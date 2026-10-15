@@ -6,7 +6,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const destination =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/dashboard';
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
+    '/cashier/dashboard';
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

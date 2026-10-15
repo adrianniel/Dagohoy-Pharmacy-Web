@@ -5,6 +5,7 @@ import { App } from './App';
 import './styles.css';
 import './landing.css';
 import './landing-reference.css';
+import './cashier.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
