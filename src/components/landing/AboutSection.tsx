@@ -12,6 +12,11 @@ export function AboutSection() {
           for the daily workflow of the pharmacy, providing a centralized platform for sales,
           products, inventory, batches, and operational records.
         </p>
+        <ul className="about-section__pillars" aria-label="System coverage">
+          <li>Sales operations</li>
+          <li>Stock visibility</li>
+          <li>Batch monitoring</li>
+        </ul>
       </div>
     </section>
   );
