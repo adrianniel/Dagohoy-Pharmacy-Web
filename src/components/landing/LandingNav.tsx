@@ -7,11 +7,16 @@ export function LandingNav() {
       <nav className="landing-nav" aria-label="Main navigation">
         <BrandMark />
         <div className="landing-nav__links">
+          <a href="#home">Home</a>
+          <a href="#features">Features</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </div>
         <Link className="landing-nav__login" to="/login">
-          Staff sign in <span aria-hidden="true">↗</span>
+          <span className="login-icon" aria-hidden="true">
+            {'\u25CF'}
+          </span>{' '}
+          Login
         </Link>
       </nav>
     </header>

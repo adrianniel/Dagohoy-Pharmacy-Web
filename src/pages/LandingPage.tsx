@@ -6,7 +6,6 @@ import { FeaturesSection } from '../components/landing/FeaturesSection';
 import { HeroSection } from '../components/landing/HeroSection';
 import { LandingFooter } from '../components/landing/LandingFooter';
 import { LandingNav } from '../components/landing/LandingNav';
-import { PharmacySnapshot } from '../components/landing/PharmacySnapshot';
 import { pharmacyProfile, staffOnDuty, weeklyHours } from '../components/landing/mockData';
 import { getPharmacyStatus } from '../components/landing/pharmacyTime';
 
@@ -23,8 +22,7 @@ export function LandingPage() {
     <div className="landing-page">
       <LandingNav />
       <main>
-        <HeroSection />
-        <PharmacySnapshot status={status} staff={staffOnDuty} hours={weeklyHours} />
+        <HeroSection status={status} staff={staffOnDuty} hours={weeklyHours} />
         <FeaturesSection />
         <AboutSection />
         <DeveloperCta />

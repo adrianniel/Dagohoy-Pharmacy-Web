@@ -1,13 +1,14 @@
 import type { StaffMember, WeeklyHoursEntry } from './types';
 
-// Temporary development content. Replace this module with API-backed data later.
+// Static sample content for the public landing page. Replace with API data in a later milestone.
 export const pharmacyProfile = {
   name: 'Dagohoy Pharmacy',
-  locationLabel: 'Your neighborhood pharmacy',
+  locationLabel: 'POS & Inventory Management System',
   timezone: 'Asia/Manila',
-  phone: '[Pharmacy phone number]',
-  email: '[Pharmacy email address]',
-  address: '[Pharmacy street address]',
+  phone: '[Contact number]',
+  email: '[Pharmacy email]',
+  address: '[Pharmacy address]',
+  businessHours: 'Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM',
 };
 
 export const weeklyHours: WeeklyHoursEntry[] = [
@@ -21,37 +22,40 @@ export const weeklyHours: WeeklyHoursEntry[] = [
 ];
 
 export const staffOnDuty: StaffMember[] = [
-  { initials: 'PD', role: 'Pharmacist', displayName: 'On shift' },
-  { initials: 'CS', role: 'Pharmacy associate', displayName: 'On shift' },
+  { initials: 'MD', role: 'Pharmacist', displayName: 'Maria D.' },
+  { initials: 'A', role: 'Cashier', displayName: 'Ana' },
 ];
 
 export const pharmacyFeatures = [
   {
     number: '01',
-    title: 'Point of sale',
-    description:
-      'A clear checkout workspace for pharmacy staff, designed to keep everyday transactions moving.',
+    title: 'Point of Sale',
+    description: 'Fast and organized sales processing with barcode-ready workflows.',
     className: 'feature-panel--primary',
   },
   {
     number: '02',
-    title: 'Stock control',
-    description:
-      'A practical view of products and quantities to help the team keep shelves organized.',
+    title: 'Inventory Management',
+    description: 'Manage stock, batches, expiry dates, products, and receiving.',
     className: 'feature-panel--secondary',
   },
   {
     number: '03',
-    title: 'Batch awareness',
-    description:
-      'Product lots and expiry dates stay part of the workflow, ready for careful stock handling.',
+    title: 'Reports',
+    description: 'View important sales and inventory information in one place.',
     className: 'feature-panel--tertiary',
   },
 ];
 
 export const developerProfile = {
-  name: '[Developer name]',
-  role: 'Full-stack developer',
-  email: '[Developer contact email]',
-  services: ['Web application development', 'System integration', 'Ongoing improvements'],
+  name: '[Developer Name]',
+  role: 'Software Developer',
+  email: '[Email address]',
+  services: ['Web Systems', 'POS Systems', 'Inventory Systems', 'Custom Business Software'],
+  contacts: [
+    { label: 'Email', value: '[Email address]', href: 'mailto:[Email address]' },
+    { label: 'Facebook / Messenger', value: '[Facebook / Messenger]', href: '#' },
+    { label: 'Portfolio', value: '[Portfolio link]', href: '#' },
+    { label: 'GitHub', value: '[GitHub link]', href: '#' },
+  ],
 };

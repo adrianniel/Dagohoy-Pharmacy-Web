@@ -5,9 +5,15 @@ export function LandingFooter() {
   return (
     <footer className="landing-footer">
       <div className="landing-footer__inner">
-        <BrandMark />
+        <div className="footer-brand">
+          <BrandMark />
+          <span>POS &amp; Inventory Management System</span>
+        </div>
         <p>
-          © {new Date().getFullYear()} {pharmacyProfile.name}. For the community, every day.
+          <span>
+            © {new Date().getFullYear()} {pharmacyProfile.name}
+          </span>
+          <span>Designed &amp; Developed by [Developer Name]</span>
         </p>
       </div>
     </footer>

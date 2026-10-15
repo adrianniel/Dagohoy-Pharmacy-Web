@@ -3,13 +3,14 @@ import { pharmacyProfile } from './mockData';
 export function AboutSection() {
   return (
     <section className="about-section section-wrap" id="about" aria-labelledby="about-title">
-      <p className="about-section__label">Rooted in care</p>
+      <p className="about-section__label">Purpose-built for Dagohoy</p>
       <div className="about-section__content">
-        <h2 id="about-title">A local pharmacy, made easier to run.</h2>
+        <p className="eyebrow">About the system</p>
+        <h2 id="about-title">About the System</h2>
         <p>
-          {pharmacyProfile.name} serves its community with a team-first approach. This system is
-          being shaped to make daily pharmacy operations clearer while keeping people and careful
-          service at the center.
+          The {pharmacyProfile.name} POS &amp; Inventory Management System is designed specifically
+          for the daily workflow of the pharmacy, providing a centralized platform for sales,
+          products, inventory, batches, and operational records.
         </p>
       </div>
     </section>
