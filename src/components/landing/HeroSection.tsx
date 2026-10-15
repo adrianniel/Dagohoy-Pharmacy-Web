@@ -44,6 +44,7 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
             Explore Features
           </a>
         </div>
+        <PharmacySnapshot status={status} staff={staff} hours={hours} />
       </div>
       <figure className="landing-hero__visual">
         <div className="landing-hero__image-wrap">
@@ -65,7 +66,6 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
           <span className="hero-caption-location">Local pharmacy</span>
         </figcaption>
       </figure>
-      <PharmacySnapshot status={status} staff={staff} hours={hours} />
     </section>
   );
 }

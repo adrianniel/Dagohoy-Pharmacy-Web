@@ -1156,3 +1156,125 @@
     min-height: 44px;
   }
 }
+
+/* Compact operational panel directly below the hero actions. */
+.landing-hero__copy .snapshot {
+  width: 100%;
+  margin: 1.1rem 0 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+.landing-hero__copy .snapshot__overview,
+.landing-hero__copy .snapshot__hours {
+  padding: 0.5rem 0.65rem;
+  border-radius: 11px;
+  box-shadow: 0 5px 16px rgb(20 58 37 / 5%);
+}
+.landing-hero__copy .snapshot__overview {
+  grid-template-columns: 0.9fr 1.1fr;
+}
+.landing-hero__copy .snapshot__status,
+.landing-hero__copy .snapshot__staff {
+  min-height: 54px;
+  padding: 0.2rem 0.55rem;
+  gap: 0.55rem;
+}
+.landing-hero__copy .snapshot-icon {
+  width: 34px;
+  height: 34px;
+}
+.landing-hero__copy .snapshot-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.landing-hero__copy .snapshot__status-heading {
+  gap: 0.4rem;
+}
+.landing-hero__copy .status-light {
+  width: 7px;
+  height: 7px;
+  box-shadow: 0 0 0 3px rgb(41 147 62 / 10%);
+}
+.landing-hero__copy .snapshot__status-copy strong {
+  font-size: 0.66rem;
+}
+.landing-hero__copy .snapshot__status-copy small {
+  margin-top: 0.22rem;
+  font-size: 0.64rem;
+}
+.landing-hero__copy .snapshot-card-heading {
+  margin-bottom: 0.24rem;
+}
+.landing-hero__copy .snapshot-card-heading .eyebrow {
+  font-size: 0.51rem;
+  letter-spacing: 0.14em;
+}
+.landing-hero__copy .staff-list {
+  gap: 0.15rem;
+}
+.landing-hero__copy .staff-row__copy,
+.landing-hero__copy .staff-row__copy span {
+  font-size: 0.61rem;
+}
+.landing-hero__copy .snapshot__hours {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+}
+.landing-hero__copy .snapshot__hours .snapshot-card-heading {
+  gap: 0.4rem;
+}
+.landing-hero__copy .snapshot__hours .snapshot-icon {
+  width: 30px;
+  height: 30px;
+}
+.landing-hero__copy .hours-list {
+  gap: 0;
+}
+.landing-hero__copy .hours-row {
+  min-height: 34px;
+  padding: 0.25rem 0.1rem;
+  gap: 0.18rem;
+  border-radius: 5px;
+  font-size: 0.5rem;
+}
+.landing-hero__copy .hours-row > span:nth-child(2) {
+  font-size: 0.45rem;
+}
+
+@media (min-width: 901px) {
+  .landing-hero {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .landing-hero__copy {
+    align-self: center;
+  }
+  .landing-hero__visual {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 700px) {
+  .landing-hero__copy .snapshot {
+    margin-top: 0.9rem;
+  }
+  .landing-hero__copy .snapshot__overview {
+    grid-template-columns: 1fr 1fr;
+  }
+  .landing-hero__copy .snapshot__hours {
+    grid-template-columns: 1fr;
+  }
+  .landing-hero__copy .snapshot__hours .snapshot-card-heading {
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .landing-hero__copy .snapshot__overview {
+    grid-template-columns: 1fr;
+  }
+  .landing-hero__copy .snapshot__status {
+    border-right: 0;
+    border-bottom: 1px solid #e5ece7;
+  }
+}
