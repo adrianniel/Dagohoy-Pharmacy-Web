@@ -1,8 +1,10 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import pharmacyLogo from '../../assets/logo.png';
-import { CASHIER_NAV_ITEMS } from '../../constants/navigation';
+import { ADMIN_NAV_ITEMS, CASHIER_NAV_ITEMS } from '../../constants/navigation';
+import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../../constants/app';
 import { cashierProfile } from '../../data/cashierMockData';
 import { CashierIcon } from './CashierIcon';
+import type { UserRole } from '../../types/navigation';
 
 interface CashierSidebarProps {
   collapsed: boolean;
@@ -17,6 +19,16 @@ export function CashierSidebar({
   onToggleCollapse,
   onCloseMobile,
 }: CashierSidebarProps) {
+  const navigate = useNavigate();
+  const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
+  const navigation = role === 'ADMIN' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS;
+
+  function handleLogout() {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(USER_ROLE_KEY);
+    navigate('/login', { replace: true });
+  }
+
   return (
     <>
       <button
@@ -36,8 +48,8 @@ export function CashierSidebar({
           </span>
         </div>
 
-        <nav className="cashier-sidebar__nav" aria-label="Cashier navigation">
-          {CASHIER_NAV_ITEMS.map((group) => (
+        <nav className="cashier-sidebar__nav" aria-label="Main navigation">
+          {navigation.map((group) => (
             <div className="cashier-nav-group" key={group.label}>
               <p>{group.label}</p>
               {group.items.map((item) =>
@@ -61,6 +73,7 @@ export function CashierSidebar({
                     type="button"
                     key={item.label}
                     title={collapsed ? item.label : undefined}
+                    onClick={item.action === 'logout' ? handleLogout : undefined}
                   >
                     <CashierIcon name={item.icon} />
                     <span>{item.label}</span>

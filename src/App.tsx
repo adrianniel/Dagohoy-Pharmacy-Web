@@ -2,17 +2,18 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { CashierLayout } from './layouts/CashierLayout';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
-import { LandingPage } from './pages/LandingPage';
 import { CashierDashboardPage } from './pages/cashier/DashboardPage';
 import { CashierPosPage } from './pages/cashier/PosPage';
 import { CashierProductsPage } from './pages/cashier/ProductsPage';
 import { CashierProfilePage } from './pages/cashier/ProfilePage';
 import { CashierTransactionsPage } from './pages/cashier/TransactionsPage';
+import { AdminPage } from './pages/admin/AdminPage';
+import { AdminRoute } from './routes/AdminRoute';
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/cashier" element={<CashierLayout />}>
@@ -22,6 +23,17 @@ export function App() {
           <Route path="products" element={<CashierProductsPage />} />
           <Route path="transactions" element={<CashierTransactionsPage />} />
           <Route path="profile" element={<CashierProfilePage />} />
+        </Route>
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<CashierLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminPage section="dashboard" />} />
+            <Route path="products" element={<AdminPage section="products" />} />
+            <Route path="suppliers" element={<AdminPage section="suppliers" />} />
+            <Route path="reports" element={<AdminPage section="reports" />} />
+            <Route path="staff" element={<AdminPage section="staff" />} />
+            <Route path="settings" element={<AdminPage section="settings" />} />
+          </Route>
         </Route>
         <Route path="/dashboard" element={<Navigate to="/cashier/dashboard" replace />} />
       </Route>

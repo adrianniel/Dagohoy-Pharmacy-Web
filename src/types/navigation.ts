@@ -1,7 +1,17 @@
 export type UserRole = 'ADMIN' | 'CASHIER';
 
 export type CashierIconName =
-  'dashboard' | 'pos' | 'products' | 'transactions' | 'profile' | 'logout';
+  | 'dashboard'
+  | 'pos'
+  | 'products'
+  | 'transactions'
+  | 'profile'
+  | 'logout'
+  | 'inventory'
+  | 'suppliers'
+  | 'reports'
+  | 'staff'
+  | 'settings';
 
 export interface NavigationItem {
   label: string;

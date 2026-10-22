@@ -19,5 +19,35 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
   },
 ];
 
-// Intentionally separate so the owner navigation can be added without rewriting the cashier UI.
-export const ADMIN_NAV_ITEMS: NavigationGroup[] = [];
+export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
+  {
+    label: 'Workspace',
+    items: [
+      { label: 'Overview', path: '/admin/dashboard', icon: 'dashboard' },
+      { label: 'Point of Sale', path: '/cashier/pos', icon: 'pos', emphasis: true },
+    ],
+  },
+  {
+    label: 'Inventory',
+    items: [
+      { label: 'Products & Stock', path: '/admin/products', icon: 'inventory' },
+      { label: 'Suppliers', path: '/admin/suppliers', icon: 'suppliers' },
+    ],
+  },
+  {
+    label: 'Business',
+    items: [
+      { label: 'Transactions', path: '/cashier/transactions', icon: 'transactions' },
+      { label: 'Reports', path: '/admin/reports', icon: 'reports' },
+      { label: 'Staff', path: '/admin/staff', icon: 'staff' },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { label: 'Settings', path: '/admin/settings', icon: 'settings' },
+      { label: 'Profile', path: '/cashier/profile', icon: 'profile' },
+      { label: 'Logout', icon: 'logout', action: 'logout' },
+    ],
+  },
+];

@@ -8,6 +8,16 @@ interface CashierHeaderProps {
 }
 
 export function CashierHeader({ title, subtitle, onOpenSidebar }: CashierHeaderProps) {
+  const today = new Intl.DateTimeFormat('en-PH', {
+    weekday: 'long',
+    timeZone: 'Asia/Manila',
+  }).format(new Date());
+  const date = new Intl.DateTimeFormat('en-PH', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'Asia/Manila',
+  }).format(new Date());
   return (
     <header className="cashier-header">
       <button
@@ -26,8 +36,8 @@ export function CashierHeader({ title, subtitle, onOpenSidebar }: CashierHeaderP
         <div className="cashier-header__date">
           <CashierIcon name="calendar" />
           <span>
-            <strong>Thursday</strong>
-            <small>October 15, 2026</small>
+            <strong>{today}</strong>
+            <small>{date}</small>
           </span>
         </div>
         <CashierProfileMenu />

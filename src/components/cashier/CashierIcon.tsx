@@ -76,6 +76,33 @@ export function CashierIcon({ name }: CashierIconProps) {
         <path d="M16 9v8l5 3" />
       </>
     ),
+    inventory: (
+      <>
+        <path d="M4 10h24v17H4zM3 5h26v5H3zM12 15h8" />
+      </>
+    ),
+    suppliers: (
+      <>
+        <path d="M3 27h26M6 27V9l10-5 10 5v18M11 13h2m6 0h2m-10 5h2m6 0h2m-8 9v-5h6v5" />
+      </>
+    ),
+    reports: (
+      <>
+        <path d="M5 27V16h6v11M13 27V6h6v21M21 27V11h6v16" />
+      </>
+    ),
+    staff: (
+      <>
+        <circle cx="12" cy="11" r="5" />
+        <path d="M3 28c0-6 3-9 9-9s9 3 9 9m0-18a5 5 0 0 1 0 10m2 2c4 1 6 3 6 6" />
+      </>
+    ),
+    settings: (
+      <>
+        <circle cx="16" cy="16" r="4" />
+        <path d="m13 3-1 3-3 2-3-1-2 4 2 2v4l-2 2 2 4 3-1 3 2 1 3h6l1-3 3-2 3 1 2-4-2-2v-4l2-2-2-4-3 1-3-2-1-3z" />
+      </>
+    ),
   };
 
   return (

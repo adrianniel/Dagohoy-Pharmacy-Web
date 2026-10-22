@@ -9,6 +9,12 @@ const routeTitles: Record<string, string> = {
   '/cashier/products': 'Products & Stock',
   '/cashier/transactions': 'Transactions',
   '/cashier/profile': 'My Profile',
+  '/admin/dashboard': 'Overview',
+  '/admin/products': 'Products & Stock',
+  '/admin/suppliers': 'Suppliers',
+  '/admin/reports': 'Reports',
+  '/admin/staff': 'Staff',
+  '/admin/settings': 'Settings',
 };
 
 export function CashierLayout() {
@@ -28,7 +34,9 @@ export function CashierLayout() {
       <div className="cashier-workspace">
         <CashierHeader
           title={title}
-          subtitle="Cashier workspace"
+          subtitle={
+            location.pathname.startsWith('/admin') ? 'Owner workspace' : 'Cashier workspace'
+          }
           onOpenSidebar={() => setMobileOpen(true)}
         />
         <main className="cashier-content">
