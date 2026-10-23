@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import pharmacyLogo from '../../assets/logo.png';
 import { ADMIN_NAV_ITEMS, CASHIER_NAV_ITEMS } from '../../constants/navigation';
 import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../../constants/app';
-import { cashierProfile } from '../../data/cashierMockData';
+import { adminProfile, cashierProfile } from '../../data/cashierMockData';
 import { CashierIcon } from './CashierIcon';
 import type { UserRole } from '../../types/navigation';
 
@@ -22,6 +22,7 @@ export function CashierSidebar({
   const navigate = useNavigate();
   const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
   const navigation = role === 'ADMIN' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS;
+  const profile = role === 'ADMIN' ? adminProfile : cashierProfile;
 
   function handleLogout() {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -85,10 +86,10 @@ export function CashierSidebar({
         </nav>
 
         <div className="cashier-sidebar__user">
-          <span className="cashier-avatar">{cashierProfile.initials}</span>
+          <span className="cashier-avatar">{profile.initials}</span>
           <span>
-            <strong>{cashierProfile.shortName}</strong>
-            <small>{cashierProfile.status}</small>
+            <strong>{profile.shortName}</strong>
+            <small>{profile.status}</small>
           </span>
         </div>
         <button

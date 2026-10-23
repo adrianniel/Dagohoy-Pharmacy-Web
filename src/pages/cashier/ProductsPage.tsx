@@ -2,21 +2,22 @@ import { useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
-import { mockProducts } from '../../data/cashierMockData';
+import { getInventory } from '../../data/inventoryStore';
 
 export function CashierProductsPage() {
   const [query, setQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('All stock statuses');
+  const [catalog] = useState(getInventory);
   const products = useMemo(
     () =>
-      mockProducts.filter((product) => {
+      catalog.filter((product) => {
         const matchesQuery = `${product.barcode} ${product.product} ${product.detail}`
           .toLowerCase()
           .includes(query.toLowerCase());
         const matchesStock = stockFilter === 'All stock statuses' || product.status === stockFilter;
         return matchesQuery && matchesStock;
       }),
-    [query, stockFilter],
+    [catalog, query, stockFilter],
   );
   return (
     <div className="cashier-page">
@@ -85,7 +86,7 @@ export function CashierProductsPage() {
           </table>
         </div>
         <div className="cashier-table-footer">
-          <span>Showing {products.length} sample products</span>
+          <span>Showing {products.length} demo catalog products</span>
           <span>Product maintenance is restricted to Admin.</span>
         </div>
       </section>

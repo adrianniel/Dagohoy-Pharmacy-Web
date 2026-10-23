@@ -5,6 +5,7 @@ import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import {
   getInventory,
+  getLowStockThreshold,
   InventoryProduct,
   saveInventory,
   stockStatus,
@@ -24,6 +25,32 @@ const staff = [
   { initials: 'JR', name: 'Jose Reyes', role: 'Cashier', status: 'Off shift' },
   { initials: 'AL', name: 'Ana Lim', role: 'Administrator', status: 'Active' },
 ];
+type Supplier = (typeof suppliers)[number];
+type TeamMember = (typeof staff)[number] & { email?: string };
+const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
+const STAFF_KEY = 'dagohoy_demo_staff';
+const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
+type PharmacySettings = { name: string; phone: string; address: string; threshold: string };
+const defaultSettings: PharmacySettings = {
+  name: 'Dagohoy Pharmacy',
+  phone: '+63 2 8123 4567',
+  address: 'Dagohoy Street, Manila, Philippines',
+  threshold: '15',
+};
+function loadLocalList<T>(key: string, initial: T[]): T[] {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? 'null') ?? initial;
+  } catch {
+    return initial;
+  }
+}
+function loadLocalValue<T>(key: string, fallback: T): T {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
@@ -31,6 +58,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [products, setProducts] = useState(getInventory);
   const [editing, setEditing] = useState<InventoryProduct | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [supplierList, setSupplierList] = useState<Supplier[]>(() =>
+    loadLocalList(SUPPLIER_KEY, suppliers),
+  );
+  const [teamList, setTeamList] = useState<TeamMember[]>(() => loadLocalList(STAFF_KEY, staff));
+  const [directoryForm, setDirectoryForm] = useState<'supplier' | 'staff' | null>(null);
+  const [directoryNotice, setDirectoryNotice] = useState('');
+  const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
+    loadLocalValue(SETTINGS_KEY, defaultSettings),
+  );
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
@@ -69,10 +105,26 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === 'products' && (
         <>
           <div className="cashier-summary-grid">
-            <Summary label="Active products" value="248" detail="Across all categories" />
-            <Summary label="Low stock" value="12" detail="Review and replenish" />
-            <Summary label="Out of stock" value="3" detail="Needs attention" />
-            <Summary label="Expiring soon" value="8" detail="Within 90 days" />
+            <Summary
+              label="Catalog products"
+              value={String(products.length)}
+              detail="Sample catalog records"
+            />
+            <Summary
+              label="Low stock"
+              value={String(
+                products.filter(
+                  (product) => product.stock > 0 && product.stock < getLowStockThreshold(),
+                ).length,
+              )}
+              detail={`Below ${getLowStockThreshold()} units`}
+            />
+            <Summary
+              label="Out of stock"
+              value={String(products.filter((product) => product.stock <= 0).length)}
+              detail="Needs replenishment"
+            />
+            <Summary label="Expiry tracking" value="Open batches" detail="Review lot-level dates" />
           </div>
           <section className="cashier-panel cashier-list-panel">
             <div className="cashier-list-toolbar">
@@ -153,12 +205,20 @@ export function AdminPage({ section }: { section: AdminSection }) {
               product={editing}
               onClose={() => setFormOpen(false)}
               onSave={(product) => {
+                if (
+                  products.some(
+                    (item) => item.barcode === product.barcode && item.barcode !== editing?.barcode,
+                  )
+                ) {
+                  return false;
+                }
                 const next = editing
                   ? products.map((item) => (item.barcode === editing.barcode ? product : item))
                   : [...products, product];
                 setProducts(next);
                 saveInventory(next);
                 setFormOpen(false);
+                return true;
               }}
             />
           )}
@@ -174,11 +234,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
             <button
               className="cashier-primary-action"
               type="button"
-              onClick={() =>
-                window.alert(
-                  'Supplier creation will be available when the supplier API is connected.',
-                )
-              }
+              onClick={() => setDirectoryForm('supplier')}
             >
               Add supplier <span>＋</span>
             </button>
@@ -195,7 +251,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 </tr>
               </thead>
               <tbody>
-                {suppliers.map((supplier) => (
+                {supplierList.map((supplier) => (
                   <tr key={supplier.name}>
                     <td>
                       <strong>{supplier.name}</strong>
@@ -209,7 +265,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
                       <button
                         className="cashier-view-button"
                         type="button"
-                        onClick={() => window.alert(`${supplier.name} supplier details`)}
+                        onClick={() =>
+                          setDirectoryNotice(
+                            `${supplier.name} · ${supplier.contact} · ${supplier.products} sample products`,
+                          )
+                        }
                       >
                         View details
                       </button>
@@ -218,6 +278,18 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 ))}
               </tbody>
             </table>
+          </div>
+          {directoryNotice && (
+            <div className="directory-notice" role="status">
+              {directoryNotice}
+              <button type="button" onClick={() => setDirectoryNotice('')}>
+                Dismiss
+              </button>
+            </div>
+          )}
+          <div className="cashier-table-footer">
+            <span>{supplierList.length} supplier records</span>
+            <span>Supplier records are local demo data.</span>
           </div>
         </section>
       )}
@@ -232,11 +304,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
             <button
               className="cashier-primary-action"
               type="button"
-              onClick={() =>
-                window.alert(
-                  'Staff invitations will be available when authentication is connected.',
-                )
-              }
+              onClick={() => setDirectoryForm('staff')}
             >
               Invite staff <span>＋</span>
             </button>
@@ -252,7 +320,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 </tr>
               </thead>
               <tbody>
-                {staff.map((person) => (
+                {teamList.map((person, index) => (
                   <tr key={person.name}>
                     <td>
                       <span className="cashier-avatar cashier-avatar--table">
@@ -269,7 +337,18 @@ export function AdminPage({ section }: { section: AdminSection }) {
                         className="cashier-view-button"
                         type="button"
                         onClick={() =>
-                          window.alert('Staff access controls will be connected to authentication.')
+                          (() => {
+                            const next = teamList.map((member, memberIndex) =>
+                              memberIndex === index
+                                ? {
+                                    ...member,
+                                    status: member.status === 'Disabled' ? 'Active' : 'Disabled',
+                                  }
+                                : member,
+                            );
+                            setTeamList(next);
+                            localStorage.setItem(STAFF_KEY, JSON.stringify(next));
+                          })()
                         }
                       >
                         Manage access
@@ -280,6 +359,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
               </tbody>
             </table>
           </div>
+          <div className="cashier-table-footer">
+            <span>{teamList.length} staff profiles</span>
+            <span>Login credentials and role security require server authentication.</span>
+          </div>
         </section>
       )}
       {section === 'settings' && (
@@ -287,24 +370,47 @@ export function AdminPage({ section }: { section: AdminSection }) {
           <p className="demo-note">Settings are saved locally in this browser for preview only.</p>
           <label>
             Pharmacy name
-            <input defaultValue="Dagohoy Pharmacy" />
+            <input
+              value={pharmacySettings.name}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, name: event.target.value })
+              }
+            />
           </label>
           <label>
             Contact number
-            <input defaultValue="+63 2 8123 4567" />
+            <input
+              value={pharmacySettings.phone}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, phone: event.target.value })
+              }
+            />
           </label>
           <label>
             Address
-            <input defaultValue="Dagohoy Street, Manila, Philippines" />
+            <input
+              value={pharmacySettings.address}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, address: event.target.value })
+              }
+            />
           </label>
           <label>
             Low-stock alert threshold
-            <input type="number" min="1" defaultValue="15" />
+            <input
+              type="number"
+              min="1"
+              value={pharmacySettings.threshold}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, threshold: event.target.value })
+              }
+            />
           </label>
           <button
             className="cashier-primary-action"
             type="button"
             onClick={() => {
+              localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
               setSaved(true);
               window.setTimeout(() => setSaved(false), 2500);
             }}
@@ -317,6 +423,24 @@ export function AdminPage({ section }: { section: AdminSection }) {
             </span>
           )}
         </section>
+      )}
+      {directoryForm && (
+        <DirectoryForm
+          kind={directoryForm}
+          onClose={() => setDirectoryForm(null)}
+          onSave={(value) => {
+            if (directoryForm === 'supplier') {
+              const next = [...supplierList, value as Supplier];
+              setSupplierList(next);
+              localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
+            } else {
+              const next = [...teamList, value as TeamMember];
+              setTeamList(next);
+              localStorage.setItem(STAFF_KEY, JSON.stringify(next));
+            }
+            setDirectoryForm(null);
+          }}
+        />
       )}
     </div>
   );
@@ -332,6 +456,95 @@ function Summary({ label, value, detail }: { label: string; value: string; detai
   );
 }
 
+function DirectoryForm({
+  kind,
+  onClose,
+  onSave,
+}: {
+  kind: 'supplier' | 'staff';
+  onClose: () => void;
+  onSave: (value: Supplier | TeamMember) => void;
+}) {
+  const [name, setName] = useState('');
+  const [contact, setContact] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('Cashier');
+  return (
+    <div className="pos-modal-backdrop">
+      <form
+        className="pos-payment-modal"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (kind === 'supplier')
+            onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
+          else
+            onSave({
+              initials: name
+                .trim()
+                .split(/\s+/)
+                .map((part) => part[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase(),
+              name: name.trim(),
+              role,
+              status: 'Invited',
+              email,
+            });
+        }}
+      >
+        <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close form">
+          ×
+        </button>
+        <p className="eyebrow">
+          {kind === 'supplier' ? 'Supplier directory' : 'Team access'} · demo
+        </p>
+        <h2>{kind === 'supplier' ? 'Add supplier' : 'Invite staff member'}</h2>
+        <p className="inventory-form-note">
+          This creates a local preview record only; no message or account will be created.
+        </p>
+        <label>
+          {kind === 'supplier' ? 'Supplier name' : 'Staff member name'}
+          <input
+            required
+            autoFocus
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        {kind === 'supplier' ? (
+          <label>
+            Phone, email, or location
+            <input required value={contact} onChange={(event) => setContact(event.target.value)} />
+          </label>
+        ) : (
+          <>
+            <label>
+              Email
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+            <label>
+              Role
+              <select value={role} onChange={(event) => setRole(event.target.value)}>
+                <option>Cashier</option>
+                <option>Administrator</option>
+              </select>
+            </label>
+          </>
+        )}
+        <button className="pos-checkout-button" type="submit">
+          {kind === 'supplier' ? 'Save supplier' : 'Create demo invitation'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function InventoryForm({
   product,
   onClose,
@@ -339,7 +552,7 @@ function InventoryForm({
 }: {
   product: InventoryProduct | null;
   onClose: () => void;
-  onSave: (product: InventoryProduct) => void;
+  onSave: (product: InventoryProduct) => boolean;
 }) {
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
@@ -347,10 +560,11 @@ function InventoryForm({
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
   const [price, setPrice] = useState(product ? product.price.replace(/[₱,]/g, '') : '');
   const [stock, setStock] = useState(String(product?.stock ?? 0));
+  const [error, setError] = useState('');
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const quantity = Math.max(0, Number(stock));
-    onSave({
+    const saved = onSave({
       barcode,
       product: name.trim(),
       detail: detail.trim(),
@@ -359,6 +573,7 @@ function InventoryForm({
       stock: quantity,
       status: stockStatus(quantity),
     });
+    if (!saved) setError('That barcode is already assigned to another product.');
   }
   return (
     <div
@@ -429,6 +644,11 @@ function InventoryForm({
             onChange={(event) => setStock(event.target.value)}
           />
         </label>
+        {error && (
+          <p className="pos-notice" role="alert">
+            {error}
+          </p>
+        )}
         <button className="pos-checkout-button" type="submit">
           Save product
         </button>
@@ -454,7 +674,11 @@ function AdminDashboard() {
         <Summary label="Sales today" value={money(18460.5)} detail="Demo data · 24 transactions" />
         <Summary label="Transactions" value="24" detail="Sample register activity" />
         <Summary label="Inventory value" value={money(283450)} detail="Illustrative retail value" />
-        <Summary label="Needs attention" value="15 items" detail="Sample low-stock alerts" />
+        <Summary
+          label="Needs attention"
+          value={`${getInventory().filter((product) => product.stock < 20).length} items`}
+          detail="Sample low-stock alerts"
+        />
       </div>
       <div className="cashier-dashboard-grid admin-dashboard-grid">
         <section className="cashier-panel">
@@ -477,7 +701,7 @@ function AdminDashboard() {
               </thead>
               <tbody>
                 {getInventory()
-                  .filter((product) => product.stock < 20)
+                  .filter((product) => product.stock < getLowStockThreshold())
                   .map((product) => (
                     <tr key={product.barcode}>
                       <td>
@@ -501,6 +725,12 @@ function AdminDashboard() {
           </Link>
           <Link to="/admin/products">
             <CashierIcon name="inventory" /> Review stock <span>→</span>
+          </Link>
+          <Link to="/admin/batches">
+            <CashierIcon name="batches" /> Check expiry dates <span>→</span>
+          </Link>
+          <Link to="/admin/purchases">
+            <CashierIcon name="purchases" /> Receive stock <span>→</span>
           </Link>
           <Link to="/admin/reports">
             <CashierIcon name="reports" /> Sales report <span>→</span>

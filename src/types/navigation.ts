@@ -11,7 +11,11 @@ export type CashierIconName =
   | 'suppliers'
   | 'reports'
   | 'staff'
-  | 'settings';
+  | 'settings'
+  | 'batches'
+  | 'purchases'
+  | 'stock'
+  | 'register';
 
 export interface NavigationItem {
   label: string;

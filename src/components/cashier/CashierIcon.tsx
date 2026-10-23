@@ -103,6 +103,30 @@ export function CashierIcon({ name }: CashierIconProps) {
         <path d="m13 3-1 3-3 2-3-1-2 4 2 2v4l-2 2 2 4 3-1 3 2 1 3h6l1-3 3-2 3 1 2-4-2-2v-4l2-2-2-4-3 1-3-2-1-3z" />
       </>
     ),
+    batches: (
+      <>
+        <path d="M7 4h18v24H7zM11 9h10M11 14h10M11 19h6" />
+        <path d="M4 8v20" />
+      </>
+    ),
+    purchases: (
+      <>
+        <path d="M5 7h22l-2 20H7L5 7zM11 11V8a5 5 0 0 1 10 0v3M12 17h8" />
+      </>
+    ),
+    stock: (
+      <>
+        <path d="M5 7h22M5 16h22M5 25h22M11 4v6m10 3v6M15 22v6" />
+        <circle cx="11" cy="7" r="3" />
+        <circle cx="21" cy="16" r="3" />
+        <circle cx="15" cy="25" r="3" />
+      </>
+    ),
+    register: (
+      <>
+        <path d="M5 10h22v17H5zM8 10V5h16v5M10 15h12v4H10zM12 23h2m4 0h2" />
+      </>
+    ),
   };
 
   return (

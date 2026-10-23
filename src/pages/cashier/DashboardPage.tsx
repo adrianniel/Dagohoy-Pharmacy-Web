@@ -1,14 +1,57 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { cashierProfile, dashboardSummary, recentTransactions } from '../../data/cashierMockData';
+import { getInventory } from '../../data/inventoryStore';
+
+const SALES_KEY = 'dagohoy_demo_sales';
+const money = (amount: number) =>
+  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 
 export function CashierDashboardPage() {
+  const [query, setQuery] = useState('');
+  const demoSales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Array<{
+    receipt: string;
+    date: string;
+    items: number;
+    total: number;
+    payment: string;
+    status: string;
+  }>;
+  const matches = useMemo(
+    () =>
+      getInventory()
+        .filter((product) =>
+          `${product.product} ${product.detail} ${product.barcode}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+        )
+        .slice(0, 4),
+    [query],
+  );
+  const today = new Intl.DateTimeFormat('en-PH', {
+    dateStyle: 'full',
+    timeZone: 'Asia/Manila',
+  }).format(new Date());
+  const latestTransactions = demoSales.length
+    ? demoSales.slice(0, 4).map((sale) => ({
+        receipt: sale.receipt,
+        time: new Date(sale.date).toLocaleTimeString('en-PH', {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+        items: sale.items,
+        total: money(sale.total),
+        payment: sale.payment,
+        status: sale.status,
+      }))
+    : recentTransactions;
   return (
     <div className="cashier-page">
       <CashierPageHeader
-        eyebrow="Today · October 15, 2026"
+        eyebrow={today}
         title={`Good morning, ${cashierProfile.shortName}`}
         description="Cashier • Dagohoy Pharmacy"
         action={
@@ -18,6 +61,9 @@ export function CashierDashboardPage() {
         }
       />
 
+      <p className="demo-note dashboard-demo-note">
+        Dashboard figures are sample data until live pharmacy sales are connected.
+      </p>
       <section className="cashier-summary-grid" aria-label="Today's cashier summary">
         {dashboardSummary.map((summary) => (
           <article
@@ -53,7 +99,7 @@ export function CashierDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((transaction) => (
+                {latestTransactions.map((transaction) => (
                   <tr key={transaction.receipt}>
                     <td>
                       <strong>{transaction.receipt}</strong>
@@ -82,13 +128,40 @@ export function CashierDashboardPage() {
           <p>Check a product, price, or available stock without leaving the dashboard.</p>
           <label className="cashier-search-field">
             <CashierIcon name="search" />
-            <input type="search" placeholder="Search or scan barcode" />
+            <input
+              type="search"
+              placeholder="Search or scan barcode"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
           </label>
+          {query && (
+            <div className="dashboard-lookup-results">
+              {matches.length ? (
+                matches.map((product) => (
+                  <div key={product.barcode}>
+                    <span>
+                      <strong>{product.product}</strong>
+                      <small>
+                        {product.barcode} · {product.stock} available
+                      </small>
+                    </span>
+                    <b>{product.price}</b>
+                  </div>
+                ))
+              ) : (
+                <span>No matching products.</span>
+              )}
+            </div>
+          )}
           <Link to="/cashier/products">
             Open product lookup <CashierIcon name="arrow" />
           </Link>
         </aside>
       </div>
+      <Link className="cashier-drawer-shortcut" to="/cashier/register">
+        <CashierIcon name="register" /> Manage cash drawer <CashierIcon name="arrow" />
+      </Link>
     </div>
   );
 }

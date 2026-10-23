@@ -994,6 +994,64 @@
 .admin-quick-actions .demo-note {
   margin-top: 0.7rem;
 }
+.dashboard-demo-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.62rem;
+}
+.dashboard-lookup-results {
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border: 1px solid var(--cashier-line);
+  border-radius: 8px;
+  background: #fff;
+}
+.dashboard-lookup-results > div {
+  padding: 0.55rem 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  border-bottom: 1px solid #edf1ee;
+}
+.dashboard-lookup-results > div:last-child {
+  border-bottom: 0;
+}
+.dashboard-lookup-results > div > span {
+  display: grid;
+  gap: 0.15rem;
+}
+.dashboard-lookup-results strong {
+  color: #33443a;
+  font-size: 0.65rem;
+}
+.dashboard-lookup-results small {
+  color: #849189;
+  font-size: 0.56rem;
+}
+.dashboard-lookup-results b {
+  color: #167356;
+  font-size: 0.65rem;
+}
+.dashboard-lookup-results > span {
+  padding: 0.7rem;
+  display: block;
+  color: #849189;
+  font-size: 0.62rem;
+}
+.cashier-drawer-shortcut {
+  width: fit-content;
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #167356;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.cashier-drawer-shortcut .cashier-icon {
+  width: 16px;
+}
 .save-confirmation {
   align-self: center;
   color: #167356;
@@ -1296,6 +1354,22 @@
   font-size: 0.82rem;
   font-weight: 750;
 }
+.pos-discount-input {
+  min-height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #66746b;
+}
+.pos-discount-input input {
+  width: 52px;
+  padding: 0.25rem 0.3rem;
+  border: 1px solid #dce5df;
+  border-radius: 5px;
+  color: #263a2f;
+  font-size: 0.67rem;
+  text-align: right;
+}
 .pos-order-grand-total strong {
   color: #167356;
   font-size: 1.2rem;
@@ -1451,6 +1525,201 @@
   color: inherit;
   font: inherit;
 }
+.operations-demo-banner {
+  margin-bottom: 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #f0e4c6;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #81652b;
+  font-size: 0.67rem;
+}
+.operations-select {
+  min-height: 40px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #d8e0da;
+  border-radius: 8px;
+  background: #fff;
+  color: #536159;
+  font: inherit;
+  font-size: 0.67rem;
+}
+.expiry-count {
+  padding: 0.28rem 0.46rem;
+  border-radius: 999px;
+  background: #e9f4ed;
+  color: #24714e;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+.expiry-count.is-warning {
+  background: #fff4db;
+  color: #946511;
+}
+.expiry-count.is-urgent {
+  background: #fbe9e7;
+  color: #a0473b;
+}
+.operations-summary-row {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--cashier-line);
+}
+.operations-summary-row > div {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+}
+.operations-summary-row > div + div {
+  border-left: 1px solid var(--cashier-line);
+}
+.operations-summary-row strong {
+  color: #1e4634;
+  font-size: 1.2rem;
+}
+.operations-summary-row span {
+  color: #78867e;
+  font-size: 0.62rem;
+}
+.movement-positive {
+  color: #137349 !important;
+  font-weight: 750;
+}
+.movement-negative {
+  color: #a14e44 !important;
+  font-weight: 750;
+}
+.operations-empty {
+  padding: 2rem !important;
+  color: #7d8982 !important;
+  text-align: center;
+  white-space: normal;
+}
+.register-state-card {
+  min-height: 76px;
+  margin-bottom: 0.85rem;
+  padding: 1rem 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--cashier-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.register-state-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #a1aaa4;
+  box-shadow: 0 0 0 4px #f0f2f0;
+}
+.register-state-light.is-open {
+  background: #24a366;
+  box-shadow: 0 0 0 4px #e3f5eb;
+}
+.register-state-card > div {
+  display: grid;
+  gap: 0.2rem;
+}
+.register-state-card > div strong {
+  color: #283c30;
+  font-size: 0.79rem;
+}
+.register-state-card > div span {
+  color: #7c8981;
+  font-size: 0.63rem;
+}
+.register-demo-label {
+  margin-left: auto;
+  color: #8b9690;
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+.register-activity-panel {
+  overflow: hidden;
+}
+.register-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.register-activity-panel .cashier-view-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.register-empty {
+  padding: 2rem 1rem;
+  color: #819087;
+  font-size: 0.7rem;
+  text-align: center;
+}
+.cashier-status--ordered {
+  background: #e9efff;
+  color: #415f9d;
+}
+.cashier-status--draft {
+  background: #f0f2f0;
+  color: #67756c;
+}
+.cashier-status--received {
+  background: #e6f5eb;
+  color: #11713f;
+}
+.cashier-status--damaged {
+  background: #fbe8e8;
+  color: #a44545;
+}
+.receipt-lines {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #e8eeea;
+}
+.receipt-lines h3 {
+  margin: 0 0 0.4rem;
+  color: #69776f;
+  font-size: 0.66rem;
+}
+.receipt-lines > div {
+  padding: 0.45rem 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: #526158;
+  font-size: 0.67rem;
+}
+.receipt-print-button {
+  margin-top: 1rem;
+}
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .transaction-detail,
+  .transaction-detail * {
+    visibility: visible !important;
+  }
+  .pos-modal-backdrop:has(.transaction-detail) {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    background: #fff;
+  }
+  .transaction-detail {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .transaction-detail .pos-modal-close,
+  .transaction-detail .receipt-print-button,
+  .transaction-detail .pos-demo-disclaimer {
+    display: none;
+  }
+}
 @media (max-width: 1080px) {
   .admin-dashboard-grid {
     grid-template-columns: 1fr;
@@ -1483,6 +1752,12 @@
   }
   .pos-product-grid {
     grid-template-columns: 1fr;
+  }
+  .operations-summary-row {
+    padding-inline: 0.4rem;
+  }
+  .operations-summary-row span {
+    font-size: 0.57rem;
   }
 }
 .cashier-profile-details > div {

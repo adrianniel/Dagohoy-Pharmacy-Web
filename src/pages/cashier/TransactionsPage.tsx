@@ -12,27 +12,57 @@ type Sale = {
   total: number;
   payment: string;
   status: string;
+  lines?: Array<{ product: string; quantity: number; unitPrice: number }>;
 };
 
 export function CashierTransactionsPage() {
   const [query, setQuery] = useState('');
+  const [period, setPeriod] = useState('7');
   const [selected, setSelected] = useState<Sale | null>(null);
   const [demoSales] = useState(() => JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Sale[]);
-  const records = useMemo(
-    () =>
-      [
-        ...demoSales.map((sale) => ({
-          receipt: sale.receipt,
-          date: new Date(sale.date).toLocaleString('en-PH'),
-          items: sale.items,
-          total: `₱${sale.total.toFixed(2)}`,
-          payment: sale.payment,
-          status: sale.status,
-        })),
-        ...transactionHistory,
-      ].filter((transaction) => transaction.receipt.toLowerCase().includes(query.toLowerCase())),
-    [demoSales, query],
-  );
+  const records = useMemo(() => {
+    const cutoff = period === 'all' ? 0 : Date.now() - Number(period) * 86400000;
+    return [
+      ...demoSales.map((sale) => ({
+        ...sale,
+        dateValue: sale.date,
+        date: new Date(sale.date).toLocaleString('en-PH'),
+        total: `₱${sale.total.toFixed(2)}`,
+      })),
+      ...transactionHistory.map((sale) => ({
+        ...sale,
+        lines: undefined,
+        dateValue: new Date(sale.date.replace(' · ', ' ')).toISOString(),
+        total: sale.total,
+      })),
+    ].filter(
+      (transaction) =>
+        transaction.receipt.toLowerCase().includes(query.toLowerCase()) &&
+        new Date(transaction.dateValue).getTime() >= cutoff,
+    );
+  }, [demoSales, period, query]);
+  function exportCsv() {
+    const rows = [
+      ['Receipt', 'Date', 'Items', 'Total', 'Payment', 'Status'],
+      ...records.map((item) => [
+        item.receipt,
+        item.date,
+        String(item.items),
+        item.total,
+        item.payment,
+        item.status,
+      ]),
+    ];
+    const csv = rows
+      .map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dagohoy-demo-transactions.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
   return (
     <div className="cashier-page">
       <CashierPageHeader
@@ -51,8 +81,21 @@ export function CashierTransactionsPage() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <button className="cashier-filter-button" type="button">
-            <CashierIcon name="calendar" /> Today <span>⌄</span>
+          <label className="cashier-filter-button">
+            <CashierIcon name="calendar" />
+            <select
+              aria-label="Transaction date range"
+              value={period}
+              onChange={(event) => setPeriod(event.target.value)}
+            >
+              <option value="1">Today</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All dates</option>
+            </select>
+          </label>
+          <button className="cashier-filter-button" type="button" onClick={exportCsv}>
+            Export CSV
           </button>
         </div>
         <div className="cashier-table-wrap">
@@ -92,6 +135,7 @@ export function CashierTransactionsPage() {
                           ...transaction,
                           date: transaction.date,
                           total: Number(transaction.total.replace(/[₱,]/g, '')),
+                          lines: transaction.lines,
                         })
                       }
                     >
@@ -152,9 +196,28 @@ export function CashierTransactionsPage() {
                 <dd>₱{selected.total.toFixed(2)}</dd>
               </div>
             </dl>
+            {selected.lines?.length ? (
+              <div className="receipt-lines">
+                <h3>Items sold</h3>
+                {selected.lines.map((line, index) => (
+                  <div key={`${line.product}-${index}`}>
+                    <span>
+                      {line.product} × {line.quantity}
+                    </span>
+                    <strong>₱{(line.quantity * line.unitPrice).toFixed(2)}</strong>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <button
+              className="cashier-view-button receipt-print-button"
+              type="button"
+              onClick={() => window.print()}
+            >
+              Print receipt
+            </button>
             <p className="pos-demo-disclaimer">
-              Sample/demo record. Receipt and item-level details are not available until the sales
-              API is connected.
+              Sample/demo record only. Printing does not create a tax invoice or official receipt.
             </p>
           </section>
         </div>

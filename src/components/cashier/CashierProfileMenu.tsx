@@ -1,16 +1,19 @@
-import { cashierProfile } from '../../data/cashierMockData';
+import { Link } from 'react-router-dom';
+import { USER_ROLE_KEY } from '../../constants/app';
+import { adminProfile, cashierProfile } from '../../data/cashierMockData';
 
 export function CashierProfileMenu() {
+  const profile = localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
   return (
-    <button className="cashier-profile-menu" type="button" aria-label="Open cashier profile menu">
-      <span className="cashier-avatar">{cashierProfile.initials}</span>
+    <Link className="cashier-profile-menu" to="/cashier/profile" aria-label="Open profile">
+      <span className="cashier-avatar">{profile.initials}</span>
       <span className="cashier-profile-menu__copy">
-        <strong>{cashierProfile.shortName}</strong>
-        <small>{cashierProfile.role}</small>
+        <strong>{profile.shortName}</strong>
+        <small>{profile.role}</small>
       </span>
       <span className="cashier-profile-menu__chevron" aria-hidden="true">
         ⌄
       </span>
-    </button>
+    </Link>
   );
 }

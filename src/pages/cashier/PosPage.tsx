@@ -1,7 +1,8 @@
 import { FormEvent, useMemo, useRef, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
-import { getInventory } from '../../data/inventoryStore';
+import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
+import { loadMovements, saveMovements } from '../../data/operationsStore';
 
 type Product = ReturnType<typeof getInventory>[number];
 type CartLine = { product: Product; quantity: number };
@@ -16,6 +17,7 @@ export function CashierPosPage() {
   const [barcode, setBarcode] = useState('');
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [discountPercent, setDiscountPercent] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [tendered, setTendered] = useState('');
   const [notice, setNotice] = useState('');
@@ -25,6 +27,8 @@ export function CashierPosPage() {
     0,
   );
   const totalItems = cart.reduce((total, line) => total + line.quantity, 0);
+  const discount = Math.round(((subtotal * discountPercent) / 100) * 100) / 100;
+  const totalDue = subtotal - discount;
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
@@ -34,7 +38,7 @@ export function CashierPosPage() {
       ),
     [products, query],
   );
-  const change = Math.max(0, Number(tendered) - subtotal);
+  const change = Math.max(0, Number(tendered) - totalDue);
 
   function addProduct(product: Product) {
     if (product.stock < 1) {
@@ -88,7 +92,7 @@ export function CashierPosPage() {
 
   function completeSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (paymentMethod === 'Cash' && Number(tendered) < subtotal) return;
+    if (paymentMethod === 'Cash' && Number(tendered) < totalDue) return;
     const sales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Array<
       Record<string, unknown>
     >;
@@ -97,11 +101,41 @@ export function CashierPosPage() {
       receipt,
       date: new Date().toISOString(),
       items: totalItems,
-      total: subtotal,
+      total: totalDue,
+      subtotal,
+      discount,
+      lines: cart.map((line) => ({
+        product: line.product.product,
+        barcode: line.product.barcode,
+        quantity: line.quantity,
+        unitPrice: toAmount(line.product.price),
+      })),
       payment: paymentMethod,
       status: 'Completed',
     });
     localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+    const inventory = getInventory();
+    saveInventory(
+      inventory.map((product) => {
+        const sold = cart.find((line) => line.product.barcode === product.barcode)?.quantity ?? 0;
+        const stock = Math.max(0, product.stock - sold);
+        return sold ? { ...product, stock, status: stockStatus(stock) } : product;
+      }),
+    );
+    const previousMovements = loadMovements();
+    saveMovements([
+      ...cart.map((line) => ({
+        id: `SALE-${receipt}-${line.product.barcode}`,
+        date: new Date().toISOString(),
+        product: line.product.product,
+        kind: 'Sale' as const,
+        change: -line.quantity,
+        reference: receipt,
+        staff: 'Demo cashier',
+        reason: 'Completed demo POS sale',
+      })),
+      ...previousMovements,
+    ]);
     setCart([]);
     setTendered('');
     setPaymentOpen(false);
@@ -253,22 +287,31 @@ export function CashierPosPage() {
               <strong>{formatMoney(subtotal)}</strong>
             </div>
             <div>
-              <span>Discount</span>
-              <button
-                type="button"
-                className="cashier-text-button"
-                onClick={() =>
-                  setNotice(
-                    'Discount controls will be connected after discount rules are confirmed.',
-                  )
-                }
-              >
-                Add discount
-              </button>
+              <span>Discount (%)</span>
+              <label className="pos-discount-input">
+                <input
+                  aria-label="Discount percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={discountPercent}
+                  onChange={(event) =>
+                    setDiscountPercent(Math.min(100, Math.max(0, Number(event.target.value))))
+                  }
+                />
+                <span>%</span>
+              </label>
             </div>
+            {discount > 0 && (
+              <div>
+                <span>Discount applied</span>
+                <strong>−{formatMoney(discount)}</strong>
+              </div>
+            )}
             <div className="pos-order-grand-total">
               <span>Total due</span>
-              <strong>{formatMoney(subtotal)}</strong>
+              <strong>{formatMoney(totalDue)}</strong>
             </div>
           </div>
           <button
@@ -305,7 +348,7 @@ export function CashierPosPage() {
             <h2>Collect payment</h2>
             <div className="pos-payment-total">
               <span>Total due</span>
-              <strong>{formatMoney(subtotal)}</strong>
+              <strong>{formatMoney(totalDue)}</strong>
             </div>
             <label>
               Payment method
@@ -324,7 +367,7 @@ export function CashierPosPage() {
                   Amount received
                   <input
                     autoFocus
-                    min={subtotal}
+                    min={totalDue}
                     step="0.01"
                     type="number"
                     value={tendered}
@@ -342,7 +385,7 @@ export function CashierPosPage() {
             <button
               className="pos-checkout-button"
               type="submit"
-              disabled={paymentMethod === 'Cash' && Number(tendered) < subtotal}
+              disabled={paymentMethod === 'Cash' && Number(tendered) < totalDue}
             >
               Complete demo sale
             </button>
