@@ -41,6 +41,7 @@ export function BarcodeScannerInput({
   const [connection, setConnection] = useState<ScannerConnection>('checking');
   const [knownDevices, setKnownDevices] = useState<HidDevice[]>([]);
   const [isCheckingDevices, setIsCheckingDevices] = useState(false);
+  const [keyboardInputVerified, setKeyboardInputVerified] = useState(false);
   const [lastScan, setLastScan] = useState<{ length: number; time: string } | null>(null);
   const [testValue, setTestValue] = useState('');
   const [testResult, setTestResult] = useState('');
@@ -100,6 +101,7 @@ export function BarcodeScannerInput({
       await onScan(barcode);
       setValue('');
       setLastScan({ length: barcode.length, time: formatTime(new Date()) });
+      setKeyboardInputVerified(true);
     } catch {
       setError('Barcode lookup could not be completed. Try again or encode the product manually.');
     } finally {
@@ -116,6 +118,9 @@ export function BarcodeScannerInput({
 
     event.preventDefault();
     const scannedValue = testValue.trim();
+    if (scannedValue) {
+      setKeyboardInputVerified(true);
+    }
     setTestResult(
       scannedValue
         ? `Input received: ${scannedValue.length} characters at ${formatTime(new Date())}.`
@@ -135,14 +140,18 @@ export function BarcodeScannerInput({
     window.requestAnimationFrame(() => testInputRef.current?.focus());
   }
 
+  const scannerConnected = keyboardInputVerified || knownDevices.length > 0;
+
   return (
     <div className="barcode-scanner">
       <form className="barcode-scanner-input" onSubmit={handleSubmit}>
         <div className="barcode-scanner-input__label-row">
           <label htmlFor="barcode-scanner-input">Scan barcode</label>
-          <span className={`barcode-scanner-input__signal${isFocused ? ' is-active' : ''}`}>
+          <span
+            className={`barcode-scanner-input__signal${isFocused || scannerConnected ? ' is-active' : ''}`}
+          >
             <i aria-hidden="true" />
-            {isFocused ? 'Input ready' : 'Click to scan'}
+            {scannerConnected ? 'Connected' : isFocused ? 'Input ready' : 'Click to scan'}
           </span>
         </div>
         <div className="barcode-scanner-input__control">
@@ -213,6 +222,12 @@ export function BarcodeScannerInput({
             </button>
           </div>
           <div className="scanner-diagnostics__grid">
+            <div>
+              <span>Scanner status</span>
+              <strong className={scannerConnected ? 'is-ready' : ''}>
+                {scannerConnected ? 'Connected' : 'Not tested'}
+              </strong>
+            </div>
             <div>
               <span>Barcode input</span>
               <strong className={isFocused ? 'is-ready' : ''}>
