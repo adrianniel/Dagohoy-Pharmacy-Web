@@ -11,6 +11,7 @@ import { AdminPage } from './pages/admin/AdminPage';
 import { AdminRoute } from './routes/AdminRoute';
 import { OperationsPage } from './pages/admin/OperationsPage';
 import { RegisterPage } from './pages/cashier/RegisterPage';
+import { ExpensesPage } from './pages/admin/ExpensesPage';
 import { LandingPage } from './pages/LandingPage';
 
 export function App() {
@@ -38,6 +39,7 @@ export function App() {
             <Route path="stock" element={<OperationsPage section="stock" />} />
             <Route path="suppliers" element={<AdminPage section="suppliers" />} />
             <Route path="reports" element={<AdminPage section="reports" />} />
+            <Route path="expenses" element={<ExpensesPage />} />
             <Route path="staff" element={<AdminPage section="staff" />} />
             <Route path="settings" element={<AdminPage section="settings" />} />
           </Route>

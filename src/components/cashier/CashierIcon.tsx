@@ -91,6 +91,13 @@ export function CashierIcon({ name }: CashierIconProps) {
         <path d="M5 27V16h6v11M13 27V6h6v21M21 27V11h6v16" />
       </>
     ),
+    expenses: (
+      <>
+        <path d="M6 5h20v22H6zM10 10h12M10 15h12M10 20h5" />
+        <circle cx="22" cy="23" r="5" />
+        <path d="M22 20v6M20.5 21.5h2.2" />
+      </>
+    ),
     staff: (
       <>
         <circle cx="12" cy="11" r="5" />
