@@ -272,6 +272,40 @@
   align-items: center;
   gap: 1rem;
 }
+.cashier-store-status {
+  padding-right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-right: 1px solid var(--cashier-line);
+  color: #7b4b42;
+}
+.cashier-store-status > span {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #cf7565;
+  box-shadow: 0 0 0 3px rgb(207 117 101 / 12%);
+}
+.cashier-store-status.is-open {
+  color: #167356;
+}
+.cashier-store-status.is-open > span {
+  background: #20a362;
+  box-shadow: 0 0 0 3px rgb(32 163 98 / 12%);
+}
+.cashier-store-status div {
+  display: grid;
+  gap: 1px;
+}
+.cashier-store-status strong {
+  font-size: 0.67rem;
+}
+.cashier-store-status small {
+  color: #7b8881;
+  font-size: 0.57rem;
+}
 .cashier-header__date {
   padding-right: 1rem;
   display: flex;
@@ -2150,6 +2184,13 @@
   }
   .cashier-profile-menu__copy,
   .cashier-profile-menu__chevron {
+    display: none;
+  }
+  .cashier-store-status {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .cashier-store-status small {
     display: none;
   }
   .cashier-content {

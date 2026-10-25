@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
+import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
 
-const SESSION_KEY = 'dagohoy_demo_register_session';
 const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
 const SALES_KEY = 'dagohoy_demo_sales';
 type Session = { openedAt: string; openingFloat: number } | null;
@@ -24,7 +24,7 @@ const readJson = <T,>(key: string, fallback: T): T => {
 };
 
 export function RegisterPage() {
-  const [session, setSession] = useState<Session>(() => readJson(SESSION_KEY, null));
+  const [session, setSession] = useState<Session>(() => readJson(REGISTER_SESSION_KEY, null));
   const [events, setEvents] = useState<CashEvent[]>(() => readJson(CASH_EVENTS_KEY, []));
   const [sales] = useState<Sale[]>(() => readJson(SALES_KEY, []));
   const [mode, setMode] = useState<'open' | 'movement' | 'close' | null>(null);
@@ -57,13 +57,15 @@ export function RegisterPage() {
   function openSession(float: number) {
     const next = { openingFloat: float, openedAt: new Date().toISOString() };
     setSession(next);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+    localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(next));
+    notifyStoreStatusChange();
     setMode(null);
     setNotice('Demo register opened. No live drawer is connected.');
   }
   function closeSession(counted: number) {
     setSession(null);
-    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(REGISTER_SESSION_KEY);
+    notifyStoreStatusChange();
     setEvents([]);
     localStorage.removeItem(CASH_EVENTS_KEY);
     setMode(null);
