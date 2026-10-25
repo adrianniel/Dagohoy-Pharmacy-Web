@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { BarcodeScannerInput } from '../../components/BarcodeScannerInput';
+import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
@@ -28,8 +29,8 @@ export function CashierPosPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [tendered, setTendered] = useState('');
   const [creditCustomer, setCreditCustomer] = useState('');
-  const [notice, setNotice] = useState('');
   const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
+  const { showToast } = useToast();
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
@@ -51,15 +52,14 @@ export function CashierPosPage() {
 
   function addProduct(product: PosProduct) {
     if (product.stock !== undefined && product.stock < 1) {
-      setNotice(`${product.product} is out of stock.`);
+      showToast(`${product.product} is out of stock.`, 'error');
       return;
     }
-    setNotice('');
     setCart((current) => {
       const existing = current.find((line) => matchesCartLine(line.product, product));
       if (existing) {
         if (product.stock !== undefined && existing.quantity >= product.stock) {
-          setNotice(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`);
+          showToast(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`, 'error');
           return current;
         }
         return current.map((line) =>
@@ -75,12 +75,15 @@ export function CashierPosPage() {
   async function handleBarcodeScan(barcode: string) {
     const result = await lookupProductByBarcode(barcode);
     if (!result.found) {
-      setNotice(`Product not found for barcode ${barcode}. Encode the product before selling it.`);
+      showToast(
+        `Product not found for barcode ${barcode}. Encode the product before selling it.`,
+        'error',
+      );
       return;
     }
 
     if (result.product.sellingPrice === null) {
-      setNotice(`${result.product.name} has no current selling price configured.`);
+      showToast(`${result.product.name} has no current selling price configured.`, 'error');
       return;
     }
 
@@ -105,8 +108,9 @@ export function CashierPosPage() {
         const quantity = line.quantity + delta;
         if (quantity < 1) return [];
         if (line.product.stock !== undefined && quantity > line.product.stock) {
-          setNotice(
+          showToast(
             `Only ${line.product.stock} ${line.product.unit.toLowerCase()}s are available.`,
+            'error',
           );
           return [line];
         }
@@ -176,8 +180,10 @@ export function CashierPosPage() {
     setTendered('');
     setCreditCustomer('');
     setPaymentOpen(false);
-    setNotice(`Demo sale ${receipt} completed. No live sale was sent to the pharmacy server.`);
-    window.setTimeout(() => setNotice(''), 6000);
+    showToast(
+      `Demo sale ${receipt} completed. No live sale was sent to the pharmacy server.`,
+      'info',
+    );
   }
 
   return (
@@ -212,11 +218,6 @@ export function CashierPosPage() {
               </div>
             </label>
           </div>
-          {notice && (
-            <p className="pos-notice" role="status">
-              {notice}
-            </p>
-          )}
           {query.trim() ? (
             <div className="pos-search-results" aria-live="polite">
               <div className="pos-search-results__heading">
@@ -298,7 +299,7 @@ export function CashierPosPage() {
               disabled={!cart.length}
               onClick={() => {
                 setCart([]);
-                setNotice('Sale cleared.');
+                showToast('Sale cleared.', 'info');
               }}
             >
               Clear

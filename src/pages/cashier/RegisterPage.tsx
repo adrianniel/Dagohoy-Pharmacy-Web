@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
+import { useToast } from '../../components/toast';
 import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
 
 const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
@@ -28,7 +29,7 @@ export function RegisterPage() {
   const [events, setEvents] = useState<CashEvent[]>(() => readJson(CASH_EVENTS_KEY, []));
   const [sales] = useState<Sale[]>(() => readJson(SALES_KEY, []));
   const [mode, setMode] = useState<'open' | 'movement' | 'close' | null>(null);
-  const [notice, setNotice] = useState('');
+  const { showToast } = useToast();
   const cashSales = useMemo(
     () =>
       sales
@@ -52,7 +53,7 @@ export function RegisterPage() {
     setEvents(next);
     localStorage.setItem(CASH_EVENTS_KEY, JSON.stringify(next));
     setMode(null);
-    setNotice(`${event.type} recorded in the local demo register.`);
+    showToast(`${event.type} recorded in the local demo register.`);
   }
   function openSession(float: number) {
     const next = { openingFloat: float, openedAt: new Date().toISOString() };
@@ -60,7 +61,7 @@ export function RegisterPage() {
     localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(next));
     notifyStoreStatusChange();
     setMode(null);
-    setNotice('Demo register opened. No live drawer is connected.');
+    showToast('Demo register opened. No live drawer is connected.', 'info');
   }
   function closeSession(counted: number) {
     setSession(null);
@@ -69,7 +70,7 @@ export function RegisterPage() {
     setEvents([]);
     localStorage.removeItem(CASH_EVENTS_KEY);
     setMode(null);
-    setNotice(
+    showToast(
       `Demo register closed. Expected ${money(expected)} · counted ${money(counted)} · variance ${money(counted - expected)}.`,
     );
   }
@@ -103,11 +104,6 @@ export function RegisterPage() {
       <div className="operations-demo-banner">
         Demo register · cash activity and reconciliation are stored in this browser only.
       </div>
-      {notice && (
-        <p className="pos-notice" role="status">
-          {notice}
-        </p>
-      )}
       <div className="register-state-card">
         <span className={`register-state-light${session ? ' is-open' : ''}`} />
         <div>

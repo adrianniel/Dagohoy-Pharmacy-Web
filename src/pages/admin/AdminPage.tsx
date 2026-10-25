@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { useToast } from '../../components/toast';
 import {
   getInventory,
   getLowStockThreshold,
@@ -54,7 +55,6 @@ function loadLocalValue<T>(key: string, fallback: T): T {
 
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
-  const [saved, setSaved] = useState(false);
   const [products, setProducts] = useState(getInventory);
   const [editing, setEditing] = useState<InventoryProduct | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -63,7 +63,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
   );
   const [teamList, setTeamList] = useState<TeamMember[]>(() => loadLocalList(STAFF_KEY, staff));
   const [directoryForm, setDirectoryForm] = useState<'supplier' | 'staff' | null>(null);
-  const [directoryNotice, setDirectoryNotice] = useState('');
+  const { showToast } = useToast();
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
@@ -218,6 +218,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 setProducts(next);
                 saveInventory(next);
                 setFormOpen(false);
+                showToast(`${product.product} saved in this browser.`);
                 return true;
               }}
             />
@@ -266,8 +267,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
                         className="cashier-view-button"
                         type="button"
                         onClick={() =>
-                          setDirectoryNotice(
+                          showToast(
                             `${supplier.name} · ${supplier.contact} · ${supplier.products} sample products`,
+                            'info',
                           )
                         }
                       >
@@ -279,14 +281,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
               </tbody>
             </table>
           </div>
-          {directoryNotice && (
-            <div className="directory-notice" role="status">
-              {directoryNotice}
-              <button type="button" onClick={() => setDirectoryNotice('')}>
-                Dismiss
-              </button>
-            </div>
-          )}
           <div className="cashier-table-footer">
             <span>{supplierList.length} supplier records</span>
             <span>Supplier records are local demo data.</span>
@@ -348,6 +342,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                             );
                             setTeamList(next);
                             localStorage.setItem(STAFF_KEY, JSON.stringify(next));
+                            showToast('Staff access updated in this browser.');
                           })()
                         }
                       >
@@ -411,17 +406,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
             type="button"
             onClick={() => {
               localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
-              setSaved(true);
-              window.setTimeout(() => setSaved(false), 2500);
+              showToast('Settings saved in this browser.');
             }}
           >
             Save changes
           </button>
-          {saved && (
-            <span className="save-confirmation" role="status">
-              Saved in this browser.
-            </span>
-          )}
         </section>
       )}
       {directoryForm && (
@@ -439,6 +428,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
               localStorage.setItem(STAFF_KEY, JSON.stringify(next));
             }
             setDirectoryForm(null);
+            showToast(
+              `${directoryForm === 'supplier' ? 'Supplier' : 'Staff invitation'} saved in this browser.`,
+            );
           }}
         />
       )}

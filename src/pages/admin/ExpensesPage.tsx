@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
+import { useToast } from '../../components/toast';
 
 type Expense = {
   id: string;
@@ -28,7 +29,7 @@ function readExpenses(): Expense[] {
 export function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>(readExpenses);
   const [formOpen, setFormOpen] = useState(false);
-  const [notice, setNotice] = useState('');
+  const { showToast } = useToast();
   const thisMonth = new Date().toISOString().slice(0, 7);
   const monthExpenses = useMemo(
     () => expenses.filter((expense) => expense.date.startsWith(thisMonth)),
@@ -41,7 +42,7 @@ export function ExpensesPage() {
     setExpenses(next);
     localStorage.setItem(EXPENSES_KEY, JSON.stringify(next));
     setFormOpen(false);
-    setNotice(`${expense.category} expense recorded in this browser.`);
+    showToast(`${expense.category} expense recorded in this browser.`);
   }
 
   return (
@@ -64,11 +65,6 @@ export function ExpensesPage() {
         Expense entries are saved in this browser only. They do not post to accounting, cash, or
         stock.
       </p>
-      {notice && (
-        <p className="pos-notice" role="status">
-          {notice}
-        </p>
-      )}
       <section className="cashier-summary-grid" aria-label="Expense summary">
         <ExpenseStat
           label="This month"

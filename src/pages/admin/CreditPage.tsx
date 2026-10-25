@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
+import { useToast } from '../../components/toast';
 
 type CreditSale = {
   receipt: string;
@@ -31,7 +32,7 @@ function readCreditSales(): CreditSale[] {
 export function CreditPage() {
   const [credits, setCredits] = useState<CreditSale[]>(readCreditSales);
   const [selectedCredit, setSelectedCredit] = useState<CreditSale | null>(null);
-  const [notice, setNotice] = useState('');
+  const { showToast } = useToast();
   const outstanding = useMemo(
     () => credits.reduce((total, credit) => total + Number(credit.creditBalance), 0),
     [credits],
@@ -54,7 +55,7 @@ export function CreditPage() {
       nextSales.filter((sale) => sale.payment === 'Credit' && Number(sale.creditBalance) > 0),
     );
     setSelectedCredit(null);
-    setNotice(`Payment of ${money(amount)} recorded for ${receipt}.`);
+    showToast(`Payment of ${money(amount)} recorded for ${receipt}.`);
   }
 
   return (
@@ -68,11 +69,6 @@ export function CreditPage() {
         Credit balances are saved in this browser only. They are not connected to live receivables
         or accounting.
       </p>
-      {notice && (
-        <p className="pos-notice" role="status">
-          {notice}
-        </p>
-      )}
       <section className="cashier-summary-grid" aria-label="Credit summary">
         <CreditStat
           label="Outstanding balance"

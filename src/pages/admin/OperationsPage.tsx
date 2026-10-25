@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { useToast } from '../../components/toast';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import {
   loadMovements,
@@ -81,7 +82,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
   const [movements, setMovements] = useState(loadMovements);
   const [modal, setModal] = useState<'purchase' | 'adjustment' | null>(null);
   const [receivingOrder, setReceivingOrder] = useState<PurchaseOrder | null>(null);
-  const [notice, setNotice] = useState('');
+  const { showToast } = useToast();
   const filteredBatches = useMemo(
     () =>
       batches.filter((batch) => {
@@ -140,7 +141,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
     setOrders(next);
     savePurchaseOrders(next);
     setModal(null);
-    setNotice(`${order.id} saved as a local demo order.`);
+    showToast(`${order.id} saved as a local demo order.`);
   }
 
   function receiveOrder(order: PurchaseOrder, lot: string, expiry: string) {
@@ -186,7 +187,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
     setOrders(nextOrders);
     savePurchaseOrders(nextOrders);
     setReceivingOrder(null);
-    setNotice(`${order.id} marked received. Demo stock updated locally.`);
+    showToast(`${order.id} marked received. Demo stock updated locally.`);
   }
 
   function saveAdjustment(movement: StockMovement, productBarcode: string) {
@@ -194,7 +195,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
     const product = inventory.find((item) => item.barcode === productBarcode);
     const newStock = (product?.stock ?? 0) + movement.change;
     if (!product || newStock < 0) {
-      setNotice('Adjustment cannot reduce available stock below zero.');
+      showToast('Adjustment cannot reduce available stock below zero.', 'error');
       return;
     }
     saveInventory(
@@ -208,7 +209,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
     setMovements(next);
     saveMovements(next);
     setModal(null);
-    setNotice('Stock adjustment saved to this browser.');
+    showToast('Stock adjustment saved to this browser.');
   }
 
   return (
@@ -240,11 +241,6 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
       <div className="operations-demo-banner">
         Demo inventory workspace · quantities and documents are stored in this browser only.
       </div>
-      {notice && (
-        <p className="pos-notice" role="status">
-          {notice}
-        </p>
-      )}
       {section === 'batches' && (
         <>
           <div className="cashier-summary-grid">
@@ -332,8 +328,9 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
                             type="button"
                             className="cashier-view-button"
                             onClick={() =>
-                              setNotice(
+                              showToast(
                                 `${batch.product} · lot ${batch.lot} · expires ${shortDate(batch.expiry)}`,
+                                'info',
                               )
                             }
                           >
