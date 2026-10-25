@@ -13,11 +13,31 @@
   color: var(--cashier-text);
   background: var(--cashier-page);
 }
+.cashier-skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.7rem;
+  left: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  transform: translateY(-180%);
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(8 62 42 / 18%);
+  color: var(--cashier-green-dark);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition: transform 150ms ease;
+}
+.cashier-skip-link:focus-visible {
+  transform: translateY(0);
+}
 .cashier-shell.is-sidebar-collapsed {
   --cashier-sidebar: 78px;
 }
 .cashier-workspace {
   min-width: 0;
+  min-height: 100dvh;
 }
 .cashier-icon {
   width: 20px;
@@ -211,6 +231,9 @@
 }
 
 .cashier-header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
   min-height: 76px;
   padding: 0.85rem clamp(1.25rem, 3vw, 2.25rem);
   display: flex;
@@ -218,7 +241,8 @@
   justify-content: space-between;
   gap: 1rem;
   border-bottom: 1px solid var(--cashier-line);
-  background: rgb(255 255 255 / 94%);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(14px);
 }
 .cashier-header__menu {
   width: 40px;
@@ -302,7 +326,11 @@
 }
 
 .cashier-content {
+  min-height: calc(100dvh - 76px);
   padding: clamp(1.25rem, 3vw, 2.25rem);
+  background:
+    radial-gradient(circle at 94% 0%, rgb(220 241 229 / 52%), transparent 26rem),
+    var(--cashier-page);
 }
 .cashier-page {
   width: min(100%, 1440px);

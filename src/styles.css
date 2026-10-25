@@ -28,6 +28,7 @@
 
 html {
   min-width: 320px;
+  color-scheme: light;
   scroll-behavior: smooth;
   scroll-padding-top: 6rem;
 }
@@ -37,10 +38,13 @@ body {
   margin: 0;
   background: var(--page);
   color: var(--ink);
+  line-height: 1.45;
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -56,9 +60,39 @@ a {
 }
 
 a:focus-visible,
-button:focus-visible {
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   outline: 3px solid #4d9c78;
   outline-offset: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Existing internal workspace surfaces */
