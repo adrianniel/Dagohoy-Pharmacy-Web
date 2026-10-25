@@ -27,6 +27,7 @@ export function CashierPosPage() {
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [tendered, setTendered] = useState('');
   const [notice, setNotice] = useState('');
+  const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
@@ -65,6 +66,7 @@ export function CashierPosPage() {
       return [...current, { product, quantity: 1 }];
     });
     setQuery('');
+    setExpandedProduct(null);
   }
 
   async function handleBarcodeScan(barcode: string) {
@@ -168,10 +170,16 @@ export function CashierPosPage() {
       <CashierPageHeader
         eyebrow="Checkout workspace"
         title="Point of Sale"
-        description="Scan a barcode or search the sample catalog to build a sale."
+        description="Scan a barcode or search for a product to build the current sale."
       />
       <div className="pos-layout">
-        <div className="pos-catalog-column">
+        <section className="cashier-panel pos-workbench">
+          <div className="cashier-panel__heading">
+            <div>
+              <h3>Scan or find a product</h3>
+              <p>Use a barcode scanner or type a product name, generic name, or brand.</p>
+            </div>
+          </div>
           <div className="pos-input-panel pos-scan-panel">
             <BarcodeScannerInput onScan={handleBarcodeScan} autoFocus />
             <label className="pos-barcode-field pos-catalog-search">
@@ -179,10 +187,12 @@ export function CashierPosPage() {
               <div>
                 <CashierIcon name="search" />
                 <input
+                  name="product-search"
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search name, generic, brand"
+                  autoComplete="off"
+                  placeholder="Search name, generic, or brand…"
                 />
               </div>
             </label>
@@ -192,40 +202,72 @@ export function CashierPosPage() {
               {notice}
             </p>
           )}
-          <section className="cashier-panel pos-catalog-panel">
-            <div className="cashier-panel__heading">
-              <div>
-                <h3>Available products</h3>
-                <p>Sample catalog · stock availability is illustrative</p>
-              </div>
-              <span>{filteredProducts.length} items</span>
-            </div>
-            <div className="pos-product-grid">
-              {filteredProducts.map((product) => (
-                <button
-                  className="pos-product-card"
-                  key={product.barcode}
-                  type="button"
-                  onClick={() => addProduct(product)}
-                  disabled={product.stock < 1}
-                >
-                  <span className="pos-product-card__category">{product.unit}</span>
-                  <strong>{product.product}</strong>
-                  <small>{product.detail}</small>
-                  <span className="pos-product-card__bottom">
-                    <b>{product.price}</b>
-                    <small>
-                      {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                    </small>
-                  </span>
+          {query.trim() ? (
+            <div className="pos-search-results" aria-live="polite">
+              <div className="pos-search-results__heading">
+                <strong>{filteredProducts.length} matching products</strong>
+                <button type="button" onClick={() => setQuery('')}>
+                  Clear search
                 </button>
+              </div>
+              {filteredProducts.map((product) => (
+                <article className="pos-search-result" key={product.barcode}>
+                  <div className="pos-search-result__summary">
+                    <span>
+                      <strong>{product.product}</strong>
+                      <small>
+                        {product.detail} · {product.unit} · {product.barcode}
+                      </small>
+                    </span>
+                    <span>
+                      <b>{product.price}</b>
+                      <small>
+                        {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                      </small>
+                    </span>
+                  </div>
+                  <div className="pos-search-result__actions">
+                    <button
+                      className="pos-search-result__info"
+                      type="button"
+                      aria-expanded={expandedProduct?.barcode === product.barcode}
+                      onClick={() =>
+                        setExpandedProduct((current) =>
+                          current?.barcode === product.barcode ? null : product,
+                        )
+                      }
+                    >
+                      Info
+                    </button>
+                    <button
+                      className="pos-search-result__add"
+                      type="button"
+                      onClick={() => addProduct(product)}
+                      disabled={product.stock < 1}
+                    >
+                      {product.stock > 0 ? 'Add to sale' : 'Out of stock'}
+                    </button>
+                  </div>
+                  {expandedProduct?.barcode === product.barcode && (
+                    <p className="pos-search-result__details">
+                      Available stock: {product.stock} {product.unit.toLowerCase()}
+                      {product.stock === 1 ? '' : 's'} · Barcode: {product.barcode}
+                    </p>
+                  )}
+                </article>
               ))}
+              {filteredProducts.length === 0 && (
+                <p className="pos-empty-state">No products match this search.</p>
+              )}
             </div>
-            {filteredProducts.length === 0 && (
-              <p className="pos-empty-state">No products match your search.</p>
-            )}
-          </section>
-        </div>
+          ) : (
+            <div className="pos-workbench-empty">
+              <CashierIcon name="search" />
+              <strong>Ready for the next item</strong>
+              <span>Scan a barcode or start typing to show matching products.</span>
+            </div>
+          )}
+        </section>
         <aside className="cashier-panel pos-order-panel">
           <div className="cashier-panel__heading">
             <div>
