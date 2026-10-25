@@ -1154,6 +1154,11 @@
   gap: 0.75rem;
   border-radius: 13px;
 }
+.barcode-scanner {
+  min-width: 0;
+  display: grid;
+  gap: 0.45rem;
+}
 .barcode-scanner-input {
   min-width: 0;
   display: grid;
@@ -1161,6 +1166,34 @@
   color: #526158;
   font-size: 0.63rem;
   font-weight: 700;
+}
+.barcode-scanner-input__label-row,
+.barcode-scanner-input__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.barcode-scanner-input__signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #79877f;
+  font-size: 0.57rem;
+  font-weight: 650;
+}
+.barcode-scanner-input__signal i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a9b6ae;
+}
+.barcode-scanner-input__signal.is-active {
+  color: #167356;
+}
+.barcode-scanner-input__signal.is-active i {
+  background: #20a362;
+  box-shadow: 0 0 0 3px rgb(32 163 98 / 13%);
 }
 .barcode-scanner-input__control {
   min-height: 46px;
@@ -1181,7 +1214,6 @@
   min-width: 0;
   padding: 0.45rem 0.4rem;
   border: 0;
-  outline: 0;
   background: transparent;
   color: #27372f;
   font-size: 0.78rem;
@@ -1207,6 +1239,118 @@
   color: #7e8d84;
   font-size: 0.57rem;
   font-weight: 500;
+}
+.barcode-scanner__diagnostics-toggle,
+.scanner-diagnostics__actions button,
+.scanner-diagnostics__focus {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #167356;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+.barcode-scanner__diagnostics-toggle--secondary {
+  justify-self: start;
+  color: #63736a;
+}
+.scanner-diagnostics {
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid #d9e8de;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f7fbf8, #fff);
+}
+.scanner-diagnostics__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.scanner-diagnostics__heading p {
+  margin: 0 0 0.2rem;
+  color: #16804b;
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.scanner-diagnostics__heading h2 {
+  margin: 0;
+  color: #263b30;
+  font-size: 0.82rem;
+}
+.scanner-diagnostics__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.scanner-diagnostics__grid > div {
+  min-width: 0;
+  padding: 0.5rem;
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid #e2ece5;
+  border-radius: 6px;
+  background: #fff;
+}
+.scanner-diagnostics__grid span,
+.scanner-diagnostics__note,
+.scanner-diagnostics__result {
+  margin: 0;
+  color: #77867d;
+  font-size: 0.57rem;
+  line-height: 1.45;
+}
+.scanner-diagnostics__grid strong {
+  overflow: hidden;
+  color: #304438;
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scanner-diagnostics__grid strong.is-ready {
+  color: #167356;
+}
+.scanner-diagnostics__note {
+  max-width: 74ch;
+}
+.scanner-diagnostics__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.scanner-diagnostics__actions button:disabled {
+  cursor: wait;
+  color: #87958d;
+}
+.scanner-diagnostics__test-field {
+  display: grid;
+  gap: 0.3rem;
+  color: #506157;
+  font-size: 0.6rem;
+}
+.scanner-diagnostics__test-field input {
+  min-height: 37px;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #cdded3;
+  border-radius: 6px;
+  color: #263b30;
+  font-size: 0.68rem;
+}
+.scanner-diagnostics__result {
+  min-height: 0.9rem;
+  color: #167356;
+}
+@supports selector(:has(*)) {
+  .pos-scan-panel:has(.scanner-diagnostics) {
+    grid-template-columns: 1fr;
+  }
 }
 .pos-scan-panel .pos-barcode-field > div {
   min-height: 46px;
@@ -1957,6 +2101,9 @@
   }
   .pos-input-divider {
     display: none;
+  }
+  .scanner-diagnostics__grid {
+    grid-template-columns: 1fr;
   }
   .cashier-profile-grid {
     grid-template-columns: 1fr;
