@@ -1412,6 +1412,28 @@
 .expense-form {
   width: min(100% - 2rem, 480px);
 }
+.credit-panel .cashier-panel__heading > span {
+  color: #75837b;
+  font-size: 0.67rem;
+}
+.credit-payment-button {
+  min-height: 32px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #b9d9c4;
+  border-radius: 6px;
+  background: #fff;
+  color: #167356;
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.credit-payment-form {
+  width: min(100% - 2rem, 430px);
+}
+.pos-payment-change--credit strong {
+  color: #986516;
+}
 .scanner-diagnostics__grid strong {
   overflow: hidden;
   color: #304438;

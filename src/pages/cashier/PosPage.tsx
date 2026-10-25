@@ -13,6 +13,7 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   localProductUnitId?: number | null;
 };
 type CartLine = { product: PosProduct; quantity: number };
+type PaymentMethod = 'Cash' | 'GCash' | 'Card' | 'Credit';
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -24,8 +25,9 @@ export function CashierPosPage() {
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountPercent, setDiscountPercent] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [tendered, setTendered] = useState('');
+  const [creditCustomer, setCreditCustomer] = useState('');
   const [notice, setNotice] = useState('');
   const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
   const subtotal = cart.reduce(
@@ -45,6 +47,7 @@ export function CashierPosPage() {
     [products, query],
   );
   const change = Math.max(0, Number(tendered) - totalDue);
+  const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
 
   function addProduct(product: PosProduct) {
     if (product.stock !== undefined && product.stock < 1) {
@@ -115,6 +118,12 @@ export function CashierPosPage() {
   function completeSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (paymentMethod === 'Cash' && Number(tendered) < totalDue) return;
+    if (
+      paymentMethod === 'Credit' &&
+      (!creditCustomer.trim() || Number(tendered) < 0 || Number(tendered) > totalDue)
+    ) {
+      return;
+    }
     const sales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Array<
       Record<string, unknown>
     >;
@@ -133,7 +142,12 @@ export function CashierPosPage() {
         unitPrice: toAmount(line.product.price),
       })),
       payment: paymentMethod,
-      status: 'Completed',
+      customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
+      amountPaid:
+        paymentMethod === 'Cash' || paymentMethod === 'Credit' ? Number(tendered || 0) : totalDue,
+      change: paymentMethod === 'Cash' ? change : 0,
+      creditBalance: paymentMethod === 'Credit' ? creditBalance : 0,
+      status: paymentMethod === 'Credit' && creditBalance > 0 ? 'Credit' : 'Completed',
     });
     localStorage.setItem(SALES_KEY, JSON.stringify(sales));
     const inventory = getInventory();
@@ -160,6 +174,7 @@ export function CashierPosPage() {
     ]);
     setCart([]);
     setTendered('');
+    setCreditCustomer('');
     setPaymentOpen(false);
     setNotice(`Demo sale ${receipt} completed. No live sale was sent to the pharmacy server.`);
     window.setTimeout(() => setNotice(''), 6000);
@@ -401,11 +416,16 @@ export function CashierPosPage() {
               Payment method
               <select
                 value={paymentMethod}
-                onChange={(event) => setPaymentMethod(event.target.value)}
+                onChange={(event) => {
+                  const nextMethod = event.target.value as PaymentMethod;
+                  setPaymentMethod(nextMethod);
+                  setTendered(nextMethod === 'Credit' ? '0' : '');
+                }}
               >
                 <option>Cash</option>
                 <option>GCash</option>
                 <option>Card</option>
+                <option>Credit</option>
               </select>
             </label>
             {paymentMethod === 'Cash' && (
@@ -429,10 +449,49 @@ export function CashierPosPage() {
                 </div>
               </>
             )}
+            {paymentMethod === 'Credit' && (
+              <>
+                <label>
+                  Customer name
+                  <input
+                    name="credit-customer"
+                    value={creditCustomer}
+                    onChange={(event) => setCreditCustomer(event.target.value)}
+                    autoComplete="name"
+                    placeholder="Customer name…"
+                    required
+                    autoFocus
+                  />
+                </label>
+                <label>
+                  Amount paid
+                  <input
+                    name="credit-amount-paid"
+                    min="0"
+                    max={totalDue}
+                    step="0.01"
+                    type="number"
+                    value={tendered}
+                    onChange={(event) => setTendered(event.target.value)}
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    required
+                  />
+                </label>
+                <div className="pos-payment-change pos-payment-change--credit">
+                  <span>Remaining balance</span>
+                  <strong>{formatMoney(creditBalance)}</strong>
+                </div>
+              </>
+            )}
             <button
               className="pos-checkout-button"
               type="submit"
-              disabled={paymentMethod === 'Cash' && Number(tendered) < totalDue}
+              disabled={
+                (paymentMethod === 'Cash' && Number(tendered) < totalDue) ||
+                (paymentMethod === 'Credit' &&
+                  (!creditCustomer.trim() || Number(tendered) < 0 || Number(tendered) > totalDue))
+              }
             >
               Complete demo sale
             </button>

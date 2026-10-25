@@ -11,6 +11,7 @@ export type CashierIconName =
   | 'suppliers'
   | 'reports'
   | 'expenses'
+  | 'credit'
   | 'staff'
   | 'settings'
   | 'batches'

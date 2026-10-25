@@ -44,6 +44,7 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
     items: [
       { label: 'Transactions', path: '/cashier/transactions', icon: 'transactions' },
       { label: 'Expenses', path: '/admin/expenses', icon: 'expenses' },
+      { label: 'Credit accounts', path: '/admin/credits', icon: 'credit' },
       { label: 'Reports', path: '/admin/reports', icon: 'reports' },
       { label: 'Staff', path: '/admin/staff', icon: 'staff' },
     ],

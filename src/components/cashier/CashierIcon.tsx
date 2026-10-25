@@ -98,6 +98,13 @@ export function CashierIcon({ name }: CashierIconProps) {
         <path d="M22 20v6M20.5 21.5h2.2" />
       </>
     ),
+    credit: (
+      <>
+        <rect x="4" y="7" width="24" height="18" rx="3" />
+        <path d="M4 13h24M9 20h5" />
+        <path d="M23 4v6M20 7h6" />
+      </>
+    ),
     staff: (
       <>
         <circle cx="12" cy="11" r="5" />

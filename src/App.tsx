@@ -12,6 +12,7 @@ import { AdminRoute } from './routes/AdminRoute';
 import { OperationsPage } from './pages/admin/OperationsPage';
 import { RegisterPage } from './pages/cashier/RegisterPage';
 import { ExpensesPage } from './pages/admin/ExpensesPage';
+import { CreditPage } from './pages/admin/CreditPage';
 import { LandingPage } from './pages/LandingPage';
 
 export function App() {
@@ -40,6 +41,7 @@ export function App() {
             <Route path="suppliers" element={<AdminPage section="suppliers" />} />
             <Route path="reports" element={<AdminPage section="reports" />} />
             <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="credits" element={<CreditPage />} />
             <Route path="staff" element={<AdminPage section="staff" />} />
             <Route path="settings" element={<AdminPage section="settings" />} />
           </Route>
