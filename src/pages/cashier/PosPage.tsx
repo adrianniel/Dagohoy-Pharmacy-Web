@@ -1,11 +1,14 @@
-import { FormEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
+import { BarcodeScannerInput } from '../../components/BarcodeScannerInput';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
+import { lookupProductByBarcode } from '../../services/productsApi';
 
-type Product = ReturnType<typeof getInventory>[number];
-type CartLine = { product: Product; quantity: number };
+type CatalogProduct = ReturnType<typeof getInventory>[number];
+type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & { stock?: number };
+type CartLine = { product: PosProduct; quantity: number };
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -14,14 +17,12 @@ const SALES_KEY = 'dagohoy_demo_sales';
 export function CashierPosPage() {
   const [products] = useState(getInventory);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [barcode, setBarcode] = useState('');
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountPercent, setDiscountPercent] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [tendered, setTendered] = useState('');
   const [notice, setNotice] = useState('');
-  const barcodeRef = useRef<HTMLInputElement>(null);
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
@@ -40,8 +41,8 @@ export function CashierPosPage() {
   );
   const change = Math.max(0, Number(tendered) - totalDue);
 
-  function addProduct(product: Product) {
-    if (product.stock < 1) {
+  function addProduct(product: PosProduct) {
+    if (product.stock !== undefined && product.stock < 1) {
       setNotice(`${product.product} is out of stock.`);
       return;
     }
@@ -49,7 +50,7 @@ export function CashierPosPage() {
     setCart((current) => {
       const existing = current.find((line) => line.product.barcode === product.barcode);
       if (existing) {
-        if (existing.quantity >= product.stock) {
+        if (product.stock !== undefined && existing.quantity >= product.stock) {
           setNotice(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`);
           return current;
         }
@@ -61,16 +62,31 @@ export function CashierPosPage() {
       }
       return [...current, { product, quantity: 1 }];
     });
-    setBarcode('');
     setQuery('');
-    barcodeRef.current?.focus();
   }
 
-  function handleBarcode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const product = products.find((item) => item.barcode === barcode.trim());
-    if (product) addProduct(product);
-    else setNotice('No matching product found. Check the barcode or use product search.');
+  async function handleBarcodeScan(barcode: string) {
+    const result = await lookupProductByBarcode(barcode);
+    if (!result.found) {
+      setNotice(`Product not found for barcode ${barcode}. Encode the product before selling it.`);
+      return;
+    }
+
+    if (result.product.sellingPrice === null) {
+      setNotice(`${result.product.name} has no current selling price configured.`);
+      return;
+    }
+
+    const detail = [result.product.genericName, result.product.brand, result.product.strength]
+      .filter((value, index, values) => Boolean(value) && values.indexOf(value) === index)
+      .join(' · ');
+    addProduct({
+      barcode: result.product.barcode,
+      product: result.product.name,
+      detail,
+      unit: result.product.productUnit?.name ?? 'Unconfigured unit',
+      price: formatMoney(result.product.sellingPrice),
+    });
   }
 
   function changeQuantity(barcodeValue: string, delta: number) {
@@ -79,7 +95,7 @@ export function CashierPosPage() {
         if (line.product.barcode !== barcodeValue) return [line];
         const quantity = line.quantity + delta;
         if (quantity < 1) return [];
-        if (quantity > line.product.stock) {
+        if (line.product.stock !== undefined && quantity > line.product.stock) {
           setNotice(
             `Only ${line.product.stock} ${line.product.unit.toLowerCase()}s are available.`,
           );
@@ -152,23 +168,8 @@ export function CashierPosPage() {
       />
       <div className="pos-layout">
         <div className="pos-catalog-column">
-          <form className="pos-input-panel pos-scan-panel" onSubmit={handleBarcode}>
-            <label className="pos-barcode-field">
-              <span>Scan barcode</span>
-              <div>
-                <CashierIcon name="pos" />
-                <input
-                  ref={barcodeRef}
-                  autoFocus
-                  value={barcode}
-                  onChange={(event) => setBarcode(event.target.value)}
-                  placeholder="Scan or type a barcode"
-                />
-                <button type="submit" aria-label="Add barcode">
-                  ↵
-                </button>
-              </div>
-            </label>
+          <div className="pos-input-panel pos-scan-panel">
+            <BarcodeScannerInput onScan={handleBarcodeScan} autoFocus />
             <label className="pos-barcode-field pos-catalog-search">
               <span>Find a product</span>
               <div>
@@ -181,7 +182,7 @@ export function CashierPosPage() {
                 />
               </div>
             </label>
-          </form>
+          </div>
           {notice && (
             <p className="pos-notice" role="status">
               {notice}

@@ -1154,6 +1154,60 @@
   gap: 0.75rem;
   border-radius: 13px;
 }
+.barcode-scanner-input {
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+  color: #526158;
+  font-size: 0.63rem;
+  font-weight: 700;
+}
+.barcode-scanner-input__control {
+  min-height: 46px;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #74b28c;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(22 128 75 / 7%);
+}
+.barcode-scanner-input__control:focus-within {
+  border-color: #167356;
+  box-shadow: 0 0 0 3px rgb(22 128 75 / 14%);
+}
+.barcode-scanner-input__control input {
+  min-width: 0;
+  padding: 0.45rem 0.4rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #27372f;
+  font-size: 0.78rem;
+}
+.barcode-scanner-input__control button {
+  min-width: 66px;
+  min-height: 34px;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: #e8f4ed;
+  color: #167356;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 750;
+}
+.barcode-scanner-input__control button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.barcode-scanner-input__status {
+  min-height: 0.9rem;
+  color: #7e8d84;
+  font-size: 0.57rem;
+  font-weight: 500;
+}
 .pos-scan-panel .pos-barcode-field > div {
   min-height: 46px;
   border-color: #dce5df;
