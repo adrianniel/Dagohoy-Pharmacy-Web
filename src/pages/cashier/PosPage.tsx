@@ -59,9 +59,7 @@ export function CashierPosPage() {
           return current;
         }
         return current.map((line) =>
-          line.product.barcode === product.barcode
-            ? { ...line, quantity: line.quantity + 1 }
-            : line,
+          matchesCartLine(line.product, product) ? { ...line, quantity: line.quantity + 1 } : line,
         );
       }
       return [...current, { product, quantity: 1 }];
