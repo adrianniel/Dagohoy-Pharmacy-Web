@@ -16,7 +16,7 @@ export function LandingNav() {
           <span className="login-icon" aria-hidden="true">
             {'\u25CF'}
           </span>{' '}
-          Login
+          Staff login
         </Link>
       </nav>
     </header>

@@ -191,6 +191,24 @@
   transform: translateY(-2px);
   background: linear-gradient(135deg, #329454, #237849);
 }
+.landing-operations-strip {
+  margin-top: 1.65rem;
+  padding-top: 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-faint);
+  font-size: 0.68rem;
+}
+.landing-operations-strip span {
+  display: inline-flex;
+  gap: 0.32rem;
+}
+.landing-operations-strip b {
+  color: #a5e5b7;
+  font-weight: 750;
+}
 
 .landing-hero__visual {
   width: 100%;

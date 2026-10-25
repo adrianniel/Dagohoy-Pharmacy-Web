@@ -16,7 +16,7 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__copy">
         <p className="landing-hero__eyebrow">
-          <span className="hero-eyebrow-dot" /> Trusted care. Modern solutions.
+          <span className="hero-eyebrow-dot" /> Internal pharmacy operations platform
         </p>
         <h1 id="landing-title">
           <span>Dagohoy</span>
@@ -24,16 +24,15 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
         </h1>
         <p className="landing-hero__subtitle">POS &amp; Inventory Management System</p>
         <p className="landing-hero__description">
-          Faster transactions. Accurate inventory.
-          <br />
-          Better pharmacy operations.
+          A focused workspace for sales, stock control, batch expiry, purchasing, and cash
+          management—built for the people running Dagohoy Pharmacy every day.
         </p>
         <div className="hero-actions">
           <Link className="action-link" to="/login">
             <span className="action-icon action-icon--arrow" aria-hidden="true">
               ↗
             </span>{' '}
-            Enter System
+            Staff login
           </Link>
           <a className="action-link action-link--outline" href="#features">
             <span className="action-icon action-icon--bars" aria-hidden="true">
@@ -41,8 +40,19 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
               <i />
               <i />
             </span>{' '}
-            Explore Features
+            See capabilities
           </a>
+        </div>
+        <div className="landing-operations-strip" aria-label="System capabilities">
+          <span>
+            <b>POS</b> Barcode-ready checkout
+          </span>
+          <span>
+            <b>Stock</b> Batch &amp; expiry tracking
+          </span>
+          <span>
+            <b>Control</b> Cash drawer reconciliation
+          </span>
         </div>
         <PharmacySnapshot status={status} staff={staff} hours={hours} />
       </div>

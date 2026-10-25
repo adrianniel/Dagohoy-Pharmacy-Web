@@ -11,11 +11,12 @@ import { AdminPage } from './pages/admin/AdminPage';
 import { AdminRoute } from './routes/AdminRoute';
 import { OperationsPage } from './pages/admin/OperationsPage';
 import { RegisterPage } from './pages/cashier/RegisterPage';
+import { LandingPage } from './pages/LandingPage';
 
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/cashier" element={<CashierLayout />}>
