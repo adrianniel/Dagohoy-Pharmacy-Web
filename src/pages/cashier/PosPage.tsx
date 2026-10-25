@@ -7,7 +7,11 @@ import { loadMovements, saveMovements } from '../../data/operationsStore';
 import { lookupProductByBarcode } from '../../services/productsApi';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
-type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & { stock?: number };
+type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
+  stock?: number;
+  localProductId?: number;
+  localProductUnitId?: number | null;
+};
 type CartLine = { product: PosProduct; quantity: number };
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
@@ -48,7 +52,7 @@ export function CashierPosPage() {
     }
     setNotice('');
     setCart((current) => {
-      const existing = current.find((line) => line.product.barcode === product.barcode);
+      const existing = current.find((line) => matchesCartLine(line.product, product));
       if (existing) {
         if (product.stock !== undefined && existing.quantity >= product.stock) {
           setNotice(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`);
@@ -86,6 +90,8 @@ export function CashierPosPage() {
       detail,
       unit: result.product.productUnit?.name ?? 'Unconfigured unit',
       price: formatMoney(result.product.sellingPrice),
+      localProductId: result.product.id,
+      localProductUnitId: result.product.productUnit?.id ?? null,
     });
   }
 
@@ -396,4 +402,14 @@ export function CashierPosPage() {
       )}
     </div>
   );
+}
+
+function matchesCartLine(left: PosProduct, right: PosProduct): boolean {
+  if (left.localProductId !== undefined && right.localProductId !== undefined) {
+    return (
+      left.localProductId === right.localProductId &&
+      left.localProductUnitId === right.localProductUnitId
+    );
+  }
+  return left.barcode === right.barcode;
 }
