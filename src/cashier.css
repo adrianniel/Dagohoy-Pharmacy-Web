@@ -537,7 +537,7 @@
 }
 
 .cashier-search-field {
-  min-height: 42px;
+  min-height: 46px;
   padding: 0 0.75rem;
   display: flex;
   align-items: center;
@@ -560,11 +560,11 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--cashier-text);
-  font-size: 0.72rem;
+  color: #28533f;
+  font-size: 0.84rem;
 }
 .cashier-search-field input::placeholder {
-  color: #99a39d;
+  color: #698173;
 }
 .cashier-search-field--wide {
   width: min(100%, 460px);
@@ -1028,15 +1028,17 @@
 .settings-form label {
   display: grid;
   gap: 0.45rem;
-  color: #526158;
-  font-size: 0.72rem;
+  color: #456353;
+  font-size: 0.8rem;
 }
 .settings-form input {
   min-height: 42px;
   padding: 0.6rem 0.7rem;
   border: 1px solid #dce5df;
   border-radius: 8px;
-  color: #293a31;
+  background: #fbfefc;
+  color: #28533f;
+  font-size: 0.9rem;
 }
 .settings-form .cashier-primary-action {
   width: fit-content;
@@ -1925,8 +1927,8 @@
   margin-top: 0.9rem;
   display: grid;
   gap: 0.4rem;
-  color: #56665c;
-  font-size: 0.7rem;
+  color: #456353;
+  font-size: 0.8rem;
 }
 .pos-payment-modal input,
 .pos-payment-modal select {
@@ -1934,8 +1936,9 @@
   padding: 0.65rem 0.75rem;
   border: 1px solid #dce5df;
   border-radius: 8px;
-  background: #fff;
-  color: #27372f;
+  background: #fbfefc;
+  color: #28533f;
+  font-size: 0.9rem;
 }
 .pos-payment-total,
 .pos-payment-change {
@@ -1996,8 +1999,8 @@
   margin-top: 0.9rem;
   display: grid;
   gap: 0.4rem;
-  color: #56665c;
-  font-size: 0.7rem;
+  color: #456353;
+  font-size: 0.8rem;
 }
 .cashier-filter-button select {
   border: 0;
@@ -2020,10 +2023,10 @@
   padding: 0.55rem 0.7rem;
   border: 1px solid #d8e0da;
   border-radius: 8px;
-  background: #fff;
-  color: #536159;
+  background: #fbfefc;
+  color: #28533f;
   font: inherit;
-  font-size: 0.67rem;
+  font-size: 0.84rem;
 }
 .expiry-count {
   padding: 0.28rem 0.46rem;
