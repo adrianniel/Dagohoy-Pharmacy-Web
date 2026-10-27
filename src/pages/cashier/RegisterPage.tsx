@@ -2,10 +2,12 @@ import { FormEvent, useMemo, useState } from 'react';
 import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { useToast } from '../../components/toast';
 import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
+import { adminProfile, cashierProfile } from '../../data/cashierMockData';
+import { USER_ROLE_KEY } from '../../constants/app';
 
 const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
 const SALES_KEY = 'dagohoy_demo_sales';
-type Session = { openedAt: string; openingFloat: number } | null;
+type Session = { openedAt: string; openingFloat: number; cashierName?: string } | null;
 type CashEvent = {
   id: string;
   type: 'Paid in' | 'Paid out';
@@ -29,6 +31,8 @@ export function RegisterPage() {
   const [events, setEvents] = useState<CashEvent[]>(() => readJson(CASH_EVENTS_KEY, []));
   const [sales] = useState<Sale[]>(() => readJson(SALES_KEY, []));
   const [mode, setMode] = useState<'open' | 'movement' | 'close' | null>(null);
+  const currentProfile =
+    localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
   const { showToast } = useToast();
   const cashSales = useMemo(
     () =>
@@ -55,8 +59,8 @@ export function RegisterPage() {
     setMode(null);
     showToast(`${event.type} recorded in the local demo register.`);
   }
-  function openSession(float: number) {
-    const next = { openingFloat: float, openedAt: new Date().toISOString() };
+  function openSession(float: number, cashierName: string) {
+    const next = { openingFloat: float, openedAt: new Date().toISOString(), cashierName };
     setSession(next);
     localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(next));
     notifyStoreStatusChange();
@@ -110,7 +114,7 @@ export function RegisterPage() {
           <strong>{session ? 'Register open' : 'Register closed'}</strong>
           <span>
             {session
-              ? `Opened ${new Date(session.openedAt).toLocaleString('en-PH')}`
+              ? `Opened by ${session.cashierName || 'Cashier'} · ${new Date(session.openedAt).toLocaleString('en-PH')}`
               : 'Open the register to begin a shift.'}
           </span>
         </div>
@@ -177,6 +181,7 @@ export function RegisterPage() {
         <RegisterModal
           mode={mode}
           expected={expected}
+          defaultCashierName={currentProfile.name}
           onClose={() => setMode(null)}
           onOpen={openSession}
           onEvent={saveEvent}
@@ -200,6 +205,7 @@ function RegisterStat({ label, value }: { label: string; value: string }) {
 function RegisterModal({
   mode,
   expected,
+  defaultCashierName,
   onClose,
   onOpen,
   onEvent,
@@ -207,18 +213,20 @@ function RegisterModal({
 }: {
   mode: 'open' | 'movement' | 'close';
   expected: number;
+  defaultCashierName: string;
   onClose: () => void;
-  onOpen: (float: number) => void;
+  onOpen: (float: number, cashierName: string) => void;
   onEvent: (event: CashEvent) => void;
   onCloseSession: (counted: number) => void;
 }) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'Paid in' | 'Paid out'>('Paid out');
   const [reason, setReason] = useState('');
+  const [cashierName, setCashierName] = useState(defaultCashierName);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = Number(amount);
-    if (mode === 'open') onOpen(value);
+    if (mode === 'open') onOpen(value, cashierName.trim());
     else if (mode === 'close') onCloseSession(value);
     else
       onEvent({
@@ -254,6 +262,18 @@ function RegisterModal({
             <strong>{money(expected)}</strong>
           </div>
         )}
+        {mode === 'open' && (
+          <label>
+            Cashier opening this register
+            <input
+              required
+              autoFocus
+              value={cashierName}
+              onChange={(event) => setCashierName(event.target.value)}
+              placeholder="Enter cashier name"
+            />
+          </label>
+        )}
         {mode === 'movement' && (
           <label>
             Movement type
@@ -281,7 +301,7 @@ function RegisterModal({
             min="0"
             step="0.01"
             required
-            autoFocus
+            autoFocus={mode !== 'open'}
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             placeholder="0.00"

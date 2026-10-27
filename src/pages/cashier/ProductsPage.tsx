@@ -11,7 +11,10 @@ import {
   stockStatus,
 } from '../../data/inventoryStore';
 import { loadBatches, loadMovements, saveBatches, saveMovements } from '../../data/operationsStore';
-import { suggestProductCategories } from '../../services/productsApi';
+import { lookupProductByBarcode, suggestProductCategories } from '../../services/productsApi';
+
+const formatPrice = (value: number | null) =>
+  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value ?? 0);
 
 export function CashierProductsPage() {
   const [query, setQuery] = useState('');
@@ -85,8 +88,54 @@ export function CashierProductsPage() {
     return [...groups.entries()].sort(([first], [second]) => first.localeCompare(second));
   }, [products]);
 
-  function selectScannedProduct(barcode: string) {
-    const product = catalog.find((item) => item.barcode === barcode);
+  function selectProductForReceiving(product: InventoryProduct) {
+    setSelectedProduct(product);
+    setReceivedQuantity('1');
+    setExpiryDate('');
+    showToast(`${product.product} selected for stock receiving.`, 'info');
+  }
+
+  async function selectScannedProduct(barcode: string) {
+    let product = catalog.find((item) => item.barcode === barcode);
+    try {
+      const result = await lookupProductByBarcode(barcode);
+      if (result.found) {
+        const details = [result.product.genericName, result.product.brand, result.product.strength]
+          .filter((value, index, values) => Boolean(value) && values.indexOf(value) === index)
+          .join(' · ');
+        const known = getInventory().find((item) => item.barcode === barcode);
+        product = {
+          ...(known ?? {
+            barcode: result.product.barcode,
+            product: result.product.name,
+            detail: details || result.product.dosageForm || 'Product details from pharmacy catalog',
+            unit: result.product.productUnit?.name ?? 'Unconfigured unit',
+            price: formatPrice(result.product.sellingPrice),
+            stock: 0,
+            status: stockStatus(0),
+          }),
+          product: result.product.name,
+          detail:
+            details ||
+            known?.detail ||
+            result.product.dosageForm ||
+            'Product details from pharmacy catalog',
+          unit: result.product.productUnit?.name ?? known?.unit ?? 'Unconfigured unit',
+          price:
+            result.product.sellingPrice === null
+              ? (known?.price ?? formatPrice(null))
+              : formatPrice(result.product.sellingPrice),
+        };
+        const inventory = getInventory();
+        const next = known
+          ? inventory.map((item) => (item.barcode === barcode ? product! : item))
+          : [...inventory, product];
+        saveInventory(next);
+        setCatalog(next);
+      }
+    } catch {
+      // Keep receiving available for locally saved products when the server is offline.
+    }
     if (!product) {
       showToast(
         `Barcode ${barcode} is not in the catalog. Ask an owner to encode the product first.`,
@@ -94,10 +143,7 @@ export function CashierProductsPage() {
       );
       return;
     }
-    setSelectedProduct(product);
-    setReceivedQuantity('1');
-    setExpiryDate('');
-    showToast(`${product.product} selected for stock receiving.`, 'info');
+    selectProductForReceiving(product);
   }
 
   function receiveStock() {
@@ -165,8 +211,11 @@ export function CashierProductsPage() {
       <section className="cashier-panel product-receiving-panel">
         <div className="cashier-panel__heading">
           <div>
-            <h3>Receive stock by scanner</h3>
-            <p>Scan a catalog product, enter the delivered quantity, then confirm receipt.</p>
+            <h3>Receive stock</h3>
+            <p>
+              Scan a barcode for fast lookup, or select a product manually. Details fill in
+              automatically when the barcode is recognized.
+            </p>
           </div>
           <span className="product-ai-status">
             {isOrganizing ? 'Organizing categories…' : categoryStatus}
@@ -176,13 +225,34 @@ export function CashierProductsPage() {
           onScan={selectScannedProduct}
           placeholder="Scan supplied product barcode…"
         />
+        <div className="product-manual-select">
+          <label htmlFor="manual-receive-product">Or select a product manually</label>
+          <select
+            id="manual-receive-product"
+            value={selectedProduct?.barcode ?? ''}
+            onChange={(event) => {
+              const product = catalog.find((item) => item.barcode === event.target.value);
+              if (product) selectProductForReceiving(product);
+            }}
+          >
+            <option value="">Choose a product…</option>
+            {catalog.map((product) => (
+              <option value={product.barcode} key={product.barcode}>
+                {product.product} · {product.barcode}
+              </option>
+            ))}
+          </select>
+        </div>
         {selectedProduct && (
           <div className="product-receive-confirm">
             <div>
               <strong>{selectedProduct.product}</strong>
               <span>
-                {selectedProduct.category ?? 'Uncategorized'} · Current stock{' '}
-                {selectedProduct.stock}
+                Barcode {selectedProduct.barcode} · {selectedProduct.category ?? 'Uncategorized'}
+              </span>
+              <span>
+                {selectedProduct.detail} · {selectedProduct.unit} · {selectedProduct.price} ·
+                Current stock {selectedProduct.stock}
               </span>
             </div>
             <label>
