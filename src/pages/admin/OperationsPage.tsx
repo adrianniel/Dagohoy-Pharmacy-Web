@@ -299,6 +299,7 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
                     <th>Product</th>
                     <th>Lot / batch</th>
                     <th>Expiry date</th>
+                    <th>Batch date</th>
                     <th>Days remaining</th>
                     <th>Quantity</th>
                     <th>Action</th>
@@ -315,6 +316,14 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
                         </td>
                         <td className="cashier-mono">{batch.lot}</td>
                         <td>{shortDate(batch.expiry)}</td>
+                        <td>
+                          {batch.receivedAt
+                            ? new Intl.DateTimeFormat('en-PH', {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              }).format(new Date(batch.receivedAt))
+                            : '—'}
+                        </td>
                         <td>
                           <span
                             className={`expiry-count${days <= 30 ? ' is-urgent' : days <= 90 ? ' is-warning' : ''}`}
@@ -344,8 +353,8 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
               </table>
             </div>
             <div className="cashier-table-footer">
-              <span>Sample batch records</span>
-              <span>Live lot-level data is not connected.</span>
+              <span>{batches.length} batch records</span>
+              <span>Batch dates are recorded when stock is received.</span>
             </div>
           </section>
         </>

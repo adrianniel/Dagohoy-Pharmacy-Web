@@ -10,7 +10,7 @@ import {
   saveInventory,
   stockStatus,
 } from '../../data/inventoryStore';
-import { loadMovements, saveMovements } from '../../data/operationsStore';
+import { loadBatches, loadMovements, saveBatches, saveMovements } from '../../data/operationsStore';
 import { suggestProductCategories } from '../../services/productsApi';
 
 export function CashierProductsPage() {
@@ -19,6 +19,7 @@ export function CashierProductsPage() {
   const [catalog, setCatalog] = useState(getInventory);
   const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
   const [receivedQuantity, setReceivedQuantity] = useState('1');
+  const [expiryDate, setExpiryDate] = useState('');
   const [isOrganizing, setIsOrganizing] = useState(false);
   const [categoryStatus, setCategoryStatus] = useState('Checking product categories…');
   const { showToast } = useToast();
@@ -95,6 +96,7 @@ export function CashierProductsPage() {
     }
     setSelectedProduct(product);
     setReceivedQuantity('1');
+    setExpiryDate('');
     showToast(`${product.product} selected for stock receiving.`, 'info');
   }
 
@@ -105,6 +107,12 @@ export function CashierProductsPage() {
       showToast('Enter a whole-number quantity greater than zero.', 'error');
       return;
     }
+    if (!expiryDate || expiryDate < new Date().toISOString().slice(0, 10)) {
+      showToast('Enter a valid future expiration date for this batch.', 'error');
+      return;
+    }
+    const receivedAt = new Date().toISOString();
+    const batchId = `B-${receivedAt.replace(/\D/g, '').slice(0, 14)}`;
     const current = getInventory();
     const next = current.map((product) =>
       product.barcode === selectedProduct.barcode
@@ -116,23 +124,34 @@ export function CashierProductsPage() {
         : product,
     );
     saveInventory(next);
+    const batches = loadBatches([]);
+    batches.unshift({
+      id: batchId,
+      product: selectedProduct.product,
+      barcode: selectedProduct.barcode,
+      lot: batchId,
+      expiry: expiryDate,
+      stock: quantity,
+      receivedAt,
+    });
+    saveBatches(batches);
     const receivedProduct = next.find((product) => product.barcode === selectedProduct.barcode)!;
     setCatalog(next);
     setSelectedProduct(null);
     const movements = loadMovements();
     movements.unshift({
-      id: `RCV-${Date.now()}`,
-      date: new Date().toISOString(),
+      id: `RCV-${receivedAt.replace(/\D/g, '').slice(0, 14)}`,
+      date: receivedAt,
       product: receivedProduct.product,
       kind: 'Received',
       change: quantity,
-      reference: `SCAN-${selectedProduct.barcode}`,
+      reference: batchId,
       staff: 'Cashier',
-      reason: 'Stock received by barcode scan',
+      reason: `Stock received by barcode scan · expires ${expiryDate}`,
     });
     saveMovements(movements);
     showToast(
-      `${quantity} ${receivedProduct.unit.toLowerCase()}${quantity === 1 ? '' : 's'} received for ${receivedProduct.product}.`,
+      `${quantity} ${receivedProduct.unit.toLowerCase()}${quantity === 1 ? '' : 's'} received for ${receivedProduct.product} · batch ${batchId}.`,
     );
   }
 
@@ -176,6 +195,19 @@ export function CashierProductsPage() {
                 onChange={(event) => setReceivedQuantity(event.target.value)}
               />
             </label>
+            <label>
+              Expiration date
+              <input
+                type="date"
+                required
+                min={new Date().toISOString().slice(0, 10)}
+                value={expiryDate}
+                onChange={(event) => setExpiryDate(event.target.value)}
+              />
+            </label>
+            <span className="product-batch-date-note">
+              Batch date: recorded automatically when stock receipt is confirmed.
+            </span>
             <button className="cashier-primary-action" type="button" onClick={receiveStock}>
               Confirm received stock
             </button>

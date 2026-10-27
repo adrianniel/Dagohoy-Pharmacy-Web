@@ -26,6 +26,7 @@ export type InventoryBatch = {
   lot: string;
   expiry: string;
   stock: number;
+  receivedAt?: string;
 };
 
 const MOVEMENTS_KEY = 'dagohoy_demo_stock_movements';

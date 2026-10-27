@@ -884,6 +884,7 @@
   margin-top: 0.85rem;
   padding: 0.8rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 0.7rem;
   border: 1px solid #dce7df;
@@ -913,6 +914,11 @@
   border: 1px solid #cbd8cf;
   border-radius: 6px;
   background: white;
+}
+.product-batch-date-note {
+  flex: 1 0 100%;
+  color: #77847b;
+  font-size: 0.62rem;
 }
 .product-category-group > h3 {
   margin: 0;
