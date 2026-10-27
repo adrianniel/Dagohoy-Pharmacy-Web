@@ -822,6 +822,53 @@
   gap: 0.75rem;
   border-bottom: 1px solid var(--cashier-line);
 }
+.product-restock-panel {
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--cashier-line);
+  background: #f7faf8;
+}
+.product-restock-panel > div {
+  display: grid;
+  gap: 0.2rem;
+}
+.product-restock-panel strong {
+  color: var(--cashier-ink);
+  font-size: 0.74rem;
+}
+.product-restock-panel span,
+.product-category-cell small {
+  color: #77847b;
+  font-size: 0.64rem;
+}
+.product-restock-panel button {
+  min-height: 36px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #cfddd3;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--cashier-green);
+  cursor: pointer;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+.product-restock-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.product-category-cell {
+  min-width: 180px;
+}
+.product-category-cell strong,
+.product-category-cell small {
+  display: block;
+}
+.product-category-cell small {
+  margin-top: 0.2rem;
+}
 .cashier-filter-button {
   min-height: 40px;
   padding: 0.6rem 0.75rem;

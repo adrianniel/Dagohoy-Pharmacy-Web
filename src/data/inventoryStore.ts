@@ -1,6 +1,6 @@
 import { mockProducts } from './cashierMockData';
 
-export type InventoryProduct = (typeof mockProducts)[number];
+export type InventoryProduct = (typeof mockProducts)[number] & { category?: string };
 const INVENTORY_KEY = 'dagohoy_demo_inventory';
 
 export function getInventory(): InventoryProduct[] {

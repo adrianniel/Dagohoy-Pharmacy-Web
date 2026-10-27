@@ -11,6 +11,7 @@ import {
   saveInventory,
   stockStatus,
 } from '../../data/inventoryStore';
+import { suggestProductCategories } from '../../services/productsApi';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 
@@ -67,6 +68,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const restockThreshold =
+    Number(pharmacySettings.threshold) > 0
+      ? Number(pharmacySettings.threshold)
+      : getLowStockThreshold();
+  const restockProducts = useMemo(
+    () => products.filter((product) => product.stock < restockThreshold),
+    [products, restockThreshold],
+  );
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
@@ -93,6 +103,55 @@ export function AdminPage({ section }: { section: AdminSection }) {
     settings: 'Manage the details shown across your pharmacy workspace.',
   };
 
+  async function categorizeProducts() {
+    setIsCategorizing(true);
+    try {
+      const suggestions = await suggestProductCategories(
+        products.map((product) => ({
+          id: product.barcode,
+          name: product.product,
+          detail: product.detail,
+        })),
+      );
+      const categoryById = new Map(suggestions.map(({ id, category }) => [id, category]));
+      const next = products.map((product) => ({
+        ...product,
+        category: categoryById.get(product.barcode) ?? product.category,
+      }));
+      setProducts(next);
+      saveInventory(next);
+      showToast(`${suggestions.length} category suggestions applied. Please review them.`, 'info');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not suggest categories.', 'error');
+    } finally {
+      setIsCategorizing(false);
+    }
+  }
+
+  function downloadRestockCsv() {
+    const rows = [
+      ['Product', 'Barcode', 'Category', 'Current stock', 'Reorder point', 'Suggested quantity'],
+      ...restockProducts.map((product) => [
+        product.product,
+        product.barcode,
+        product.category ?? 'Uncategorized',
+        String(product.stock),
+        String(restockThreshold),
+        String(Math.max(restockThreshold * 2 - product.stock, restockThreshold)),
+      ]),
+    ];
+    const csv = rows
+      .map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(','))
+      .join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dagohoy-restock-order-basis.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Restock order basis downloaded. Confirm quantities with your supplier.');
+  }
+
   if (section === 'dashboard') return <AdminDashboard />;
 
   return (
@@ -113,11 +172,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
             <Summary
               label="Low stock"
               value={String(
-                products.filter(
-                  (product) => product.stock > 0 && product.stock < getLowStockThreshold(),
-                ).length,
+                products.filter((product) => product.stock > 0 && product.stock < restockThreshold)
+                  .length,
               )}
-              detail={`Below ${getLowStockThreshold()} units`}
+              detail={`Below ${restockThreshold} units`}
             />
             <Summary
               label="Out of stock"
@@ -149,6 +207,25 @@ export function AdminPage({ section }: { section: AdminSection }) {
               <Link className="cashier-primary-action" to="/cashier/products">
                 Cashier lookup <CashierIcon name="arrow" />
               </Link>
+              <button
+                className="cashier-view-button"
+                type="button"
+                disabled={isCategorizing || products.length === 0}
+                onClick={() => void categorizeProducts()}
+              >
+                {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
+              </button>
+            </div>
+            <div className="product-restock-panel">
+              <div>
+                <strong>Restock order basis</strong>
+                <span>
+                  {restockProducts.length} products below the {restockThreshold}-unit reorder point
+                </span>
+              </div>
+              <button type="button" onClick={downloadRestockCsv} disabled={!restockProducts.length}>
+                Download CSV
+              </button>
             </div>
             <div className="cashier-table-wrap">
               <table className="cashier-table">
@@ -170,7 +247,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
                         <strong>{product.product}</strong>
                       </td>
                       <td className="cashier-mono">{product.barcode}</td>
-                      <td>{product.detail}</td>
+                      <td className="product-category-cell">
+                        <strong>{product.category ?? 'Uncategorized'}</strong>
+                        <small>{product.detail}</small>
+                      </td>
                       <td>
                         <strong>{product.price}</strong>
                       </td>
@@ -549,6 +629,7 @@ function InventoryForm({
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [detail, setDetail] = useState(product?.detail ?? '');
+  const [category, setCategory] = useState(product?.category ?? 'Other');
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
   const [price, setPrice] = useState(product ? product.price.replace(/[₱,]/g, '') : '');
   const [stock, setStock] = useState(String(product?.stock ?? 0));
@@ -560,6 +641,7 @@ function InventoryForm({
       barcode,
       product: name.trim(),
       detail: detail.trim(),
+      category: category.trim(),
       unit,
       price: `₱${Number(price).toFixed(2)}`,
       stock: quantity,
@@ -600,6 +682,10 @@ function InventoryForm({
         <label>
           Generic / brand
           <input required value={detail} onChange={(event) => setDetail(event.target.value)} />
+        </label>
+        <label>
+          Category
+          <input required value={category} onChange={(event) => setCategory(event.target.value)} />
         </label>
         <div className="inventory-form-row">
           <label>

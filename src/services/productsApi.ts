@@ -26,3 +26,18 @@ export type BarcodeLookupResponse =
 export function lookupProductByBarcode(barcode: string): Promise<BarcodeLookupResponse> {
   return apiRequest<BarcodeLookupResponse>(`/products/barcode/${encodeURIComponent(barcode)}`);
 }
+
+type CategorySuggestion = {
+  id: string;
+  category: string;
+  confidence: 'high' | 'medium' | 'low';
+};
+
+export function suggestProductCategories(
+  products: Array<{ id: string; name: string; detail?: string }>,
+): Promise<CategorySuggestion[]> {
+  return apiRequest<CategorySuggestion[]>('/products/ai-category-suggestions', {
+    method: 'POST',
+    body: JSON.stringify({ products }),
+  });
+}
