@@ -1,0 +1,131 @@
+.auth-shell {
+  min-height: 100dvh;
+  padding: clamp(1.25rem, 5vw, 5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 7rem);
+  background: radial-gradient(ellipse at top right, #dceee4, transparent 65%), #f2f7f4;
+}
+
+.auth-introduction {
+  max-width: 600px;
+  color: #163e30;
+}
+
+.auth-home-link {
+  display: block;
+  width: fit-content;
+  margin-bottom: 3rem;
+  font-size: 1.2rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.auth-introduction__badge {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #c8dfd1;
+  border-radius: 999px;
+  color: #286448;
+  font-size: 0.8rem;
+}
+
+.auth-introduction h2 {
+  margin-bottom: 1.25rem;
+  font-size: clamp(2rem, 3.6vw, 3.6rem);
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+
+.auth-introduction p,
+.auth-introduction li {
+  color: #536d5e;
+  line-height: 1.8;
+}
+
+.auth-introduction ul {
+  padding-left: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid #d9e7df;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgb(22 62 48 / 8%);
+}
+
+.auth-card h1 {
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.auth-card .stack input,
+.auth-card .stack select,
+.auth-card .button {
+  min-height: 48px;
+  border-radius: 10px;
+}
+
+.auth-card .stack label {
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.landing-page .landing-hero__visual,
+.landing-page .feature-panel,
+.landing-page .contact-card {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgb(22 62 48 / 5%);
+}
+
+.landing-page .feature-panel,
+.landing-page .contact-card {
+  border: 1px solid #dce8e0;
+}
+
+.landing-page .action-link {
+  min-height: 48px;
+  border-radius: 10px;
+}
+
+.landing-page .section-heading h2,
+.landing-page .about-section h2,
+.landing-page .contact-section h2 {
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+@media (max-width: 820px) {
+  .landing-hero::before {
+    display: none;
+  }
+
+  .auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 1.5rem;
+  }
+
+  .auth-introduction,
+  .auth-card {
+    max-width: 460px;
+  }
+
+  .auth-home-link {
+    margin-bottom: 1rem;
+  }
+
+  .auth-introduction ul,
+  .auth-introduction__badge {
+    display: none;
+  }
+
+  .auth-introduction h2 {
+    font-size: 1.7rem;
+  }
+}

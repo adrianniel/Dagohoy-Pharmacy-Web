@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ACCESS_TOKEN_KEY, APP_NAME, USER_ROLE_KEY } from '../constants/app';
 
 export function LoginPage() {
@@ -22,15 +22,47 @@ export function LoginPage() {
 
   return (
     <main className="auth-shell">
+      <aside className="auth-introduction">
+        <Link to="/" className="auth-home-link">
+          Dagohoy Pharmacy
+        </Link>
+        <span className="auth-introduction__badge">Your daily operations, simplified</span>
+        <h2>
+          More time for care.
+          <br />
+          Less time on paperwork.
+        </h2>
+        <p>One workspace for your counter, inventory, and pharmacy team.</p>
+        <ul>
+          <li>Fast barcode checkout and stock receiving</li>
+          <li>Clear batch and expiry tracking</li>
+          <li>Sales, expenses, and credit in one place</li>
+        </ul>
+      </aside>
       <section className="auth-card">
         <p className="eyebrow">Pharmacy operations</p>
         <h1>Welcome back</h1>
         <p className="muted">Sign in to manage sales, inventory, and your pharmacy team.</p>
         <form onSubmit={handleSubmit} className="stack">
           <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="staff@example.com" required />
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="username"
+            spellCheck={false}
+            placeholder="staff@example.com"
+            required
+          />
           <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="••••••••" required />
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            required
+          />
           <label htmlFor="role">Workspace</label>
           <select
             id="role"
