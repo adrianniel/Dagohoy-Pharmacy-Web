@@ -14,11 +14,12 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   localProductUnitId?: number | null;
 };
 type CartLine = { product: PosProduct; quantity: number };
-type PaymentMethod = 'Cash' | 'GCash' | 'Card' | 'Credit';
+type PaymentMethod = 'Cash' | 'GCash' | 'Credit';
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 const SALES_KEY = 'dagohoy_demo_sales';
+const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 
 export function CashierPosPage() {
   const [products] = useState(getInventory);
@@ -29,6 +30,19 @@ export function CashierPosPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [tendered, setTendered] = useState('');
   const [creditCustomer, setCreditCustomer] = useState('');
+  const [gcashReference, setGcashReference] = useState('');
+  const [gcashPaid, setGcashPaid] = useState(false);
+  const [gcashDetails] = useState(() => {
+    try {
+      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as {
+        gcashNumber?: string;
+        gcashQrUrl?: string;
+      };
+      return { number: settings.gcashNumber ?? '', qrUrl: settings.gcashQrUrl ?? '' };
+    } catch {
+      return { number: '', qrUrl: '' };
+    }
+  });
   const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
   const { showToast } = useToast();
   const subtotal = cart.reduce(
@@ -148,10 +162,21 @@ export function CashierPosPage() {
       payment: paymentMethod,
       customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
       amountPaid:
-        paymentMethod === 'Cash' || paymentMethod === 'Credit' ? Number(tendered || 0) : totalDue,
+        paymentMethod === 'Cash' || paymentMethod === 'Credit'
+          ? Number(tendered || 0)
+          : gcashPaid
+            ? totalDue
+            : 0,
       change: paymentMethod === 'Cash' ? change : 0,
       creditBalance: paymentMethod === 'Credit' ? creditBalance : 0,
-      status: paymentMethod === 'Credit' && creditBalance > 0 ? 'Credit' : 'Completed',
+      gcashReference: paymentMethod === 'GCash' ? gcashReference.trim() : undefined,
+      paymentStatus: paymentMethod === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
+      status:
+        paymentMethod === 'Credit' && creditBalance > 0
+          ? 'Credit'
+          : paymentMethod === 'GCash' && !gcashPaid
+            ? 'Pending GCash'
+            : 'Completed',
     });
     localStorage.setItem(SALES_KEY, JSON.stringify(sales));
     const inventory = getInventory();
@@ -179,6 +204,8 @@ export function CashierPosPage() {
     setCart([]);
     setTendered('');
     setCreditCustomer('');
+    setGcashReference('');
+    setGcashPaid(false);
     setPaymentOpen(false);
     showToast(
       `Demo sale ${receipt} completed. No live sale was sent to the pharmacy server.`,
@@ -421,12 +448,13 @@ export function CashierPosPage() {
                   const nextMethod = event.target.value as PaymentMethod;
                   setPaymentMethod(nextMethod);
                   setTendered(nextMethod === 'Credit' ? '0' : '');
+                  setGcashReference('');
+                  setGcashPaid(false);
                 }}
               >
                 <option>Cash</option>
                 <option>GCash</option>
-                <option>Card</option>
-                <option>Credit</option>
+                <option value="Credit">Credit (utang)</option>
               </select>
             </label>
             {paymentMethod === 'Cash' && (
@@ -485,13 +513,60 @@ export function CashierPosPage() {
                 </div>
               </>
             )}
+            {paymentMethod === 'GCash' && (
+              <>
+                <div className="gcash-payment-details">
+                  <div>
+                    <strong>Pay via GCash</strong>
+                    <span>
+                      Ask the customer to send the exact amount. No payment is processed in this
+                      system.
+                    </span>
+                    {gcashDetails.number ? (
+                      <span>
+                        GCash number: <b>{gcashDetails.number}</b>
+                      </span>
+                    ) : (
+                      <span>GCash number not configured. Add it in Owner → Pharmacy settings.</span>
+                    )}
+                  </div>
+                  {gcashDetails.qrUrl && (
+                    <img src={gcashDetails.qrUrl} alt="Pharmacy GCash QR code" />
+                  )}
+                </div>
+                <label>
+                  GCash reference number
+                  <input
+                    value={gcashReference}
+                    onChange={(event) => setGcashReference(event.target.value)}
+                    placeholder="Enter transaction reference number"
+                    required
+                  />
+                </label>
+                <label className="gcash-paid-check">
+                  <input
+                    type="checkbox"
+                    checked={gcashPaid}
+                    onChange={(event) => setGcashPaid(event.target.checked)}
+                  />
+                  I manually verified this GCash payment as received
+                </label>
+                <div className={`gcash-manual-status${gcashPaid ? ' is-paid' : ''}`}>
+                  Manual payment status:{' '}
+                  <strong>{gcashPaid ? 'Paid' : 'Unpaid / pending verification'}</strong>
+                </div>
+              </>
+            )}
             <button
               className="pos-checkout-button"
               type="submit"
               disabled={
                 (paymentMethod === 'Cash' && Number(tendered) < totalDue) ||
                 (paymentMethod === 'Credit' &&
-                  (!creditCustomer.trim() || Number(tendered) < 0 || Number(tendered) > totalDue))
+                  (!creditCustomer.trim() ||
+                    Number(tendered) < 0 ||
+                    Number(tendered) > totalDue)) ||
+                (paymentMethod === 'GCash' && !gcashReference.trim())
               }
             >
               Complete demo sale

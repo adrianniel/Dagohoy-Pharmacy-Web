@@ -12,6 +12,8 @@ type Sale = {
   total: number;
   payment: string;
   status: string;
+  gcashReference?: string;
+  paymentStatus?: string;
   lines?: Array<{ product: string; quantity: number; unitPrice: number }>;
 };
 
@@ -32,6 +34,8 @@ export function CashierTransactionsPage() {
       ...transactionHistory.map((sale) => ({
         ...sale,
         lines: undefined,
+        gcashReference: undefined,
+        paymentStatus: undefined,
         dateValue: new Date(sale.date.replace(' · ', ' ')).toISOString(),
         total: sale.total,
       })),
@@ -43,13 +47,24 @@ export function CashierTransactionsPage() {
   }, [demoSales, period, query]);
   function exportCsv() {
     const rows = [
-      ['Receipt', 'Date', 'Items', 'Total', 'Payment', 'Status'],
+      [
+        'Receipt',
+        'Date',
+        'Items',
+        'Total',
+        'Payment',
+        'Payment status',
+        'GCash reference',
+        'Status',
+      ],
       ...records.map((item) => [
         item.receipt,
         item.date,
         String(item.items),
         item.total,
         item.payment,
+        item.paymentStatus ?? '',
+        item.gcashReference ?? '',
         item.status,
       ]),
     ];
@@ -187,6 +202,18 @@ export function CashierTransactionsPage() {
                 <dt>Payment</dt>
                 <dd>{selected.payment}</dd>
               </div>
+              {selected.payment === 'GCash' && (
+                <>
+                  <div>
+                    <dt>GCash reference</dt>
+                    <dd>{selected.gcashReference || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Manual payment status</dt>
+                    <dd>{selected.paymentStatus || 'Unpaid'}</dd>
+                  </div>
+                </>
+              )}
               <div>
                 <dt>Status</dt>
                 <dd>{selected.status}</dd>

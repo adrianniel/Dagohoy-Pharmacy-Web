@@ -32,7 +32,14 @@ type TeamMember = (typeof staff)[number] & { email?: string };
 const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
 const STAFF_KEY = 'dagohoy_demo_staff';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
-type PharmacySettings = { name: string; phone: string; address: string; threshold: string };
+type PharmacySettings = {
+  name: string;
+  phone: string;
+  address: string;
+  threshold: string;
+  gcashNumber?: string;
+  gcashQrUrl?: string;
+};
 const defaultSettings: PharmacySettings = {
   name: 'Dagohoy Pharmacy',
   phone: '+63 2 8123 4567',
@@ -479,6 +486,33 @@ export function AdminPage({ section }: { section: AdminSection }) {
               onChange={(event) =>
                 setPharmacySettings({ ...pharmacySettings, threshold: event.target.value })
               }
+            />
+          </label>
+          <h3>GCash payment display</h3>
+          <p className="demo-note">
+            These details are displayed to the cashier at checkout. No payment is processed by this
+            app.
+          </p>
+          <label>
+            GCash number
+            <input
+              inputMode="tel"
+              value={pharmacySettings.gcashNumber ?? ''}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, gcashNumber: event.target.value })
+              }
+              placeholder="09XX XXX XXXX"
+            />
+          </label>
+          <label>
+            GCash QR image URL
+            <input
+              type="url"
+              value={pharmacySettings.gcashQrUrl ?? ''}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, gcashQrUrl: event.target.value })
+              }
+              placeholder="https://…"
             />
           </label>
           <button
