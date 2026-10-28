@@ -9,6 +9,7 @@ import './landing-reference.css';
 import './cashier.css';
 import './workspace-polish.css';
 import './public-polish.css';
+import './landing-modern.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -1,0 +1,275 @@
+/* Landing page composition: calm emerald accents and readable information. */
+.landing-page {
+  background: #f7faf8;
+  color: #173b2e;
+}
+
+.landing-page .landing-nav-wrap {
+  border-bottom: 1px solid #dfebe3;
+  background: #fff;
+}
+
+.landing-page .landing-nav {
+  max-width: 1240px;
+  min-height: 88px;
+  margin-inline: auto;
+}
+
+.landing-page .landing-nav__links a {
+  padding-block: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.landing-page .landing-hero {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 4.5rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  grid-template-rows: auto auto;
+  height: auto;
+  max-height: none;
+  align-items: center;
+  gap: 3rem;
+  background: none;
+}
+
+.landing-page .landing-hero::before {
+  display: none;
+}
+
+.landing-page .landing-hero__copy {
+  padding: 0;
+  min-width: 0;
+  grid-row: auto;
+}
+
+.landing-page .landing-hero__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+}
+
+.landing-page .landing-hero h1 {
+  margin: 1.25rem 0;
+  font-size: clamp(3rem, 5.8vw, 5.5rem);
+  letter-spacing: -0.065em;
+  line-height: 1;
+}
+
+.landing-page .landing-hero__subtitle {
+  max-width: 32ch;
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.landing-page .landing-hero__description {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  max-width: 50ch;
+}
+
+.landing-page .landing-hero__visual {
+  width: 100%;
+  margin: 0;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  align-self: center;
+  transform: none;
+  border: 8px solid #fff;
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgb(23 59 46 / 12%);
+}
+
+.landing-page .landing-hero__image-wrap {
+  position: relative;
+  height: 440px;
+  min-height: 0;
+  border-radius: 20px;
+}
+
+.landing-page .landing-hero__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.landing-page .hero-image-caption {
+  position: static;
+  padding: 1.1rem;
+  background: #fff;
+  color: #173b2e;
+}
+
+.landing-page .landing-operations-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+  border: 0;
+}
+
+.landing-page .landing-operations-strip > span {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #dce9e1;
+  border-radius: 8px;
+  color: #486554;
+  font-size: 0.72rem;
+}
+
+.landing-pharmacy-overview {
+  grid-column: 1 / -1;
+  padding: 1.75rem;
+  border: 1px solid #dce9e1;
+  border-radius: 24px;
+  background: #edf5ef;
+}
+
+.landing-overview-heading h2 {
+  margin-bottom: 0.4rem;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.landing-overview-heading > p:last-child {
+  color: #536d5d;
+  font-size: 0.85rem;
+}
+
+.landing-page .snapshot {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+}
+
+.landing-page .snapshot__overview,
+.landing-page .snapshot__hours {
+  padding: 1rem;
+  box-shadow: none;
+  background: #fff;
+}
+
+.landing-page .snapshot__hours {
+  display: block;
+}
+
+.landing-page .snapshot__overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.landing-page .snapshot__status-copy strong,
+.landing-page .staff-row__copy,
+.landing-page .snapshot-card-heading .eyebrow {
+  font-size: 0.75rem;
+}
+
+.landing-page .snapshot__status-copy small {
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+.landing-page .hours-list {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.landing-page .hours-row {
+  padding: 0.6rem 0.2rem;
+}
+
+.landing-page .hours-row > span {
+  font-size: 0.65rem;
+}
+
+.landing-page .section-wrap {
+  max-width: 1176px;
+  margin-inline: auto;
+  padding-block: 4rem;
+}
+
+.landing-page .section-heading {
+  max-width: 660px;
+  margin-bottom: 2rem;
+}
+
+.landing-page .section-heading h2 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+
+.landing-page .feature-panel {
+  min-height: 260px;
+  padding: 1.75rem;
+  background: #fff;
+}
+
+.landing-page .feature-panel h3 {
+  font-size: 1.2rem;
+}
+
+.landing-page .feature-panel p,
+.landing-page .contact-card p {
+  color: #536d5d;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+@media (max-width: 900px) {
+  .landing-page .landing-hero {
+    padding-top: 2.5rem;
+    gap: 2rem;
+  }
+
+  .landing-page .landing-hero__visual {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .landing-page .snapshot {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .landing-page .landing-nav {
+    min-height: 100px;
+  }
+
+  .landing-page .landing-nav__links a {
+    font-size: 0.8rem;
+  }
+
+  .landing-page .landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 2rem 1rem;
+  }
+
+  .landing-page .landing-hero__image-wrap {
+    height: 300px;
+  }
+
+  .landing-pharmacy-overview {
+    padding: 1rem;
+  }
+
+  .landing-page .snapshot__overview {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-page .hours-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .landing-page .section-wrap {
+    margin-inline: 1rem;
+    padding-block: 2.5rem;
+  }
+
+  .landing-page .feature-panel {
+    min-height: 220px;
+  }
+}

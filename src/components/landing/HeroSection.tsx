@@ -16,13 +16,14 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__copy">
         <p className="landing-hero__eyebrow">
-          <span className="hero-eyebrow-dot" /> Internal pharmacy operations platform
+          <span className="hero-eyebrow-dot" aria-hidden="true" /> Care starts with a well-run
+          pharmacy
         </p>
         <h1 id="landing-title">
           <span>Dagohoy</span>
           <span>Pharmacy</span>
         </h1>
-        <p className="landing-hero__subtitle">POS &amp; Inventory Management System</p>
+        <p className="landing-hero__subtitle">Your community. Your pharmacy. One workspace.</p>
         <p className="landing-hero__description">
           A focused workspace for sales, stock control, batch expiry, purchasing, and cash
           management—built for the people running Dagohoy Pharmacy every day.
@@ -54,7 +55,6 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
             <b>Control</b> Cash drawer reconciliation
           </span>
         </div>
-        <PharmacySnapshot status={status} staff={staff} hours={hours} />
       </div>
       <figure className="landing-hero__visual">
         <div className="landing-hero__image-wrap">
@@ -76,6 +76,14 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
           <span className="hero-caption-location">Local pharmacy</span>
         </figcaption>
       </figure>
+      <div className="landing-pharmacy-overview">
+        <div className="landing-overview-heading">
+          <p className="eyebrow">At a glance</p>
+          <h2>Plan your visit</h2>
+          <p>Opening hours and the team on duty.</p>
+        </div>
+        <PharmacySnapshot status={status} staff={staff} hours={hours} />
+      </div>
     </section>
   );
 }
