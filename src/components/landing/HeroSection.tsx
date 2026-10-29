@@ -1,4 +1,5 @@
 import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
+import pharmacyLogo from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { pharmacyProfile } from './mockData';
 import { PharmacySnapshot } from './PharmacySnapshot';
@@ -16,24 +17,22 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__copy">
         <p className="landing-hero__eyebrow">
-          <span className="hero-eyebrow-dot" aria-hidden="true" /> Care starts with a well-run
-          pharmacy
+          <span className="hero-eyebrow-dot" aria-hidden="true" /> Dagohoy Pharmacy · Manila
         </p>
         <h1 id="landing-title">
-          <span>Dagohoy</span>
-          <span>Pharmacy</span>
+          Care for the community. <em>Clarity behind the counter.</em>
         </h1>
-        <p className="landing-hero__subtitle">Your community. Your pharmacy. One workspace.</p>
+        <p className="landing-hero__subtitle">A better way to run Dagohoy Pharmacy.</p>
         <p className="landing-hero__description">
-          A focused workspace for sales, stock control, batch expiry, purchasing, and cash
-          management—built for the people running Dagohoy Pharmacy every day.
+          Sales, stock, and daily operations in one considered workspace—so your team can stay
+          focused on the people who walk through the door.
         </p>
         <div className="hero-actions">
           <Link className="action-link" to="/login">
             <span className="action-icon action-icon--arrow" aria-hidden="true">
               ↗
             </span>{' '}
-            Staff login
+            Open staff workspace
           </Link>
           <a className="action-link action-link--outline" href="#features">
             <span className="action-icon action-icon--bars" aria-hidden="true">
@@ -41,19 +40,8 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
               <i />
               <i />
             </span>{' '}
-            See capabilities
+            Explore the system
           </a>
-        </div>
-        <div className="landing-operations-strip" aria-label="System capabilities">
-          <span>
-            <b>POS</b> Barcode-ready checkout
-          </span>
-          <span>
-            <b>Stock</b> Batch &amp; expiry tracking
-          </span>
-          <span>
-            <b>Control</b> Cash drawer reconciliation
-          </span>
         </div>
       </div>
       <figure className="landing-hero__visual">
@@ -62,18 +50,17 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
             className="landing-hero__image"
             src={storefrontImage}
             alt={`${pharmacyProfile.name} streetfront storefront`}
+            width="1200"
+            height="800"
             fetchPriority="high"
           />
         </div>
         <figcaption className="hero-image-caption">
-          <span className="hero-caption-mark" aria-hidden="true">
-            D
-          </span>
+          <img className="hero-caption-logo" src={pharmacyLogo} alt="" width="54" height="54" />
           <span>
-            <strong>Dagohoy Pharmacy</strong>
-            <small>Serving the community with care</small>
+            <strong>The neighborhood pharmacy</strong>
+            <small>Built for the people we serve, every day.</small>
           </span>
-          <span className="hero-caption-location">Local pharmacy</span>
         </figcaption>
       </figure>
       <div className="landing-pharmacy-overview">

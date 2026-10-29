@@ -32,11 +32,8 @@ export function FeaturesSection() {
     >
       <div className="section-heading">
         <p className="eyebrow">Core capabilities</p>
-        <h2 id="features-title">One professional workspace for pharmacy operations.</h2>
-        <p>
-          Designed around the daily controls that keep sales accurate, stock traceable, and the
-          counter moving.
-        </p>
+        <h2 id="features-title">Everything in its place. Nothing in your way.</h2>
+        <p>Thoughtful tools for the moments that matter at the counter and beyond.</p>
       </div>
       <div className="features-grid">
         {pharmacyFeatures.map((feature, index) => (

@@ -20,8 +20,11 @@ export function LandingPage() {
 
   return (
     <div className="landing-page">
+      <a className="landing-skip-link" href="#landing-main">
+        Skip to content
+      </a>
       <LandingNav />
-      <main>
+      <main id="landing-main">
         <HeroSection status={status} staff={staffOnDuty} hours={weeklyHours} />
         <FeaturesSection />
         <AboutSection />
