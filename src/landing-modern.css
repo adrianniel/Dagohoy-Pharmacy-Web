@@ -232,14 +232,15 @@
 
 .landing-pharmacy-overview {
   min-width: 0;
-  padding: 1.8rem 0 0;
-  display: grid;
-  grid-template-columns: minmax(170px, 0.28fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 2rem;
+  padding: 3rem 0 0;
+  display: block;
   grid-column: 1 / -1;
   grid-row: 2;
   border-top: 1px solid #dbded3;
+}
+
+.landing-overview-heading {
+  margin-bottom: 1.5rem;
 }
 
 .landing-overview-heading .eyebrow {
@@ -250,9 +251,9 @@
 }
 
 .landing-overview-heading h2 {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.65rem;
+  font-size: clamp(1.9rem, 2.8vw, 2.5rem);
   font-weight: 500;
   letter-spacing: -0.03em;
 }
@@ -260,76 +261,202 @@
 .landing-overview-heading > p:last-child {
   margin: 0;
   color: #617267;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
 }
 
-.landing-page .snapshot {
-  width: 100%;
-  min-width: 0;
-  margin: 0;
+.landing-page .visit-details {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-column: auto;
-  grid-row: auto;
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-.landing-page .snapshot__overview,
-.landing-page .snapshot__hours {
+.landing-page .visit-card,
+.landing-page .visit-schedule {
   min-width: 0;
-  padding: 0.6rem;
-  border: 1px solid #e5e6db;
-  border-radius: 4px;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  border: 1px solid #dedfd3;
+  border-radius: 6px;
   background: #fffefa;
-  box-shadow: none;
 }
 
-.landing-page .snapshot__overview {
+.landing-page .visit-card {
+  min-height: 210px;
+}
+
+.landing-page .visit-card--status {
+  border-left: 4px solid var(--landing-green);
+}
+
+.landing-page .visit-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.25rem;
+}
+
+.landing-page .visit-card__icon {
+  width: 40px;
+  height: 40px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.landing-page .snapshot__hours {
-  display: block;
-}
-
-.landing-page .snapshot__status,
-.landing-page .snapshot__staff {
-  min-width: 0;
-  padding: 0.5rem;
-  gap: 0.4rem;
-}
-
-.landing-page .snapshot-icon {
-  width: 36px;
-  height: 36px;
+  place-items: center;
   flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ebf3ed;
+  color: var(--landing-green);
 }
 
-.landing-page .snapshot__status-copy strong,
-.landing-page .staff-row__copy,
-.landing-page .snapshot-card-heading .eyebrow {
-  font-size: 0.68rem;
+.landing-page .visit-card__icon svg {
+  width: 21px;
+  height: 21px;
 }
 
-.landing-page .snapshot__status-copy small {
+.landing-page .visit-card h3 {
+  margin: 0;
+  color: #52695a;
+  font-size: 0.77rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.landing-page .visit-card__primary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  color: var(--landing-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.25;
+}
+
+.landing-page .visit-status-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #c26a4e;
+  box-shadow: 0 0 0 5px #faeee9;
+}
+
+.landing-page .visit-status-dot.is-open {
+  background: #14895e;
+  box-shadow: 0 0 0 5px #e5f4ec;
+}
+
+.landing-page .visit-card__secondary {
+  margin: 0.6rem 0 0 1.35rem;
+  color: #5c7062;
+  font-size: 0.85rem;
+}
+
+.landing-page .visit-team {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .visit-team li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #e9e9df;
+  font-size: 0.9rem;
+}
+
+.landing-page .visit-team li:last-child {
+  border-bottom: 0;
+}
+
+.landing-page .visit-team li span {
   color: #617267;
-  font-size: 0.63rem;
-  line-height: 1.5;
 }
 
-.landing-page .hours-list {
+.landing-page .visit-team li strong {
+  color: var(--landing-ink);
+  font-weight: 700;
+}
+
+.landing-page .visit-schedule {
+  grid-column: 1 / -1;
+}
+
+.landing-page .visit-schedule__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.landing-page .visit-schedule__heading .eyebrow {
+  margin-bottom: 0.3rem;
+  color: var(--landing-green);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.landing-page .visit-schedule h3 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.landing-page .visit-schedule__heading > span {
+  color: #68796d;
+  font-size: 0.75rem;
+}
+
+.landing-page .visit-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.landing-page .hours-row {
-  padding: 0.45rem 0.1rem;
+.landing-page .visit-day {
+  min-width: 0;
+  min-height: 86px;
+  padding: 0.8rem 0.45rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid #e7e8dd;
+  border-radius: 4px;
+  background: #faf9f3;
+  color: var(--landing-ink);
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-.landing-page .hours-row > span {
-  font-size: 0.57rem;
+.landing-page .visit-day__name {
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.landing-page .visit-day strong {
+  font-size: 0.68rem;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.landing-page .visit-day.is-today {
+  border-color: var(--landing-green);
+  background: #eaf3ec;
+}
+
+.landing-page .visit-day__today {
+  color: var(--landing-green);
+  font-size: 0.65rem;
+  font-weight: 800;
 }
 
 .landing-page .section-wrap {
@@ -402,13 +529,6 @@
   background: #f1f1e9;
 }
 
-@media (max-width: 1100px) {
-  .landing-pharmacy-overview {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
 @media (max-width: 850px) {
   .landing-page .landing-hero {
     grid-template-columns: 1fr;
@@ -436,6 +556,10 @@
   .landing-page .landing-hero h1 {
     max-width: 16ch;
   }
+
+  .landing-page .visit-week {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
@@ -457,12 +581,29 @@
     height: 410px;
   }
 
-  .landing-page .snapshot {
+  .landing-page .visit-details {
     grid-template-columns: 1fr;
   }
 
-  .landing-page .hours-list {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .landing-page .visit-card {
+    min-height: 0;
+  }
+
+  .landing-page .visit-schedule__heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .landing-page .visit-week {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-page .visit-day {
+    min-height: 74px;
+  }
+
+  .landing-page .visit-day strong {
+    font-size: 0.75rem;
   }
 
   .landing-page .section-wrap {
@@ -472,11 +613,5 @@
 
   .landing-page .feature-panel {
     min-height: 220px;
-  }
-}
-
-@media (max-width: 390px) {
-  .landing-page .snapshot__overview {
-    grid-template-columns: 1fr;
   }
 }
