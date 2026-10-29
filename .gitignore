@@ -7,3 +7,6 @@ dist/
 .DS_Store
 coverage/
 /AGENTS.md
+# Local design skill installation and its generated sweep reports
+/.agents/skills/hallmark/
+/.hallmark/

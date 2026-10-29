@@ -10,6 +10,7 @@ import './cashier.css';
 import './workspace-polish.css';
 import './public-polish.css';
 import './landing-modern.css';
+import './workspace-hallmark.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -11,9 +11,9 @@ export function CashierPageHeader({ eyebrow, title, description, action }: Cashi
   return (
     <div className="cashier-page-heading">
       <div>
-        <p>{eyebrow}</p>
         <h2>{title}</h2>
         <span>{description}</span>
+        <p className="cashier-page-context">{eyebrow}</p>
       </div>
       {action}
     </div>
