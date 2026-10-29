@@ -43,7 +43,7 @@ type PharmacySettings = {
 const defaultSettings: PharmacySettings = {
   name: 'Dagohoy Pharmacy',
   phone: '+63 2 8123 4567',
-  address: 'Dagohoy Street, Manila, Philippines',
+  address: 'Bohol, Philippines',
   threshold: '15',
 };
 function loadLocalList<T>(key: string, initial: T[]): T[] {

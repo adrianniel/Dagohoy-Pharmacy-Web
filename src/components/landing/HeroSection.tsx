@@ -17,7 +17,7 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__copy">
         <p className="landing-hero__eyebrow">
-          <span className="hero-eyebrow-dot" aria-hidden="true" /> Dagohoy Pharmacy · Manila
+          <span className="hero-eyebrow-dot" aria-hidden="true" /> Dagohoy Pharmacy · Bohol
         </p>
         <h1 id="landing-title">
           Care for the community. <em>Clarity behind the counter.</em>
