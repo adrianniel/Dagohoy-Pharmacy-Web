@@ -292,7 +292,12 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
                 <option value="expired">Expired</option>
               </select>
             </div>
-            <div className="cashier-table-wrap">
+            <div
+              className="cashier-table-wrap"
+              role="region"
+              aria-label="Batches table"
+              tabIndex={0}
+            >
               <table className="cashier-table">
                 <thead>
                   <tr>
@@ -393,7 +398,12 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
               <option>Received</option>
             </select>
           </div>
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Purchases table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>
@@ -467,7 +477,12 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
               <option>Return</option>
             </select>
           </div>
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Stock movements table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>

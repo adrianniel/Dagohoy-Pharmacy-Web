@@ -92,7 +92,12 @@ export function CreditPage() {
           <span>{credits.length} open</span>
         </div>
         {credits.length ? (
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Credit accounts table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>

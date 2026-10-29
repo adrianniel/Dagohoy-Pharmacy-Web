@@ -322,7 +322,12 @@ export function CashierProductsPage() {
                 {category}
                 <span>{categoryProducts.length}</span>
               </h3>
-              <div className="cashier-table-wrap">
+              <div
+                className="cashier-table-wrap"
+                role="region"
+                aria-label="Products table"
+                tabIndex={0}
+              >
                 <table className="cashier-table cashier-products-table">
                   <thead>
                     <tr>

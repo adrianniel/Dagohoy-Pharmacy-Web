@@ -234,7 +234,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 Download CSV
               </button>
             </div>
-            <div className="cashier-table-wrap">
+            <div
+              className="cashier-table-wrap"
+              role="region"
+              aria-label="Products table"
+              tabIndex={0}
+            >
               <table className="cashier-table">
                 <thead>
                   <tr>
@@ -327,7 +332,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
               Add supplier <span>＋</span>
             </button>
           </div>
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Suppliers table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>
@@ -390,7 +400,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
               Invite staff <span>＋</span>
             </button>
           </div>
-          <div className="cashier-table-wrap">
+          <div className="cashier-table-wrap" role="region" aria-label="Staff table" tabIndex={0}>
             <table className="cashier-table">
               <thead>
                 <tr>
@@ -801,7 +811,12 @@ function AdminDashboard() {
             </div>
             <Link to="/admin/products">View inventory</Link>
           </div>
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Recent sales table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>

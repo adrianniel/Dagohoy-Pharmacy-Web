@@ -86,7 +86,12 @@ export function CashierDashboardPage() {
             </div>
             <Link to="/cashier/transactions">View all</Link>
           </div>
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Recent transactions table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>

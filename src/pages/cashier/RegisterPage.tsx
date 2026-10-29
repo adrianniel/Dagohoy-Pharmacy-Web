@@ -144,7 +144,12 @@ export function RegisterPage() {
           </div>
         </div>
         {events.length ? (
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Register history table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>

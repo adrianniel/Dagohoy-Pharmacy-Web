@@ -113,7 +113,12 @@ export function CashierTransactionsPage() {
             Export CSV
           </button>
         </div>
-        <div className="cashier-table-wrap">
+        <div
+          className="cashier-table-wrap"
+          role="region"
+          aria-label="Transactions table"
+          tabIndex={0}
+        >
           <table className="cashier-table cashier-transactions-table">
             <thead>
               <tr>

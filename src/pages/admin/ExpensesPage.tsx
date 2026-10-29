@@ -92,7 +92,12 @@ export function ExpensesPage() {
           <span>{expenses.length} entries</span>
         </div>
         {expenses.length ? (
-          <div className="cashier-table-wrap">
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label="Expenses table"
+            tabIndex={0}
+          >
             <table className="cashier-table">
               <thead>
                 <tr>
