@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AboutSection } from '../components/landing/AboutSection';
 import { ContactSection } from '../components/landing/ContactSection';
 import { DeveloperCta } from '../components/landing/DeveloperCta';
 import { FeaturesSection } from '../components/landing/FeaturesSection';
@@ -27,7 +26,6 @@ export function LandingPage() {
       <main id="landing-main">
         <HeroSection status={status} staff={staffOnDuty} hours={weeklyHours} />
         <FeaturesSection />
-        <AboutSection />
         <DeveloperCta />
         <ContactSection />
       </main>

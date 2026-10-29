@@ -9,7 +9,6 @@ export function LandingNav() {
         <div className="landing-nav__links">
           <a href="#home">Home</a>
           <a href="#features">Features</a>
-          <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </div>
         <Link className="landing-nav__login" to="/login">

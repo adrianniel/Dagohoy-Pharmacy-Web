@@ -1,4 +1,4 @@
-import pharmacyCareImage from '../../assets/pharmacy-care.jpg';
+import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
 import { Link } from 'react-router-dom';
 import { PharmacySnapshot } from './PharmacySnapshot';
 import type { PharmacyStatus } from './pharmacyTime';
@@ -35,15 +35,13 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
         <figure className="landing-hero__visual">
           <img
             className="landing-hero__image"
-            src={pharmacyCareImage}
-            alt="Illustrative photo of a pharmacist selecting medicine from a shelf"
-            width="1600"
-            height="1067"
+            src={storefrontImage}
+            alt="Dagohoy Pharmacy storefront"
+            width="1500"
+            height="842"
             fetchPriority="high"
           />
-          <figcaption className="landing-hero__photo-credit">
-            Illustrative photo: National Cancer Institute / Unsplash
-          </figcaption>
+          <figcaption className="landing-hero__photo-credit">Dagohoy Pharmacy · Bohol</figcaption>
         </figure>
         <div className="landing-hero__highlights" aria-label="System highlights">
           <div>
