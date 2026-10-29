@@ -1,7 +1,5 @@
-import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
-import pharmacyLogo from '../../assets/logo.png';
+import pharmacyCareImage from '../../assets/pharmacy-care.jpg';
 import { Link } from 'react-router-dom';
-import { pharmacyProfile } from './mockData';
 import { PharmacySnapshot } from './PharmacySnapshot';
 import type { PharmacyStatus } from './pharmacyTime';
 import type { StaffMember, WeeklyHoursEntry } from './types';
@@ -15,54 +13,68 @@ interface HeroSectionProps {
 export function HeroSection({ status, staff, hours }: HeroSectionProps) {
   return (
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
-      <div className="landing-hero__copy">
-        <p className="landing-hero__eyebrow">
-          <span className="hero-eyebrow-dot" aria-hidden="true" /> Dagohoy Pharmacy · Bohol
-        </p>
-        <h1 id="landing-title">
-          Care for the community. <em>Clarity behind the counter.</em>
-        </h1>
-        <p className="landing-hero__subtitle">A better way to run Dagohoy Pharmacy.</p>
-        <p className="landing-hero__description">
-          Sales, stock, and daily operations in one considered workspace—so your team can stay
-          focused on the people who walk through the door.
-        </p>
-        <div className="hero-actions">
-          <Link className="action-link" to="/login">
-            <span className="action-icon action-icon--arrow" aria-hidden="true">
-              ↗
-            </span>{' '}
-            Open staff workspace
-          </Link>
-          <a className="action-link action-link--outline" href="#features">
-            <span className="action-icon action-icon--bars" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>{' '}
-            Explore the system
-          </a>
+      <div className="landing-hero__stage">
+        <div className="landing-hero__copy">
+          <p className="landing-hero__eyebrow">Dagohoy Pharmacy · Bohol</p>
+          <h1 id="landing-title">
+            Better care starts <em>behind the counter.</em>
+          </h1>
+          <p className="landing-hero__description">
+            A calmer way to manage sales, stock, and everyday pharmacy work—so there’s more room to
+            focus on your community.
+          </p>
+          <div className="hero-actions">
+            <Link className="action-link" to="/login">
+              Open staff workspace <span aria-hidden="true">→</span>
+            </Link>
+            <a className="action-link action-link--outline" href="#features">
+              Explore the system
+            </a>
+          </div>
         </div>
-      </div>
-      <figure className="landing-hero__visual">
-        <div className="landing-hero__image-wrap">
+        <figure className="landing-hero__visual">
           <img
             className="landing-hero__image"
-            src={storefrontImage}
-            alt={`${pharmacyProfile.name} streetfront storefront`}
-            width="1200"
-            height="800"
+            src={pharmacyCareImage}
+            alt="Illustrative photo of a pharmacist selecting medicine from a shelf"
+            width="1600"
+            height="1067"
             fetchPriority="high"
           />
+          <figcaption className="landing-hero__photo-credit">
+            Illustrative photo: National Cancer Institute / Unsplash
+          </figcaption>
+        </figure>
+        <div className="landing-hero__highlights" aria-label="System highlights">
+          <div>
+            <span className="landing-highlight-icon" aria-hidden="true">
+              ✳
+            </span>
+            <span>
+              <strong>At the counter</strong>
+              <small>Barcode-ready sales</small>
+            </span>
+          </div>
+          <div>
+            <span className="landing-highlight-icon" aria-hidden="true">
+              ▦
+            </span>
+            <span>
+              <strong>Behind the scenes</strong>
+              <small>Stock &amp; expiry tracking</small>
+            </span>
+          </div>
+          <div>
+            <span className="landing-highlight-icon" aria-hidden="true">
+              ↗
+            </span>
+            <span>
+              <strong>Every day</strong>
+              <small>Clear operational reports</small>
+            </span>
+          </div>
         </div>
-        <figcaption className="hero-image-caption">
-          <img className="hero-caption-logo" src={pharmacyLogo} alt="" width="54" height="54" />
-          <span>
-            <strong>The neighborhood pharmacy</strong>
-            <small>Built for the people we serve, every day.</small>
-          </span>
-        </figcaption>
-      </figure>
+      </div>
       <div className="landing-pharmacy-overview">
         <div className="landing-overview-heading">
           <p className="eyebrow">At a glance</p>
