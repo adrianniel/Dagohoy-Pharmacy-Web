@@ -54,8 +54,8 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Built for Pharmacy Work</h2>
               <p>
-                Designed around the actual daily flow of a pharmacy, from counter transactions to
-                inventory monitoring.
+                Designed for real pharmacy routines, keeping daily counter work and inventory tasks
+                simple and organized.
               </p>
             </article>
             <article className="landing-hero__feature">
@@ -64,8 +64,8 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Scan and Go</h2>
               <p>
-                Use barcode scanning to find products faster, reduce manual encoding, and keep
-                checkout moving smoothly.
+                Use barcode scanning to find products quickly, reduce manual input, and keep
+                transactions moving smoothly.
               </p>
             </article>
             <Link
