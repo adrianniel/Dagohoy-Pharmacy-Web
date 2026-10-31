@@ -1507,6 +1507,14 @@ html:has(.landing-page) {
   display: none;
 }
 
+@media (max-width: 700px) {
+  .landing-page .landing-nav-wrap.is-compact .landing-nav {
+    width: fit-content;
+    padding-inline: 0.7rem;
+    gap: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-page .landing-nav {
     transition: none;
