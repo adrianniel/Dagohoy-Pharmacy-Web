@@ -796,12 +796,20 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid #d7e4da;
+  border: 1px solid #78927b;
   border-radius: 7px;
   background: #fdfefd;
   color: #173b2e;
   font-size: 0.74rem;
   font-weight: 700;
+  box-shadow:
+    0 0 0 2px rgb(53 94 59 / 12%),
+    0 4px 14px rgb(53 94 59 / 24%);
+}
+
+.landing-page .landing-hero__status.is-open {
+  border-color: #355e3b;
+  animation: store-status-glow 2.6s ease-in-out infinite;
 }
 
 .landing-page .landing-hero__status > span {
@@ -813,7 +821,44 @@
 
 .landing-page .landing-hero__status.is-open > span {
   background: #25a85a;
-  box-shadow: 0 0 0 3px rgb(37 168 90 / 12%);
+  animation: store-status-light 2.6s ease-in-out infinite;
+}
+
+@keyframes store-status-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgb(53 94 59 / 12%),
+      0 4px 14px rgb(53 94 59 / 24%);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 4px rgb(53 94 59 / 22%),
+      0 5px 24px rgb(53 94 59 / 48%);
+  }
+}
+
+@keyframes store-status-light {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgb(37 168 90 / 14%),
+      0 0 7px rgb(37 168 90 / 38%);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 5px rgb(37 168 90 / 24%),
+      0 0 12px rgb(37 168 90 / 72%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .landing-hero__status.is-open,
+  .landing-page .landing-hero__status.is-open > span {
+    animation: none;
+  }
 }
 
 .landing-page .landing-hero__photo-credit {
