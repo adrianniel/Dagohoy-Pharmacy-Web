@@ -2,6 +2,7 @@ import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
 import { Link, useLocation } from 'react-router-dom';
 import ChartBarIcon from './hovericons/chart-bar-icon';
 import HomeIcon from './hovericons/home-icon';
+import MapPinIcon from './hovericons/map-pin-icon';
 import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
 import StackIcon from './hovericons/stack-icon';
 import type { PharmacyStatus } from './pharmacyTime';
@@ -42,8 +43,8 @@ export function HeroSection({ status }: HeroSectionProps) {
               {status.isOpen ? 'Open' : 'Closed'}
             </span>
             <figcaption className="landing-hero__photo-credit">
-              <strong>Hinungdan sa inyong kahimsug</strong>
-              <span>Dagohoy Pharmacy, Bohol</span>
+              <MapPinIcon size={16} color="currentColor" strokeWidth={2} />
+              <span>Dagohoy Public Market, Bohol</span>
             </figcaption>
           </figure>
 
