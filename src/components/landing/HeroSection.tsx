@@ -121,8 +121,8 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
               colors={{
                 fill: '#102318',
                 hoverFill: '#183d2a',
-                textColor: '#fffdf1',
-                hoverTextColor: '#d7f6c7',
+                textColor: '#e3ef26',
+                hoverTextColor: '#e3ef26',
               }}
               font={{
                 fontFamily: 'inherit',
@@ -137,15 +137,15 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 side: 'right',
                 size: 16,
                 symbol: '↗',
-                color: '#cce8b7',
-                hoverColor: '#fffdf1',
+                color: '#e3ef26',
+                hoverColor: '#e3ef26',
               }}
               border={{
                 borderWidth: 1,
                 borderStyle: 'solid',
-                borderColor: '#cce8b7',
+                borderColor: '#e3ef26',
               }}
-              glow={{ color: '#cce8b7', size: 5, blur: 8 }}
+              glow={{ color: '#e3ef26', size: 5, blur: 8 }}
               style={{ minHeight: 42, width: 'fit-content' }}
             />
           </aside>
