@@ -1822,3 +1822,13 @@
 .landing-page .features-section .feature-panel h3 {
   color: #172d24;
 }
+
+.landing-page .landing-nav__login {
+  border: 0;
+  background: #fffff0;
+  color: #14532d;
+}
+
+.landing-page .landing-nav__login:hover {
+  background: #f2f0d9;
+}
