@@ -1,9 +1,15 @@
 /* Dagohoy landing: editorial typography, real storefront, restrained pharmacy green. */
+html:has(.landing-page) {
+  scroll-padding-top: 0;
+}
+
 .landing-page {
+  overflow: clip;
   --landing-ink: #172d24;
   --landing-green: #176246;
   --landing-cream: #f7f5ee;
   --landing-nav-height: 100px;
+  padding-top: var(--landing-nav-height);
   --landing-home-pattern:
     linear-gradient(
       0deg,
@@ -61,6 +67,7 @@
 }
 
 .landing-page .landing-nav {
+  overflow: hidden;
   max-width: 1320px;
   min-height: 84px;
   margin-inline: auto;
@@ -1468,6 +1475,44 @@
   text-align: center;
 }
 
+.landing-page .landing-nav {
+  margin-inline-start: max(0px, calc((100% - 1320px) / 2));
+  margin-inline-end: 0;
+  transition:
+    width 220ms ease,
+    height 220ms ease,
+    padding 220ms ease;
+}
+
+.landing-page .landing-nav-wrap.is-compact {
+  min-height: var(--landing-nav-height);
+  box-sizing: border-box;
+  background: transparent;
+  pointer-events: none;
+}
+
+.landing-page .landing-nav-wrap.is-compact .landing-nav {
+  width: 250px;
+  max-width: calc(100vw - 2rem);
+  height: 70px;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  pointer-events: auto;
+}
+
+.landing-page .landing-nav-wrap .landing-nav__links[hidden],
+.landing-page .landing-nav-wrap .landing-nav__login[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .landing-nav {
+    transition: none;
+  }
+}
+
 .landing-page .landing-hero__feature h2 {
   color: #172d24;
 }
@@ -1856,8 +1901,9 @@
 }
 
 .landing-page .landing-nav-wrap {
-  position: sticky;
+  position: fixed;
   inset-block-start: 0;
+  inset-inline: 0;
   z-index: 1000;
   background-color: #f5f0e0;
   background-image: var(--landing-home-pattern);
@@ -1881,6 +1927,9 @@
   width: 100%;
   max-width: none;
   margin: 0;
+  min-height: calc(100svh - var(--landing-nav-height));
+  scroll-margin-top: var(--landing-nav-height);
+  box-sizing: border-box;
   padding: clamp(3.5rem, 6vw, 5.5rem) max(1rem, calc((100% - 1320px) / 2));
   background: #355e3b;
 }
