@@ -648,6 +648,7 @@
 
 .landing-page .landing-hero {
   width: 100%;
+  max-width: none;
   padding: 0;
   display: block;
 }
@@ -726,7 +727,9 @@
 .landing-page .landing-hero__visual {
   position: absolute;
   z-index: -2;
-  inset: 0 0 0 auto;
+  inset-block: 0;
+  inset-inline-end: min(-1.25rem, calc(660px - 50%));
+  inset-inline-start: auto;
   width: 68%;
   height: 100%;
   display: block;
