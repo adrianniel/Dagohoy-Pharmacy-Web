@@ -618,18 +618,21 @@
 }
 
 .landing-page .landing-nav-wrap {
-  position: relative;
+  position: sticky;
   z-index: 5;
-  width: min(100% - 2.5rem, 1320px);
-  margin: 1.25rem auto 0;
-  border: 1px solid #e2ece5;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 12px 34px rgb(18 72 47 / 8%);
+  top: 0;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid #d8e6dc;
+  border-radius: 0;
+  background: rgb(237 245 240 / 96%);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
 }
 
 .landing-page .landing-nav {
-  width: 100%;
+  width: min(100% - 3rem, 1320px);
   min-height: 76px;
   padding-inline: clamp(1rem, 2.6vw, 2.5rem);
 }
@@ -644,8 +647,8 @@
 }
 
 .landing-page .landing-hero {
-  width: min(100% - 2.5rem, 1320px);
-  padding: 0 0 3rem;
+  width: 100%;
+  padding: 0;
   display: block;
 }
 
@@ -653,16 +656,15 @@
   position: relative;
   isolation: isolate;
   min-height: 640px;
-  padding: clamp(2.5rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem) 2rem;
+  padding: clamp(2.5rem, 5vw, 5rem) max(1.25rem, calc((100% - 1320px) / 2)) 2rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 3rem;
   overflow: hidden;
-  border: 1px solid #e2ece5;
-  border-top: 0;
-  border-radius: 0 0 22px 22px;
-  background: #fff;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .landing-page .landing-hero__stage::before {
@@ -671,10 +673,10 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    #fff 0%,
-    #fff 30%,
-    rgb(255 255 255 / 94%) 42%,
-    rgb(255 255 255 / 56%) 55%,
+    #edf5f0 0%,
+    #edf5f0 30%,
+    rgb(237 245 240 / 94%) 42%,
+    rgb(237 245 240 / 56%) 55%,
     transparent 75%
   );
   content: '';
@@ -755,10 +757,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
   padding: 1.2rem clamp(1rem, 2.5vw, 2rem);
-  border: 1px solid #e5ece6;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 96%);
-  box-shadow: 0 14px 34px rgb(15 69 42 / 10%);
+  border: 1px solid #d5e4d9;
+  border-radius: 12px;
+  background: rgb(237 245 240 / 94%);
+  box-shadow: 0 8px 24px rgb(15 69 42 / 6%);
 }
 
 .landing-page .landing-hero__highlights > div {
@@ -796,11 +798,12 @@
 }
 
 .landing-pharmacy-overview {
-  margin-top: 2rem;
+  width: min(100% - 2.5rem, 1320px);
+  margin: 0 auto;
   padding: clamp(1.5rem, 3vw, 2.75rem);
-  border: 1px solid #dce9df;
-  border-radius: 20px;
-  background: #fff;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .landing-page .features-section {
@@ -861,21 +864,12 @@
 }
 
 @media (max-width: 700px) {
-  .landing-page .landing-nav-wrap,
-  .landing-page .landing-hero {
-    width: min(100% - 1.5rem, 1320px);
-  }
-
-  .landing-page .landing-nav-wrap {
-    margin-top: 0.75rem;
-  }
-
-  .landing-page .landing-hero {
-    padding: 0 0 2rem;
+  .landing-page .landing-nav {
+    width: calc(100% - 2rem);
   }
 
   .landing-page .landing-hero__stage {
-    padding: 2.25rem 1.25rem 1.25rem;
+    padding: 2.25rem 1rem 1.25rem;
     gap: 1.75rem;
   }
 
@@ -893,6 +887,7 @@
   }
 
   .landing-pharmacy-overview {
-    margin-top: 1rem;
+    width: 100%;
+    padding: 2rem 1rem;
   }
 }
