@@ -547,7 +547,75 @@ html:has(.landing-page) {
   margin: 0 auto;
   padding: clamp(1.5rem, 4vw, 3rem);
   border-radius: 4px;
-  background: #e8ede3;
+  isolation: isolate;
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+}
+
+.landing-page .developer-section::after {
+  display: none;
+}
+
+.landing-page .developer-section__copy h2 {
+  color: #fff;
+}
+
+.landing-page .developer-section__copy > p:not(.eyebrow) {
+  color: #d6e0e9;
+}
+
+.landing-page .developer-section__copy .eyebrow {
+  color: #cce8b7;
+}
+
+.landing-page .business-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.landing-page .business-starfield__layer,
+.landing-page .business-starfield__layer::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--star-size, 1px);
+  height: var(--star-size, 1px);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: var(--star-positions);
+}
+
+.landing-page .business-starfield__layer {
+  animation: business-stars-rise var(--star-duration, 50s) linear infinite;
+}
+
+.landing-page .business-starfield__layer::after {
+  content: '';
+  top: 2000px;
+}
+
+.landing-page .business-starfield__layer--2 {
+  --star-size: 2px;
+  --star-duration: 100s;
+}
+
+.landing-page .business-starfield__layer--3 {
+  --star-size: 3px;
+  --star-duration: 150s;
+}
+
+@keyframes business-stars-rise {
+  to {
+    transform: translateY(-2000px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .business-starfield__layer {
+    animation: none;
+  }
 }
 
 .landing-page .developer-section-wall {

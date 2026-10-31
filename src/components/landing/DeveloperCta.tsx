@@ -1,9 +1,11 @@
 import { developerProfile } from './mockData';
+import { BusinessStarfield } from './BusinessStarfield';
 
 export function DeveloperCta() {
   return (
     <div className="developer-section-wall">
       <section className="developer-section section-wrap" aria-labelledby="developer-title">
+        <BusinessStarfield />
         <div className="developer-section__copy">
           <p className="eyebrow">For your business</p>
           <h2 id="developer-title">Need a System for Your Business?</h2>
