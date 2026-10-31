@@ -1901,6 +1901,7 @@
 }
 
 .landing-page .features-section .section-heading > p:not(.eyebrow) {
+  max-width: none;
   margin-inline: auto;
   text-align: center;
   color: #f0f0dc;
