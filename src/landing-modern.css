@@ -1832,3 +1832,29 @@
 .landing-page .landing-nav__login:hover {
   background: #f2f0d9;
 }
+
+.landing-page .landing-hero__showcase .landing-hero__visual {
+  animation: storefront-forest-glow 3.8s ease-in-out infinite;
+}
+
+@keyframes storefront-forest-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 16px 2px rgb(53 94 59 / 20%),
+      0 0 32px 4px rgb(53 94 59 / 10%);
+  }
+
+  50% {
+    box-shadow:
+      0 0 26px 7px rgb(53 94 59 / 40%),
+      0 0 52px 12px rgb(53 94 59 / 20%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .landing-hero__showcase .landing-hero__visual {
+    animation: none;
+    box-shadow: 0 0 20px 4px rgb(53 94 59 / 24%);
+  }
+}
