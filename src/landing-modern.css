@@ -542,8 +542,19 @@ html:has(.landing-page) {
 }
 
 .landing-page .developer-section {
+  box-sizing: border-box;
+  width: min(calc(100% - 2rem), 1200px);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
   border-radius: 4px;
   background: #e8ede3;
+}
+
+.landing-page .developer-section-wall {
+  padding: clamp(2rem, 5vw, 4rem) 0;
+  background-color: #f5f0e0;
+  background-image: var(--landing-home-pattern);
+  background-size: 55px 55px;
 }
 
 .landing-page .contact-card {
