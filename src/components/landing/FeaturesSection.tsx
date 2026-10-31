@@ -155,10 +155,9 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
           <button
             className="features-tour__button features-tour__button--primary"
             type="button"
-            onClick={() => setActiveStep((step) => Math.min(workflow.steps.length - 1, step + 1))}
-            disabled={activeStep === workflow.steps.length - 1}
+            onClick={() => setActiveStep((step) => (step + 1) % workflow.steps.length)}
           >
-            Next
+            {activeStep === workflow.steps.length - 1 ? 'Start again' : 'Next'}
             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
               <path d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8" />
             </svg>
