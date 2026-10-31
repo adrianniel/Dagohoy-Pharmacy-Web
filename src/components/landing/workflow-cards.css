@@ -5,22 +5,41 @@
 .landing-page .features-workflow {
   min-width: 0;
   overflow: hidden;
-  border: 2px solid #fffdf1;
+  border: 1px solid #e2e9df;
   border-radius: 24px;
-  background: #f7faf5;
+  background: #fbfcf9;
   box-shadow: 0 14px 30px #10362340;
   display: flex;
   flex-direction: column;
 }
 .landing-page .features-workflow__header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 112px;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.25rem 1.5rem 2rem;
-  background-size: cover;
-  background-position: center;
-  color: #fffdf1;
+  padding: 1.4rem 1.5rem;
+  color: #103623;
+}
+.landing-page .features-workflow__header::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  right: -65px;
+  top: -130px;
+  width: 200px;
+  height: 240px;
+  border-radius: 48%;
+  transform: rotate(-40deg);
+  background: linear-gradient(120deg, #dbeacb, #7aa666);
+  box-shadow: -22px 4px 0 #c4d9b0;
+  pointer-events: none;
+}
+.landing-page .features-workflow__header > div {
+  padding-left: 1rem;
+  border-left: 1px solid #cdd7c8;
 }
 .landing-page .features-workflow__header-icon {
   width: 58px;
@@ -28,9 +47,10 @@
   flex: 0 0 58px;
   display: grid;
   place-items: center;
-  border: 2px solid #cce8b799;
-  border-radius: 14px;
-  background: #ffffff12;
+  border: 0;
+  border-radius: 50%;
+  background: #e6efdc;
+  color: #14532d;
 }
 .landing-page .features-workflow__title {
   margin: 0 0 0.4rem;
@@ -38,20 +58,21 @@
   font-family: inherit;
   font-size: clamp(1.15rem, 1.7vw, 1.55rem);
   font-weight: 750;
+  color: #103623;
 }
 .landing-page .features-workflow__header p {
   margin: 0;
   font-size: 0.8rem;
   line-height: 1.5;
-  color: #f1f6ec;
+  color: #24392c;
 }
 .landing-page .features-tour {
   flex: 1;
-  margin-top: -14px;
+  margin-top: 0;
   position: relative;
   border: 0;
-  border-radius: 24px 24px 0 0;
-  background: #f7faf5;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
   padding: 1.25rem 1.25rem 1.5rem;
   display: flex;
@@ -71,34 +92,34 @@
   background: #77a86e;
 }
 .landing-page .features-tour__circle {
-  background: #edf4df;
-  border-color: #a3cd94;
+  background: #e3edda;
+  border-color: transparent;
   color: #245a32;
   box-shadow: 0 3px 5px #173b2e12;
 }
 .landing-page .features-tour__step--active .features-tour__circle,
 .landing-page .features-tour__step--completed .features-tour__circle {
-  background: linear-gradient(#17932e, #075124);
+  background: linear-gradient(#88b573, #63994f);
   color: white;
-  border-color: #83b778;
+  border-color: transparent;
   box-shadow: 0 3px 6px #173b2e26;
 }
 .landing-page .features-tour__content {
   position: relative;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 14px;
+  grid-template-columns: 52px minmax(0, 1fr);
   gap: 0.75rem;
   align-items: center;
-  min-height: 108px;
+  min-height: 92px;
   box-sizing: border-box;
   padding: 0.75rem;
-  border: 1px solid #dce5d9;
+  border: 1px solid transparent;
   border-radius: 14px;
-  background: #fcfdfb;
+  background: #f1f4ed;
 }
 .landing-page .features-tour__step--active .features-tour__content {
-  background: #e9f4e3;
-  border-color: #cce3bd;
+  background: #e8f0e0;
+  border-color: transparent;
 }
 .landing-page .features-tour__icon {
   width: 52px;
@@ -111,7 +132,7 @@
 }
 .landing-page .features-tour__copy {
   min-width: 0;
-  padding-top: 1.1rem;
+  padding-top: 0;
 }
 .landing-page .features-tour__content h4,
 .landing-page .features-tour__step--pending .features-tour__content h4 {
@@ -127,29 +148,9 @@
   font-size: 0.77rem;
   line-height: 1.45;
 }
-.landing-page .features-tour__status {
-  position: absolute;
-  right: 2.25rem;
-  top: 0.4rem;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.61rem;
-  line-height: 1.4;
-}
-.landing-page .features-tour__step--active .features-tour__status {
-  background: #d5efb3;
-  color: #215125;
-}
-.landing-page .features-tour__step--pending .features-tour__status {
-  background: #e9eeeb;
-  color: #415b50;
-}
-.landing-page .features-tour__chevron {
-  font-size: 1.8rem;
-  color: #41634f;
-}
 .landing-page .features-tour__controls {
   padding-top: 1.15rem;
-  border-top: 1px solid #dbe4d6;
+  border-top: 0;
   gap: 0.6rem;
 }
 .landing-page .features-tour__progress {
@@ -188,7 +189,7 @@
     padding: 1rem;
   }
   .landing-page .features-tour__content {
-    grid-template-columns: 38px minmax(0, 1fr) 10px;
+    grid-template-columns: 38px minmax(0, 1fr);
     gap: 0.5rem;
   }
   .landing-page .features-tour__icon {
@@ -211,7 +212,7 @@
     gap: 0.5rem;
   }
   .landing-page .features-tour__content {
-    grid-template-columns: minmax(0, 1fr) 10px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.3rem;
   }
   .landing-page .features-tour__icon {

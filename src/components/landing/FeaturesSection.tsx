@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
 import ChartBarIcon from './hovericons/chart-bar-icon';
 import StackIcon from './hovericons/stack-icon';
 import UsersGroupIcon from './hovericons/users-group-icon';
@@ -76,12 +75,7 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
 
   return (
     <section className="features-workflow" aria-labelledby={`${workflow.id}-workflow-title`}>
-      <header
-        className="features-workflow__header"
-        style={{
-          backgroundImage: `linear-gradient(115deg, #123f2a 0%, #14532deB 72%, #14532d55 73%), url(${storefrontImage})`,
-        }}
-      >
+      <header className="features-workflow__header">
         <span className="features-workflow__header-icon" aria-hidden="true">
           <HeaderIcon size={36} />
         </span>
@@ -130,12 +124,6 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
                     <h4>{step.title}</h4>
                     <p>{step.description}</p>
                   </div>
-                  <span className="features-tour__status">
-                    {isComplete ? 'Completed' : isActive ? 'In progress' : 'Up next'}
-                  </span>
-                  <span className="features-tour__chevron" aria-hidden="true">
-                    ›
-                  </span>
                 </div>
               </li>
             );
