@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { AnimatedIconHandle } from './hovericons/types';
 import ChartBarIcon from './hovericons/chart-bar-icon';
 import StackIcon from './hovericons/stack-icon';
 import UsersGroupIcon from './hovericons/users-group-icon';
@@ -67,6 +68,14 @@ const workflows: Workflow[] = [
 
 function WorkflowStepper({ workflow }: { workflow: Workflow }) {
   const [activeStep, setActiveStep] = useState(0);
+  const activeIconRef = useRef<AnimatedIconHandle>(null);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const icon = activeIconRef.current;
+    icon?.startAnimation();
+    return () => icon?.stopAnimation();
+  }, [activeStep]);
   const icons =
     workflow.id === 'administrator'
       ? [ChartBarIcon, StackIcon, CheckedIcon, UsersGroupIcon]
@@ -118,7 +127,7 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
                 )}
                 <div className="features-tour__content">
                   <span className="features-tour__icon" aria-hidden="true">
-                    <Icon size={30} />
+                    <Icon ref={isActive ? activeIconRef : undefined} size={30} />
                   </span>
                   <div className="features-tour__copy">
                     <h4>{step.title}</h4>
