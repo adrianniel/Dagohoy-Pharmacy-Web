@@ -41,7 +41,7 @@
   padding: 0.6rem 0.9rem;
   transform: translateY(-160%);
   border-radius: 4px;
-  background: #fffefa;
+  background: #fffff0;
   color: #173b2e;
   font-weight: 700;
 }
@@ -2192,7 +2192,7 @@
   padding: clamp(1.25rem, 4vw, 2rem);
   border: 1px solid #e2e8dc;
   border-radius: 12px;
-  background: #fffefa;
+  background: #e0ffc2;
   box-shadow: 0 10px 28px rgb(13 40 24 / 18%);
   color: #173b2e;
   text-align: start;
