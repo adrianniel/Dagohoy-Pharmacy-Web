@@ -1948,7 +1948,7 @@
 
 .landing-page .landing-hero__feature,
 .landing-page .landing-hero__side--right .landing-hero__feature {
-  border: 1px solid #9bb88e;
+  border: 2px solid #6f965f;
   border-radius: 12px;
   background: #cce8b7;
   box-shadow:
@@ -1962,7 +1962,7 @@
 
 .landing-page .landing-hero__feature:hover {
   transform: translateY(-6px);
-  border-color: #6e965f;
+  border-color: #4f754b;
   box-shadow:
     0 6px 12px rgb(28 55 34 / 10%),
     0 16px 30px rgb(53 94 59 / 22%);
