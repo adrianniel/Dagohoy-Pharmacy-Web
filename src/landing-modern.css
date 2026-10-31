@@ -2065,11 +2065,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  border: 1px solid #c8d7bc;
+  border: 1px solid #355e3b;
   border-radius: 8px;
-  background: #edf4df;
+  background: #355e3b;
   box-shadow: 0 4px 12px rgb(23 59 46 / 12%);
-  color: #173b2e;
+  color: #fffff0;
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
@@ -2083,8 +2083,8 @@
 }
 
 .landing-page .landing-opening-hours__button:hover {
-  border-color: #789b70;
-  background: #e2edcf;
+  border-color: #26482c;
+  background: #26482c;
   box-shadow: 0 6px 16px rgb(23 59 46 / 17%);
 }
 
