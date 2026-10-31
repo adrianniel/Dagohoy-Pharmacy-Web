@@ -2046,3 +2046,207 @@
   color: #173b2e;
   font-weight: 700;
 }
+
+.landing-page .features-tour {
+  width: min(100%, 620px);
+  margin-inline: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid #e2e8dc;
+  border-radius: 12px;
+  background: #fffefa;
+  box-shadow: 0 10px 28px rgb(13 40 24 / 18%);
+  color: #173b2e;
+  text-align: start;
+}
+
+.landing-page .features-tour__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .features-tour__step {
+  position: relative;
+  min-height: 48px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.landing-page .features-tour__step:last-child {
+  margin-bottom: 0;
+}
+
+.landing-page .features-tour__line {
+  position: absolute;
+  z-index: 0;
+  top: 42px;
+  bottom: -1.35rem;
+  left: 19px;
+  width: 2px;
+  background: #e2e8dc;
+}
+
+.landing-page .features-tour__circle {
+  position: relative;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #dce5d9;
+  border-radius: 50%;
+  background: #fffefa;
+  color: #839187;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.landing-page .features-tour__circle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.landing-page .features-tour__step--completed .features-tour__circle {
+  border-color: #355e3b;
+  background: #355e3b;
+  color: #fffefa;
+}
+
+.landing-page .features-tour__step--active .features-tour__circle {
+  border: 2px solid #355e3b;
+  color: #355e3b;
+  box-shadow: 0 0 0 4px rgb(53 94 59 / 12%);
+}
+
+.landing-page .features-tour__step--completed .features-tour__line {
+  background: #355e3b;
+}
+
+.landing-page .features-tour__content {
+  min-width: 0;
+  flex: 1;
+  padding-top: 0.1rem;
+}
+
+.landing-page .features-tour__content h3 {
+  margin: 0 0 0.3rem;
+  color: #173b2e;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.landing-page .features-tour__step--pending .features-tour__content h3 {
+  color: #78867b;
+}
+
+.landing-page .features-tour__status {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #edf4df;
+  color: #355e3b;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.landing-page .features-tour__step--active .features-tour__status {
+  background: #e5edcf;
+  color: #26482c;
+}
+
+.landing-page .features-tour__step--pending .features-tour__status {
+  background: #f1f4ee;
+  color: #78867b;
+}
+
+.landing-page .features-tour__detail {
+  margin-top: 1.4rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid #e2e8dc;
+  color: #52695a;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.landing-page .features-tour__detail p {
+  margin: 0;
+}
+
+.landing-page .features-tour__detail .features-tour__detail-label {
+  margin-bottom: 0.3rem;
+  color: #355e3b;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-page .features-tour__controls {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.landing-page .features-tour__button {
+  min-height: 40px;
+  padding: 0.55rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid #dce5d9;
+  border-radius: 6px;
+  background: #fffefa;
+  color: #355e3b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.landing-page .features-tour__button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.landing-page .features-tour__button:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: #9cb59a;
+  background: #f2f6ec;
+}
+
+.landing-page .features-tour__button--primary {
+  border-color: #355e3b;
+  background: #355e3b;
+  color: #fffefa;
+}
+
+.landing-page .features-tour__button--primary:not(:disabled):hover {
+  border-color: #26482c;
+  background: #26482c;
+}
+
+.landing-page .features-tour__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.landing-page .features-tour__button:focus-visible {
+  outline: 3px solid #9abd68;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .features-tour__button {
+    transition: none;
+  }
+}
