@@ -25,7 +25,7 @@ export function LandingPage() {
       </a>
       <LandingNav />
       <main id="landing-main">
-        <HeroSection status={status} />
+        <HeroSection status={status} staff={staffOnDuty} />
         <section className="landing-pharmacy-overview" aria-labelledby="visit-heading">
           <div className="landing-overview-heading">
             <p className="eyebrow">At a glance</p>

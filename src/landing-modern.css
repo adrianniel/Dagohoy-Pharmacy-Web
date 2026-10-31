@@ -2002,3 +2002,47 @@
     font-size: 0.82rem;
   }
 }
+
+.landing-page .landing-hero__duty {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  align-self: stretch;
+  border: 1px solid rgb(255 255 240 / 42%);
+  border-radius: 9px;
+  background: #fffff0;
+  box-shadow: 0 5px 16px rgb(20 83 45 / 14%);
+  color: #173b2e;
+  text-align: start;
+}
+
+.landing-page .landing-hero__duty > strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.landing-page .landing-hero__duty ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  list-style: none;
+}
+
+.landing-page .landing-hero__duty li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.landing-page .landing-hero__duty li span {
+  color: #52695a;
+}
+
+.landing-page .landing-hero__duty li b {
+  color: #173b2e;
+  font-weight: 700;
+}
