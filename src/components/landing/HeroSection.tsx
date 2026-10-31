@@ -131,7 +131,7 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 lineHeight: '1.2',
               }}
               padding="0.7rem 1rem"
-              rounded={8}
+              rounded={30}
               addIcon
               icon={{
                 side: 'right',
@@ -146,7 +146,7 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 borderColor: '#cce8b7',
               }}
               glow={{ color: '#cce8b7', size: 5, blur: 8 }}
-              style={{ minHeight: 42 }}
+              style={{ minHeight: 42, width: 'fit-content' }}
             />
           </aside>
         </div>
