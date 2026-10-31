@@ -650,7 +650,7 @@
 
 .landing-page .landing-hero__stage {
   width: min(100% - 2rem, 1180px);
-  min-height: 700px;
+  min-height: 600px;
   margin-inline: auto;
   padding: clamp(2rem, 4vw, 3.25rem) 0 2.25rem;
   display: flex;
