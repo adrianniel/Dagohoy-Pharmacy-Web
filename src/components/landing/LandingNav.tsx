@@ -44,13 +44,13 @@ export function LandingNav() {
               : undefined
           }
         />
-        <div className="landing-nav__links" hidden={isCompact}>
+        <div className="landing-nav__links" inert={isCompact}>
           <a href="#home">Home</a>
           <a href="#features">Features</a>
           <a href="#contact">Contact</a>
         </div>
         <Link
-          hidden={isCompact}
+          inert={isCompact}
           className="landing-nav__login"
           to="/login"
           state={{ backgroundLocation: location }}
