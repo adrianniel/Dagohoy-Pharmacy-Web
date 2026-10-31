@@ -1889,8 +1889,21 @@
   color: #fffdf1;
 }
 
+.landing-page .features-section .section-heading .eyebrow,
+.landing-page .features-section .section-heading h2,
+.landing-page .features-section .section-heading > p:not(.eyebrow) {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.landing-page .features-section .section-heading .eyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
 .landing-page .features-section .section-heading > p:not(.eyebrow) {
   color: #f0f0dc;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .landing-page .features-section .section-heading .eyebrow {
@@ -2174,8 +2187,8 @@
 }
 
 .landing-page .features-tour {
-  width: min(100%, 620px);
-  margin-inline: auto;
+  width: 100%;
+  box-sizing: border-box;
   padding: clamp(1.25rem, 4vw, 2rem);
   border: 1px solid #e2e8dc;
   border-radius: 12px;
@@ -2183,6 +2196,23 @@
   box-shadow: 0 10px 28px rgb(13 40 24 / 18%);
   color: #173b2e;
   text-align: start;
+}
+
+.landing-page .features-workflows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(1rem, 2.2vw, 2rem);
+}
+
+.landing-page .features-workflow__title {
+  margin: 0 0 0.9rem;
+  color: #fffdf1;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.3rem, 2vw, 1.65rem);
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .landing-page .features-tour__steps {
@@ -2257,14 +2287,14 @@
   padding-top: 0.1rem;
 }
 
-.landing-page .features-tour__content h3 {
+.landing-page .features-tour__content h4 {
   margin: 0 0 0.3rem;
   color: #173b2e;
   font-size: 1rem;
   font-weight: 700;
 }
 
-.landing-page .features-tour__step--pending .features-tour__content h3 {
+.landing-page .features-tour__step--pending .features-tour__content h4 {
   color: #78867b;
 }
 
@@ -2374,6 +2404,12 @@
 @media (prefers-reduced-motion: reduce) {
   .landing-page .features-tour__button {
     transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-page .features-workflows {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

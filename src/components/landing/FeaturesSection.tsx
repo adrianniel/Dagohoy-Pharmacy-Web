@@ -1,24 +1,76 @@
 import { useState } from 'react';
-import { pharmacyFeatures } from './mockData';
 
-export function FeaturesSection() {
+interface WorkflowStep {
+  title: string;
+  description: string;
+}
+
+interface Workflow {
+  id: string;
+  title: string;
+  steps: WorkflowStep[];
+}
+
+const workflows: Workflow[] = [
+  {
+    id: 'administrator',
+    title: 'Administrator Workflow',
+    steps: [
+      {
+        title: 'Monitor Operations',
+        description: 'View sales activity, active shifts, and the pharmacy’s current status.',
+      },
+      {
+        title: 'Manage Inventory',
+        description:
+          'Maintain products, stock levels, batches, expiry dates, and received supplies.',
+      },
+      {
+        title: 'Review Records',
+        description: 'Check transactions, customer credit, stock movements, and business reports.',
+      },
+      {
+        title: 'Manage Staff',
+        description: 'Create cashier accounts, review shifts, and control access to the system.',
+      },
+    ],
+  },
+  {
+    id: 'cashier',
+    title: 'Cashier Workflow',
+    steps: [
+      {
+        title: 'Start Shift',
+        description: 'Log in and begin the active cashier shift for the day.',
+      },
+      {
+        title: 'Scan & Add Products',
+        description: 'Scan barcodes or search products to quickly build the customer’s cart.',
+      },
+      {
+        title: 'Process Sale',
+        description: 'Review items, choose the payment method, and complete the transaction.',
+      },
+      {
+        title: 'End Shift',
+        description: 'Review the shift summary, record the closing cash, and close the shift.',
+      },
+    ],
+  },
+];
+
+function WorkflowStepper({ workflow }: { workflow: Workflow }) {
   const [activeStep, setActiveStep] = useState(0);
-  const activeFeature = pharmacyFeatures[activeStep];
+  const activeItem = workflow.steps[activeStep];
 
   return (
-    <section
-      className="features-section section-wrap"
-      id="features"
-      aria-labelledby="features-title"
-    >
-      <div className="section-heading">
-        <p className="eyebrow">Core capabilities</p>
-        <h2 id="features-title">Everything in its place. Nothing in your way.</h2>
-        <p>Thoughtful tools for the moments that matter at the counter and beyond.</p>
-      </div>
+    <section className="features-workflow" aria-labelledby={`${workflow.id}-workflow-title`}>
+      <h3 className="features-workflow__title" id={`${workflow.id}-workflow-title`}>
+        {workflow.title}
+      </h3>
       <div className="features-tour">
-        <ol className="features-tour__steps" aria-label="System workflow">
-          {pharmacyFeatures.map((feature, index) => {
+        <ol className="features-tour__steps" aria-label={`${workflow.title} steps`}>
+          {workflow.steps.map((step, index) => {
             const isComplete = index < activeStep;
             const isActive = index === activeStep;
             const stepState = isComplete ? 'completed' : isActive ? 'active' : 'pending';
@@ -26,7 +78,7 @@ export function FeaturesSection() {
             return (
               <li
                 className={`features-tour__step features-tour__step--${stepState}`}
-                key={feature.number}
+                key={step.title}
                 aria-current={isActive ? 'step' : undefined}
               >
                 <span className="features-tour__circle" aria-hidden="true">
@@ -35,14 +87,14 @@ export function FeaturesSection() {
                       <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z" />
                     </svg>
                   ) : (
-                    feature.number
+                    index + 1
                   )}
                 </span>
-                {index < pharmacyFeatures.length - 1 && (
+                {index < workflow.steps.length - 1 && (
                   <span className="features-tour__line" aria-hidden="true" />
                 )}
                 <div className="features-tour__content">
-                  <h3>{feature.title}</h3>
+                  <h4>{step.title}</h4>
                   <span className="features-tour__status">
                     {isComplete ? 'Completed' : isActive ? 'In progress' : 'Up next'}
                   </span>
@@ -52,12 +104,12 @@ export function FeaturesSection() {
           })}
         </ol>
 
-        {activeFeature && (
+        {activeItem && (
           <div className="features-tour__detail" aria-live="polite" aria-atomic="true">
             <p className="features-tour__detail-label">
-              Step {activeStep + 1} of {pharmacyFeatures.length}
+              Step {activeStep + 1} of {workflow.steps.length}
             </p>
-            <p>{activeFeature.description}</p>
+            <p>{activeItem.description}</p>
           </div>
         )}
 
@@ -76,8 +128,8 @@ export function FeaturesSection() {
           <button
             className="features-tour__button features-tour__button--primary"
             type="button"
-            onClick={() => setActiveStep((step) => Math.min(pharmacyFeatures.length - 1, step + 1))}
-            disabled={activeStep === pharmacyFeatures.length - 1}
+            onClick={() => setActiveStep((step) => Math.min(workflow.steps.length - 1, step + 1))}
+            disabled={activeStep === workflow.steps.length - 1}
           >
             Next
             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -85,6 +137,27 @@ export function FeaturesSection() {
             </svg>
           </button>
         </div>
+      </div>
+    </section>
+  );
+}
+
+export function FeaturesSection() {
+  return (
+    <section
+      className="features-section section-wrap"
+      id="features"
+      aria-labelledby="features-title"
+    >
+      <div className="section-heading">
+        <p className="eyebrow">Core capabilities</p>
+        <h2 id="features-title">Everything in its place. Nothing in your way.</h2>
+        <p>Thoughtful tools for the moments that matter at the counter and beyond.</p>
+      </div>
+      <div className="features-workflows">
+        {workflows.map((workflow) => (
+          <WorkflowStepper workflow={workflow} key={workflow.id} />
+        ))}
       </div>
     </section>
   );
