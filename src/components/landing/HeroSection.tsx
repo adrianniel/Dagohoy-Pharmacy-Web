@@ -4,6 +4,7 @@ import HomeIcon from './hovericons/home-icon';
 import MapPinIcon from './hovericons/map-pin-icon';
 import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
 import StackIcon from './hovericons/stack-icon';
+import NeonGlowButton from '../originkit/ui/neon-glow-button';
 import type { PharmacyStatus } from './pharmacyTime';
 import type { StaffMember } from './types';
 
@@ -114,9 +115,39 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 daily operations in one system.
               </p>
             </article>
-            <a className="landing-hero__action landing-hero__action--secondary" href="#contact">
-              Get Your Own System
-            </a>
+            <NeonGlowButton
+              label="Get Your Own System"
+              link="#contact"
+              colors={{
+                fill: '#102318',
+                hoverFill: '#183d2a',
+                textColor: '#fffdf1',
+                hoverTextColor: '#d7f6c7',
+              }}
+              font={{
+                fontFamily: 'inherit',
+                fontSize: 14,
+                fontWeight: 700,
+                lineHeight: '1.2',
+              }}
+              padding="0.7rem 1rem"
+              rounded={8}
+              addIcon
+              icon={{
+                side: 'right',
+                size: 16,
+                symbol: '↗',
+                color: '#cce8b7',
+                hoverColor: '#fffdf1',
+              }}
+              border={{
+                borderWidth: 1,
+                borderStyle: 'solid',
+                borderColor: '#cce8b7',
+              }}
+              glow={{ color: '#cce8b7', size: 5, blur: 8 }}
+              style={{ minHeight: 42 }}
+            />
           </aside>
         </div>
       </div>
