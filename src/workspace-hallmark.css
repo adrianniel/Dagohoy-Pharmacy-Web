@@ -2,20 +2,28 @@
 /* Hallmark · pre-emit critique: P4 H4 E3 S4 R4 V4 · weakest: E, dense legacy controls need a shared, tested surface system; preserved their wiring and restyled the shell first. */
 :root {
   --hm-font-body: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
-  --hm-ink: #172f27;
-  --hm-ink-soft: #3c5549;
-  --hm-muted: #586f62;
-  --hm-accent: #126747;
+  --hm-ink: #17251e;
+  --hm-ink-soft: #4b5a52;
+  --hm-muted: #77857d;
+  --hm-accent: #0f6a47;
   --hm-accent-strong: #084f36;
-  --hm-accent-soft: #e7f1e9;
-  --hm-paper: #f4f7f3;
-  --hm-surface: #fbfdfb;
-  --hm-surface-muted: #edf3ed;
-  --hm-line: #d3e0d5;
-  --hm-line-strong: #a7beae;
-  --hm-focus: #126747;
+  --hm-accent-soft: #e3f3ea;
+  --hm-paper: #f6f8f6;
+  --hm-surface: #fdfefd;
+  --hm-surface-muted: #f2f6f3;
+  --hm-line: #e6ece7;
+  --hm-line-strong: #d5e1d9;
+  --hm-focus: #0f6a47;
   --hm-danger: #8d3d37;
-  --hm-shadow: rgb(18 54 37 / 7%);
+  --hm-shadow: rgb(0 82 56 / 9%);
+  --hm-sidebar-gradient: linear-gradient(155deg, #1dbd80 0%, #0f6a47 78%);
+  --hm-sidebar-line: rgb(255 255 255 / 18%);
+  --hm-sidebar-text: #f5fff9;
+  --hm-sidebar-muted: rgb(255 255 255 / 72%);
+  --hm-sidebar-hover: rgb(255 255 255 / 12%);
+  --hm-summary-green: linear-gradient(135deg, #0f6a47, #1c9a70);
+  --hm-summary-edge: #c8dcd3;
+  --hm-summary-shadow: rgb(15 106 71 / 20%);
   --hm-space-xs: 0.5rem;
   --hm-space-sm: 0.75rem;
   --hm-space-md: 1rem;
@@ -32,7 +40,7 @@ body:has(.cashier-shell) {
 }
 
 .cashier-shell {
-  --cashier-sidebar: 252px;
+  --cashier-sidebar: 260px;
   --cashier-green: var(--hm-accent);
   --cashier-green-dark: var(--hm-accent-strong);
   --cashier-green-soft: var(--hm-accent-soft);
@@ -51,30 +59,30 @@ body:has(.cashier-shell) {
 
 .cashier-sidebar {
   padding: var(--hm-space-lg) var(--hm-space-sm) var(--hm-space-md);
-  border-color: var(--hm-line);
-  background: var(--hm-surface);
-  color: var(--hm-ink);
+  border-color: var(--hm-sidebar-line);
+  background: var(--hm-sidebar-gradient);
+  color: var(--hm-sidebar-text);
   transition: transform 180ms ease;
 }
 
 .cashier-sidebar__brand {
   min-height: 64px;
   padding-inline: var(--hm-space-md);
-  border-color: var(--hm-line);
+  border-color: var(--hm-sidebar-line);
 }
 
 .cashier-sidebar__brand img {
-  filter: none;
+  filter: brightness(0) invert(1);
 }
 
 .cashier-sidebar__brand strong {
-  color: var(--hm-ink);
+  color: var(--hm-sidebar-text);
   font-style: normal;
   letter-spacing: normal;
 }
 
 .cashier-sidebar__brand small {
-  color: var(--hm-accent);
+  color: var(--hm-sidebar-muted);
   letter-spacing: normal;
 }
 
@@ -85,12 +93,12 @@ body:has(.cashier-shell) {
 .cashier-nav-group + .cashier-nav-group {
   margin-block-start: var(--hm-space-lg);
   padding-block-start: var(--hm-space-md);
-  border-top: 1px solid var(--hm-line);
+  border-top: 1px solid var(--hm-sidebar-line);
 }
 
 .cashier-nav-group > p {
   margin-block-end: var(--hm-space-sm);
-  color: var(--hm-muted);
+  color: var(--hm-sidebar-muted);
   font-size: 0.73rem;
   letter-spacing: normal;
   text-transform: none;
@@ -98,58 +106,63 @@ body:has(.cashier-shell) {
 
 .cashier-nav-item {
   min-height: 44px;
-  color: var(--hm-ink-soft);
+  color: var(--hm-sidebar-text);
   font-size: 0.86rem;
   font-weight: 500;
 }
 
 .cashier-nav-item:hover,
 .cashier-nav-item.is-active {
-  background: var(--hm-accent-soft);
-  color: var(--hm-accent-strong);
+  background: var(--hm-sidebar-hover);
+  color: var(--hm-sidebar-text);
   box-shadow: none;
 }
 
 .cashier-nav-item.is-active {
+  margin-inline-end: -0.75rem;
+  padding-inline-end: 1.45rem;
+  border-radius: 999px 0 0 999px;
+  background: var(--hm-paper);
+  color: var(--hm-accent);
   font-weight: 700;
 }
 
 .cashier-nav-item.is-emphasis:not(.is-active) {
-  color: var(--hm-accent-strong);
+  color: var(--hm-sidebar-text);
 }
 
 .cashier-nav-item small {
-  background: var(--hm-accent-soft);
-  color: var(--hm-accent-strong);
+  background: var(--hm-sidebar-line);
+  color: var(--hm-sidebar-text);
   font-size: 0.68rem;
   letter-spacing: normal;
   text-transform: none;
 }
 
 .cashier-sidebar__user {
-  border-color: var(--hm-line);
+  border-color: var(--hm-sidebar-line);
 }
 
 .cashier-sidebar__user small {
-  color: var(--hm-muted);
+  color: var(--hm-sidebar-muted);
 }
 
 .cashier-sidebar__collapse {
   min-height: 44px;
-  border-color: var(--hm-line);
-  color: var(--hm-ink-soft);
+  border-color: var(--hm-sidebar-line);
+  color: var(--hm-sidebar-text);
 }
 
 .cashier-sidebar__collapse:hover {
-  background: var(--hm-accent-soft);
-  color: var(--hm-accent-strong);
+  background: var(--hm-sidebar-hover);
+  color: var(--hm-sidebar-text);
 }
 
 .cashier-header {
-  min-height: 76px;
+  min-height: 86px;
   border-color: var(--hm-line);
-  background: var(--hm-surface);
-  box-shadow: none;
+  background: var(--hm-paper);
+  box-shadow: 0 8px 28px var(--hm-shadow);
 }
 
 .cashier-header__title p {
@@ -176,12 +189,12 @@ body:has(.cashier-shell) {
 }
 
 .cashier-content {
-  padding: var(--hm-space-xl);
+  padding: 1.5rem clamp(1.25rem, 2.5vw, 2.5rem) 2.5rem;
   background: var(--hm-paper);
 }
 
 .cashier-page {
-  width: min(100%, 1420px);
+  width: min(100%, 1600px);
 }
 
 .cashier-page-heading {
@@ -217,20 +230,19 @@ body:has(.cashier-shell) {
 
 .cashier-summary-grid {
   margin-block-end: var(--hm-space-xl);
-  gap: 0;
-  border-block: 1px solid var(--hm-line-strong);
+  gap: var(--hm-space-md);
+  border: 0;
 }
 
 .cashier-summary-card {
   min-width: 0;
-  min-height: 136px;
-  padding: var(--hm-space-lg);
-  overflow: visible;
+  min-height: 148px;
+  padding: 1.25rem 1.35rem;
+  overflow: hidden;
   border: 0;
-  border-inline-end: 1px solid var(--hm-line);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  border-radius: 1.15rem;
+  background: var(--hm-surface);
+  box-shadow: 0 8px 28px var(--hm-shadow);
 }
 
 .cashier-summary-card:last-child {
@@ -238,18 +250,41 @@ body:has(.cashier-shell) {
 }
 
 .cashier-summary-card::before {
+  width: 4px;
+  height: 100%;
+  background: var(--hm-summary-edge);
+}
+
+.cashier-summary-card--green {
+  border-color: var(--hm-accent);
+  background: var(--hm-summary-green);
+  box-shadow: 0 12px 30px var(--hm-summary-shadow);
+}
+
+.cashier-summary-card--green::before {
   display: none;
 }
 
+.cashier-summary-card--green p,
+.cashier-summary-card--green strong,
+.cashier-summary-card--green span {
+  color: var(--hm-sidebar-text);
+}
+
+.cashier-summary-card--green p,
+.cashier-summary-card--green span {
+  color: var(--hm-sidebar-muted);
+}
+
 .cashier-summary-card p {
-  margin-block-end: var(--hm-space-lg);
+  margin-block-end: var(--hm-space-md);
   color: var(--hm-ink-soft);
   font-size: 0.83rem;
 }
 
 .cashier-summary-card strong {
   color: var(--hm-ink);
-  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-size: clamp(1.65rem, 2.4vw, 2.25rem);
 }
 
 .cashier-summary-card span {
@@ -260,10 +295,10 @@ body:has(.cashier-shell) {
 .cashier-panel,
 .register-state-card {
   min-width: 0;
-  border: 1px solid var(--hm-line);
-  border-radius: var(--hm-radius-md);
+  border: 0;
+  border-radius: 1.2rem;
   background: var(--hm-surface);
-  box-shadow: none;
+  box-shadow: 0 8px 28px var(--hm-shadow);
 }
 
 .cashier-panel__heading {
@@ -287,7 +322,7 @@ body:has(.cashier-shell) {
 .cashier-dashboard-grid,
 .pos-layout,
 .pos-workspace-grid {
-  gap: var(--hm-space-lg);
+  gap: 1.15rem;
 }
 
 .cashier-table th {
@@ -321,7 +356,7 @@ body:has(.cashier-shell) {
 
 .cashier-primary-action,
 .pos-checkout-button {
-  border-radius: var(--hm-radius-sm);
+  border-radius: 999px;
   background: var(--hm-accent);
   box-shadow: none;
 }
@@ -452,19 +487,9 @@ body:has(.cashier-shell) {
   background: var(--hm-surface);
 }
 
-@media (max-width: 1080px) {
-  .cashier-summary-card:nth-child(2) {
-    border-inline-end: 0;
-  }
-
-  .cashier-summary-card:nth-child(-n + 2) {
-    border-block-end: 1px solid var(--hm-line);
-  }
-}
-
 @media (max-width: 820px) {
   .cashier-sidebar {
-    width: 252px;
+    width: 260px;
   }
 
   .cashier-content {
@@ -489,17 +514,6 @@ body:has(.cashier-shell) {
   .cashier-panel__heading,
   .cashier-list-toolbar {
     padding: var(--hm-space-md);
-  }
-}
-
-@media (max-width: 380px) {
-  .cashier-summary-card {
-    border-inline-end: 0;
-    border-block-end: 1px solid var(--hm-line);
-  }
-
-  .cashier-summary-card:last-child {
-    border-block-end: 0;
   }
 }
 
