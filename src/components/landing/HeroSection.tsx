@@ -5,15 +5,16 @@ import MapPinIcon from './hovericons/map-pin-icon';
 import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
 import StackIcon from './hovericons/stack-icon';
 import { ContactGlowButton } from './ContactGlowButton';
+import { OpeningHoursDisclosure } from './OpeningHoursDisclosure';
 import type { PharmacyStatus } from './pharmacyTime';
-import type { StaffMember } from './types';
+import type { WeeklyHoursEntry } from './types';
 
 interface HeroSectionProps {
   status: PharmacyStatus;
-  staff: StaffMember[];
+  hours: WeeklyHoursEntry[];
 }
 
-export function HeroSection({ status, staff }: HeroSectionProps) {
+export function HeroSection({ status, hours }: HeroSectionProps) {
   return (
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__stage">
@@ -75,17 +76,7 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 transactions moving smoothly.
               </p>
             </article>
-            <div className="landing-hero__duty" aria-label="Staff on duty">
-              <strong>On Duty:</strong>
-              <ul>
-                {staff.map((person) => (
-                  <li key={person.role}>
-                    <span>{person.role}</span>
-                    <b>{person.displayName}</b>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <OpeningHoursDisclosure hours={hours} />
           </aside>
 
           <aside className="landing-hero__side landing-hero__side--right">

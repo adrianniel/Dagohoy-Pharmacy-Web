@@ -5,7 +5,7 @@ import { FeaturesSection } from '../components/landing/FeaturesSection';
 import { HeroSection } from '../components/landing/HeroSection';
 import { LandingFooter } from '../components/landing/LandingFooter';
 import { LandingNav } from '../components/landing/LandingNav';
-import { pharmacyProfile, staffOnDuty, weeklyHours } from '../components/landing/mockData';
+import { pharmacyProfile, weeklyHours } from '../components/landing/mockData';
 import { getPharmacyStatus } from '../components/landing/pharmacyTime';
 
 export function LandingPage() {
@@ -24,7 +24,7 @@ export function LandingPage() {
       </a>
       <LandingNav />
       <main id="landing-main">
-        <HeroSection status={status} staff={staffOnDuty} />
+        <HeroSection status={status} hours={weeklyHours} />
         <FeaturesSection />
         <DeveloperCta />
         <ContactSection />

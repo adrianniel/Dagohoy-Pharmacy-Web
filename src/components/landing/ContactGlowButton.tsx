@@ -30,7 +30,7 @@ const StyledWrapper = styled.div`
 
     position: relative;
     display: inline-flex;
-    width: fit-content;
+    width: 210px;
     min-height: 42px;
     align-items: center;
     justify-content: center;
@@ -62,6 +62,7 @@ const StyledWrapper = styled.div`
       background-color var(--transition);
     user-select: none;
     white-space: nowrap;
+    box-sizing: border-box;
   }
 
   .btn::before {
