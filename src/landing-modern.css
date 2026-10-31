@@ -1794,3 +1794,31 @@
   width: 30px;
   height: 30px;
 }
+
+.landing-page .features-section {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(3.5rem, 6vw, 5.5rem) max(1rem, calc((100% - 1320px) / 2));
+  background: #737f42;
+}
+
+.landing-page .features-section .section-heading h2 {
+  color: #fffdf1;
+}
+
+.landing-page .features-section .section-heading > p:not(.eyebrow) {
+  color: #f0f0dc;
+}
+
+.landing-page .features-section .section-heading .eyebrow {
+  color: #f2df9b;
+}
+
+.landing-page .features-section .feature-panel {
+  background: #fffefa;
+}
+
+.landing-page .features-section .feature-panel h3 {
+  color: #172d24;
+}
