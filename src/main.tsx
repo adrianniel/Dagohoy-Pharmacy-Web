@@ -11,6 +11,7 @@ import './workspace-polish.css';
 import './public-polish.css';
 import './landing-modern.css';
 import './workspace-hallmark.css';
+import './components/landing/workflow-cards.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

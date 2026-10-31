@@ -1,4 +1,11 @@
 import { useState } from 'react';
+import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
+import ChartBarIcon from './hovericons/chart-bar-icon';
+import StackIcon from './hovericons/stack-icon';
+import UsersGroupIcon from './hovericons/users-group-icon';
+import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
+import ShoppingCartIcon from './hovericons/shopping-cart-icon';
+import CheckedIcon from './hovericons/checked-icon';
 
 interface WorkflowStep {
   title: string;
@@ -61,19 +68,41 @@ const workflows: Workflow[] = [
 
 function WorkflowStepper({ workflow }: { workflow: Workflow }) {
   const [activeStep, setActiveStep] = useState(0);
-  const activeItem = workflow.steps[activeStep];
+  const icons =
+    workflow.id === 'administrator'
+      ? [ChartBarIcon, StackIcon, CheckedIcon, UsersGroupIcon]
+      : [CheckedIcon, ScanBarcodeIcon, ShoppingCartIcon, CheckedIcon];
+  const HeaderIcon = workflow.id === 'administrator' ? ChartBarIcon : ShoppingCartIcon;
 
   return (
     <section className="features-workflow" aria-labelledby={`${workflow.id}-workflow-title`}>
-      <h3 className="features-workflow__title" id={`${workflow.id}-workflow-title`}>
-        {workflow.title}
-      </h3>
+      <header
+        className="features-workflow__header"
+        style={{
+          backgroundImage: `linear-gradient(115deg, #123f2a 0%, #14532deB 72%, #14532d55 73%), url(${storefrontImage})`,
+        }}
+      >
+        <span className="features-workflow__header-icon" aria-hidden="true">
+          <HeaderIcon size={36} />
+        </span>
+        <div>
+          <h3 className="features-workflow__title" id={`${workflow.id}-workflow-title`}>
+            {workflow.title}
+          </h3>
+          <p>
+            {workflow.id === 'administrator'
+              ? 'Manage, monitor, and control the pharmacy’s operations.'
+              : 'Process sales quickly and accurately from start to finish.'}
+          </p>
+        </div>
+      </header>
       <div className="features-tour">
         <ol className="features-tour__steps" aria-label={`${workflow.title} steps`}>
           {workflow.steps.map((step, index) => {
             const isComplete = index < activeStep;
             const isActive = index === activeStep;
             const stepState = isComplete ? 'completed' : isActive ? 'active' : 'pending';
+            const Icon = icons[index] ?? CheckedIcon;
 
             return (
               <li
@@ -94,9 +123,18 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
                   <span className="features-tour__line" aria-hidden="true" />
                 )}
                 <div className="features-tour__content">
-                  <h4>{step.title}</h4>
+                  <span className="features-tour__icon" aria-hidden="true">
+                    <Icon size={30} />
+                  </span>
+                  <div className="features-tour__copy">
+                    <h4>{step.title}</h4>
+                    <p>{step.description}</p>
+                  </div>
                   <span className="features-tour__status">
                     {isComplete ? 'Completed' : isActive ? 'In progress' : 'Up next'}
+                  </span>
+                  <span className="features-tour__chevron" aria-hidden="true">
+                    ›
                   </span>
                 </div>
               </li>
@@ -104,16 +142,17 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
           })}
         </ol>
 
-        {activeItem && (
-          <div className="features-tour__detail" aria-live="polite" aria-atomic="true">
-            <p className="features-tour__detail-label">
+        <div className="features-tour__controls">
+          <div className="features-tour__progress" aria-live="polite" aria-atomic="true">
+            <p>
               Step {activeStep + 1} of {workflow.steps.length}
             </p>
-            <p>{activeItem.description}</p>
+            <div aria-hidden="true">
+              {workflow.steps.map((step, index) => (
+                <span className={index <= activeStep ? 'is-filled' : ''} key={step.title} />
+              ))}
+            </div>
           </div>
-        )}
-
-        <div className="features-tour__controls">
           <button
             className="features-tour__button"
             type="button"
