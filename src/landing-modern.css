@@ -3,6 +3,32 @@
   --landing-ink: #172d24;
   --landing-green: #176246;
   --landing-cream: #f7f5ee;
+  --landing-nav-height: 100px;
+  --landing-home-pattern:
+    linear-gradient(
+      0deg,
+      transparent 24%,
+      #e1e1e1 25%,
+      #e1e1e1 26%,
+      transparent 27%,
+      transparent 74%,
+      #e1e1e1 75%,
+      #e1e1e1 76%,
+      transparent 77%,
+      transparent
+    ),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      #e1e1e1 25%,
+      #e1e1e1 26%,
+      transparent 27%,
+      transparent 74%,
+      #e1e1e1 75%,
+      #e1e1e1 76%,
+      transparent 77%,
+      transparent
+    );
   background: var(--landing-cream);
   color: var(--landing-ink);
 }
@@ -1833,6 +1859,10 @@
   position: sticky;
   inset-block-start: 0;
   z-index: 1000;
+  background-color: #f5f0e0;
+  background-image: var(--landing-home-pattern);
+  background-size: 55px 55px;
+  background-position: 0 0;
 }
 
 .landing-page .feature-panel__icon {
@@ -1893,21 +1923,26 @@
   0%,
   100% {
     box-shadow:
-      0 0 16px 2px rgb(53 94 59 / 20%),
-      0 0 32px 4px rgb(53 94 59 / 10%);
+      0 0 34px 10px rgb(53 94 59 / 23%),
+      0 0 76px 24px rgb(53 94 59 / 15%),
+      0 0 125px 42px rgb(53 94 59 / 8%);
   }
 
   50% {
     box-shadow:
-      0 0 26px 7px rgb(53 94 59 / 40%),
-      0 0 52px 12px rgb(53 94 59 / 20%);
+      0 0 48px 17px rgb(53 94 59 / 38%),
+      0 0 100px 36px rgb(53 94 59 / 25%),
+      0 0 165px 58px rgb(53 94 59 / 13%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page .landing-hero__showcase .landing-hero__visual {
     animation: none;
-    box-shadow: 0 0 20px 4px rgb(53 94 59 / 24%);
+    box-shadow:
+      0 0 38px 12px rgb(53 94 59 / 27%),
+      0 0 90px 30px rgb(53 94 59 / 18%),
+      0 0 140px 48px rgb(53 94 59 / 10%);
   }
 }
 
@@ -2344,30 +2379,19 @@
 
 .landing-page .landing-hero {
   background-color: #f5f0e0;
-  background-image:
-    linear-gradient(
-      0deg,
-      transparent 24%,
-      #e1e1e1 25%,
-      #e1e1e1 26%,
-      transparent 27%,
-      transparent 74%,
-      #e1e1e1 75%,
-      #e1e1e1 76%,
-      transparent 77%,
-      transparent
-    ),
-    linear-gradient(
-      90deg,
-      transparent 24%,
-      #e1e1e1 25%,
-      #e1e1e1 26%,
-      transparent 27%,
-      transparent 74%,
-      #e1e1e1 75%,
-      #e1e1e1 76%,
-      transparent 77%,
-      transparent
-    );
+  background-image: var(--landing-home-pattern);
   background-size: 55px 55px;
+  background-position: 0 calc(-1 * var(--landing-nav-height));
+}
+
+.landing-page .landing-hero__intro h1 {
+  text-shadow:
+    0 0 12px rgb(255 255 255 / 95%),
+    0 0 28px rgb(255 255 255 / 88%);
+}
+
+@media (max-width: 700px) {
+  .landing-page {
+    --landing-nav-height: 102px;
+  }
 }
