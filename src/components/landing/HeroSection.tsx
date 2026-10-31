@@ -53,20 +53,14 @@ export function HeroSection({ status }: HeroSectionProps) {
                 <HomeIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
               <h2>Built for Pharmacy Work</h2>
-              <p>
-                Designed for real pharmacy routines, keeping daily counter work and inventory tasks
-                simple and organized.
-              </p>
+              <p>Made for daily pharmacy tasks, from counter work to inventory.</p>
             </article>
             <article className="landing-hero__feature">
               <span className="landing-hero__feature-icon" aria-hidden="true">
                 <ScanBarcodeIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
               <h2>Scan and Go</h2>
-              <p>
-                Use barcode scanning to find products quickly, reduce manual input, and keep
-                transactions moving smoothly.
-              </p>
+              <p>Scan products faster, reduce manual input, and speed up checkout.</p>
             </article>
             <Link
               className="landing-hero__action landing-hero__action--primary"
