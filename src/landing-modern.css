@@ -1315,8 +1315,10 @@
 
 /* Keep the centered pharmacy hero above the legacy landing-page variants. */
 .landing-page .landing-nav-wrap {
-  border-color: rgb(218 237 224 / 11%);
-  background: rgb(8 19 15 / 92%);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .landing-page .landing-brand__text strong {
