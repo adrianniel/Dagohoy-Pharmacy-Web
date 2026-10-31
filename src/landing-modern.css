@@ -2390,6 +2390,12 @@
     0 0 28px rgb(255 255 255 / 88%);
 }
 
+.landing-page .landing-hero__intro .landing-hero__description {
+  text-shadow:
+    0 0 10px rgb(255 255 255 / 92%),
+    0 0 22px rgb(255 255 255 / 78%);
+}
+
 @media (max-width: 700px) {
   .landing-page {
     --landing-nav-height: 102px;
