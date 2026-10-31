@@ -72,9 +72,12 @@ function WorkflowStepper({ workflow }: { workflow: Workflow }) {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const icon = activeIconRef.current;
-    icon?.startAnimation();
-    return () => icon?.stopAnimation();
+    // Wait until refs are attached, including StrictMode's mount replay.
+    // Motion's useAnimate owns cleanup; stopAnimation queries a detached scope.
+    const frame = window.requestAnimationFrame(() => {
+      activeIconRef.current?.startAnimation();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [activeStep]);
   const icons =
     workflow.id === 'administrator'
