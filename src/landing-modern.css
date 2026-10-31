@@ -1858,3 +1858,25 @@
     box-shadow: 0 0 20px 4px rgb(53 94 59 / 24%);
   }
 }
+
+.landing-page .landing-hero__feature,
+.landing-page .landing-hero__side--right .landing-hero__feature {
+  border: 1px solid rgb(255 255 255 / 42%);
+  border-radius: 12px;
+  background: #cc3b87;
+  box-shadow: 0 8px 22px rgb(53 94 59 / 12%);
+}
+
+.landing-page .landing-hero__feature h2 {
+  color: #fff;
+}
+
+.landing-page .landing-hero__feature p {
+  color: #fff3f8;
+}
+
+.landing-page .landing-hero__feature-icon,
+.landing-page .landing-hero__side--right .landing-hero__feature-icon {
+  background: rgb(255 255 255 / 88%);
+  color: #355e3b;
+}
