@@ -115,15 +115,31 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             placeholder="••••••••"
             required
           />
-          <label htmlFor="role">Workspace</label>
-          <select
-            id="role"
-            value={role}
-            onChange={(event) => setRole(event.target.value as 'ADMIN' | 'CASHIER')}
-          >
-            <option value="ADMIN">Owner / administrator</option>
-            <option value="CASHIER">Cashier</option>
-          </select>
+          <fieldset className="login-role-group">
+            <legend>Workspace</legend>
+            <div className="login-role-options">
+              <label className="login-role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value="ADMIN"
+                  checked={role === 'ADMIN'}
+                  onChange={() => setRole('ADMIN')}
+                />
+                <span>Administrator</span>
+              </label>
+              <label className="login-role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value="CASHIER"
+                  checked={role === 'CASHIER'}
+                  onChange={() => setRole('CASHIER')}
+                />
+                <span>Cashier</span>
+              </label>
+            </div>
+          </fieldset>
           <button className="button" type="submit">
             Sign in to {APP_NAME}
           </button>
