@@ -1913,10 +1913,7 @@ html:has(.landing-page) {
   inset-block-start: 0;
   inset-inline: 0;
   z-index: 1000;
-  background-color: #f5f0e0;
-  background-image: var(--landing-home-pattern);
-  background-size: 55px 55px;
-  background-position: 0 0;
+  background: transparent;
 }
 
 .landing-page .feature-panel__icon {
