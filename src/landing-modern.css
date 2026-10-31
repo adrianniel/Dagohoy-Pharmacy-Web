@@ -1976,3 +1976,23 @@
   font-size: 0.8rem;
   line-height: 1.4;
 }
+
+.landing-page .landing-hero__visual .landing-hero__photo-credit {
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.landing-page .landing-hero__visual .landing-hero__photo-credit svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 520px) {
+  .landing-page .landing-hero__visual .landing-hero__photo-credit {
+    gap: 0.45rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+  }
+}
