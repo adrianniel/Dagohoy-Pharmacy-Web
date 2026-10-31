@@ -614,7 +614,7 @@
 /* Centered storefront hero inspired by the supplied landing-page reference. */
 .landing-page .landing-nav-wrap {
   border: 0;
-  background: transparent;
+  background: #08130f;
   box-shadow: none;
   backdrop-filter: none;
 }
@@ -1316,7 +1316,7 @@
 /* Keep the centered pharmacy hero above the legacy landing-page variants. */
 .landing-page .landing-nav-wrap {
   border: 0;
-  background: transparent;
+  background: #08130f;
   box-shadow: none;
   backdrop-filter: none;
 }
