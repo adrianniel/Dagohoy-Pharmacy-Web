@@ -1,9 +1,9 @@
 import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
 import { Link, useLocation } from 'react-router-dom';
 import ChartBarIcon from './hovericons/chart-bar-icon';
-import CheckedIcon from './hovericons/checked-icon';
+import HomeIcon from './hovericons/home-icon';
+import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
 import StackIcon from './hovericons/stack-icon';
-import UsersGroupIcon from './hovericons/users-group-icon';
 import type { PharmacyStatus } from './pharmacyTime';
 
 interface HeroSectionProps {
@@ -50,17 +50,23 @@ export function HeroSection({ status }: HeroSectionProps) {
           <aside className="landing-hero__side landing-hero__side--left">
             <article className="landing-hero__feature">
               <span className="landing-hero__feature-icon" aria-hidden="true">
-                <ChartBarIcon size={28} color="currentColor" strokeWidth={2} />
+                <HomeIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
-              <h2>Sales</h2>
-              <p>Ring up customers fast and see the day’s totals as they build.</p>
+              <h2>Built for Pharmacy Work</h2>
+              <p>
+                Designed around the actual daily flow of a pharmacy, from counter transactions to
+                inventory monitoring.
+              </p>
             </article>
             <article className="landing-hero__feature">
               <span className="landing-hero__feature-icon" aria-hidden="true">
-                <StackIcon size={28} color="currentColor" strokeWidth={2} />
+                <ScanBarcodeIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
-              <h2>Stock</h2>
-              <p>Know what is on the shelf, what is low, and what expires soon.</p>
+              <h2>Scan and Go</h2>
+              <p>
+                Use barcode scanning to find products faster, reduce manual encoding, and keep
+                checkout moving smoothly.
+              </p>
             </article>
             <Link
               className="landing-hero__action landing-hero__action--primary"
@@ -74,17 +80,23 @@ export function HeroSection({ status }: HeroSectionProps) {
           <aside className="landing-hero__side landing-hero__side--right">
             <article className="landing-hero__feature">
               <span className="landing-hero__feature-icon" aria-hidden="true">
-                <CheckedIcon size={28} color="currentColor" strokeWidth={2} />
+                <StackIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
-              <h2>Daily work</h2>
-              <p>Keep records tidy so end-of-day checks take minutes.</p>
+              <h2>Stock You Can Trust</h2>
+              <p>
+                Keep inventory, batches, and expiry information organized so stock decisions are
+                based on clear records.
+              </p>
             </article>
             <article className="landing-hero__feature">
               <span className="landing-hero__feature-icon" aria-hidden="true">
-                <UsersGroupIcon size={28} color="currentColor" strokeWidth={2} />
+                <ChartBarIcon size={28} color="currentColor" strokeWidth={2} />
               </span>
-              <h2>Made for the shop</h2>
-              <p>Simple screens your whole team can pick up on day one.</p>
+              <h2>Clear Business Visibility</h2>
+              <p>
+                Give the owner a better view of sales, inventory activity, and daily operations in
+                one system.
+              </p>
             </article>
             <a className="landing-hero__action landing-hero__action--secondary" href="#contact">
               Need help getting in?
