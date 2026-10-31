@@ -1923,16 +1923,16 @@
   0%,
   100% {
     box-shadow:
-      0 0 34px 10px rgb(53 94 59 / 23%),
-      0 0 76px 24px rgb(53 94 59 / 15%),
-      0 0 125px 42px rgb(53 94 59 / 8%);
+      0 0 22px 5px rgb(53 94 59 / 24%),
+      0 0 46px 15px rgb(53 94 59 / 14%),
+      0 0 75px 28px rgb(53 94 59 / 7%);
   }
 
   50% {
     box-shadow:
-      0 0 48px 17px rgb(53 94 59 / 38%),
-      0 0 100px 36px rgb(53 94 59 / 25%),
-      0 0 165px 58px rgb(53 94 59 / 13%);
+      0 0 34px 12px rgb(53 94 59 / 38%),
+      0 0 70px 25px rgb(53 94 59 / 23%),
+      0 0 105px 40px rgb(53 94 59 / 11%);
   }
 }
 
@@ -1940,9 +1940,9 @@
   .landing-page .landing-hero__showcase .landing-hero__visual {
     animation: none;
     box-shadow:
-      0 0 38px 12px rgb(53 94 59 / 27%),
-      0 0 90px 30px rgb(53 94 59 / 18%),
-      0 0 140px 48px rgb(53 94 59 / 10%);
+      0 0 26px 8px rgb(53 94 59 / 27%),
+      0 0 58px 20px rgb(53 94 59 / 16%),
+      0 0 88px 32px rgb(53 94 59 / 8%);
   }
 }
 
