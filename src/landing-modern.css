@@ -1869,10 +1869,13 @@
 
 .landing-page .landing-hero__feature h2 {
   color: #172d24;
+  font-size: 1.15rem;
 }
 
 .landing-page .landing-hero__feature p {
   color: #43574a;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .landing-page .landing-hero__feature-icon,
