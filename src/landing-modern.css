@@ -1777,3 +1777,20 @@
     transition: none;
   }
 }
+
+.landing-page .landing-nav__links a,
+.landing-page .landing-nav__login {
+  color: #fff;
+}
+
+.landing-page .feature-panel__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #176246;
+}
+
+.landing-page .feature-panel__icon svg {
+  width: 30px;
+  height: 30px;
+}

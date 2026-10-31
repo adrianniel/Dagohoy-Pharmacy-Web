@@ -1,25 +1,16 @@
 import { pharmacyFeatures } from './mockData';
+import ChartBarIcon from './hovericons/chart-bar-icon';
+import ShoppingCartIcon from './hovericons/shopping-cart-icon';
+import StackIcon from './hovericons/stack-icon';
 
 function FeatureIcon({ index }: { index: number }) {
-  const icons = [
-    <>
-      <path d="M5 8h22v16H5z" />
-      <path d="M9 13h8M9 18h5M22 12v8M19 16h6" />
-    </>,
-    <>
-      <path d="m16 4 11 5-11 5L5 9z" />
-      <path d="m5 15 11 5 11-5M5 21l11 5 11-5" />
-    </>,
-    <>
-      <path d="M6 27V15M13 27V9M20 27V18M27 27V5" />
-      <path d="M4 27h25" />
-    </>,
-  ];
+  const icons = [ShoppingCartIcon, StackIcon, ChartBarIcon];
+  const Icon = icons[index] ?? ShoppingCartIcon;
 
   return (
-    <svg className="feature-panel__icon" viewBox="0 0 32 32" aria-hidden="true">
-      {icons[index]}
-    </svg>
+    <span className="feature-panel__icon" aria-hidden="true">
+      <Icon size={30} color="currentColor" strokeWidth={2} />
+    </span>
   );
 }
 

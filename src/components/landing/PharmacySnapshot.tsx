@@ -1,5 +1,7 @@
 import type { PharmacyStatus } from './pharmacyTime';
 import type { StaffMember, WeeklyHoursEntry } from './types';
+import HomeIcon from './hovericons/home-icon';
+import UsersGroupIcon from './hovericons/users-group-icon';
 
 interface PharmacySnapshotProps {
   status: PharmacyStatus;
@@ -23,18 +25,7 @@ export function PharmacySnapshot({ status, staff, hours }: PharmacySnapshotProps
       <article className="visit-card visit-card--status">
         <div className="visit-card__heading">
           <span className="visit-card__icon" aria-hidden="true">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m5 12 2-6h18l2 6" />
-              <path d="M4 12h24v4a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-4-2z" />
-              <path d="M6 17v11h20V17M12 28v-8h8v8" />
-            </svg>
+            <HomeIcon size={21} color="currentColor" strokeWidth={1.8} />
           </span>
           <h3>Store status</h3>
         </div>
@@ -51,18 +42,7 @@ export function PharmacySnapshot({ status, staff, hours }: PharmacySnapshotProps
       <article className="visit-card visit-card--team">
         <div className="visit-card__heading">
           <span className="visit-card__icon" aria-hidden="true">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="10" r="4" />
-              <circle cx="23" cy="13" r="3" />
-              <path d="M4 27c0-5 3-9 8-9s8 4 8 9H4zM19 20c4-2 9 1 9 7h-6" />
-            </svg>
+            <UsersGroupIcon size={21} color="currentColor" strokeWidth={1.8} />
           </span>
           <h3>On duty today</h3>
         </div>
