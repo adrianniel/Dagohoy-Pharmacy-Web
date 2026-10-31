@@ -1583,7 +1583,9 @@
   border: 1px solid rgb(220 237 225 / 14%);
   border-radius: 14px;
   background: #14532d;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 22%);
+  box-shadow:
+    0 18px 38px rgb(20 83 45 / 18%),
+    0 4px 12px rgb(0 0 0 / 12%);
 }
 
 .landing-page .landing-brand {
