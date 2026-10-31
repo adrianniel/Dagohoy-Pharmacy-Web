@@ -1926,11 +1926,7 @@
 }
 
 .landing-page .landing-hero__feature p {
-  display: -webkit-box;
-  max-width: 24ch;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  max-width: none;
   font-size: 0.8rem;
   line-height: 1.4;
 }

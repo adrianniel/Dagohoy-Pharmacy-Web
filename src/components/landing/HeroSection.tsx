@@ -54,8 +54,11 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Built for Pharmacy Work</h2>
               <p>
-                Keep daily pharmacy tasks organized so staff can work efficiently and focus on
-                better service.
+                Keep daily pharmacy tasks organized
+                <br />
+                so staff can work efficiently
+                <br />
+                and focus on better service.
               </p>
             </article>
             <article className="landing-hero__feature">
@@ -64,7 +67,10 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Scan and Go</h2>
               <p>
-                Use barcode scanning to find products faster, reduce manual input, and keep
+                Use barcode scanning to find products
+                <br />
+                faster, reduce manual input, and keep
+                <br />
                 transactions moving smoothly.
               </p>
             </article>
@@ -84,8 +90,11 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Stock You Can Trust</h2>
               <p>
-                Keep inventory, batches, and expiry information organized so stock decisions are
-                based on clear records.
+                Keep inventory, batches, and expiry
+                <br />
+                information organized so stock decisions
+                <br />
+                are based on clear records.
               </p>
             </article>
             <article className="landing-hero__feature">
@@ -94,8 +103,11 @@ export function HeroSection({ status }: HeroSectionProps) {
               </span>
               <h2>Clear Business Visibility</h2>
               <p>
-                Give the owner a better view of sales, inventory activity, and daily operations in
-                one system.
+                Give the owner a better view
+                <br />
+                of sales, inventory activity, and
+                <br />
+                daily operations in one system.
               </p>
             </article>
             <a className="landing-hero__action landing-hero__action--secondary" href="#contact">
