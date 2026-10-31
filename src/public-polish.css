@@ -75,6 +75,144 @@
   font-weight: 650;
 }
 
+.login-overlay {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  padding: 1rem;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgb(8 35 24 / 42%);
+  backdrop-filter: blur(10px) saturate(88%);
+  animation: login-overlay-in 180ms ease-out both;
+}
+
+.auth-card.auth-card--modal {
+  position: relative;
+  width: min(100%, 460px);
+  max-height: min(90dvh, 760px);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  overflow-y: auto;
+  border: 1px solid #d9e7df;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 28px 90px rgb(8 35 24 / 25%);
+  animation: login-card-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.login-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dce8e0;
+  border-radius: 50%;
+  background: #f5f8f5;
+  color: #28533f;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.login-modal-close:hover {
+  background: #e8f1ea;
+}
+
+.login-modal-brand {
+  margin: 0 3rem 2rem 0;
+  padding: 0;
+  display: inline-flex;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: #176246;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.login-modal-brand span {
+  color: #66776d;
+  font-weight: 500;
+}
+
+.auth-card--modal .eyebrow {
+  margin-bottom: 0.5rem;
+  color: #176246;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-card--modal h1 {
+  margin-bottom: 0.5rem;
+  color: #163e30;
+  font-size: clamp(1.8rem, 6vw, 2.15rem);
+}
+
+.auth-card--modal > .muted {
+  margin-bottom: 1.5rem;
+  color: #536d5e;
+  line-height: 1.6;
+}
+
+.auth-card--modal .stack {
+  gap: 0.65rem;
+}
+
+.auth-card--modal .stack label {
+  margin-top: 0.25rem;
+  color: #304c3a;
+}
+
+.auth-card--modal .stack input,
+.auth-card--modal .stack select {
+  min-height: 48px;
+}
+
+.auth-card--modal .stack .button {
+  min-height: 50px;
+  margin-top: 0.5rem;
+  background: #176246;
+}
+
+.auth-card--modal .stack .button:hover {
+  background: #0d4c35;
+}
+
+.auth-card--modal .auth-note {
+  margin: 1.25rem 0 0;
+  color: #718077;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@keyframes login-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .landing-page .landing-hero__visual,
 .landing-page .feature-panel,
 .landing-page .contact-card {
@@ -127,5 +265,12 @@
 
   .auth-introduction h2 {
     font-size: 1.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-overlay,
+  .auth-card--modal {
+    animation-duration: 0.01ms;
   }
 }

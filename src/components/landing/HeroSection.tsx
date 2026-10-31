@@ -1,5 +1,5 @@
 import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PharmacySnapshot } from './PharmacySnapshot';
 import type { PharmacyStatus } from './pharmacyTime';
 import type { StaffMember, WeeklyHoursEntry } from './types';
@@ -11,6 +11,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ status, staff, hours }: HeroSectionProps) {
+  const location = useLocation();
+
   return (
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
       <div className="landing-hero__stage">
@@ -24,7 +26,7 @@ export function HeroSection({ status, staff, hours }: HeroSectionProps) {
             focus on your community.
           </p>
           <div className="hero-actions">
-            <Link className="action-link" to="/login">
+            <Link className="action-link" to="/login" state={{ backgroundLocation: location }}>
               Open staff workspace <span aria-hidden="true">→</span>
             </Link>
             <a className="action-link action-link--outline" href="#features">
