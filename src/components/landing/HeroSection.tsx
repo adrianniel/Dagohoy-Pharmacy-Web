@@ -112,7 +112,7 @@ export function HeroSection({ status }: HeroSectionProps) {
               </p>
             </article>
             <a className="landing-hero__action landing-hero__action--secondary" href="#contact">
-              Need help getting in?
+              Get Your Own System
             </a>
           </aside>
         </div>
