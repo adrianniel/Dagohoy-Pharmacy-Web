@@ -145,7 +145,7 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 borderStyle: 'solid',
                 borderColor: '#e3ef26',
               }}
-              glow={{ color: '#e3ef26', size: 5, blur: 8 }}
+              glow={{ color: '#355e3b', size: 5, blur: 8 }}
               style={{ minHeight: 42, width: 'fit-content' }}
             />
           </aside>
