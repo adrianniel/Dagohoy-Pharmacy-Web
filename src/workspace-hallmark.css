@@ -8,11 +8,11 @@
   --hm-accent: #126747;
   --hm-accent-strong: #084f36;
   --hm-accent-soft: #e7f1e9;
-  --hm-paper: #f4f7f3;
+  --hm-paper: #edf5f0;
   --hm-surface: #fbfdfb;
-  --hm-surface-muted: #edf3ed;
-  --hm-line: #d3e0d5;
-  --hm-line-strong: #a7beae;
+  --hm-surface-muted: #e6f1e9;
+  --hm-line: #d5e4d9;
+  --hm-line-strong: #abc5b3;
   --hm-focus: #126747;
   --hm-danger: #8d3d37;
   --hm-shadow: rgb(18 54 37 / 7%);
@@ -52,7 +52,7 @@ body:has(.cashier-shell) {
 .cashier-sidebar {
   padding: var(--hm-space-lg) var(--hm-space-sm) var(--hm-space-md);
   border-color: var(--hm-line);
-  background: var(--hm-surface);
+  background: var(--hm-paper);
   color: var(--hm-ink);
   transition: transform 180ms ease;
 }
@@ -148,7 +148,7 @@ body:has(.cashier-shell) {
 .cashier-header {
   min-height: 76px;
   border-color: var(--hm-line);
-  background: var(--hm-surface);
+  background: var(--hm-paper);
   box-shadow: none;
 }
 
