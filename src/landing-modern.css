@@ -1703,7 +1703,7 @@
 }
 
 .landing-page .landing-hero__feature:hover {
-  transform: translateY(-3px);
+  transform: translateY(-6px);
   box-shadow: 0 12px 28px rgb(22 73 43 / 12%);
 }
 
@@ -1874,7 +1874,7 @@
 }
 
 .landing-page .landing-hero__feature:hover {
-  transform: translateY(-3px);
+  transform: translateY(-6px);
   border-color: #6e965f;
   box-shadow:
     0 6px 12px rgb(28 55 34 / 10%),
