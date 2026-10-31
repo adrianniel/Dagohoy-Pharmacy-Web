@@ -650,7 +650,7 @@
 
 .landing-page .landing-hero__stage {
   width: min(100% - 2rem, 1180px);
-  min-height: 0;
+  min-height: 700px;
   margin-inline: auto;
   padding: clamp(2rem, 4vw, 3.25rem) 0 2.25rem;
   display: flex;
@@ -1281,7 +1281,7 @@
 
 .landing-page .landing-hero__stage {
   width: min(100% - 2rem, 1180px);
-  min-height: 0;
+  min-height: 700px;
   padding: clamp(1.5rem, 3vw, 2.5rem) 0 1.5rem;
   align-items: center;
   justify-content: flex-start;
@@ -1367,6 +1367,10 @@
 }
 
 @media (max-width: 850px) {
+  .landing-page .landing-hero__stage {
+    min-height: 0;
+  }
+
   .landing-page .landing-hero__showcase .landing-hero__visual {
     width: min(100%, 360px);
     grid-column: 1 / -1;
