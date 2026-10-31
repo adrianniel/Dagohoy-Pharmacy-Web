@@ -14,10 +14,7 @@ export function LandingNav() {
           <a href="#contact">Contact</a>
         </div>
         <Link className="landing-nav__login" to="/login" state={{ backgroundLocation: location }}>
-          <span className="login-icon" aria-hidden="true">
-            {'\u25CF'}
-          </span>{' '}
-          Staff login
+          Login
         </Link>
       </nav>
     </header>
