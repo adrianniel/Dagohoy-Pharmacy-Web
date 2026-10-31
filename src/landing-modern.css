@@ -1316,7 +1316,7 @@
 /* Keep the centered pharmacy hero above the legacy landing-page variants. */
 .landing-page .landing-nav-wrap {
   border: 0;
-  background: #08130f;
+  background: #fffff0;
   box-shadow: none;
   backdrop-filter: none;
 }
@@ -1349,8 +1349,8 @@
 .landing-page .landing-hero {
   position: relative;
   isolation: isolate;
-  background: #08130f;
-  color: #f2f6f2;
+  background: #fffff0;
+  color: #172d24;
 }
 
 .landing-page .landing-hero__stage::before {
@@ -1364,7 +1364,7 @@
 .landing-page .landing-hero__intro h1 {
   max-width: none;
   margin: 0 auto 0.85rem;
-  color: #f2f6f2;
+  color: #172d24;
   font-family: inherit;
   font-size: clamp(1.5rem, 4.2vw, 3.1rem);
   font-weight: 800;
@@ -1375,7 +1375,7 @@
 }
 
 .landing-page .landing-hero__intro h1 span + span {
-  color: #f2f6f2;
+  color: #172d24;
   margin-inline-start: 0.18em;
 }
 
@@ -1390,18 +1390,18 @@
 .landing-page .landing-hero__intro .landing-hero__description {
   max-width: 54ch;
   margin: 0 auto;
-  color: #aab9af;
+  color: #506357;
   font-size: 0.95rem;
   line-height: 1.55;
   text-align: center;
 }
 
 .landing-page .landing-hero__feature h2 {
-  color: #f2f6f2;
+  color: #172d24;
 }
 
 .landing-page .landing-hero__feature p {
-  color: #aab9af;
+  color: #506357;
 }
 
 .landing-page .landing-hero__showcase .landing-hero__visual {
