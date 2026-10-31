@@ -4,6 +4,7 @@ import HomeIcon from './hovericons/home-icon';
 import MapPinIcon from './hovericons/map-pin-icon';
 import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
 import StackIcon from './hovericons/stack-icon';
+import { ContactGlowButton } from './ContactGlowButton';
 import type { PharmacyStatus } from './pharmacyTime';
 import type { StaffMember } from './types';
 
@@ -114,9 +115,7 @@ export function HeroSection({ status, staff }: HeroSectionProps) {
                 daily operations in one system.
               </p>
             </article>
-            <a className="landing-hero__action landing-hero__action--contact" href="#contact">
-              Get Your Own System
-            </a>
+            <ContactGlowButton />
           </aside>
         </div>
       </div>
