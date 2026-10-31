@@ -633,8 +633,22 @@ html:has(.landing-page) {
 }
 
 .landing-page .landing-footer {
-  border-top: 1px solid #dbded3;
-  background: #f1f1e9;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: #355e3b;
+  color: #f4f1e6;
+}
+
+.landing-page .landing-footer .footer-brand span,
+.landing-page .landing-footer p {
+  color: #d8e6cf;
+}
+
+.landing-page .landing-footer .landing-brand__text strong {
+  color: #fff;
+}
+
+.landing-page .landing-footer .landing-brand__text > span {
+  color: #cce8b7;
 }
 
 @media (max-width: 850px) {
