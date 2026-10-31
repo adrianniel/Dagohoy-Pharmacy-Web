@@ -11,7 +11,6 @@ import './workspace-polish.css';
 import './public-polish.css';
 import './landing-modern.css';
 import './workspace-hallmark.css';
-import './originkit.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

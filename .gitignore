@@ -10,4 +10,3 @@ coverage/
 # Local design skill installation and its generated sweep reports
 /.agents/skills/hallmark/
 /.hallmark/
-.originkit/
