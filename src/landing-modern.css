@@ -2737,7 +2737,8 @@ html:has(.landing-page) {
 
 .landing-page .landing-brand__text strong {
   color: var(--hero-reference-green);
-  font-size: 1.25rem;
+  font-family: inherit;
+  font-size: clamp(1.45rem, 1.8vw, 2rem);
   font-style: italic;
   font-weight: 850;
   letter-spacing: 0.015em;
@@ -2747,7 +2748,8 @@ html:has(.landing-page) {
 .landing-page .landing-brand__text > span {
   margin-top: 0;
   color: #6b8f79;
-  font-size: 0.72rem;
+  font-family: inherit;
+  font-size: clamp(0.78rem, 0.95vw, 1.05rem);
   font-weight: 750;
   letter-spacing: 0.19em;
 }
@@ -2765,7 +2767,8 @@ html:has(.landing-page) {
 
 .landing-page .landing-nav__links a {
   color: #fffdf1;
-  font-size: clamp(1rem, 1.7vw, 2rem);
+  font-family: inherit;
+  font-size: clamp(1.1rem, 1.7vw, 2rem);
   font-weight: 700;
   letter-spacing: 0;
 }
