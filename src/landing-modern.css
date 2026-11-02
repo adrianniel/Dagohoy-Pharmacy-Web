@@ -2737,19 +2737,19 @@ html:has(.landing-page) {
 
 .landing-page .landing-brand__text strong {
   color: var(--hero-reference-green);
-  font-size: clamp(1.45rem, 2.5vw, 3rem);
-  font-style: normal;
-  font-weight: 750;
-  letter-spacing: -0.04em;
-  text-transform: none;
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 850;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
 }
 
 .landing-page .landing-brand__text > span {
-  margin-top: 0.08em;
-  color: #5c5c5c;
-  font-size: clamp(1.25rem, 2.25vw, 2.65rem);
+  margin-top: 0;
+  color: #6b8f79;
+  font-size: 0.72rem;
   font-weight: 750;
-  letter-spacing: -0.035em;
+  letter-spacing: 0.19em;
 }
 
 .landing-page .landing-nav__links {
@@ -2982,11 +2982,11 @@ html:has(.landing-page) {
   }
 
   .landing-page .landing-brand__text strong {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .landing-page .landing-brand__text > span {
-    font-size: 1rem;
+    font-size: 0.62rem;
   }
 
   .landing-page .landing-nav__links {
@@ -3059,11 +3059,11 @@ html:has(.landing-page) {
   }
 
   .landing-page .landing-brand__text strong {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .landing-page .landing-brand__text > span {
-    font-size: 0.82rem;
+    font-size: 0.55rem;
   }
 
   .landing-page .landing-nav__links {
