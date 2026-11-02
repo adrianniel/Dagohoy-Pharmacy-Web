@@ -2076,6 +2076,7 @@ html:has(.landing-page) {
 }
 
 .landing-page .features-section {
+  position: relative;
   width: 100%;
   max-width: none;
   margin: 0;
@@ -2153,6 +2154,21 @@ html:has(.landing-page) {
   object-fit: contain;
 }
 
+.landing-page .features-scanner-holder {
+  position: absolute;
+  top: clamp(15rem, 39vh, 22rem);
+  right: clamp(4rem, calc(40vw - 27rem), 10.5rem);
+  width: clamp(12.5rem, 17vw, 16.25rem);
+  pointer-events: none;
+}
+
+.landing-page .features-scanner-holder img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 .landing-page .features-section .section-heading h2,
 .landing-page .features-section .section-heading > p:not(.eyebrow) {
   font-family: 'Poppins', sans-serif;
@@ -2190,6 +2206,15 @@ html:has(.landing-page) {
     width: calc(100% - 2rem);
     margin-inline: auto;
     gap: clamp(0.5rem, 4vw, 0.9rem);
+  }
+}
+
+@media (max-width: 1100px) {
+  .landing-page .features-scanner-holder {
+    position: static;
+    width: clamp(10rem, 28vw, 15rem);
+    margin-block-start: 1.5rem;
+    justify-self: center;
   }
 }
 

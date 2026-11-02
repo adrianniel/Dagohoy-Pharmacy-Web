@@ -1,4 +1,5 @@
 import medicineMockup from '../../assets/medicine mockup.png';
+import scannerHolder from '../../assets/scanner holder.png';
 
 export function FeaturesSection() {
   return (
@@ -22,6 +23,9 @@ export function FeaturesSection() {
             </div>
           </div>
         ))}
+      </div>
+      <div className="features-scanner-holder">
+        <img src={scannerHolder} alt="Wall-mounted barcode scanner holder" />
       </div>
     </section>
   );
