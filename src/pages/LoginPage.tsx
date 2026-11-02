@@ -76,7 +76,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
       <section
         aria-labelledby="login-title"
         aria-modal="true"
-        className="auth-card auth-card--modal"
+        className={`auth-card auth-card--modal${role === 'ADMIN' ? ' auth-card--admin' : ''}`}
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
