@@ -2123,7 +2123,7 @@ html:has(.landing-page) {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.65rem;
+  gap: 0.3rem;
 }
 
 .landing-page .features-medicine-row__item h3 {
