@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ACCESS_TOKEN_KEY, APP_NAME, USER_ROLE_KEY } from '../constants/app';
+import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../constants/app';
 import pharmacyLogo from '../assets/logo.png';
 
 interface LoginPageProps {
@@ -13,7 +13,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
   const location = useLocation();
   const dialogRef = useRef<HTMLElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
-  const [role, setRole] = useState<'ADMIN' | 'CASHIER'>('ADMIN');
+  const [role, setRole] = useState<'ADMIN' | 'CASHIER'>('CASHIER');
   const destination =
     (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
     '/cashier/dashboard';
@@ -96,7 +96,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             <span>PHARMACY</span>
           </span>
         </button>
-        <h1 id="login-title">Welcome back</h1>
+        <h1 id="login-title">Welcome back!</h1>
         <p className="muted">Sign in to manage sales, inventory, and your pharmacy team.</p>
         <form onSubmit={handleSubmit} className="stack">
           <label htmlFor="email">Email</label>
@@ -145,7 +145,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             </div>
           </fieldset>
           <button className="button" type="submit">
-            Sign in to {APP_NAME}
+            Sign in
           </button>
         </form>
         <p className="auth-note">Demo workspace · Live authentication is not connected yet.</p>
