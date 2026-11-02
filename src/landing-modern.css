@@ -2940,9 +2940,9 @@ html:has(.landing-page) {
 .landing-page .landing-hero__cta-outline {
   position: absolute;
   z-index: 1;
-  inset: -3px;
+  inset: 3px 5px;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 10px;
   opacity: 0;
   transition: opacity 180ms ease;
 }
@@ -2950,7 +2950,7 @@ html:has(.landing-page) {
 .landing-page .landing-hero__cta-outline::before {
   position: absolute;
   inset: -100%;
-  background: conic-gradient(from 180deg, transparent 60%, #003f35 80%, transparent 100%);
+  background: conic-gradient(from 180deg, transparent 60%, #0b8068 80%, transparent 100%);
   content: '';
   animation: landing-cta-outline-spin 2s linear infinite paused;
 }
