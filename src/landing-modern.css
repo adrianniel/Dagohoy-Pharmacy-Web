@@ -2916,11 +2916,12 @@ html:has(.landing-page) {
 .landing-page .landing-hero__pos-image {
   position: absolute;
   z-index: 1;
-  top: 13%;
+  top: 50%;
   right: 17%;
-  width: clamp(350px, 36vw, 760px);
+  width: clamp(320px, 32vw, 680px);
   height: auto;
   object-fit: contain;
+  transform: translateY(-50%);
   pointer-events: none;
 }
 
@@ -3041,9 +3042,9 @@ html:has(.landing-page) {
   }
 
   .landing-page .landing-hero__pos-image {
-    top: 24%;
+    top: 50%;
     right: 7%;
-    width: 40%;
+    width: 36%;
   }
 }
 
@@ -3147,7 +3148,8 @@ html:has(.landing-page) {
   .landing-page .landing-hero__pos-image {
     top: 14%;
     right: 7%;
-    width: min(82%, 390px);
+    width: min(76%, 360px);
+    transform: none;
   }
 }
 
