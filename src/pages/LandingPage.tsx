@@ -7,8 +7,10 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 import { LandingNav } from '../components/landing/LandingNav';
 import { pharmacyProfile, weeklyHours } from '../components/landing/mockData';
 import { getPharmacyStatus } from '../components/landing/pharmacyTime';
+import { useLandingScrollReveal } from '../components/landing/useLandingScrollReveal';
 
 export function LandingPage() {
+  useLandingScrollReveal();
   const [now, setNow] = useState(() => new Date());
   const status = getPharmacyStatus(now, weeklyHours, pharmacyProfile.timezone);
 
