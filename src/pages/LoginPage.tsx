@@ -121,7 +121,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             required
           />
           <fieldset className="login-role-group">
-            <legend>Workspace</legend>
+            <legend>Role</legend>
             <div className="login-role-options">
               <label className="login-role-option">
                 <input
