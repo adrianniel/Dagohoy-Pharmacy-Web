@@ -184,6 +184,48 @@
 .landing-page .features-tour__button--primary {
   background: linear-gradient(#12832a, #075124);
 }
+
+@media (min-width: 900px) and (max-height: 900px) {
+  .landing-page .features-workflows {
+    gap: 1.25rem;
+  }
+
+  .landing-page .features-workflow__header {
+    min-height: 88px;
+    padding: 1rem 1.25rem;
+  }
+
+  .landing-page .features-workflow__header-icon {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .landing-page .features-tour {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  .landing-page .features-tour__step {
+    margin-bottom: 0.45rem;
+  }
+
+  .landing-page .features-tour__content {
+    min-height: 72px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 0.6rem;
+    padding: 0.55rem;
+  }
+
+  .landing-page .features-tour__icon {
+    width: 42px;
+    height: 46px;
+  }
+
+  .landing-page .features-tour__controls {
+    padding-top: 0.8rem;
+  }
+}
+
 @media (max-width: 1100px) and (min-width: 901px) {
   .landing-page .features-tour {
     padding: 1rem;
