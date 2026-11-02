@@ -2891,21 +2891,48 @@ html:has(.landing-page) {
   justify-content: center;
   border: 0;
   border-radius: 20px;
-  background: var(--hero-reference-green);
-  color: #fffdf1;
+  background-color: var(--hero-reference-green);
+  background-image:
+    linear-gradient(110deg, #a8aaa8 0%, #fff 12%, #a8aaa8 24%, #fff 36%, #a8aaa8 48%),
+    linear-gradient(var(--hero-reference-green), var(--hero-reference-green));
+  background-repeat: no-repeat;
+  background-position:
+    100% 0,
+    0 0;
+  background-size:
+    250% 100%,
+    100% 100%;
+  background-clip: text, border-box;
+  -webkit-background-clip: text, border-box;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
   font-family: 'Poppins', sans-serif;
   font-size: clamp(0.95rem, 1.35vw, 1.6rem);
   font-weight: 700;
   line-height: 1.2;
   text-decoration: none;
-  transition:
-    background-color 160ms ease,
-    transform 160ms ease;
+  animation: landing-cta-text-shine 3s linear infinite;
+  transition: transform 160ms ease;
 }
 
 .landing-page .landing-hero__cta:hover {
   transform: translateY(-2px);
-  background: #004f42;
+  background-color: #004f42;
+}
+
+@keyframes landing-cta-text-shine {
+  0% {
+    background-position:
+      100% 0,
+      0 0;
+  }
+
+  60%,
+  100% {
+    background-position:
+      0 0,
+      0 0;
+  }
 }
 
 .landing-page .landing-hero__cta:focus-visible {
@@ -3159,6 +3186,10 @@ html:has(.landing-page) {
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page .landing-hero__cta {
+    animation: none;
+    background-position:
+      0 0,
+      0 0;
     transition: none;
   }
 }
