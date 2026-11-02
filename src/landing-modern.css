@@ -2950,7 +2950,7 @@ html:has(.landing-page) {
 .landing-page .landing-hero__cta-outline::before {
   position: absolute;
   inset: -100%;
-  background: conic-gradient(from 180deg, transparent 60%, #0b8068 80%, transparent 100%);
+  background: conic-gradient(from 180deg, transparent 60%, #15947b 80%, transparent 100%);
   content: '';
   animation: landing-cta-outline-spin 2s linear infinite paused;
 }
