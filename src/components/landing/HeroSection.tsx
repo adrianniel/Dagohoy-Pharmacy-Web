@@ -12,7 +12,7 @@ export function HeroSection() {
       >
         <path
           className="landing-hero__green-shape-desktop"
-          d="M607 0H2000V860L641 220Q607 202 607 170Z"
+          d="M607 0H2000V970L641 220Q607 202 607 170Z"
         />
         <path
           className="landing-hero__green-shape-mobile"
