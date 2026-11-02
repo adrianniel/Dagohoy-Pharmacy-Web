@@ -340,9 +340,7 @@
 }
 
 .auth-card--admin .login-modal-brand img {
-  padding: 3px;
-  border-radius: 50%;
-  background: #fffff0;
+  filter: brightness(0) invert(1);
 }
 
 .auth-card--admin .stack input,
