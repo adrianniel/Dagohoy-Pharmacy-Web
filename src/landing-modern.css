@@ -2860,7 +2860,12 @@ html:has(.landing-page) {
 
 .landing-page .landing-hero__intro h1 span {
   display: block;
+  margin-inline-start: 0;
   color: #073b31;
+}
+
+.landing-page .landing-hero__intro h1 span + span {
+  margin-inline-start: 0;
 }
 
 .landing-page .landing-hero__intro h1 span:first-child {
