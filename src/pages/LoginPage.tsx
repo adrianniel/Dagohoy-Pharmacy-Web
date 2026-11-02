@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ACCESS_TOKEN_KEY, APP_NAME, USER_ROLE_KEY } from '../constants/app';
+import pharmacyLogo from '../assets/logo.png';
 
 interface LoginPageProps {
   onClose: () => void;
@@ -89,7 +90,11 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
           <span aria-hidden="true">×</span>
         </button>
         <button className="login-modal-brand" type="button" onClick={onClose}>
-          Dagohoy <span>Pharmacy</span>
+          <img src={pharmacyLogo} alt="" aria-hidden="true" />
+          <span className="login-modal-brand__text">
+            <strong>Dagohoy</strong>
+            <span>PHARMACY</span>
+          </span>
         </button>
         <p className="eyebrow">Staff workspace</p>
         <h1 id="login-title">Welcome back</h1>
