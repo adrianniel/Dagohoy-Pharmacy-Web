@@ -2903,7 +2903,7 @@ html:has(.landing-page) {
 .landing-page .landing-hero__pos-image {
   position: absolute;
   z-index: 1;
-  top: 22%;
+  top: 13%;
   right: 17%;
   width: clamp(350px, 36vw, 760px);
   height: auto;
