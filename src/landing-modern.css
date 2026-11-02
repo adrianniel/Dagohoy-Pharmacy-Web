@@ -2786,14 +2786,14 @@ html:has(.landing-page) {
   border: 0;
   border-radius: 999px;
   background: var(--hero-reference-cream);
-  color: #171717;
+  color: var(--hero-reference-green);
   font-size: clamp(0.95rem, 1.3vw, 1.55rem);
   font-weight: 700;
 }
 
 .landing-page .landing-nav__login:hover {
   background: #f0f0d9;
-  color: #171717;
+  color: var(--hero-reference-green);
 }
 
 .landing-page .landing-hero {
