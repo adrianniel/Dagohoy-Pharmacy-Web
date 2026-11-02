@@ -96,7 +96,6 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             <span>PHARMACY</span>
           </span>
         </button>
-        <p className="eyebrow">Staff workspace</p>
         <h1 id="login-title">Welcome back</h1>
         <p className="muted">Sign in to manage sales, inventory, and your pharmacy team.</p>
         <form onSubmit={handleSubmit} className="stack">
