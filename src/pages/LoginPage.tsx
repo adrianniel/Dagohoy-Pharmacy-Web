@@ -127,21 +127,21 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
                 <input
                   type="radio"
                   name="role"
-                  value="ADMIN"
-                  checked={role === 'ADMIN'}
-                  onChange={() => setRole('ADMIN')}
-                />
-                <span>Administrator</span>
-              </label>
-              <label className="login-role-option">
-                <input
-                  type="radio"
-                  name="role"
                   value="CASHIER"
                   checked={role === 'CASHIER'}
                   onChange={() => setRole('CASHIER')}
                 />
                 <span>Cashier</span>
+              </label>
+              <label className="login-role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value="ADMIN"
+                  checked={role === 'ADMIN'}
+                  onChange={() => setRole('ADMIN')}
+                />
+                <span>Administrator</span>
               </label>
             </div>
           </fieldset>
