@@ -7,17 +7,19 @@ export function DeveloperCta() {
       <section className="developer-section section-wrap" aria-labelledby="developer-title">
         <BusinessStarfield />
         <div className="developer-section__copy">
-          <p className="eyebrow">For your business</p>
-          <h2 id="developer-title">Need a System for Your Business?</h2>
-          <p>
-            Looking for a POS, inventory system, or custom web application tailored to your business
-            operations? Let&apos;s build a system around how your business actually works.
+          <p className="eyebrow" id="developer-title">
+            For pharmacy owners
+          </p>
+          <p className="developer-section__message">
+            Get a custom POS and inventory system built around your pharmacy’s daily workflow—from
+            counter sales and barcode scanning to stock, batches, expiry dates, and staff
+            operations.
           </p>
           <a
             className="action-link developer-section__contact"
             href={`mailto:${developerProfile.email}`}
           >
-            Let&apos;s Connect <span aria-hidden="true">↗</span>
+            Send a Message
           </a>
         </div>
         <div className="developer-section__profile">
