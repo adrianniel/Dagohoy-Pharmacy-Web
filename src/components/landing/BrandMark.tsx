@@ -21,7 +21,7 @@ export function BrandMark({ onExpand }: { onExpand?: MouseEventHandler<HTMLAncho
       />
       <span className="landing-brand__text">
         <strong>Dagohoy</strong>
-        <span>PHARMACY</span>
+        <span>Pharmacy</span>
       </span>
     </Link>
   );

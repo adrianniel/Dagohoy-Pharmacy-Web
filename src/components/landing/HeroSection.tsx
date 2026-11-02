@@ -1,114 +1,43 @@
-import storefrontImage from '../../assets/dagohoy-pharmacy-storefront.jpg';
-import ChartBarIcon from './hovericons/chart-bar-icon';
-import HomeIcon from './hovericons/home-icon';
-import MapPinIcon from './hovericons/map-pin-icon';
-import ScanBarcodeIcon from './hovericons/scan-barcode-icon';
-import StackIcon from './hovericons/stack-icon';
-import { ContactGlowButton } from './ContactGlowButton';
-import { OpeningHoursDisclosure } from './OpeningHoursDisclosure';
-import type { PharmacyStatus } from './pharmacyTime';
-import type { WeeklyHoursEntry } from './types';
+import posImage from '../../assets/POS element.png';
 
-interface HeroSectionProps {
-  status: PharmacyStatus;
-  hours: WeeklyHoursEntry[];
-}
-
-export function HeroSection({ status, hours }: HeroSectionProps) {
+export function HeroSection() {
   return (
     <section className="landing-hero" id="home" aria-labelledby="landing-title">
+      <svg
+        className="landing-hero__green-shape"
+        viewBox="0 0 2000 1125"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          className="landing-hero__green-shape-desktop"
+          d="M607 0H2000V860L641 220Q607 202 607 170Z"
+        />
+        <path
+          className="landing-hero__green-shape-mobile"
+          d="M1050 0H2000V460L1400 325Q1050 260 1050 150Z"
+        />
+      </svg>
       <div className="landing-hero__stage">
         <header className="landing-hero__intro">
           <h1 id="landing-title">
-            <span className="landing-hero__headline-line">Better care starts behind</span>
-            <span>the counter.</span>
+            <span>Better care starts</span>
+            <span>behind the counter.</span>
           </h1>
           <p className="landing-hero__description">
-            Manage sales, stock, and everyday pharmacy work in one calm place, so you have more time
-            for your community.
+            One system to keep sales moving, stock visible, and daily pharmacy work under control.
           </p>
+          <a className="landing-hero__cta" href="#contact">
+            Get Your Own System
+          </a>
         </header>
-
-        <div className="landing-hero__showcase">
-          <figure className="landing-hero__visual">
-            <img
-              className="landing-hero__image"
-              src={storefrontImage}
-              alt="Dagohoy Pharmacy storefront"
-              width="1500"
-              height="842"
-              fetchPriority="high"
-            />
-            <span className={`landing-hero__status${status.isOpen ? ' is-open' : ''}`}>
-              <span aria-hidden="true" />
-              {status.isOpen ? 'Open' : 'Closed'}
-            </span>
-            <figcaption className="landing-hero__photo-credit">
-              <MapPinIcon size={16} color="currentColor" strokeWidth={2} />
-              <span>Dagohoy Public Market, Bohol</span>
-            </figcaption>
-          </figure>
-
-          <aside className="landing-hero__side landing-hero__side--left">
-            <article className="landing-hero__feature">
-              <span className="landing-hero__feature-icon" aria-hidden="true">
-                <HomeIcon size={28} color="currentColor" strokeWidth={2} />
-              </span>
-              <h2>Built for Pharmacy Work</h2>
-              <p>
-                Keep daily pharmacy tasks organized
-                <br />
-                so staff can work efficiently
-                <br />
-                and focus on better service.
-              </p>
-            </article>
-            <article className="landing-hero__feature">
-              <span className="landing-hero__feature-icon" aria-hidden="true">
-                <ScanBarcodeIcon size={28} color="currentColor" strokeWidth={2} />
-              </span>
-              <h2>Scan and Go</h2>
-              <p>
-                Use barcode scanning to find products
-                <br />
-                faster, reduce manual input, and keep
-                <br />
-                transactions moving smoothly.
-              </p>
-            </article>
-            <OpeningHoursDisclosure hours={hours} />
-          </aside>
-
-          <aside className="landing-hero__side landing-hero__side--right">
-            <article className="landing-hero__feature">
-              <span className="landing-hero__feature-icon" aria-hidden="true">
-                <StackIcon size={28} color="currentColor" strokeWidth={2} />
-              </span>
-              <h2>Stock You Can Trust</h2>
-              <p>
-                Keep inventory, batches, and expiry
-                <br />
-                information organized so stock decisions
-                <br />
-                are based on clear records.
-              </p>
-            </article>
-            <article className="landing-hero__feature">
-              <span className="landing-hero__feature-icon" aria-hidden="true">
-                <ChartBarIcon size={28} color="currentColor" strokeWidth={2} />
-              </span>
-              <h2>Clear Business Visibility</h2>
-              <p>
-                Give the owner a better view
-                <br />
-                of sales, inventory activity, and
-                <br />
-                daily operations in one system.
-              </p>
-            </article>
-            <ContactGlowButton />
-          </aside>
-        </div>
+        <img
+          className="landing-hero__pos-image"
+          src={posImage}
+          alt="Pharmacy point-of-sale system with touchscreen, cash drawer, barcode scanner, and receipt printer"
+          fetchPriority="high"
+        />
       </div>
     </section>
   );
