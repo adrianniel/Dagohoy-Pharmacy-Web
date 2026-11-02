@@ -2914,7 +2914,7 @@ html:has(.landing-page) {
 
 .landing-page .landing-hero__cta::before {
   position: absolute;
-  z-index: 0;
+  z-index: 2;
   inset: 6px;
   border-radius: 10px;
   background: linear-gradient(to top, #005344, #087560);
@@ -2940,9 +2940,9 @@ html:has(.landing-page) {
 .landing-page .landing-hero__cta-outline {
   position: absolute;
   z-index: 1;
-  inset: 3px 5px;
+  inset: 2px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 11px;
   opacity: 0;
   transition: opacity 180ms ease;
 }
@@ -2967,7 +2967,7 @@ html:has(.landing-page) {
 
 .landing-page .landing-hero__cta-state {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
