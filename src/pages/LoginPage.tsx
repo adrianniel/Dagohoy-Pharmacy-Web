@@ -92,7 +92,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
         <button className="login-modal-brand" type="button" onClick={onClose}>
           <img src={pharmacyLogo} alt="" aria-hidden="true" />
           <span className="login-modal-brand__text">
-            <strong>Dagohoy</strong>
+            <strong>DAGOHOY</strong>
             <span>PHARMACY</span>
           </span>
         </button>
