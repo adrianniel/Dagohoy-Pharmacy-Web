@@ -2096,10 +2096,9 @@ html:has(.landing-page) {
   margin-inline: auto;
 }
 
-.landing-page .features-section .section-heading .eyebrow,
 .landing-page .features-section .section-heading h2,
 .landing-page .features-section .section-heading > p:not(.eyebrow) {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 .landing-page .features-section .section-heading .eyebrow {
