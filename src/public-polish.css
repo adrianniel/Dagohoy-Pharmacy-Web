@@ -188,8 +188,10 @@
 .auth-card--modal > .muted {
   margin-bottom: 0.9rem;
   color: #536d5e;
-  font-size: 0.92rem;
+  font-size: clamp(0.625rem, 3vw, 0.75rem);
+  letter-spacing: -0.035em;
   line-height: 1.45;
+  white-space: nowrap;
 }
 
 .auth-card--modal .stack {
@@ -204,6 +206,8 @@
 .auth-card--modal .stack input,
 .auth-card--modal .stack select {
   min-height: 48px;
+  border: 1px solid #8fa596;
+  background: #fff;
 }
 
 .login-role-group {
@@ -233,7 +237,7 @@
   padding: 0.5rem 0.7rem;
   display: grid;
   place-items: center;
-  border: 1px solid #d8e3dc;
+  border: 1px solid #8fa596;
   border-radius: 10px;
   background: #fbfefc;
   color: #28533f;
@@ -341,6 +345,12 @@
 
   .auth-card--modal .auth-note {
     margin-top: 0.55rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .auth-card.auth-card--modal {
+    padding-inline: 1rem;
   }
 }
 
