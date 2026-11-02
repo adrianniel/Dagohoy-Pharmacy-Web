@@ -2129,11 +2129,13 @@ html:has(.landing-page) {
 .landing-page .features-medicine-row__item h3 {
   margin: 0;
   color: #173b31;
-  font-family: 'Poppins', sans-serif;
-  font-size: clamp(0.9rem, 1.1vw, 1.05rem);
-  font-weight: 650;
+  font-family: 'Segoe Script', 'Brush Script MT', cursive;
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  font-style: italic;
+  font-weight: 600;
   line-height: 1.2;
   text-align: center;
+  transform: rotate(-3deg);
 }
 
 .landing-page .features-medicine-row__image {
