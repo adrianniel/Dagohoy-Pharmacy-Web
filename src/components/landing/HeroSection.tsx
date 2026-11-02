@@ -17,10 +17,7 @@ export function HeroSection() {
           className="landing-hero__green-shape-desktop"
           d="M607 0H2000V970L641 220Q607 202 607 170Z"
         />
-        <path
-          className="landing-hero__green-shape-mobile"
-          d="M1050 0H2000V460L1400 325Q1050 260 1050 150Z"
-        />
+        <path className="landing-hero__green-shape-mobile" d="M800 0H2000V920Z" />
       </svg>
       <div className="landing-hero__stage">
         <header className="landing-hero__intro">
