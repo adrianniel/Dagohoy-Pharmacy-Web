@@ -2706,11 +2706,7 @@ html:has(.landing-page) {
   gap: 0;
   border: 0;
   border-radius: 0;
-  background: linear-gradient(
-    to right,
-    var(--hero-reference-cream) 0 30.35%,
-    var(--hero-reference-green) 30.35% 100%
-  );
+  background: transparent;
   box-shadow: none;
   pointer-events: auto;
 }
@@ -2721,6 +2717,7 @@ html:has(.landing-page) {
   display: flex;
   align-items: center;
   gap: clamp(0.8rem, 1.2vw, 1.5rem);
+  background: var(--hero-reference-cream);
 }
 
 .landing-page .landing-brand__mark {
@@ -2971,15 +2968,12 @@ html:has(.landing-page) {
     min-height: 94px;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: 1fr;
-    background: linear-gradient(
-      to right,
-      var(--hero-reference-cream) 0 42%,
-      var(--hero-reference-green) 42% 100%
-    );
+    background: transparent;
   }
 
   .landing-page .landing-brand {
     padding-inline: 1rem;
+    background: var(--hero-reference-cream);
   }
 
   .landing-page .landing-brand__mark {
@@ -3050,16 +3044,13 @@ html:has(.landing-page) {
     height: 104px;
     min-height: 104px;
     grid-template-columns: minmax(0, 1fr) auto;
-    background: linear-gradient(
-      to right,
-      var(--hero-reference-cream) 0 52%,
-      var(--hero-reference-green) 52% 100%
-    );
+    background: transparent;
   }
 
   .landing-page .landing-brand {
     gap: 0.5rem;
     padding-inline: 0.7rem;
+    background: var(--hero-reference-cream);
   }
 
   .landing-page .landing-brand__mark {
