@@ -46,24 +46,70 @@ const featureSlides = [
   },
 ];
 
+const cashierSteps = [
+  {
+    title: 'Log In',
+    titleLines: ['Step 1', 'Log In'],
+    description: 'Access the pharmacy system securely using your assigned cashier account.',
+  },
+  {
+    title: 'Start Shift',
+    titleLines: ['Step 2', 'Start Shift'],
+    description: 'Begin your duty and record the opening cash balance.',
+  },
+  {
+    title: 'Scan Products',
+    titleLines: ['Step 3', 'Scan Products'],
+    description: 'Scan barcodes or search products to quickly add items to the cart.',
+  },
+  {
+    title: 'Review Cart',
+    titleLines: ['Step 4', 'Review Cart'],
+    description: 'Check product quantities, prices, and totals before completing the sale.',
+  },
+  {
+    title: 'Process Sale',
+    titleLines: ['Step 5', 'Process Sale'],
+    description:
+      'Record customer payments or approved credit transactions accurately and efficiently.',
+  },
+  {
+    title: 'Issue Receipt',
+    titleLines: ['Step 6', 'Issue Receipt'],
+    description: 'Generate a receipt and provide customers with their transaction details.',
+  },
+  {
+    title: 'View Transactions',
+    titleLines: ['Step 7', 'View Transactions'],
+    description: 'Track completed sales and review transaction records during your shift.',
+  },
+  {
+    title: 'End Shift',
+    titleLines: ['Step 8', 'End Shift'],
+    description: 'Count the closing cash balance and submit your daily shift summary.',
+  },
+];
+
 export function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
-  const activeFeature = featureSlides[activeFeatureIndex];
-  const barcodeTarget = useRef<HTMLDivElement>(null);
-  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const [activeCashierStepIndex, setActiveCashierStepIndex] = useState(0);
+  const featureBarcodeTarget = useRef<HTMLDivElement>(null);
+  const cashierBarcodeTarget = useRef<HTMLDivElement>(null);
+  const featureDescriptionRef = useRef<HTMLParagraphElement>(null);
+  const cashierDescriptionRef = useRef<HTMLParagraphElement>(null);
   const scannerDrag = useRef<{
     pointerId: number;
     x: number;
     y: number;
-    overBarcode: boolean;
+    overBarcode: 'features' | 'cashier' | null;
   } | null>(null);
 
   useLayoutEffect(() => {
-    const description = descriptionRef.current;
-    const copyContainer = description?.parentElement;
-    if (!description || !copyContainer) return;
+    const descriptions = [featureDescriptionRef.current, cashierDescriptionRef.current].filter(
+      (description): description is HTMLParagraphElement => description !== null,
+    );
 
-    const fitDescription = () => {
+    const fitDescription = (description: HTMLParagraphElement) => {
       description.style.fontSize = '';
       const baseSize = Number.parseFloat(getComputedStyle(description).fontSize);
       const minSize = Math.max(4, baseSize * 0.6);
@@ -76,11 +122,13 @@ export function FeaturesSection() {
       }
     };
 
-    fitDescription();
-    const resizeObserver = new ResizeObserver(fitDescription);
-    resizeObserver.observe(copyContainer);
+    descriptions.forEach(fitDescription);
+    const resizeObserver = new ResizeObserver(() => descriptions.forEach(fitDescription));
+    descriptions.forEach((description) => {
+      if (description.parentElement) resizeObserver.observe(description.parentElement);
+    });
     return () => resizeObserver.disconnect();
-  }, [activeFeatureIndex]);
+  }, [activeCashierStepIndex, activeFeatureIndex]);
 
   const handleScannerPointerDown = (event: PointerEvent<HTMLImageElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -90,7 +138,7 @@ export function FeaturesSection() {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
-      overBarcode: false,
+      overBarcode: null,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.dataset.dragging = 'true';
@@ -104,25 +152,34 @@ export function FeaturesSection() {
     event.currentTarget.style.transform = `translate3d(${event.clientX - drag.x}px, ${event.clientY - drag.y}px, 0)`;
 
     const scannerBounds = event.currentTarget.getBoundingClientRect();
-    const barcodeBounds = barcodeTarget.current?.getBoundingClientRect();
     const scannerHead = {
       left: scannerBounds.left + scannerBounds.width * 0.19,
       right: scannerBounds.left + scannerBounds.width * 0.63,
       top: scannerBounds.top + scannerBounds.height * 0.22,
       bottom: scannerBounds.top + scannerBounds.height * 0.46,
     };
-    const isOverBarcode = Boolean(
-      barcodeBounds &&
-      scannerHead.right > barcodeBounds.left &&
-      scannerHead.left < barcodeBounds.right &&
-      scannerHead.bottom > barcodeBounds.top &&
-      scannerHead.top < barcodeBounds.bottom,
-    );
+    const scannedBox = [
+      { name: 'features' as const, target: featureBarcodeTarget.current },
+      { name: 'cashier' as const, target: cashierBarcodeTarget.current },
+    ].find(({ target }) => {
+      const bounds = target?.getBoundingClientRect();
+      return Boolean(
+        bounds &&
+        scannerHead.right > bounds.left &&
+        scannerHead.left < bounds.right &&
+        scannerHead.bottom > bounds.top &&
+        scannerHead.top < bounds.bottom,
+      );
+    })?.name;
 
-    if (isOverBarcode && !drag.overBarcode) {
-      setActiveFeatureIndex((index) => (index + 1) % featureSlides.length);
+    if (scannedBox && drag.overBarcode !== scannedBox) {
+      if (scannedBox === 'features') {
+        setActiveFeatureIndex((index) => (index + 1) % featureSlides.length);
+      } else {
+        setActiveCashierStepIndex((index) => (index + 1) % cashierSteps.length);
+      }
     }
-    drag.overBarcode = isOverBarcode;
+    drag.overBarcode = scannedBox ?? null;
   };
 
   const handleScannerPointerRelease = (event: PointerEvent<HTMLImageElement>) => {
@@ -147,31 +204,42 @@ export function FeaturesSection() {
         </p>
       </div>
       <div className="features-medicine-row">
-        {['Features', 'Cashier', 'Admin'].map((title) => (
-          <div className="features-medicine-row__item" key={title}>
-            <h3>{title}</h3>
-            <div className="features-medicine-row__image">
-              <img src={medicineMockup} alt="" aria-hidden="true" />
-              {title === 'Features' && (
-                <>
-                  <div className="features-medicine-row__feature-copy" aria-live="polite">
-                    <h4>
-                      {activeFeature.titleLines.map((line) => (
-                        <span key={line}>{line}</span>
-                      ))}
-                    </h4>
-                    <p ref={descriptionRef}>{activeFeature.description}</p>
-                  </div>
-                  <div
-                    className="features-medicine-row__barcode-target"
-                    ref={barcodeTarget}
-                    aria-hidden="true"
-                  />
-                </>
-              )}
+        {['Features', 'Cashier', 'Admin'].map((title) => {
+          const isFeatureBox = title === 'Features';
+          const slide = isFeatureBox
+            ? featureSlides[activeFeatureIndex]
+            : title === 'Cashier'
+              ? cashierSteps[activeCashierStepIndex]
+              : null;
+
+          return (
+            <div className="features-medicine-row__item" key={title}>
+              <h3>{title}</h3>
+              <div className="features-medicine-row__image">
+                <img src={medicineMockup} alt="" aria-hidden="true" />
+                {slide && (
+                  <>
+                    <div className="features-medicine-row__feature-copy" aria-live="polite">
+                      <h4 data-compact-title={slide.title === 'View Transactions'}>
+                        {slide.titleLines.map((line) => (
+                          <span key={line}>{line}</span>
+                        ))}
+                      </h4>
+                      <p ref={isFeatureBox ? featureDescriptionRef : cashierDescriptionRef}>
+                        {slide.description}
+                      </p>
+                    </div>
+                    <div
+                      className="features-medicine-row__barcode-target"
+                      ref={isFeatureBox ? featureBarcodeTarget : cashierBarcodeTarget}
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div
         className="features-scanner-holder"

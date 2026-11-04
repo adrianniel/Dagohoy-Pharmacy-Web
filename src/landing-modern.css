@@ -2186,6 +2186,10 @@ html:has(.landing-page) {
   white-space: nowrap;
 }
 
+.landing-page .features-medicine-row__feature-copy h4[data-compact-title='true'] span:last-child {
+  font-size: clamp(0.46rem, 5.1cqi, 1.08rem);
+}
+
 .landing-page .features-medicine-row__feature-copy p {
   position: absolute;
   top: 40.5%;
