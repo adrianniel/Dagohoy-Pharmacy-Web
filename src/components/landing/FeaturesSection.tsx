@@ -292,6 +292,15 @@ export function FeaturesSection() {
                 {title}
               </h3>
               <div className="features-medicine-row__image">
+                <span
+                  key={scanBounce.box === title ? scanBounce.sequence : title}
+                  className={
+                    scanBounce.box === title
+                      ? 'features-medicine-row__scan-glow is-scan-glowing'
+                      : 'features-medicine-row__scan-glow'
+                  }
+                  aria-hidden="true"
+                />
                 <img src={medicineMockup} alt="" aria-hidden="true" />
                 {slide && (
                   <>

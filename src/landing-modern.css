@@ -2182,6 +2182,52 @@ html:has(.landing-page) {
   object-fit: contain;
 }
 
+.landing-page .features-medicine-row__scan-glow {
+  position: absolute;
+  inset: 4% 3% 5% 3%;
+  z-index: 0;
+  border-radius: 22px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(150, 191, 138, 0.95) 0%,
+    rgba(150, 191, 138, 0.55) 45%,
+    rgba(150, 191, 138, 0) 78%
+  );
+  filter: blur(18px);
+  transform: scale(0.88);
+}
+
+.landing-page .features-medicine-row__scan-glow.is-scan-glowing {
+  animation: features-box-scan-glow 650ms ease-out both;
+}
+
+@keyframes features-box-scan-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  55% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .features-medicine-row__scan-glow.is-scan-glowing {
+    animation: none;
+  }
+}
+
 .landing-page .features-medicine-row__feature-copy {
   position: absolute;
   inset: 0;
