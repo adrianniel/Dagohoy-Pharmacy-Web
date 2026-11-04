@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
 import medicineMockup from '../../assets/medicine mockup.png';
 import scanner from '../../assets/scanner.png';
 import scannerHolder from '../../assets/scanner holder.png';
@@ -6,34 +6,42 @@ import scannerHolder from '../../assets/scanner holder.png';
 const featureSlides = [
   {
     title: 'Barcode Scanning',
+    titleLines: ['Barcode', 'Scanning'],
     description: 'Faster product lookup and checkout with less manual encoding.',
   },
   {
     title: 'Point of Sale (POS)',
+    titleLines: ['Point of', 'Sale (POS)'],
     description: 'Process sales quickly through a simple and efficient checkout system.',
   },
   {
     title: 'Inventory Monitoring',
+    titleLines: ['Inventory', 'Monitoring'],
     description: 'Track available stock and identify products that are running low.',
   },
   {
     title: 'Batch & Expiry Tracking',
+    titleLines: ['Batch & Expiry', 'Tracking'],
     description: 'Monitor medicine batches and expiration dates to improve stock management.',
   },
   {
     title: 'Customer Credit Management',
+    titleLines: ['Customer Credit', 'Management'],
     description: 'Keep track of customer credit (utang), outstanding balances, and repayments.',
   },
   {
     title: 'Supply Receiving',
+    titleLines: ['Supply', 'Receiving'],
     description: 'Record incoming products, supplier details, quantities, and purchase costs.',
   },
   {
     title: 'Cashier Shift Management',
+    titleLines: ['Cashier Shift', 'Management'],
     description: 'Monitor staff duty, shift transactions, opening cash, and closing balances.',
   },
   {
     title: 'Sales Analytics & Reports',
+    titleLines: ['Sales Analytics', '& Reports'],
     description: 'View sales performance, inventory activity, and business insights in one place.',
   },
 ];
@@ -42,12 +50,37 @@ export function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const activeFeature = featureSlides[activeFeatureIndex];
   const barcodeTarget = useRef<HTMLDivElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
   const scannerDrag = useRef<{
     pointerId: number;
     x: number;
     y: number;
     overBarcode: boolean;
   } | null>(null);
+
+  useLayoutEffect(() => {
+    const description = descriptionRef.current;
+    const copyContainer = description?.parentElement;
+    if (!description || !copyContainer) return;
+
+    const fitDescription = () => {
+      description.style.fontSize = '';
+      const baseSize = Number.parseFloat(getComputedStyle(description).fontSize);
+      const minSize = Math.max(4, baseSize * 0.6);
+      let size = baseSize;
+      description.style.fontSize = `${size}px`;
+
+      while (description.scrollHeight > description.clientHeight + 1 && size > minSize) {
+        size = Math.max(minSize, size - 0.25);
+        description.style.fontSize = `${size}px`;
+      }
+    };
+
+    fitDescription();
+    const resizeObserver = new ResizeObserver(fitDescription);
+    resizeObserver.observe(copyContainer);
+    return () => resizeObserver.disconnect();
+  }, [activeFeatureIndex]);
 
   const handleScannerPointerDown = (event: PointerEvent<HTMLImageElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -122,10 +155,12 @@ export function FeaturesSection() {
               {title === 'Features' && (
                 <>
                   <div className="features-medicine-row__feature-copy" aria-live="polite">
-                    <h4 data-long={activeFeature.title.length > 18}>{activeFeature.title}</h4>
-                    <p data-compact={activeFeature.description.length > 64}>
-                      {activeFeature.description}
-                    </p>
+                    <h4>
+                      {activeFeature.titleLines.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </h4>
+                    <p ref={descriptionRef}>{activeFeature.description}</p>
                   </div>
                   <div
                     className="features-medicine-row__barcode-target"

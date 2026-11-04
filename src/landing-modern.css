@@ -2172,6 +2172,8 @@ html:has(.landing-page) {
   left: 31%;
   width: 48%;
   margin: 0;
+  display: flex;
+  flex-direction: column;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(0.5rem, 5.7cqi, 1.2rem);
   font-weight: 700;
@@ -2179,8 +2181,9 @@ html:has(.landing-page) {
   line-height: 0.96;
 }
 
-.landing-page .features-medicine-row__feature-copy h4[data-long='true'] {
-  font-size: clamp(0.44rem, 4.8cqi, 1rem);
+.landing-page .features-medicine-row__feature-copy h4 span {
+  display: block;
+  white-space: nowrap;
 }
 
 .landing-page .features-medicine-row__feature-copy p {
@@ -2195,10 +2198,6 @@ html:has(.landing-page) {
   font-size: clamp(0.4rem, 4cqi, 0.9rem);
   font-weight: 400;
   line-height: 1.02;
-}
-
-.landing-page .features-medicine-row__feature-copy p[data-compact='true'] {
-  font-size: clamp(0.34rem, 3.3cqi, 0.72rem);
 }
 
 .landing-page .features-medicine-row__barcode-target {
