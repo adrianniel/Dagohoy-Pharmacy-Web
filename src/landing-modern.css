@@ -2172,7 +2172,7 @@ html:has(.landing-page) {
 .landing-page .features-scanner-holder img.features-scanner-holder__scanner {
   position: absolute;
   z-index: 1;
-  top: -44%;
+  top: -32%;
   left: -4%;
   width: 155%;
   max-width: none;
