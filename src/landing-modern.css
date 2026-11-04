@@ -2140,18 +2140,61 @@ html:has(.landing-page) {
 }
 
 .landing-page .features-medicine-row__image {
-  width: 100%;
+  position: relative;
+  align-self: center;
+  width: 150%;
   overflow: visible;
-  display: flex;
-  justify-content: center;
+  display: block;
 }
 
 .landing-page .features-medicine-row__image img {
-  width: 150%;
+  display: block;
+  width: 100%;
   max-width: none;
   height: auto;
-  flex: 0 0 150%;
   object-fit: contain;
+}
+
+.landing-page .features-medicine-row__feature-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  color: #075a43;
+  font-family: 'Poppins', sans-serif;
+  pointer-events: none;
+  text-align: left;
+}
+
+.landing-page .features-medicine-row__feature-copy h4 {
+  position: absolute;
+  top: 30.5%;
+  left: 31%;
+  width: 46%;
+  margin: 0;
+  font-size: clamp(0.52rem, 1.05vw, 0.95rem);
+  font-weight: 750;
+  line-height: 1.04;
+}
+
+.landing-page .features-medicine-row__feature-copy p {
+  position: absolute;
+  top: 45%;
+  left: 32.5%;
+  width: 37%;
+  height: 16%;
+  margin: 0;
+  font-size: clamp(0.38rem, 0.76vw, 0.72rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.landing-page .features-medicine-row__barcode-target {
+  position: absolute;
+  top: 75%;
+  left: 36%;
+  width: 35%;
+  height: 9%;
+  pointer-events: none;
 }
 
 .landing-page .features-scanner-holder {

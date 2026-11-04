@@ -1,16 +1,63 @@
-import { useRef, type PointerEvent } from 'react';
+import { useRef, useState, type PointerEvent } from 'react';
 import medicineMockup from '../../assets/medicine mockup.png';
 import scanner from '../../assets/scanner.png';
 import scannerHolder from '../../assets/scanner holder.png';
 
+const featureSlides = [
+  {
+    title: 'Barcode Scanning',
+    description: 'Faster product lookup and checkout with less manual encoding.',
+  },
+  {
+    title: 'Point of Sale (POS)',
+    description: 'Process sales quickly through a simple and efficient checkout system.',
+  },
+  {
+    title: 'Inventory Monitoring',
+    description: 'Track available stock and identify products that are running low.',
+  },
+  {
+    title: 'Batch & Expiry Tracking',
+    description: 'Monitor medicine batches and expiration dates to improve stock management.',
+  },
+  {
+    title: 'Customer Credit Management',
+    description: 'Keep track of customer credit (utang), outstanding balances, and repayments.',
+  },
+  {
+    title: 'Supply Receiving',
+    description: 'Record incoming products, supplier details, quantities, and purchase costs.',
+  },
+  {
+    title: 'Cashier Shift Management',
+    description: 'Monitor staff duty, shift transactions, opening cash, and closing balances.',
+  },
+  {
+    title: 'Sales Analytics & Reports',
+    description: 'View sales performance, inventory activity, and business insights in one place.',
+  },
+];
+
 export function FeaturesSection() {
-  const scannerDrag = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+  const barcodeTarget = useRef<HTMLDivElement>(null);
+  const scannerDrag = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    overBarcode: boolean;
+  } | null>(null);
 
   const handleScannerPointerDown = (event: PointerEvent<HTMLImageElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
     event.preventDefault();
-    scannerDrag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+    scannerDrag.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      overBarcode: false,
+    };
     event.currentTarget.setPointerCapture(event.pointerId);
     event.currentTarget.dataset.dragging = 'true';
     event.currentTarget.style.transition = 'none';
@@ -21,6 +68,27 @@ export function FeaturesSection() {
     if (!drag || drag.pointerId !== event.pointerId) return;
 
     event.currentTarget.style.transform = `translate3d(${event.clientX - drag.x}px, ${event.clientY - drag.y}px, 0)`;
+
+    const scannerBounds = event.currentTarget.getBoundingClientRect();
+    const barcodeBounds = barcodeTarget.current?.getBoundingClientRect();
+    const scannerHead = {
+      left: scannerBounds.left + scannerBounds.width * 0.19,
+      right: scannerBounds.left + scannerBounds.width * 0.63,
+      top: scannerBounds.top + scannerBounds.height * 0.22,
+      bottom: scannerBounds.top + scannerBounds.height * 0.46,
+    };
+    const isOverBarcode = Boolean(
+      barcodeBounds &&
+      scannerHead.right > barcodeBounds.left &&
+      scannerHead.left < barcodeBounds.right &&
+      scannerHead.bottom > barcodeBounds.top &&
+      scannerHead.top < barcodeBounds.bottom,
+    );
+
+    if (isOverBarcode && !drag.overBarcode) {
+      setActiveFeatureIndex((index) => (index + 1) % featureSlides.length);
+    }
+    drag.overBarcode = isOverBarcode;
   };
 
   const handleScannerPointerRelease = (event: PointerEvent<HTMLImageElement>) => {
@@ -50,6 +118,19 @@ export function FeaturesSection() {
             <h3>{title}</h3>
             <div className="features-medicine-row__image">
               <img src={medicineMockup} alt="" aria-hidden="true" />
+              {title === 'Features' && (
+                <>
+                  <div className="features-medicine-row__feature-copy" aria-live="polite">
+                    <h4>{featureSlides[activeFeatureIndex].title}</h4>
+                    <p>{featureSlides[activeFeatureIndex].description}</p>
+                  </div>
+                  <div
+                    className="features-medicine-row__barcode-target"
+                    ref={barcodeTarget}
+                    aria-hidden="true"
+                  />
+                </>
+              )}
             </div>
           </div>
         ))}
