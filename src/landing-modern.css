@@ -2190,6 +2190,10 @@ html:has(.landing-page) {
   font-size: clamp(0.46rem, 5.1cqi, 1.08rem);
 }
 
+.landing-page .features-medicine-row__feature-copy h4[data-admin-title='true'] span:last-child {
+  font-size: clamp(0.38rem, 4.25cqi, 0.9rem);
+}
+
 .landing-page .features-medicine-row__feature-copy p {
   position: absolute;
   top: 40.5%;

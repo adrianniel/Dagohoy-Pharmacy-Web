@@ -90,24 +90,83 @@ const cashierSteps = [
   },
 ];
 
+const adminSteps = [
+  {
+    title: 'Log In',
+    titleLines: ['Step 1', 'Log In'],
+    description: 'Access the pharmacy system securely with full administrative privileges.',
+  },
+  {
+    title: 'Monitor Dashboard',
+    titleLines: ['Step 2', 'Monitor Dashboard'],
+    description: 'View daily sales, active shifts, stock alerts, and pharmacy operations.',
+  },
+  {
+    title: 'Manage Products',
+    titleLines: ['Step 3', 'Manage Products'],
+    description: 'Organize product details, barcodes, categories, units, and selling prices.',
+  },
+  {
+    title: 'Manage Inventory',
+    titleLines: ['Step 4', 'Manage Inventory'],
+    description: 'Monitor stock levels, medicine batches, expiry dates, and inventory movements.',
+  },
+  {
+    title: 'Receive Supplies',
+    titleLines: ['Step 5', 'Receive Supplies'],
+    description: 'Record incoming products, supplier information, quantities, and purchase costs.',
+  },
+  {
+    title: 'Review Sales',
+    titleLines: ['Step 6', 'Review Sales'],
+    description: 'Track completed transactions, payment records, and cashier sales activity.',
+  },
+  {
+    title: 'Manage Customer Credit',
+    titleLines: ['Step 7', 'Manage Customer Credit'],
+    description: 'Monitor customer credit balances, outstanding debts, and repayment records.',
+  },
+  {
+    title: 'Manage Staff',
+    titleLines: ['Step 8', 'Manage Staff'],
+    description: 'Create cashier accounts, monitor shifts, and control staff access permissions.',
+  },
+  {
+    title: 'Review Reports',
+    titleLines: ['Step 9', 'Review Reports'],
+    description: 'Analyze sales performance, inventory trends, and overall pharmacy operations.',
+  },
+  {
+    title: 'Manage Settings',
+    titleLines: ['Step 10', 'Manage Settings'],
+    description:
+      'Configure pharmacy details, operating schedules, and essential system preferences.',
+  },
+];
+
 export function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const [activeCashierStepIndex, setActiveCashierStepIndex] = useState(0);
+  const [activeAdminStepIndex, setActiveAdminStepIndex] = useState(0);
   const featureBarcodeTarget = useRef<HTMLDivElement>(null);
   const cashierBarcodeTarget = useRef<HTMLDivElement>(null);
+  const adminBarcodeTarget = useRef<HTMLDivElement>(null);
   const featureDescriptionRef = useRef<HTMLParagraphElement>(null);
   const cashierDescriptionRef = useRef<HTMLParagraphElement>(null);
+  const adminDescriptionRef = useRef<HTMLParagraphElement>(null);
   const scannerDrag = useRef<{
     pointerId: number;
     x: number;
     y: number;
-    overBarcode: 'features' | 'cashier' | null;
+    overBarcode: 'features' | 'cashier' | 'admin' | null;
   } | null>(null);
 
   useLayoutEffect(() => {
-    const descriptions = [featureDescriptionRef.current, cashierDescriptionRef.current].filter(
-      (description): description is HTMLParagraphElement => description !== null,
-    );
+    const descriptions = [
+      featureDescriptionRef.current,
+      cashierDescriptionRef.current,
+      adminDescriptionRef.current,
+    ].filter((description): description is HTMLParagraphElement => description !== null);
 
     const fitDescription = (description: HTMLParagraphElement) => {
       description.style.fontSize = '';
@@ -128,7 +187,7 @@ export function FeaturesSection() {
       if (description.parentElement) resizeObserver.observe(description.parentElement);
     });
     return () => resizeObserver.disconnect();
-  }, [activeCashierStepIndex, activeFeatureIndex]);
+  }, [activeAdminStepIndex, activeCashierStepIndex, activeFeatureIndex]);
 
   const handleScannerPointerDown = (event: PointerEvent<HTMLImageElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -161,6 +220,7 @@ export function FeaturesSection() {
     const scannedBox = [
       { name: 'features' as const, target: featureBarcodeTarget.current },
       { name: 'cashier' as const, target: cashierBarcodeTarget.current },
+      { name: 'admin' as const, target: adminBarcodeTarget.current },
     ].find(({ target }) => {
       const bounds = target?.getBoundingClientRect();
       return Boolean(
@@ -175,8 +235,10 @@ export function FeaturesSection() {
     if (scannedBox && drag.overBarcode !== scannedBox) {
       if (scannedBox === 'features') {
         setActiveFeatureIndex((index) => (index + 1) % featureSlides.length);
-      } else {
+      } else if (scannedBox === 'cashier') {
         setActiveCashierStepIndex((index) => (index + 1) % cashierSteps.length);
+      } else {
+        setActiveAdminStepIndex((index) => (index + 1) % adminSteps.length);
       }
     }
     drag.overBarcode = scannedBox ?? null;
@@ -206,11 +268,13 @@ export function FeaturesSection() {
       <div className="features-medicine-row">
         {['Features', 'Cashier', 'Admin'].map((title) => {
           const isFeatureBox = title === 'Features';
+          const isCashierBox = title === 'Cashier';
+          const isAdminBox = title === 'Admin';
           const slide = isFeatureBox
             ? featureSlides[activeFeatureIndex]
-            : title === 'Cashier'
+            : isCashierBox
               ? cashierSteps[activeCashierStepIndex]
-              : null;
+              : adminSteps[activeAdminStepIndex];
 
           return (
             <div className="features-medicine-row__item" key={title}>
@@ -220,18 +284,35 @@ export function FeaturesSection() {
                 {slide && (
                   <>
                     <div className="features-medicine-row__feature-copy" aria-live="polite">
-                      <h4 data-compact-title={slide.title === 'View Transactions'}>
+                      <h4
+                        data-compact-title={slide.title === 'View Transactions'}
+                        data-admin-title={isAdminBox}
+                      >
                         {slide.titleLines.map((line) => (
                           <span key={line}>{line}</span>
                         ))}
                       </h4>
-                      <p ref={isFeatureBox ? featureDescriptionRef : cashierDescriptionRef}>
+                      <p
+                        ref={
+                          isFeatureBox
+                            ? featureDescriptionRef
+                            : isCashierBox
+                              ? cashierDescriptionRef
+                              : adminDescriptionRef
+                        }
+                      >
                         {slide.description}
                       </p>
                     </div>
                     <div
                       className="features-medicine-row__barcode-target"
-                      ref={isFeatureBox ? featureBarcodeTarget : cashierBarcodeTarget}
+                      ref={
+                        isFeatureBox
+                          ? featureBarcodeTarget
+                          : isCashierBox
+                            ? cashierBarcodeTarget
+                            : adminBarcodeTarget
+                      }
                       aria-hidden="true"
                     />
                   </>
