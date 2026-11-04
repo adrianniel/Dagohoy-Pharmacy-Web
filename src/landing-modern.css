@@ -2175,6 +2175,8 @@ html:has(.landing-page) {
 }
 
 .landing-page .features-medicine-row__image img {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   max-width: none;
@@ -2184,19 +2186,22 @@ html:has(.landing-page) {
 
 .landing-page .features-medicine-row__scan-glow {
   position: absolute;
-  inset: 4% 3% 5% 3%;
+  left: 6%;
+  right: 6%;
+  bottom: -5%;
+  height: 26%;
   z-index: 0;
-  border-radius: 22px;
+  border-radius: 50%;
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
     ellipse at 50% 50%,
     rgba(150, 191, 138, 0.95) 0%,
-    rgba(150, 191, 138, 0.55) 45%,
+    rgba(150, 191, 138, 0.5) 45%,
     rgba(150, 191, 138, 0) 78%
   );
-  filter: blur(18px);
-  transform: scale(0.88);
+  filter: blur(14px);
+  transform: scale(0.8);
 }
 
 .landing-page .features-medicine-row__scan-glow.is-scan-glowing {
@@ -2206,19 +2211,19 @@ html:has(.landing-page) {
 @keyframes features-box-scan-glow {
   0% {
     opacity: 0;
-    transform: scale(0.88);
+    transform: scale(0.8);
   }
   22% {
     opacity: 1;
-    transform: scale(1.06);
+    transform: scale(1.12);
   }
   55% {
-    opacity: 0.72;
+    opacity: 0.7;
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(1.1);
+    transform: scale(1.18);
   }
 }
 
