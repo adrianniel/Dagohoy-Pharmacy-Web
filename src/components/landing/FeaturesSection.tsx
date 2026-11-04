@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
 import medicineMockup from '../../assets/medicine mockup.png';
+import conveyorTable from '../../assets/converyor table.png';
 import scanner from '../../assets/scanner.png';
 import scannerHolder from '../../assets/scanner holder.png';
 
@@ -292,6 +293,7 @@ export function FeaturesSection() {
                 {title}
               </h3>
               <div className="features-medicine-row__image">
+                <span className="features-medicine-row__box-shadow" aria-hidden="true" />
                 <span
                   key={scanBounce.box === title ? scanBounce.sequence : title}
                   className={
@@ -345,6 +347,12 @@ export function FeaturesSection() {
             </div>
           );
         })}
+        <img
+          className="features-medicine-row__conveyor"
+          src={conveyorTable}
+          alt=""
+          aria-hidden="true"
+        />
       </div>
       <div
         className="features-scanner-holder"
@@ -355,7 +363,7 @@ export function FeaturesSection() {
         <div className="features-scanner-guide">
           <p>Drag the scanner over a barcode to scan it.</p>
           <svg viewBox="0 0 120 78" aria-hidden="true">
-              <defs>
+            <defs>
               <marker
                 id="scanner-guide-arrowhead"
                 markerWidth="8"
@@ -366,8 +374,8 @@ export function FeaturesSection() {
               >
                 <path d="M0,0 L8,4 L0,8 Z" />
               </marker>
-              </defs>
-              <path d="M112 6 C104 40, 72 56, 22 62" markerEnd="url(#scanner-guide-arrowhead)" />
+            </defs>
+            <path d="M112 6 C104 40, 72 56, 22 62" markerEnd="url(#scanner-guide-arrowhead)" />
           </svg>
         </div>
         <img

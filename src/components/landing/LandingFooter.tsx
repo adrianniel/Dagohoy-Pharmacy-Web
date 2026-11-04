@@ -13,7 +13,7 @@ export function LandingFooter() {
           <span>
             © {new Date().getFullYear()} {pharmacyProfile.name}
           </span>
-          <span>Designed &amp; Developed by [Developer Name]</span>
+          <span>Designed &amp; Developed by Niel Adrian Garig</span>
         </p>
       </div>
     </footer>

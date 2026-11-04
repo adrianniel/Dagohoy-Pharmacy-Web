@@ -48,14 +48,22 @@ export const pharmacyFeatures = [
 ];
 
 export const developerProfile = {
-  name: '[Developer Name]',
+  name: 'Niel Adrian Garig',
   role: 'Software Developer',
-  email: '[Email address]',
+  email: 'adrianniel.garig@gmail.com',
   services: ['Web Systems', 'POS Systems', 'Inventory Systems', 'Custom Business Software'],
   contacts: [
-    { label: 'Email', value: '[Email address]', href: 'mailto:[Email address]' },
-    { label: 'Facebook / Messenger', value: '[Facebook / Messenger]', href: '#' },
+    {
+      label: 'Email',
+      value: 'adrianniel.garig@gmail.com',
+      href: 'mailto:adrianniel.garig@gmail.com',
+    },
+    {
+      label: 'Facebook / Messenger',
+      value: 'facebook.com/niel.adrn',
+      href: 'https://www.facebook.com/niel.adrn',
+    },
     { label: 'Portfolio', value: '[Portfolio link]', href: '#' },
-    { label: 'GitHub', value: '[GitHub link]', href: '#' },
+    { label: 'GitHub', value: 'github.com/adrianniel', href: 'https://github.com/adrianniel' },
   ],
 };

@@ -24,7 +24,9 @@ export function ContactSection() {
           <address>
             <span>{developerProfile.name}</span>
             <a href={`mailto:${developerProfile.email}`}>{developerProfile.email}</a>
-            <span>[Email / Messenger]</span>
+            <a href="https://www.facebook.com/niel.adrn" target="_blank" rel="noreferrer">
+              facebook.com/niel.adrn
+            </a>
           </address>
         </article>
       </div>
