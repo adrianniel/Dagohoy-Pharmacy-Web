@@ -40,6 +40,7 @@ const featureSlides = [
 
 export function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+  const activeFeature = featureSlides[activeFeatureIndex];
   const barcodeTarget = useRef<HTMLDivElement>(null);
   const scannerDrag = useRef<{
     pointerId: number;
@@ -121,8 +122,10 @@ export function FeaturesSection() {
               {title === 'Features' && (
                 <>
                   <div className="features-medicine-row__feature-copy" aria-live="polite">
-                    <h4>{featureSlides[activeFeatureIndex].title}</h4>
-                    <p>{featureSlides[activeFeatureIndex].description}</p>
+                    <h4 data-long={activeFeature.title.length > 18}>{activeFeature.title}</h4>
+                    <p data-compact={activeFeature.description.length > 64}>
+                      {activeFeature.description}
+                    </p>
                   </div>
                   <div
                     className="features-medicine-row__barcode-target"
