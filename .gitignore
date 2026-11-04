@@ -11,3 +11,5 @@ coverage/
 # Local design skill installation and its generated sweep reports
 /.agents/skills/hallmark/
 /.hallmark/
+# Chat attachments and reference screenshots kept out of git
+/.hormachuelos/

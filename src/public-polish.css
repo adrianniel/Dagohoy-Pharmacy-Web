@@ -360,15 +360,21 @@
   color: #f5fff9;
 }
 
-.auth-card--admin .login-role-option:hover:not(:has(input:checked)) {
-  border-color: #d5eadf;
-  background: rgb(255 255 240 / 10%);
-}
-
-.auth-card--admin .stack .login-role-option:has(input:checked) {
+.auth-card--admin .login-role-option:not(:has(input:checked)) {
   border-color: #fffff0;
   background: #fffff0;
   color: #006451;
+}
+
+.auth-card--admin .login-role-option:hover:not(:has(input:checked)) {
+  border-color: #e8f1e7;
+  background: #e8f1e7;
+}
+
+.auth-card--admin .stack .login-role-option:has(input:checked) {
+  border: 2px solid #fffff0;
+  background: var(--landing-green, #176246);
+  color: #ffffff;
   box-shadow: 0 5px 14px rgb(0 35 27 / 18%);
 }
 

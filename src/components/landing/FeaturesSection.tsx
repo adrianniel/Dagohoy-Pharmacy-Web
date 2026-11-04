@@ -123,7 +123,7 @@ const adminSteps = [
   },
   {
     title: 'Manage Customer Credit',
-    titleLines: ['Step 7', 'Manage Customer Credit'],
+    titleLines: ['Step 7', 'Manage Customer', 'Credit'],
     description: 'Monitor customer credit balances, outstanding debts, and repayment records.',
   },
   {
@@ -148,6 +148,10 @@ export function FeaturesSection() {
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const [activeCashierStepIndex, setActiveCashierStepIndex] = useState(0);
   const [activeAdminStepIndex, setActiveAdminStepIndex] = useState(0);
+  const [scanBounce, setScanBounce] = useState<{
+    box: 'Features' | 'Cashier' | 'Admin' | null;
+    sequence: number;
+  }>({ box: null, sequence: 0 });
   const featureBarcodeTarget = useRef<HTMLDivElement>(null);
   const cashierBarcodeTarget = useRef<HTMLDivElement>(null);
   const adminBarcodeTarget = useRef<HTMLDivElement>(null);
@@ -233,6 +237,9 @@ export function FeaturesSection() {
     })?.name;
 
     if (scannedBox && drag.overBarcode !== scannedBox) {
+      const boxTitle =
+        scannedBox === 'features' ? 'Features' : scannedBox === 'cashier' ? 'Cashier' : 'Admin';
+      setScanBounce((current) => ({ box: boxTitle, sequence: current.sequence + 1 }));
       if (scannedBox === 'features') {
         setActiveFeatureIndex((index) => (index + 1) % featureSlides.length);
       } else if (scannedBox === 'cashier') {
@@ -278,7 +285,12 @@ export function FeaturesSection() {
 
           return (
             <div className="features-medicine-row__item" key={title}>
-              <h3>{title}</h3>
+              <h3
+                key={scanBounce.box === title ? scanBounce.sequence : title}
+                className={scanBounce.box === title ? 'is-scan-bouncing' : undefined}
+              >
+                {title}
+              </h3>
               <div className="features-medicine-row__image">
                 <img src={medicineMockup} alt="" aria-hidden="true" />
                 {slide && (
@@ -287,6 +299,9 @@ export function FeaturesSection() {
                       <h4
                         data-compact-title={slide.title === 'View Transactions'}
                         data-admin-title={isAdminBox}
+                        data-admin-step-seven={
+                          isAdminBox && slide.title === 'Manage Customer Credit'
+                        }
                       >
                         {slide.titleLines.map((line) => (
                           <span key={line}>{line}</span>
@@ -328,6 +343,24 @@ export function FeaturesSection() {
         aria-label="Barcode scanner resting in its wall-mounted holder"
       >
         <img src={scannerHolder} alt="" aria-hidden="true" />
+        <div className="features-scanner-guide">
+          <p>Drag the scanner over a barcode to scan it.</p>
+          <svg viewBox="0 0 120 78" aria-hidden="true">
+              <defs>
+              <marker
+                id="scanner-guide-arrowhead"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M0,0 L8,4 L0,8 Z" />
+              </marker>
+              </defs>
+              <path d="M112 6 C104 40, 72 56, 22 62" markerEnd="url(#scanner-guide-arrowhead)" />
+          </svg>
+        </div>
         <img
           className="features-scanner-holder__scanner"
           src={scanner}
