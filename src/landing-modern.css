@@ -2177,6 +2177,17 @@ html:has(.landing-page) {
   width: 155%;
   max-width: none;
   height: auto;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.landing-page .features-scanner-holder img.features-scanner-holder__scanner[data-dragging='true'] {
+  z-index: 9999;
+  cursor: grabbing;
 }
 
 .landing-page .features-section .section-heading h2,
