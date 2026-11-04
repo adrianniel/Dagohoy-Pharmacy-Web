@@ -2169,6 +2169,16 @@ html:has(.landing-page) {
   object-fit: contain;
 }
 
+.landing-page .features-scanner-holder img.features-scanner-holder__scanner {
+  position: absolute;
+  z-index: 1;
+  top: -44%;
+  left: -4%;
+  width: 155%;
+  max-width: none;
+  height: auto;
+}
+
 .landing-page .features-section .section-heading h2,
 .landing-page .features-section .section-heading > p:not(.eyebrow) {
   font-family: 'Poppins', sans-serif;
@@ -2211,7 +2221,9 @@ html:has(.landing-page) {
 
 @media (max-width: 1100px) {
   .landing-page .features-scanner-holder {
-    position: static;
+    position: relative;
+    top: auto;
+    right: auto;
     width: clamp(10rem, 28vw, 15rem);
     margin-block-start: 1.5rem;
     justify-self: center;
