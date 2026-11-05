@@ -4,6 +4,9 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
 import CartIcon from '../../components/originkit/ui/CartIcon';
+import { adminProfile, cashierProfile } from '../../data/cashierMockData';
+import { USER_ROLE_KEY } from '../../constants/app';
+import { REGISTER_SESSION_KEY } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -24,6 +27,9 @@ type CompletedSale = {
   change: number;
   customer?: string;
   reference?: string;
+  cashier: string;
+  paymentStatus?: string;
+  creditBalance?: number;
 };
 type PaymentMethod = 'Cash' | 'GCash' | 'Credit';
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
@@ -49,6 +55,20 @@ const PAYMENT_METHOD_OPTIONS: Array<{
   { id: 'GCash', name: 'GCash', detail: 'Manual verification', icon: 'phone' },
   { id: 'Credit', name: 'Credit', detail: 'Utang / pay later', icon: 'credit' },
 ];
+
+function readCashierName(): string {
+  try {
+    const session = JSON.parse(localStorage.getItem(REGISTER_SESSION_KEY) ?? 'null') as {
+      cashierName?: string;
+    } | null;
+    const sessionName = session?.cashierName?.trim();
+    if (sessionName) return sessionName;
+  } catch {
+    // fall through to the account profile
+  }
+  const profile = localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
+  return profile.name;
+}
 
 function sanitizeMoneyInput(value: string): string {
   const cleaned = value.replace(/[^\d.]/g, '');
@@ -210,8 +230,10 @@ export function CashierPosPage() {
     >;
     const receipt = `DP-${String(Date.now()).slice(-6)}`;
     const saleLines = cart.map((line) => ({ ...line }));
+    const salePayment = paymentMethod;
+    const cashierName = readCashierName();
     const amountPaidValue =
-      paymentMethod === 'Cash' || paymentMethod === 'Credit'
+      salePayment === 'Cash' || salePayment === 'Credit'
         ? Number(tendered || 0)
         : gcashPaid
           ? totalDue
@@ -229,17 +251,18 @@ export function CashierPosPage() {
         quantity: line.quantity,
         unitPrice: toAmount(line.product.price),
       })),
-      payment: paymentMethod,
-      customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
+      payment: salePayment,
+      cashier: cashierName,
+      customer: salePayment === 'Credit' ? creditCustomer.trim() : undefined,
       amountPaid: amountPaidValue,
-      change: paymentMethod === 'Cash' ? change : 0,
-      creditBalance: paymentMethod === 'Credit' ? creditBalance : 0,
-      gcashReference: paymentMethod === 'GCash' ? gcashReference.trim() : undefined,
-      paymentStatus: paymentMethod === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
+      change: salePayment === 'Cash' ? change : 0,
+      creditBalance: salePayment === 'Credit' ? creditBalance : 0,
+      gcashReference: salePayment === 'GCash' ? gcashReference.trim() : undefined,
+      paymentStatus: salePayment === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
       status:
-        paymentMethod === 'Credit' && creditBalance > 0
+        salePayment === 'Credit' && creditBalance > 0
           ? 'Credit'
-          : paymentMethod === 'GCash' && !gcashPaid
+          : salePayment === 'GCash' && !gcashPaid
             ? 'Pending GCash'
             : 'Completed',
     });
@@ -273,11 +296,14 @@ export function CashierPosPage() {
       subtotal,
       discount,
       total: totalDue,
-      payment: paymentMethod,
+      payment: salePayment,
       amountPaid: amountPaidValue,
-      change: paymentMethod === 'Cash' ? change : 0,
-      customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
-      reference: paymentMethod === 'GCash' ? gcashReference.trim() : undefined,
+      change: salePayment === 'Cash' ? change : 0,
+      customer: salePayment === 'Credit' ? creditCustomer.trim() : undefined,
+      reference: salePayment === 'GCash' ? gcashReference.trim() : undefined,
+      cashier: cashierName,
+      paymentStatus: salePayment === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
+      creditBalance: salePayment === 'Credit' ? creditBalance : 0,
     });
     setCart([]);
     setTransactionActive(false);
@@ -285,6 +311,7 @@ export function CashierPosPage() {
     setCreditCustomer('');
     setGcashReference('');
     setGcashPaid(false);
+    setPaymentMethod('Cash');
     showToast(`Transaction ${receipt} completed.`, 'success');
   }
 
@@ -742,6 +769,14 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
             <span>Date</span>
             <strong>{formatReceiptDate(sale.date)}</strong>
           </div>
+          <div>
+            <span>Served by</span>
+            <strong>{sale.cashier}</strong>
+          </div>
+          <div>
+            <span>Payment</span>
+            <strong>{sale.payment}</strong>
+          </div>
         </div>
         <ul className="pos-receipt-preview__lines">
           {sale.lines.map((line) => (
@@ -772,13 +807,23 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
             <strong>{formatMoney(sale.total)}</strong>
           </div>
           <div>
-            <span>Paid via {sale.payment}</span>
+            <span>Payment method</span>
+            <strong>{sale.payment}</strong>
+          </div>
+          <div>
+            <span>Amount paid</span>
             <strong>{formatMoney(sale.amountPaid)}</strong>
           </div>
           {sale.change > 0 && (
             <div>
               <span>Change</span>
               <strong>{formatMoney(sale.change)}</strong>
+            </div>
+          )}
+          {sale.payment === 'Credit' && (sale.creditBalance ?? 0) > 0 && (
+            <div>
+              <span>Remaining balance</span>
+              <strong>{formatMoney(sale.creditBalance ?? 0)}</strong>
             </div>
           )}
           {sale.customer && (
@@ -793,8 +838,16 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
               <strong>{sale.reference}</strong>
             </div>
           )}
+          {sale.paymentStatus && (
+            <div>
+              <span>GCash status</span>
+              <strong>{sale.paymentStatus}</strong>
+            </div>
+          )}
         </div>
-        <p className="pos-receipt-preview__thanks">Thank you. Keep this receipt for your records.</p>
+        <p className="pos-receipt-preview__thanks">
+          Served by {sale.cashier}. Thank you. Keep this receipt for your records.
+        </p>
       </div>
       <button className="pos-checkout-button" type="button" onClick={onDone}>
         New sale
