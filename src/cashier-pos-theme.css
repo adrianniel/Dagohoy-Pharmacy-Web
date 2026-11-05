@@ -1644,23 +1644,17 @@
 
 .cashier-pos-page .pos-order-empty {
   min-height: 240px;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  align-content: center;
+  gap: 1rem;
   color: #708076;
 }
 
-.cashier-pos-page .pos-order-empty > .cashier-icon {
-  width: 28px;
-  height: 28px;
-  box-sizing: content-box;
-  padding: 15px;
-  border: 1px solid #d7e6d0;
-  border-radius: 50%;
-  background: #e9f2e4;
-  color: var(--pos-green);
-}
-
 .cashier-pos-page .pos-order-empty strong {
-  margin-top: 0.3rem;
+  margin-top: 0.1rem;
   color: var(--pos-green-deep);
   font-size: 1.02rem;
   font-weight: 700;

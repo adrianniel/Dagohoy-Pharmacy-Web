@@ -269,7 +269,6 @@ export function CashierPosPage() {
             ))}
             {!cart.length && (
               <div className={`pos-order-empty${transactionActive ? ' is-active' : ''}`}>
-                <CashierIcon name={transactionActive ? 'search' : 'pos'} />
                 {transactionActive ? (
                   <>
                     <strong>Ready for the first item</strong>
