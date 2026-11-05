@@ -19,13 +19,32 @@ const formatMoney = (amount: number) =>
 const SALES_KEY = 'dagohoy_demo_sales';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 
+function sanitizeDiscountInput(value: string): string {
+  const cleaned = value.replace(/[^\d.]/g, '');
+  const dotIndex = cleaned.indexOf('.');
+  const integerPart = (dotIndex === -1 ? cleaned : cleaned.slice(0, dotIndex)).slice(0, 3);
+  const decimalPart =
+    dotIndex === -1
+      ? ''
+      : cleaned
+          .slice(dotIndex + 1)
+          .replace(/\./g, '')
+          .slice(0, 2);
+  const next = dotIndex === -1 ? integerPart : `${integerPart}.${decimalPart}`;
+
+  if (next === '' || next === '.') {
+    return dotIndex === -1 ? '' : '0.';
+  }
+  return Number(next) > 100 ? '100' : next;
+}
+
 export function CashierPosPage() {
   const [products] = useState(getInventory);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [transactionActive, setTransactionActive] = useState(false);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [discountPercent, setDiscountPercent] = useState(0);
+  const [discountInput, setDiscountInput] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [tendered, setTendered] = useState('');
   const [creditCustomer, setCreditCustomer] = useState('');
@@ -48,6 +67,7 @@ export function CashierPosPage() {
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
   );
+  const discountPercent = Math.min(100, Math.max(0, Number(discountInput) || 0));
   const totalItems = cart.reduce((total, line) => total + line.quantity, 0);
   const discount = Math.round(((subtotal * discountPercent) / 100) * 100) / 100;
   const totalDue = subtotal - discount;
@@ -305,14 +325,13 @@ export function CashierPosPage() {
               <label className="pos-discount-input">
                 <input
                   aria-label="Discount percent"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={discountPercent}
-                  onChange={(event) =>
-                    setDiscountPercent(Math.min(100, Math.max(0, Number(event.target.value))))
-                  }
+                  type="text"
+                  inputMode="decimal"
+                  value={discountInput}
+                  placeholder="0"
+                  maxLength={6}
+                  onChange={(event) => setDiscountInput(sanitizeDiscountInput(event.target.value))}
+                  onBlur={() => setDiscountInput(String(discountPercent))}
                 />
                 <span>%</span>
               </label>
