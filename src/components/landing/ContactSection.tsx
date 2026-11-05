@@ -6,9 +6,7 @@ export function ContactSection() {
       <div className="contact-section__intro">
         <p className="eyebrow">Get in touch</p>
         <h2 id="contact-title">Contact &amp; support</h2>
-        <p>
-          Questions about the pharmacy or need help with the system? Reach the right team below.
-        </p>
+        <p>Questions about the pharmacy or need help with the system? Reach the right team.</p>
       </div>
       <div className="contact-section__groups">
         <article className="contact-card">

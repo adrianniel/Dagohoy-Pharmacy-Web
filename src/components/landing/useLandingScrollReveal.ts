@@ -11,7 +11,6 @@ const revealTargets = [
   '.developer-section__profile',
   '.contact-section__intro',
   '.contact-card',
-  '.landing-footer__inner',
 ].join(', ');
 
 export function useLandingScrollReveal() {

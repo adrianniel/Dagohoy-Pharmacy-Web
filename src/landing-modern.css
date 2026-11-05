@@ -680,7 +680,9 @@ html:has(.landing-page) {
 }
 
 .landing-page .developer-section-wall {
-  padding: clamp(4.5rem, 8vw, 7rem) 0 clamp(1rem, 2vw, 1.5rem);
+  --quickbar-spacing: clamp(3rem, 4.5vw, 4.25rem);
+
+  padding: var(--quickbar-spacing) 0 clamp(1rem, 2vw, 1.5rem);
   background: #fffff0;
 }
 
@@ -689,10 +691,10 @@ html:has(.landing-page) {
   --quickbar-cream: #fffff0;
 
   width: min(calc(100% - 2rem), 612px);
-  margin: 0 auto clamp(1.25rem, 2vw, 1.75rem);
+  margin: 0 auto var(--quickbar-spacing);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
+  align-items: center;
   gap: clamp(0.65rem, 1.4vw, 1rem);
   position: relative;
   z-index: 5;
@@ -754,6 +756,10 @@ html:has(.landing-page) {
   line-height: 1;
   transform: rotate(-90deg);
   transition: transform 350ms ease;
+}
+
+.landing-page .developer-hours-dropdown.is-open .developer-hours-trigger {
+  margin-bottom: 1rem;
 }
 
 .landing-page .developer-hours-dropdown.is-open .developer-hours-trigger::before {
@@ -877,7 +883,6 @@ html:has(.landing-page) {
 @media (max-width: 520px) {
   .landing-page .developer-quickbar {
     column-gap: 0.5rem;
-    margin-bottom: 1.25rem;
   }
 
   .landing-page .developer-hours-trigger {
@@ -1192,22 +1197,40 @@ html:has(.landing-page) {
 }
 
 .landing-page .landing-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  background: #355e3b;
-  color: #f4f1e6;
+  border-top: 1px solid rgba(255, 255, 240, 0.16);
+  background: var(--hero-reference-green);
+  color: #fffff0;
 }
 
-.landing-page .landing-footer .footer-brand span,
+.landing-page .landing-footer .footer-brand > span,
 .landing-page .landing-footer p {
-  color: #d8e6cf;
+  color: #e8f1df;
+}
+
+.landing-page .landing-footer .landing-brand {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 0.8rem;
+}
+
+.landing-page .landing-footer .landing-brand__mark {
+  width: 56px;
+  height: 56px;
+  filter: brightness(0) invert(1);
 }
 
 .landing-page .landing-footer .landing-brand__text strong {
-  color: #fff;
+  color: #fffff0;
+  font-size: 1.1rem;
 }
 
 .landing-page .landing-footer .landing-brand__text > span {
   color: #cce8b7;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
 }
 
 @media (max-width: 850px) {
@@ -3582,7 +3605,9 @@ html:has(.landing-page) {
   }
 
   .landing-page .developer-section-wall {
-    padding-block: 5.5rem 1.25rem;
+    --quickbar-spacing: 3.5rem;
+
+    padding-bottom: 1.25rem;
   }
 
   .landing-page .contact-section {
