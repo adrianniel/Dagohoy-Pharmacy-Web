@@ -1,19 +1,53 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { LoadingState } from './components/LoadingState';
 import { CashierLayout } from './layouts/CashierLayout';
 import { ProtectedRoute } from './routes/ProtectedRoute';
-import { LoginPage } from './pages/LoginPage';
-import { CashierDashboardPage } from './pages/cashier/DashboardPage';
-import { CashierPosPage } from './pages/cashier/PosPage';
-import { CashierProductsPage } from './pages/cashier/ProductsPage';
-import { CashierProfilePage } from './pages/cashier/ProfilePage';
-import { CashierTransactionsPage } from './pages/cashier/TransactionsPage';
-import { AdminPage } from './pages/admin/AdminPage';
 import { AdminRoute } from './routes/AdminRoute';
-import { OperationsPage } from './pages/admin/OperationsPage';
-import { RegisterPage } from './pages/cashier/RegisterPage';
-import { ExpensesPage } from './pages/admin/ExpensesPage';
-import { CreditPage } from './pages/admin/CreditPage';
-import { LandingPage } from './pages/LandingPage';
+const LandingPage = lazy(() =>
+  import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })),
+);
+const LoginPage = lazy(() =>
+  import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+);
+const CashierDashboardPage = lazy(() =>
+  import('./pages/cashier/DashboardPage').then((module) => ({
+    default: module.CashierDashboardPage,
+  })),
+);
+const CashierPosPage = lazy(() =>
+  import('./pages/cashier/PosPage').then((module) => ({ default: module.CashierPosPage })),
+);
+const CashierProductsPage = lazy(() =>
+  import('./pages/cashier/ProductsPage').then((module) => ({
+    default: module.CashierProductsPage,
+  })),
+);
+const CashierProfilePage = lazy(() =>
+  import('./pages/cashier/ProfilePage').then((module) => ({
+    default: module.CashierProfilePage,
+  })),
+);
+const CashierTransactionsPage = lazy(() =>
+  import('./pages/cashier/TransactionsPage').then((module) => ({
+    default: module.CashierTransactionsPage,
+  })),
+);
+const AdminPage = lazy(() =>
+  import('./pages/admin/AdminPage').then((module) => ({ default: module.AdminPage })),
+);
+const OperationsPage = lazy(() =>
+  import('./pages/admin/OperationsPage').then((module) => ({ default: module.OperationsPage })),
+);
+const RegisterPage = lazy(() =>
+  import('./pages/cashier/RegisterPage').then((module) => ({ default: module.RegisterPage })),
+);
+const ExpensesPage = lazy(() =>
+  import('./pages/admin/ExpensesPage').then((module) => ({ default: module.ExpensesPage })),
+);
+const CreditPage = lazy(() =>
+  import('./pages/admin/CreditPage').then((module) => ({ default: module.CreditPage })),
+);
 
 export function App() {
   const location = useLocation();
@@ -34,7 +68,7 @@ export function App() {
   }
 
   return (
-    <>
+    <Suspense fallback={<LoadingState label="Loading workspace…" />}>
       <Routes location={backgroundLocation ?? location}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage onClose={closeLogin} />} />
@@ -73,6 +107,6 @@ export function App() {
           <Route path="/login" element={<LoginPage onClose={closeLogin} isModal />} />
         </Routes>
       )}
-    </>
+    </Suspense>
   );
 }
