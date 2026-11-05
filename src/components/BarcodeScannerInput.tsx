@@ -151,7 +151,13 @@ export function BarcodeScannerInput({
             className={`barcode-scanner-input__signal${isFocused || scannerConnected ? ' is-active' : ''}`}
           >
             <i aria-hidden="true" />
-            {scannerConnected ? 'Connected' : isFocused ? 'Input ready' : 'Click to scan'}
+            {disabled
+              ? 'Scanner paused'
+              : scannerConnected
+                ? 'Connected'
+                : isFocused
+                  ? 'Input ready'
+                  : 'Click to scan'}
           </span>
         </div>
         <div className="barcode-scanner-input__control">
@@ -175,12 +181,14 @@ export function BarcodeScannerInput({
         </div>
         <div className="barcode-scanner-input__footer">
           <span className="barcode-scanner-input__status" role="status" aria-live="polite">
-            {isSubmitting
-              ? 'Checking local product database…'
-              : error ||
-                (isFocused
-                  ? 'Scanner ready · scan then press Enter'
-                  : 'Keep the barcode field focused')}
+            {disabled
+              ? 'Scanning is paused until a transaction starts.'
+              : isSubmitting
+                ? 'Checking local product database…'
+                : error ||
+                  (isFocused
+                    ? 'Scanner ready · scan then press Enter'
+                    : 'Keep the barcode field focused')}
           </span>
           <button
             className="barcode-scanner__diagnostics-toggle"

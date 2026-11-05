@@ -24,6 +24,7 @@ const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 export function CashierPosPage() {
   const [products] = useState(getInventory);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [transactionActive, setTransactionActive] = useState(false);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -64,7 +65,18 @@ export function CashierPosPage() {
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
 
+  function startTransaction() {
+    setTransactionActive(true);
+    setQuery('');
+    setExpandedProduct(null);
+    showToast('Transaction started. Scan or search for the first item.', 'info');
+  }
+
   function addProduct(product: PosProduct) {
+    if (!transactionActive) {
+      showToast('Start a transaction before adding items to the sale.', 'error');
+      return;
+    }
     if (product.stock !== undefined && product.stock < 1) {
       showToast(`${product.product} is out of stock.`, 'error');
       return;
@@ -202,6 +214,7 @@ export function CashierPosPage() {
       ...previousMovements,
     ]);
     setCart([]);
+    setTransactionActive(false);
     setTendered('');
     setCreditCustomer('');
     setGcashReference('');
@@ -231,15 +244,18 @@ export function CashierPosPage() {
               </p>
             </div>
             <button
-              className="cashier-text-button"
+              className="cashier-text-button pos-clear-sale"
               type="button"
-              disabled={!cart.length}
+              disabled={!transactionActive || !cart.length}
               onClick={() => {
                 setCart([]);
-                showToast('Sale cleared.', 'info');
+                showToast('All scanned items cleared.', 'info');
+                window.requestAnimationFrame(() =>
+                  document.getElementById('barcode-scanner-input')?.focus(),
+                );
               }}
             >
-              Clear
+              Clear all
             </button>
           </div>
           <div className="pos-order-lines">
@@ -274,12 +290,28 @@ export function CashierPosPage() {
               </div>
             ))}
             {!cart.length && (
-              <div className="pos-order-empty">
-                <CashierIcon name="pos" />
-                <strong>Your sale is empty</strong>
-                <span>
-                  Scan a barcode or search for a product in the helper panel to get started.
-                </span>
+              <div className={`pos-order-empty${transactionActive ? ' is-active' : ''}`}>
+                <CashierIcon name={transactionActive ? 'search' : 'pos'} />
+                {transactionActive ? (
+                  <>
+                    <strong>Ready for the first item</strong>
+                    <span>
+                      Scan a barcode or search for a product in the helper panel to add it here.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <strong>Start a new sale</strong>
+                    <span>Begin a transaction to unlock scanning and build the current sale.</span>
+                    <button
+                      className="pos-start-transaction"
+                      type="button"
+                      onClick={startTransaction}
+                    >
+                      Start transaction <CashierIcon name="arrow" />
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -332,11 +364,20 @@ export function CashierPosPage() {
           <div className="cashier-panel__heading">
             <div>
               <h3 id="pos-workbench-heading">Scan or find a product</h3>
-              <p>Check a price or add an item with a barcode scan or product search.</p>
+              <p>
+                {transactionActive
+                  ? 'Check a price or add an item with a barcode scan or product search.'
+                  : 'Scanning is paused until you start a transaction.'}
+              </p>
             </div>
           </div>
           <div className="pos-input-panel pos-scan-panel">
-            <BarcodeScannerInput onScan={handleBarcodeScan} autoFocus placeholder="Scan barcode…" />
+            <BarcodeScannerInput
+              onScan={handleBarcodeScan}
+              autoFocus={transactionActive}
+              disabled={!transactionActive}
+              placeholder={transactionActive ? 'Scan barcode…' : 'Start transaction first…'}
+            />
             <label className="pos-barcode-field pos-catalog-search">
               <span>Find a product</span>
               <div>
@@ -347,7 +388,8 @@ export function CashierPosPage() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   autoComplete="off"
-                  placeholder="Search products…"
+                  disabled={!transactionActive}
+                  placeholder={transactionActive ? 'Search products…' : 'Start transaction first…'}
                 />
               </div>
             </label>
@@ -415,9 +457,18 @@ export function CashierPosPage() {
             </div>
           ) : (
             <div className="pos-workbench-empty">
-              <CashierIcon name="search" />
-              <strong>Ready for the next item</strong>
-              <span>Scan a barcode or start typing to show matching products.</span>
+              <CashierIcon name={transactionActive ? 'search' : 'clock'} />
+              {transactionActive ? (
+                <>
+                  <strong>Ready for the next item</strong>
+                  <span>Scan a barcode or start typing to show matching products.</span>
+                </>
+              ) : (
+                <>
+                  <strong>Transaction not started</strong>
+                  <span>Use Start transaction in the current sale panel to unlock scanning.</span>
+                </>
+              )}
             </div>
           )}
         </aside>

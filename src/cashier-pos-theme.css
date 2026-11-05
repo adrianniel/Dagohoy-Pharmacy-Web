@@ -1329,6 +1329,24 @@
   box-shadow: 0 0 0 4px rgb(0 100 81 / 12%);
 }
 
+.cashier-pos-page .barcode-scanner-input:has(input:disabled) .barcode-scanner-input__control,
+.cashier-pos-page .pos-scan-panel .pos-barcode-field:has(input:disabled) > div {
+  border-color: #dde4d2;
+  background: #f8f8ee;
+  box-shadow: none;
+}
+
+.cashier-pos-page
+  .barcode-scanner-input:has(input:disabled)
+  .barcode-scanner-input__control
+  button {
+  box-shadow: none;
+}
+
+.cashier-pos-page .pos-scan-panel .pos-barcode-field:has(input:disabled) .cashier-icon {
+  color: #8a988d;
+}
+
 .cashier-pos-page .barcode-scanner-input__control input,
 .cashier-pos-page .pos-scan-panel .pos-barcode-field input {
   min-width: 0;
@@ -1519,17 +1537,20 @@
 }
 
 .cashier-pos-page .pos-order-panel .cashier-text-button {
-  min-height: 32px;
-  padding: 0.35rem 0.65rem;
+  min-height: 44px;
+  flex: 0 0 auto;
+  padding: 0.65rem 1.05rem;
+  border: 1px solid rgb(255 255 240 / 28%);
   border-radius: 999px;
-  background: rgb(255 255 240 / 14%);
+  background: rgb(255 255 240 / 16%);
   color: #fffff0;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 
 .cashier-pos-page .pos-order-panel .cashier-text-button:hover:not(:disabled) {
-  background: rgb(255 255 240 / 24%);
+  background: rgb(255 255 240 / 26%);
 }
 
 .cashier-pos-page .pos-order-lines {
@@ -1621,7 +1642,7 @@
   color: #708076;
 }
 
-.cashier-pos-page .pos-order-empty .cashier-icon {
+.cashier-pos-page .pos-order-empty > .cashier-icon {
   width: 28px;
   height: 28px;
   box-sizing: content-box;
@@ -1643,6 +1664,43 @@
   max-width: 26ch;
   font-size: 0.8rem;
   line-height: 1.55;
+}
+
+.cashier-pos-page .pos-start-transaction {
+  min-height: 54px;
+  margin-top: 0.75rem;
+  padding: 0.85rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 0;
+  border-radius: var(--pos-radius-md);
+  background: linear-gradient(145deg, var(--pos-green-bright), var(--pos-green));
+  box-shadow:
+    0 12px 24px rgb(0 100 81 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 20%);
+  color: #fffdf1;
+  font-size: 0.96rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.cashier-pos-page .pos-start-transaction .cashier-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.cashier-pos-page .pos-start-transaction:hover {
+  background: linear-gradient(145deg, #09836b, #005344);
+  box-shadow: 0 16px 30px rgb(0 100 81 / 26%);
+  transform: translateY(-1px);
+}
+
+.cashier-pos-page .pos-start-transaction:focus-visible {
+  outline: 2px solid var(--pos-green);
+  outline-offset: 3px;
 }
 
 .cashier-pos-page .pos-order-totals {
