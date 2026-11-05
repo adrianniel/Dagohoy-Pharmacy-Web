@@ -1,10 +1,8 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { BarcodeScannerInput } from '../../components/BarcodeScannerInput';
 import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
-import { lookupProductByBarcode } from '../../services/productsApi';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -69,6 +67,9 @@ export function CashierPosPage() {
     setQuery('');
     setExpandedProduct(null);
     showToast('Transaction started. Scan or search for the first item.', 'info');
+    window.requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
+    );
   }
 
   function addProduct(product: PosProduct) {
@@ -95,35 +96,9 @@ export function CashierPosPage() {
     });
     setQuery('');
     setExpandedProduct(null);
-  }
-
-  async function handleBarcodeScan(barcode: string) {
-    const result = await lookupProductByBarcode(barcode);
-    if (!result.found) {
-      showToast(
-        `Product not found for barcode ${barcode}. Encode the product before selling it.`,
-        'error',
-      );
-      return;
-    }
-
-    if (result.product.sellingPrice === null) {
-      showToast(`${result.product.name} has no current selling price configured.`, 'error');
-      return;
-    }
-
-    const detail = [result.product.genericName, result.product.brand, result.product.strength]
-      .filter((value, index, values) => Boolean(value) && values.indexOf(value) === index)
-      .join(' · ');
-    addProduct({
-      barcode: result.product.barcode,
-      product: result.product.name,
-      detail,
-      unit: result.product.productUnit?.name ?? 'Unconfigured unit',
-      price: formatMoney(result.product.sellingPrice),
-      localProductId: result.product.id,
-      localProductUnitId: result.product.productUnit?.id ?? null,
-    });
+    window.requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
+    );
   }
 
   function changeQuantity(barcodeValue: string, delta: number) {
@@ -360,23 +335,16 @@ export function CashierPosPage() {
         <aside className="cashier-panel pos-workbench" aria-labelledby="pos-workbench-heading">
           <div className="cashier-panel__heading">
             <div>
-              <h3 id="pos-workbench-heading">Scan or find a product</h3>
+              <h3 id="pos-workbench-heading">Find a product or check the price</h3>
               <p>
-                {transactionActive
-                  ? 'Check a price or add an item with a barcode scan or product search.'
-                  : 'Scanning is paused until you start a transaction.'}
+                Search by product, generic name, brand, or barcode. Add it to the current sale only
+                if you want it.
               </p>
             </div>
           </div>
-          <div className="pos-input-panel pos-scan-panel">
-            <BarcodeScannerInput
-              onScan={handleBarcodeScan}
-              autoFocus={transactionActive}
-              disabled={!transactionActive}
-              placeholder={transactionActive ? 'Scan barcode…' : 'Start transaction first…'}
-            />
+          <div className="pos-input-panel pos-find-panel">
             <label className="pos-barcode-field pos-catalog-search">
-              <span>Find a product</span>
+              <span>Search or scan</span>
               <div>
                 <CashierIcon name="search" />
                 <input
@@ -385,11 +353,17 @@ export function CashierPosPage() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   autoComplete="off"
-                  disabled={!transactionActive}
-                  placeholder={transactionActive ? 'Search products…' : 'Start transaction first…'}
+                  autoFocus
+                  placeholder="Type or scan a barcode…"
                 />
               </div>
             </label>
+            {!transactionActive && (
+              <p className="pos-find-hint">
+                <CashierIcon name="clock" />
+                Start a transaction in the Current sale panel to add items to this list.
+              </p>
+            )}
           </div>
           {query.trim() ? (
             <div className="pos-search-results" aria-live="polite">
@@ -435,7 +409,12 @@ export function CashierPosPage() {
                       className="pos-search-result__add"
                       type="button"
                       onClick={() => addProduct(product)}
-                      disabled={product.stock < 1}
+                      disabled={product.stock < 1 || !transactionActive}
+                      title={
+                        transactionActive
+                          ? 'Add to the current sale'
+                          : 'Start a transaction to add this item'
+                      }
                     >
                       {product.stock > 0 ? 'Add to sale' : 'Out of stock'}
                     </button>
@@ -454,18 +433,12 @@ export function CashierPosPage() {
             </div>
           ) : (
             <div className="pos-workbench-empty">
-              <CashierIcon name={transactionActive ? 'search' : 'clock'} />
-              {transactionActive ? (
-                <>
-                  <strong>Ready for the next item</strong>
-                  <span>Scan a barcode or start typing to show matching products.</span>
-                </>
-              ) : (
-                <>
-                  <strong>Transaction not started</strong>
-                  <span>Use Start transaction in the current sale panel to unlock scanning.</span>
-                </>
-              )}
+              <CashierIcon name="search" />
+              <strong>Product and price lookup</strong>
+              <span>
+                Type a product name, generic name, brand, or scan a barcode to check price and
+                stock.
+              </span>
             </div>
           )}
         </aside>
