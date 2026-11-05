@@ -74,7 +74,10 @@ export function CashierPosPage() {
 
   function addProduct(product: PosProduct) {
     if (!transactionActive) {
-      showToast('Start a transaction before adding items to the sale.', 'error');
+      showToast(
+        'Start a transaction in the Current sale panel to add this item to the list.',
+        'info',
+      );
       return;
     }
     if (product.stock !== undefined && product.stock < 1) {
@@ -358,12 +361,6 @@ export function CashierPosPage() {
                 />
               </div>
             </label>
-            {!transactionActive && (
-              <p className="pos-find-hint">
-                <CashierIcon name="clock" />
-                Start a transaction in the Current sale panel to add items to this list.
-              </p>
-            )}
           </div>
           {query.trim() ? (
             <div className="pos-search-results" aria-live="polite">
@@ -409,12 +406,8 @@ export function CashierPosPage() {
                       className="pos-search-result__add"
                       type="button"
                       onClick={() => addProduct(product)}
-                      disabled={product.stock < 1 || !transactionActive}
-                      title={
-                        transactionActive
-                          ? 'Add to the current sale'
-                          : 'Start a transaction to add this item'
-                      }
+                      disabled={product.stock < 1}
+                      title="Add to the current sale list"
                     >
                       {product.stock > 0 ? 'Add to sale' : 'Out of stock'}
                     </button>
