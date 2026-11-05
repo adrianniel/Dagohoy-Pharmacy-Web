@@ -1,7 +1,16 @@
 import type { CashierIconName } from '../../types/navigation';
 
 interface CashierIconProps {
-  name: CashierIconName | 'menu' | 'collapse' | 'search' | 'calendar' | 'arrow' | 'clock';
+  name:
+    | CashierIconName
+    | 'menu'
+    | 'collapse'
+    | 'search'
+    | 'calendar'
+    | 'arrow'
+    | 'clock'
+    | 'cash'
+    | 'phone';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -18,6 +27,19 @@ export function CashierIcon({ name }: CashierIconProps) {
       <>
         <path d="M5 6h22v19H5z" />
         <path d="M9 11h14M9 16h5M19 16h4M9 21h3M16 21h7" />
+      </>
+    ),
+    cash: (
+      <>
+        <rect x="2" y="9" width="28" height="15" rx="2" />
+        <circle cx="16" cy="16.5" r="4" />
+        <path d="M7 14.5h.01M25 18.5h.01" />
+      </>
+    ),
+    phone: (
+      <>
+        <rect x="9" y="3" width="14" height="26" rx="3" />
+        <path d="M13 7h6M16 24.5h.01" />
       </>
     ),
     products: (

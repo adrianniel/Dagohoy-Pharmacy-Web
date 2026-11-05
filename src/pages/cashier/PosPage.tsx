@@ -18,6 +18,16 @@ const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 const SALES_KEY = 'dagohoy_demo_sales';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
+const PAYMENT_METHOD_OPTIONS: Array<{
+  id: PaymentMethod;
+  name: string;
+  detail: string;
+  icon: 'cash' | 'phone' | 'credit';
+}> = [
+  { id: 'Cash', name: 'Cash', detail: 'Tendered cash', icon: 'cash' },
+  { id: 'GCash', name: 'GCash', detail: 'Manual verification', icon: 'phone' },
+  { id: 'Credit', name: 'Credit', detail: 'Utang / pay later', icon: 'credit' },
+];
 
 function sanitizeDiscountInput(value: string): string {
   const cleaned = value.replace(/[^\d.]/g, '');
@@ -82,6 +92,13 @@ export function CashierPosPage() {
   );
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
+
+  function selectPaymentMethod(nextMethod: PaymentMethod) {
+    setPaymentMethod(nextMethod);
+    setTendered(nextMethod === 'Credit' ? '0' : '');
+    setGcashReference('');
+    setGcashPaid(false);
+  }
 
   function startTransaction() {
     setTransactionActive(true);
@@ -483,23 +500,30 @@ export function CashierPosPage() {
               <span>Total due</span>
               <strong>{formatMoney(totalDue)}</strong>
             </div>
-            <label>
-              Payment method
-              <select
-                value={paymentMethod}
-                onChange={(event) => {
-                  const nextMethod = event.target.value as PaymentMethod;
-                  setPaymentMethod(nextMethod);
-                  setTendered(nextMethod === 'Credit' ? '0' : '');
-                  setGcashReference('');
-                  setGcashPaid(false);
-                }}
-              >
-                <option>Cash</option>
-                <option>GCash</option>
-                <option value="Credit">Credit (utang)</option>
-              </select>
-            </label>
+            <fieldset className="payment-method-options">
+              <legend className="payment-method-options__legend">Payment method</legend>
+              <div className="payment-method-options__grid">
+                {PAYMENT_METHOD_OPTIONS.map((method) => (
+                  <button
+                    key={method.id}
+                    className={`payment-method-option${
+                      paymentMethod === method.id ? ' is-selected' : ''
+                    }`}
+                    type="button"
+                    aria-pressed={paymentMethod === method.id}
+                    onClick={() => selectPaymentMethod(method.id)}
+                  >
+                    <span className="payment-method-option__icon" aria-hidden="true">
+                      <CashierIcon name={method.icon} />
+                    </span>
+                    <span className="payment-method-option__copy">
+                      <strong>{method.name}</strong>
+                      <small>{method.detail}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             {paymentMethod === 'Cash' && (
               <>
                 <label>
