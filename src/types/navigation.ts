@@ -17,8 +17,7 @@ export type CashierIconName =
   | 'batches'
   | 'purchases'
   | 'stock'
-  | 'register'
-  | 'cart';
+  | 'register';
 
 export interface NavigationItem {
   label: string;

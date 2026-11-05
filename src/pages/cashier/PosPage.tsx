@@ -3,6 +3,7 @@ import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
+import CartIcon from '../../components/originkit/ui/CartIcon';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -210,7 +211,7 @@ export function CashierPosPage() {
           <div className="cashier-panel__heading">
             <div className="pos-order-heading">
               <span className="pos-order-heading__icon" aria-hidden="true">
-                <CashierIcon name="cart" />
+                <CartIcon size={23} color="#fffdf1" strokeWidth={1.8} />
               </span>
               <div>
                 <h3 id="pos-sale-heading">Current sale</h3>
