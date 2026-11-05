@@ -1713,14 +1713,13 @@
 }
 
 .cashier-pos-page .pos-order-empty span {
-  max-width: 26ch;
+  max-width: 42ch;
   font-size: 0.8rem;
   line-height: 1.55;
 }
 
 .cashier-pos-page .pos-start-transaction {
   min-height: 54px;
-  margin-top: 0.75rem;
   padding: 0.85rem 1.5rem;
   display: inline-flex;
   align-items: center;

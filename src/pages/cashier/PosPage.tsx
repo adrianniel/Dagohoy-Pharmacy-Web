@@ -295,8 +295,6 @@ export function CashierPosPage() {
                   </>
                 ) : (
                   <>
-                    <strong>Start a new sale</strong>
-                    <span>Begin a transaction to unlock scanning and build the current sale.</span>
                     <button
                       className="pos-start-transaction"
                       type="button"
@@ -304,6 +302,11 @@ export function CashierPosPage() {
                     >
                       Start transaction <CashierIcon name="arrow" />
                     </button>
+                    <span>
+                      Begin a transaction to unlock
+                      <br />
+                      scanning and build the current sale.
+                    </span>
                   </>
                 )}
               </div>
