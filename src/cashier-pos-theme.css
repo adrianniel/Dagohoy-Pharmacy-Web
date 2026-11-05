@@ -2501,3 +2501,274 @@
     font-size: 0.7rem;
   }
 }
+
+/* Amount fields: plain text entry, no number spinners or wheel scrolling */
+.cashier-shell.is-cashier .pos-payment-modal input.pos-amount-input {
+  appearance: none;
+  -moz-appearance: textfield;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.cashier-shell.is-cashier .pos-payment-modal input.pos-amount-input::-webkit-outer-spin-button,
+.cashier-shell.is-cashier .pos-payment-modal input.pos-amount-input::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Completion animation */
+.pos-sale-complete {
+  display: grid;
+  gap: 1.15rem;
+  align-content: start;
+  text-align: center;
+}
+
+.pos-sale-complete__success {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  animation: pos-success-pop 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pos-success-badge {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  color: #fffdf1;
+  background: radial-gradient(circle at 32% 26%, #2f8d63, #176246 72%);
+  box-shadow:
+    0 0 0 0 rgba(150, 191, 138, 0.85),
+    0 14px 30px rgba(23, 98, 70, 0.28);
+  animation: pos-success-ring 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+.pos-success-badge svg {
+  width: 38px;
+  height: 38px;
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  animation: pos-success-tick 420ms ease-out 320ms forwards;
+}
+
+.pos-sale-complete__success h2 {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(1.5rem, 3.4vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.pos-sale-complete__note {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  opacity: 0.78;
+}
+
+@keyframes pos-success-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pos-success-ring {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(150, 191, 138, 0.85),
+      0 10px 22px rgba(23, 98, 70, 0.22);
+  }
+  60% {
+    box-shadow:
+      0 0 0 16px rgba(150, 191, 138, 0),
+      0 16px 32px rgba(23, 98, 70, 0.3);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(150, 191, 138, 0),
+      0 14px 30px rgba(23, 98, 70, 0.28);
+  }
+}
+
+@keyframes pos-success-tick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Receipt preview, revealed after the success animation */
+.pos-receipt-preview {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem 1.25rem 1.1rem;
+  border: 1px dashed #cdd8c4;
+  border-radius: 18px;
+  background: #fffefa;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 340ms ease,
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pos-sale-complete.is-showing-receipt .pos-receipt-preview {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.pos-receipt-preview__head {
+  display: grid;
+  gap: 0.2rem;
+  text-align: center;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px dashed #dbe3d3;
+}
+
+.pos-receipt-preview__head strong {
+  font-size: 1.02rem;
+  color: #176246;
+}
+
+.pos-receipt-preview__head span {
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.68;
+}
+
+.pos-receipt-preview__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  font-size: 0.8rem;
+}
+
+.pos-receipt-preview__meta > div,
+.pos-receipt-preview__totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pos-receipt-preview__meta span,
+.pos-receipt-preview__totals span {
+  opacity: 0.72;
+}
+
+.pos-receipt-preview__meta strong {
+  font-size: 0.84rem;
+}
+
+.pos-receipt-preview__lines {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.7rem 0;
+  list-style: none;
+  border-top: 1px dashed #dbe3d3;
+  border-bottom: 1px dashed #dbe3d3;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.pos-receipt-preview__lines li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  font-size: 0.88rem;
+}
+
+.pos-receipt-preview__lines li > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.pos-receipt-preview__lines li small {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.pos-receipt-preview__lines li > span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.pos-receipt-preview__totals {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+}
+
+.pos-receipt-preview__totals .is-total {
+  margin-top: 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid #e4ebdd;
+  font-size: 1rem;
+}
+
+.pos-receipt-preview__totals .is-total strong {
+  color: #176246;
+  font-size: 1.22rem;
+}
+
+.pos-receipt-preview__thanks {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  opacity: 0.72;
+}
+
+.pos-sale-complete > .pos-checkout-button {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 0.15rem;
+  border-radius: 16px;
+}
+
+@media (max-width: 560px) {
+  .pos-success-badge {
+    width: 62px;
+    height: 62px;
+  }
+
+  .pos-success-badge svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pos-receipt-preview {
+    padding: 1rem 0.9rem 0.9rem;
+  }
+
+  .pos-receipt-preview__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-sale-complete__success,
+  .pos-success-badge,
+  .pos-success-badge svg {
+    animation: none;
+  }
+
+  .pos-success-badge svg {
+    stroke-dashoffset: 0;
+  }
+
+  .pos-receipt-preview {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

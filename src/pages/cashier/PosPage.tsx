@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
@@ -12,10 +12,31 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   localProductUnitId?: number | null;
 };
 type CartLine = { product: PosProduct; quantity: number };
+type CompletedSale = {
+  receipt: string;
+  date: string;
+  lines: CartLine[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  payment: PaymentMethod;
+  amountPaid: number;
+  change: number;
+  customer?: string;
+  reference?: string;
+};
 type PaymentMethod = 'Cash' | 'GCash' | 'Credit';
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+const formatReceiptDate = (value: string) =>
+  new Date(value).toLocaleString('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 const SALES_KEY = 'dagohoy_demo_sales';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 const PAYMENT_METHOD_OPTIONS: Array<{
@@ -28,6 +49,14 @@ const PAYMENT_METHOD_OPTIONS: Array<{
   { id: 'GCash', name: 'GCash', detail: 'Manual verification', icon: 'phone' },
   { id: 'Credit', name: 'Credit', detail: 'Utang / pay later', icon: 'credit' },
 ];
+
+function sanitizeMoneyInput(value: string): string {
+  const cleaned = value.replace(/[^\d.]/g, '');
+  const [whole, ...rest] = cleaned.split('.');
+  const wholePart = whole.slice(0, 7);
+  if (!rest.length) return wholePart;
+  return `${wholePart}.${rest.join('').slice(0, 2)}`;
+}
 
 function sanitizeDiscountInput(value: string): string {
   const cleaned = value.replace(/[^\d.]/g, '');
@@ -60,6 +89,7 @@ export function CashierPosPage() {
   const [creditCustomer, setCreditCustomer] = useState('');
   const [gcashReference, setGcashReference] = useState('');
   const [gcashPaid, setGcashPaid] = useState(false);
+  const [completedSale, setCompletedSale] = useState<CompletedSale | null>(null);
   const [gcashDetails] = useState(() => {
     try {
       const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as {
@@ -92,6 +122,11 @@ export function CashierPosPage() {
   );
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
+
+  function closePayment() {
+    setPaymentOpen(false);
+    setCompletedSale(null);
+  }
 
   function selectPaymentMethod(nextMethod: PaymentMethod) {
     setPaymentMethod(nextMethod);
@@ -162,6 +197,7 @@ export function CashierPosPage() {
 
   function completeSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (completedSale || !cart.length) return;
     if (paymentMethod === 'Cash' && Number(tendered) < totalDue) return;
     if (
       paymentMethod === 'Credit' &&
@@ -172,7 +208,14 @@ export function CashierPosPage() {
     const sales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Array<
       Record<string, unknown>
     >;
-    const receipt = `DP-DEMO-${String(Date.now()).slice(-6)}`;
+    const receipt = `DP-${String(Date.now()).slice(-6)}`;
+    const saleLines = cart.map((line) => ({ ...line }));
+    const amountPaidValue =
+      paymentMethod === 'Cash' || paymentMethod === 'Credit'
+        ? Number(tendered || 0)
+        : gcashPaid
+          ? totalDue
+          : 0;
     sales.unshift({
       receipt,
       date: new Date().toISOString(),
@@ -188,12 +231,7 @@ export function CashierPosPage() {
       })),
       payment: paymentMethod,
       customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
-      amountPaid:
-        paymentMethod === 'Cash' || paymentMethod === 'Credit'
-          ? Number(tendered || 0)
-          : gcashPaid
-            ? totalDue
-            : 0,
+      amountPaid: amountPaidValue,
       change: paymentMethod === 'Cash' ? change : 0,
       creditBalance: paymentMethod === 'Credit' ? creditBalance : 0,
       gcashReference: paymentMethod === 'GCash' ? gcashReference.trim() : undefined,
@@ -223,22 +261,31 @@ export function CashierPosPage() {
         kind: 'Sale' as const,
         change: -line.quantity,
         reference: receipt,
-        staff: 'Demo cashier',
-        reason: 'Completed demo POS sale',
+        staff: 'Cashier',
+        reason: 'Completed POS sale',
       })),
       ...previousMovements,
     ]);
+    setCompletedSale({
+      receipt,
+      date: new Date().toISOString(),
+      lines: saleLines,
+      subtotal,
+      discount,
+      total: totalDue,
+      payment: paymentMethod,
+      amountPaid: amountPaidValue,
+      change: paymentMethod === 'Cash' ? change : 0,
+      customer: paymentMethod === 'Credit' ? creditCustomer.trim() : undefined,
+      reference: paymentMethod === 'GCash' ? gcashReference.trim() : undefined,
+    });
     setCart([]);
     setTransactionActive(false);
     setTendered('');
     setCreditCustomer('');
     setGcashReference('');
     setGcashPaid(false);
-    setPaymentOpen(false);
-    showToast(
-      `Demo sale ${receipt} completed. No live sale was sent to the pharmacy server.`,
-      'info',
-    );
+    showToast(`Transaction ${receipt} completed.`, 'success');
   }
 
   return (
@@ -373,7 +420,7 @@ export function CashierPosPage() {
             Continue to payment <CashierIcon name="arrow" />
           </button>
           <p className="pos-demo-disclaimer">
-            Demo checkout only · does not record a live pharmacy sale.
+            Records the sale in this browser and updates stock.
           </p>
         </section>
         <aside className="cashier-panel pos-workbench" aria-labelledby="pos-workbench-heading">
@@ -482,19 +529,23 @@ export function CashierPosPage() {
           className="pos-modal-backdrop"
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setPaymentOpen(false);
+            if (event.target === event.currentTarget) closePayment();
           }}
         >
           <form className="pos-payment-modal" onSubmit={completeSale}>
             <button
               className="pos-modal-close"
               type="button"
-              onClick={() => setPaymentOpen(false)}
+              onClick={closePayment}
               aria-label="Close payment"
             >
               ×
             </button>
-            <p className="eyebrow">Payment</p>
+            {completedSale ? (
+              <SaleComplete sale={completedSale} onDone={closePayment} />
+            ) : (
+              <>
+                <p className="eyebrow">Payment</p>
             <h2>Collect payment</h2>
             <div className="pos-payment-total">
               <span>Total due</span>
@@ -530,11 +581,12 @@ export function CashierPosPage() {
                   Amount received
                   <input
                     autoFocus
-                    min={totalDue}
-                    step="0.01"
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    className="pos-amount-input"
                     value={tendered}
-                    onChange={(event) => setTendered(event.target.value)}
+                    onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
                     placeholder="0.00"
                     required
                   />
@@ -563,13 +615,12 @@ export function CashierPosPage() {
                   Amount paid
                   <input
                     name="credit-amount-paid"
-                    min="0"
-                    max={totalDue}
-                    step="0.01"
-                    type="number"
-                    value={tendered}
-                    onChange={(event) => setTendered(event.target.value)}
+                    type="text"
                     inputMode="decimal"
+                    autoComplete="off"
+                    className="pos-amount-input"
+                    value={tendered}
+                    onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
                     placeholder="0.00"
                     required
                   />
@@ -625,7 +676,7 @@ export function CashierPosPage() {
               </>
             )}
             <button
-              className="pos-checkout-button"
+              className="pos-checkout-button pos-complete-button"
               type="submit"
               disabled={
                 (paymentMethod === 'Cash' && Number(tendered) < totalDue) ||
@@ -636,12 +687,118 @@ export function CashierPosPage() {
                 (paymentMethod === 'GCash' && !gcashReference.trim())
               }
             >
-              Complete demo sale
+              Complete transaction
             </button>
-            <p className="pos-demo-disclaimer">This saves a demo record in this browser only.</p>
+            <p className="pos-demo-disclaimer">
+              Saving records this sale in this browser and updates stock.
+            </p>
+              </>
+            )}
           </form>
         </div>
       )}
+    </div>
+  );
+}
+
+function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => void }) {
+  const [showReceipt, setShowReceipt] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowReceipt(true), 900);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={`pos-sale-complete${showReceipt ? ' is-showing-receipt' : ''}`}>
+      <div className="pos-sale-complete__success" aria-live="polite">
+        <span className="pos-success-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M5 12.6 9.6 17 19 7.4"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <h2>Transaction complete</h2>
+        <p className="pos-sale-complete__note">
+          {sale.payment} · {formatMoney(sale.total)}
+        </p>
+      </div>
+      <div className="pos-receipt-preview">
+        <div className="pos-receipt-preview__head">
+          <strong>Dagohoy Pharmacy</strong>
+          <span>Sales receipt</span>
+        </div>
+        <div className="pos-receipt-preview__meta">
+          <div>
+            <span>Receipt no.</span>
+            <strong>{sale.receipt}</strong>
+          </div>
+          <div>
+            <span>Date</span>
+            <strong>{formatReceiptDate(sale.date)}</strong>
+          </div>
+        </div>
+        <ul className="pos-receipt-preview__lines">
+          {sale.lines.map((line) => (
+            <li key={`${line.product.barcode}-${line.product.product}`}>
+              <div>
+                <strong>{line.product.product}</strong>
+                <small>
+                  {line.quantity} × {formatMoney(toAmount(line.product.price))}
+                </small>
+              </div>
+              <span>{formatMoney(toAmount(line.product.price) * line.quantity)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="pos-receipt-preview__totals">
+          <div>
+            <span>Subtotal</span>
+            <strong>{formatMoney(sale.subtotal)}</strong>
+          </div>
+          {sale.discount > 0 && (
+            <div>
+              <span>Discount</span>
+              <strong>−{formatMoney(sale.discount)}</strong>
+            </div>
+          )}
+          <div className="is-total">
+            <span>Total</span>
+            <strong>{formatMoney(sale.total)}</strong>
+          </div>
+          <div>
+            <span>Paid via {sale.payment}</span>
+            <strong>{formatMoney(sale.amountPaid)}</strong>
+          </div>
+          {sale.change > 0 && (
+            <div>
+              <span>Change</span>
+              <strong>{formatMoney(sale.change)}</strong>
+            </div>
+          )}
+          {sale.customer && (
+            <div>
+              <span>Customer</span>
+              <strong>{sale.customer}</strong>
+            </div>
+          )}
+          {sale.reference && (
+            <div>
+              <span>GCash ref.</span>
+              <strong>{sale.reference}</strong>
+            </div>
+          )}
+        </div>
+        <p className="pos-receipt-preview__thanks">Thank you. Keep this receipt for your records.</p>
+      </div>
+      <button className="pos-checkout-button" type="button" onClick={onDone}>
+        New sale
+      </button>
     </div>
   );
 }
