@@ -289,7 +289,7 @@
   box-shadow: 0 0 0 3px rgb(207 117 101 / 12%);
 }
 .cashier-store-status.is-open {
-  color: #167356;
+  color: #176246;
 }
 .cashier-store-status.is-open > span {
   background: #20a362;
@@ -379,7 +379,7 @@
 }
 .cashier-page-heading p {
   margin-bottom: 0.4rem;
-  color: #16804b;
+  color: #176246;
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -472,7 +472,7 @@
 }
 .cashier-summary-card--green::before,
 .cashier-summary-card--success::before {
-  background: #16804b;
+  background: #176246;
 }
 .cashier-summary-card p {
   margin-bottom: 1rem;
@@ -490,7 +490,7 @@
   font-size: 0.65rem;
 }
 .cashier-summary-card--success strong {
-  color: #16804b;
+  color: #176246;
 }
 .cashier-dashboard-grid {
   min-width: 0;
@@ -1056,7 +1056,7 @@
 /* Pharmacy operations refresh */
 .cashier-shell {
   --cashier-sidebar: 258px;
-  --cashier-green: #167356;
+  --cashier-green: #176246;
   --cashier-green-dark: #105c44;
   --cashier-green-soft: #e8f4ed;
   --cashier-page: #f5f7f8;
@@ -1066,7 +1066,7 @@
   font-family: Inter, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
 }
 .cashier-sidebar {
-  background: #123d32;
+  background: #124d36;
   border-right: 0;
 }
 .cashier-sidebar__brand img {
@@ -1242,7 +1242,7 @@
   font-size: 0.56rem;
 }
 .dashboard-lookup-results b {
-  color: #167356;
+  color: #176246;
   font-size: 0.65rem;
 }
 .dashboard-lookup-results > span {
@@ -1257,7 +1257,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #167356;
+  color: #176246;
   font-size: 0.7rem;
   font-weight: 700;
   text-decoration: none;
@@ -1267,7 +1267,7 @@
 }
 .save-confirmation {
   align-self: center;
-  color: #167356;
+  color: #176246;
   font-size: 0.72rem;
 }
 .report-panel {
@@ -1302,7 +1302,7 @@
   width: min(100%, 58px);
   min-height: 14px;
   border-radius: 7px 7px 2px 2px;
-  background: linear-gradient(180deg, #4caa7a, #167356);
+  background: linear-gradient(180deg, #4caa7a, #176246);
 }
 .report-chart__column small {
   color: #718078;
@@ -1343,7 +1343,7 @@
   min-height: 46px;
   margin-top: 0.65rem;
   border-radius: 8px;
-  background: #167356;
+  background: #176246;
 }
 .auth-note {
   margin: 1rem 0 0;
@@ -1402,7 +1402,7 @@
   background: #a9b6ae;
 }
 .barcode-scanner-input__signal.is-active {
-  color: #167356;
+  color: #176246;
 }
 .barcode-scanner-input__signal.is-active i {
   background: #20a362;
@@ -1420,7 +1420,7 @@
   box-shadow: 0 0 0 3px rgb(22 128 75 / 7%);
 }
 .barcode-scanner-input__control:focus-within {
-  border-color: #167356;
+  border-color: #176246;
   box-shadow: 0 0 0 3px rgb(22 128 75 / 14%);
 }
 .barcode-scanner-input__control input {
@@ -1438,7 +1438,7 @@
   border: 0;
   border-radius: 6px;
   background: #e8f4ed;
-  color: #167356;
+  color: #176246;
   cursor: pointer;
   font-size: 0.65rem;
   font-weight: 750;
@@ -1459,7 +1459,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #167356;
+  color: #176246;
   cursor: pointer;
   font: inherit;
   font-size: 0.58rem;
@@ -1487,7 +1487,7 @@
 }
 .scanner-diagnostics__heading p {
   margin: 0 0 0.2rem;
-  color: #16804b;
+  color: #176246;
   font-size: 0.57rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -1555,7 +1555,7 @@
   border: 1px solid #b9d9c4;
   border-radius: 7px;
   background: #fff;
-  color: #167356;
+  color: #176246;
   cursor: pointer;
   font-size: 0.68rem;
   font-weight: 750;
@@ -1573,7 +1573,7 @@
   border: 1px solid #b9d9c4;
   border-radius: 6px;
   background: #fff;
-  color: #167356;
+  color: #176246;
   cursor: pointer;
   font-size: 0.66rem;
   font-weight: 750;
@@ -1593,7 +1593,7 @@
   white-space: nowrap;
 }
 .scanner-diagnostics__grid strong.is-ready {
-  color: #167356;
+  color: #176246;
 }
 .scanner-diagnostics__note {
   max-width: 74ch;
@@ -1623,7 +1623,7 @@
 }
 .scanner-diagnostics__result {
   min-height: 0.9rem;
-  color: #167356;
+  color: #176246;
 }
 @supports selector(:has(*)) {
   .pos-scan-panel:has(.scanner-diagnostics) {
@@ -1649,7 +1649,7 @@
   border: 0;
   border-radius: 6px;
   background: #e9f4ed;
-  color: #167356;
+  color: #176246;
   cursor: pointer;
   font-size: 1rem;
 }
@@ -1719,7 +1719,7 @@
   gap: 0.4rem;
 }
 .pos-product-card__bottom b {
-  color: #167356;
+  color: #176246;
   font-size: 0.76rem;
 }
 .pos-product-card__bottom small {
@@ -1847,7 +1847,7 @@
   text-align: right;
 }
 .pos-order-grand-total strong {
-  color: #167356;
+  color: #176246;
   font-size: 1.2rem;
 }
 .pos-order-panel > .pos-checkout-button {
@@ -2007,8 +2007,8 @@
   gap: 0.45rem;
 }
 .pos-search-result__add {
-  border: 1px solid #167356;
-  background: #167356;
+  border: 1px solid #176246;
+  background: #176246;
   color: #fff;
 }
 .pos-search-result__add:disabled {
@@ -2103,7 +2103,7 @@
   font-size: 0.7rem;
 }
 .pos-payment-total strong {
-  color: #167356;
+  color: #176246;
   font-size: 1.3rem;
 }
 .pos-payment-change {
@@ -2471,7 +2471,7 @@
 }
 .cashier-shift-card > p:first-child {
   margin-bottom: 0.55rem;
-  color: #16804b;
+  color: #176246;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -2690,4 +2690,498 @@
   .cashier-profile-details {
     grid-template-columns: 1fr;
   }
+}
+
+/* Readability + brand green pass: bigger type, green taken from the landing page (#176246). */
+.cashier-shell {
+  --cashier-sidebar: 268px;
+  --cashier-green: #176246;
+  --cashier-green-dark: #11503a;
+  --cashier-green-soft: #e8f1ea;
+  --cashier-page: #f4f6f1;
+  --cashier-text: #16261d;
+  --cashier-muted: #5c6c62;
+  --cashier-ink: #16261d;
+  --cashier-line: #dfe6dd;
+}
+.cashier-content {
+  padding: clamp(1.5rem, 2.6vw, 2.6rem) clamp(1.35rem, 3vw, 2.75rem);
+  background:
+    radial-gradient(circle at 94% 0%, rgb(23 98 70 / 7%), transparent 28rem),
+    var(--cashier-page);
+}
+
+/* Sidebar: landing green, roomier rows */
+.cashier-sidebar {
+  background: linear-gradient(180deg, #176246, #0f4430);
+}
+.cashier-sidebar__brand small {
+  color: #b6f0cd;
+  font-size: 0.68rem;
+}
+.cashier-nav-group > p {
+  color: rgb(233 250 240 / 62%);
+  font-size: 0.7rem;
+}
+.cashier-nav-item {
+  min-height: 48px;
+  padding: 0.72rem 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.cashier-nav-item.is-active {
+  color: var(--cashier-green-dark);
+  font-weight: 700;
+}
+.cashier-nav-item small {
+  padding: 0.24rem 0.45rem;
+  background: #2f9d63;
+  font-size: 0.62rem;
+}
+.cashier-sidebar__user strong {
+  font-size: 0.88rem;
+}
+.cashier-sidebar__user small {
+  color: #badfc6;
+  font-size: 0.74rem;
+}
+.cashier-sidebar__collapse {
+  min-height: 42px;
+  font-size: 0.78rem;
+}
+
+/* Header */
+.cashier-header__title p {
+  font-size: 0.74rem;
+}
+.cashier-header__title h1 {
+  font-size: 1.4rem;
+}
+.cashier-store-status strong {
+  font-size: 0.82rem;
+}
+.cashier-store-status small {
+  font-size: 0.7rem;
+}
+.cashier-header__date strong {
+  font-size: 0.84rem;
+}
+.cashier-header__date small {
+  font-size: 0.74rem;
+}
+.cashier-profile-menu__copy strong {
+  font-size: 0.86rem;
+}
+.cashier-profile-menu__copy small {
+  font-size: 0.74rem;
+}
+
+/* Page headings and buttons */
+.cashier-page-heading p {
+  margin-bottom: 0.5rem;
+  color: var(--cashier-green);
+  font-size: 0.76rem;
+}
+.cashier-page-heading > div > span {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.cashier-primary-action {
+  min-height: 48px;
+  padding: 0.8rem 1.15rem;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.92rem;
+  box-shadow: 0 8px 20px rgb(23 98 70 / 18%);
+}
+.cashier-panel {
+  border-radius: 16px;
+}
+.cashier-panel__heading {
+  padding: 1.15rem 1.3rem;
+}
+.cashier-panel__heading h3 {
+  font-size: 1.08rem;
+}
+.cashier-panel__heading p,
+.cashier-panel__heading a {
+  font-size: 0.84rem;
+}
+
+/* Summary cards */
+.cashier-summary-card {
+  min-height: 148px;
+  border-radius: 16px;
+}
+.cashier-summary-card p {
+  margin-bottom: 0.85rem;
+  font-size: 0.84rem;
+}
+.cashier-summary-card strong {
+  font-size: 1.95rem;
+}
+.cashier-summary-card span {
+  color: var(--cashier-muted);
+  font-size: 0.78rem;
+}
+
+/* Lookup, search */
+.cashier-quick-lookup h3 {
+  font-size: 1.1rem;
+}
+.cashier-quick-lookup > p {
+  font-size: 0.9rem;
+}
+.cashier-quick-lookup > a {
+  font-size: 0.86rem;
+}
+.cashier-search-field {
+  min-height: 50px;
+}
+.cashier-search-field input {
+  font-size: 0.95rem;
+}
+.cashier-search-field input::placeholder {
+  font-size: 0.92rem;
+}
+.cashier-filter-button {
+  min-height: 46px;
+  font-size: 0.84rem;
+}
+.cashier-drawer-shortcut,
+.save-confirmation {
+  font-size: 0.86rem;
+}
+
+/* Tables */
+.cashier-table th {
+  padding-block: 0.95rem;
+  color: #55655b;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+}
+.cashier-table td {
+  padding: 1rem 0.9rem;
+  color: #3f5147;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.cashier-table td strong {
+  font-size: 0.92rem;
+}
+.cashier-table td small {
+  font-size: 0.76rem;
+}
+.cashier-mono {
+  font-size: 0.82rem !important;
+}
+.cashier-status {
+  padding: 0.36rem 0.6rem;
+  font-size: 0.74rem;
+}
+.cashier-table-footer {
+  font-size: 0.78rem;
+}
+.cashier-view-button {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+}
+
+/* Point of sale */
+.pos-barcode-field,
+.barcode-scanner-input {
+  font-size: 0.8rem;
+}
+.pos-barcode-field kbd {
+  font-size: 0.68rem;
+}
+.barcode-scanner-input__signal,
+.barcode-scanner-input__status {
+  font-size: 0.72rem;
+}
+.barcode-scanner-input__control button {
+  min-width: 74px;
+  min-height: 38px;
+  font-size: 0.8rem;
+}
+.pos-input-divider {
+  font-size: 0.76rem;
+}
+.pos-product-card {
+  min-height: 162px;
+  padding: 1rem;
+}
+.pos-product-card__category {
+  font-size: 0.7rem;
+}
+.pos-product-card > strong {
+  font-size: 0.95rem;
+}
+.pos-product-card > small {
+  font-size: 0.76rem;
+}
+.pos-product-card__bottom b {
+  font-size: 0.95rem;
+}
+.pos-product-card__bottom small {
+  font-size: 0.72rem;
+}
+.pos-order-line__name strong,
+.pos-line-total {
+  font-size: 0.9rem;
+}
+.pos-order-line__name small,
+.pos-order-totals > div {
+  font-size: 0.82rem;
+}
+.pos-order-line .pos-quantity span {
+  font-size: 0.8rem;
+}
+.pos-order-grand-total {
+  font-size: 0.9rem;
+}
+.pos-checkout-button {
+  min-height: 52px;
+  font-size: 0.92rem;
+}
+.pos-summary__label {
+  font-size: 1rem;
+}
+.pos-summary__reference {
+  font-size: 0.74rem;
+}
+.pos-summary dl > div {
+  font-size: 0.86rem;
+}
+.pos-summary__total {
+  font-size: 1rem !important;
+}
+.pos-summary__total dd {
+  font-size: 1.45rem;
+}
+.pos-summary__hint,
+.pos-demo-disclaimer,
+.pos-cart-placeholder {
+  color: var(--cashier-muted);
+  font-size: 0.76rem;
+}
+.pos-order-empty strong {
+  font-size: 0.92rem;
+}
+.pos-order-empty span {
+  font-size: 0.82rem;
+}
+.pos-search-results__heading {
+  font-size: 0.88rem;
+}
+.pos-search-results__heading button,
+.pos-search-result__info,
+.pos-search-result__add {
+  min-height: 38px;
+  font-size: 0.82rem;
+}
+.pos-search-result__summary small,
+.pos-search-result__details {
+  font-size: 0.84rem;
+}
+.pos-workbench-empty strong {
+  font-size: 0.95rem;
+}
+.pos-workbench-empty span {
+  font-size: 0.86rem;
+}
+.pos-notice {
+  font-size: 0.82rem;
+}
+.pos-payment-total,
+.pos-payment-change {
+  font-size: 0.84rem;
+}
+.pos-payment-total strong {
+  font-size: 1.5rem;
+}
+.pos-payment-modal > label {
+  font-size: 0.88rem;
+}
+.gcash-payment-details > div {
+  font-size: 0.82rem;
+}
+.gcash-paid-check,
+.gcash-manual-status {
+  font-size: 0.84rem;
+}
+
+/* Products / stock */
+.product-restock-panel strong {
+  font-size: 0.88rem;
+}
+.product-restock-panel span,
+.product-category-cell small {
+  font-size: 0.78rem;
+}
+.product-restock-panel button {
+  min-height: 40px;
+  font-size: 0.82rem;
+}
+.product-manual-select label,
+.product-receive-confirm label,
+.product-receive-confirm > div span {
+  font-size: 0.8rem;
+}
+.product-ai-status,
+.product-batch-date-note {
+  font-size: 0.78rem;
+}
+.product-category-group > h3 {
+  font-size: 0.92rem;
+}
+.product-category-group > h3 span {
+  font-size: 0.8rem;
+}
+.product-empty-state,
+.pos-empty-state,
+.operations-empty {
+  font-size: 0.9rem;
+}
+
+/* Profile / shift / register / reports */
+.cashier-profile-card__identity h3 {
+  font-size: 1.2rem;
+}
+.cashier-profile-card__identity p {
+  font-size: 0.86rem;
+}
+.cashier-profile-status {
+  font-size: 0.78rem;
+}
+.cashier-profile-details dt {
+  color: var(--cashier-muted);
+  font-size: 0.74rem;
+}
+.cashier-profile-details dd {
+  font-size: 0.9rem;
+}
+.cashier-shift-card > p:first-child {
+  color: var(--cashier-green);
+  font-size: 0.76rem;
+}
+.cashier-shift-card > span {
+  font-size: 0.86rem;
+}
+.cashier-shift-card > div small {
+  font-size: 0.74rem;
+}
+.cashier-shift-card > div strong {
+  font-size: 0.92rem;
+}
+.cashier-shift-card__note {
+  color: var(--cashier-muted);
+  font-size: 0.74rem;
+}
+.admin-quick-actions h3 {
+  font-size: 1.05rem;
+}
+.admin-quick-actions > a {
+  min-height: 50px;
+  color: #2f4436;
+  font-size: 0.88rem;
+}
+.register-state-card > div strong {
+  font-size: 0.94rem;
+}
+.register-state-card > div span {
+  font-size: 0.78rem;
+}
+.register-demo-label {
+  font-size: 0.7rem;
+}
+.register-empty {
+  font-size: 0.86rem;
+}
+.operations-summary-row span {
+  font-size: 0.76rem;
+}
+.operations-demo-banner {
+  font-size: 0.82rem;
+}
+.expenses-panel .cashier-panel__heading > span,
+.credit-panel .cashier-panel__heading > span {
+  font-size: 0.8rem;
+}
+.expense-category,
+.expiry-count {
+  font-size: 0.74rem;
+}
+.expenses-empty-state span {
+  font-size: 0.86rem;
+}
+.expenses-empty-state button,
+.credit-payment-button {
+  font-size: 0.82rem;
+}
+.transaction-detail dl > div {
+  font-size: 0.86rem;
+}
+.receipt-lines h3 {
+  font-size: 0.8rem;
+}
+.receipt-lines > div {
+  font-size: 0.82rem;
+}
+.report-period {
+  font-size: 0.8rem;
+}
+.report-chart__column small {
+  font-size: 0.76rem;
+}
+.demo-note,
+.dashboard-demo-note {
+  font-size: 0.8rem;
+}
+.dashboard-lookup-results strong,
+.dashboard-lookup-results b {
+  font-size: 0.82rem;
+}
+.dashboard-lookup-results small,
+.dashboard-lookup-results > span {
+  font-size: 0.74rem;
+}
+.scanner-diagnostics__heading p {
+  color: var(--cashier-green);
+  font-size: 0.72rem;
+}
+.scanner-diagnostics__heading h2 {
+  font-size: 0.95rem;
+}
+.scanner-diagnostics__grid span,
+.scanner-diagnostics__note,
+.scanner-diagnostics__result,
+.scanner-diagnostics__test-field,
+.barcode-scanner__diagnostics-toggle,
+.scanner-diagnostics__actions button,
+.scanner-diagnostics__focus {
+  font-size: 0.76rem;
+}
+.scanner-diagnostics__grid strong {
+  font-size: 0.78rem;
+}
+
+/* Forms */
+.settings-form label,
+.pos-payment-modal > label,
+.inventory-form-row > label,
+.auth-card .stack label {
+  font-size: 0.9rem;
+}
+.settings-form input,
+.pos-payment-modal input,
+.pos-payment-modal select,
+.operations-select {
+  font-size: 1rem;
+}
+.auth-note {
+  color: var(--cashier-muted);
+  font-size: 0.8rem;
 }
