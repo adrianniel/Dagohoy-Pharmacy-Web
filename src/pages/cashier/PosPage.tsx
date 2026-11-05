@@ -208,12 +208,17 @@ export function CashierPosPage() {
       <div className="pos-layout">
         <section className="cashier-panel pos-order-panel" aria-labelledby="pos-sale-heading">
           <div className="cashier-panel__heading">
-            <div>
-              <h3 id="pos-sale-heading">Current sale</h3>
-              <p>
-                {totalItems} item{totalItems === 1 ? '' : 's'} · {cart.length} product
-                {cart.length === 1 ? '' : 's'}
-              </p>
+            <div className="pos-order-heading">
+              <span className="pos-order-heading__icon" aria-hidden="true">
+                <CashierIcon name="cart" />
+              </span>
+              <div>
+                <h3 id="pos-sale-heading">Current sale</h3>
+                <p>
+                  {totalItems} item{totalItems === 1 ? '' : 's'} · {cart.length} product
+                  {cart.length === 1 ? '' : 's'}
+                </p>
+              </div>
             </div>
             <button
               className="cashier-text-button pos-clear-sale"
@@ -223,7 +228,7 @@ export function CashierPosPage() {
                 setCart([]);
                 showToast('All scanned items cleared.', 'info');
                 window.requestAnimationFrame(() =>
-                  document.getElementById('barcode-scanner-input')?.focus(),
+                  document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
                 );
               }}
             >

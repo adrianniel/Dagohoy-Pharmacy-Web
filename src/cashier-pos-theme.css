@@ -1504,6 +1504,31 @@
   color: #fffdf1;
 }
 
+.cashier-pos-page .pos-order-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.cashier-pos-page .pos-order-heading__icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(255 255 240 / 24%);
+  border-radius: 14px;
+  background: rgb(255 255 240 / 14%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+
+.cashier-pos-page .pos-order-heading__icon .cashier-icon {
+  width: 23px;
+  height: 23px;
+  color: #fffdf1;
+}
+
 .cashier-pos-page .pos-order-panel > .cashier-panel__heading h3 {
   margin-bottom: 0.3rem;
   color: #fffdf1;
@@ -1999,5 +2024,22 @@
 
   .cashier-shell.is-cashier .pos-payment-total strong {
     font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .cashier-pos-page .pos-order-heading {
+    gap: 0.65rem;
+  }
+
+  .cashier-pos-page .pos-order-heading__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .cashier-pos-page .pos-order-heading__icon .cashier-icon {
+    width: 19px;
+    height: 19px;
   }
 }

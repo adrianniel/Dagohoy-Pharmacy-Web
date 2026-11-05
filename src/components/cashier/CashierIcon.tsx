@@ -14,6 +14,13 @@ export function CashierIcon({ name }: CashierIconProps) {
         <rect x="19" y="19" width="9" height="9" rx="2" />
       </>
     ),
+    cart: (
+      <>
+        <path d="M5 6h2.5l2.4 13.1a2.1 2.1 0 0 0 2 1.7h7.4a2.1 2.1 0 0 0 2-1.6L22.5 10H9.2" />
+        <circle cx="14" cy="25.8" r="1.4" />
+        <circle cx="19.5" cy="25.8" r="1.4" />
+      </>
+    ),
     pos: (
       <>
         <path d="M5 6h22v19H5z" />
