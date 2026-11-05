@@ -1,6 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
@@ -121,21 +120,6 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
       ),
     [filter, orders, query],
   );
-  const labels: Record<OperationsSection, [string, string]> = {
-    batches: [
-      'Batch & expiry tracking',
-      'Monitor lot numbers and expiry dates to support safe stock rotation.',
-    ],
-    purchases: [
-      'Purchasing & receiving',
-      'Create supplier orders and record incoming stock against inventory.',
-    ],
-    stock: [
-      'Stock movement history',
-      'Review receipts, adjustments, damages, and other inventory changes.',
-    ],
-  };
-
   function saveOrder(order: PurchaseOrder) {
     const next = [order, ...orders];
     setOrders(next);
@@ -214,32 +198,28 @@ export function OperationsPage({ section }: { section: OperationsSection }) {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Inventory operations"
-        title={labels[section][0]}
-        description={labels[section][1]}
-        action={
-          section === 'purchases' ? (
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setModal('purchase')}
-            >
-              Create purchase order <span>＋</span>
-            </button>
-          ) : section === 'stock' ? (
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setModal('adjustment')}
-            >
-              Adjust stock <span>＋</span>
-            </button>
-          ) : undefined
-        }
-      />
-      <div className="operations-demo-banner">
-        Demo inventory workspace · quantities and documents are stored in this browser only.
+      <div className="operations-demo-banner operations-demo-banner--with-action">
+        <span>
+          Demo inventory workspace · quantities and documents are stored in this browser only.
+        </span>
+        {section === 'purchases' && (
+          <button
+            className="cashier-primary-action operations-demo-action"
+            type="button"
+            onClick={() => setModal('purchase')}
+          >
+            Create purchase order <span>＋</span>
+          </button>
+        )}
+        {section === 'stock' && (
+          <button
+            className="cashier-primary-action operations-demo-action"
+            type="button"
+            onClick={() => setModal('adjustment')}
+          >
+            Adjust stock <span>＋</span>
+          </button>
+        )}
       </div>
       {section === 'batches' && (
         <>

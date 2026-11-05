@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { transactionHistory } from '../../data/cashierMockData';
 
@@ -80,11 +79,6 @@ export function CashierTransactionsPage() {
   }
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Sales history"
-        title="Transactions"
-        description="Review completed sales recorded during cashier operations."
-      />
       <section className="cashier-panel cashier-list-panel">
         <div className="cashier-list-toolbar">
           <label className="cashier-search-field cashier-search-field--wide">

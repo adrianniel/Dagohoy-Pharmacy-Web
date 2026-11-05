@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
-import { cashierProfile, dashboardSummary, recentTransactions } from '../../data/cashierMockData';
+import { dashboardSummary, recentTransactions } from '../../data/cashierMockData';
 import { getInventory } from '../../data/inventoryStore';
 
 const SALES_KEY = 'dagohoy_demo_sales';
@@ -31,10 +30,6 @@ export function CashierDashboardPage() {
         .slice(0, 4),
     [query],
   );
-  const today = new Intl.DateTimeFormat('en-PH', {
-    dateStyle: 'full',
-    timeZone: 'Asia/Manila',
-  }).format(new Date());
   const latestTransactions = demoSales.length
     ? demoSales.slice(0, 4).map((sale) => ({
         receipt: sale.receipt,
@@ -50,20 +45,12 @@ export function CashierDashboardPage() {
     : recentTransactions;
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow={today}
-        title={`Good morning, ${cashierProfile.shortName}`}
-        description="Cashier • Dagohoy Pharmacy"
-        action={
-          <Link className="cashier-primary-action" to="/cashier/pos">
-            Open POS <CashierIcon name="arrow" />
-          </Link>
-        }
-      />
-
-      <p className="demo-note dashboard-demo-note">
-        Dashboard figures are sample data until live pharmacy sales are connected.
-      </p>
+      <div className="demo-note dashboard-demo-note">
+        <span>Dashboard figures are sample data until live pharmacy sales are connected.</span>
+        <Link className="cashier-view-button dashboard-pos-link" to="/cashier/pos">
+          Open POS <CashierIcon name="arrow" />
+        </Link>
+      </div>
       <section className="cashier-summary-grid" aria-label="Today's cashier summary">
         {dashboardSummary.map((summary) => (
           <article

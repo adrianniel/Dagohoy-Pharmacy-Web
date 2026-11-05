@@ -1,5 +1,4 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { useToast } from '../../components/toast';
 import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
 import { adminProfile, cashierProfile } from '../../data/cashierMockData';
@@ -81,30 +80,6 @@ export function RegisterPage() {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Cash management"
-        title="Cash drawer"
-        description="Open and close a register shift, track paid-in / paid-out cash, and reconcile the drawer."
-        action={
-          session ? (
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setMode('close')}
-            >
-              Close register
-            </button>
-          ) : (
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setMode('open')}
-            >
-              Open register
-            </button>
-          )
-        }
-      />
       <div className="operations-demo-banner">
         Demo register · cash activity and reconciliation are stored in this browser only.
       </div>
@@ -118,7 +93,16 @@ export function RegisterPage() {
               : 'Open the register to begin a shift.'}
           </span>
         </div>
-        {session && <span className="register-demo-label">LOCAL DEMO</span>}
+        <div className="register-state-actions">
+          {session && <span className="register-demo-label">LOCAL DEMO</span>}
+          <button
+            className="cashier-primary-action register-state-action"
+            type="button"
+            onClick={() => setMode(session ? 'close' : 'open')}
+          >
+            {session ? 'Close register' : 'Open register'}
+          </button>
+        </div>
       </div>
       <div className="cashier-summary-grid">
         <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />

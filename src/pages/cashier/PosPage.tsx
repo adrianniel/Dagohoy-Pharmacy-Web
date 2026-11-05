@@ -2,7 +2,6 @@ import { FormEvent, useMemo, useState } from 'react';
 import { BarcodeScannerInput } from '../../components/BarcodeScannerInput';
 import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
 import { lookupProductByBarcode } from '../../services/productsApi';
@@ -228,11 +227,6 @@ export function CashierPosPage() {
 
   return (
     <div className="cashier-page cashier-pos-page">
-      <CashierPageHeader
-        eyebrow="Checkout workspace"
-        title="Point of Sale"
-        description="Review the current sale, then scan or find products in the helper panel."
-      />
       <div className="pos-layout">
         <section className="cashier-panel pos-order-panel" aria-labelledby="pos-sale-heading">
           <div className="cashier-panel__heading">

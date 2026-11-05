@@ -1,5 +1,4 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { useToast } from '../../components/toast';
 
 type Expense = {
@@ -47,24 +46,19 @@ export function ExpensesPage() {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Owner controls · local demo"
-        title="Expenses"
-        description="Track operational expenses separately from sales and purchasing records."
-        action={
-          <button
-            className="cashier-primary-action"
-            type="button"
-            onClick={() => setFormOpen(true)}
-          >
-            Add expense
-          </button>
-        }
-      />
-      <p className="operations-demo-banner">
-        Expense entries are saved in this browser only. They do not post to accounting, cash, or
-        stock.
-      </p>
+      <div className="operations-demo-banner operations-demo-banner--with-action">
+        <span>
+          Expense entries are saved in this browser only. They do not post to accounting, cash, or
+          stock.
+        </span>
+        <button
+          className="cashier-primary-action operations-demo-action"
+          type="button"
+          onClick={() => setFormOpen(true)}
+        >
+          Add expense
+        </button>
+      </div>
       <section className="cashier-summary-grid" aria-label="Expense summary">
         <ExpenseStat
           label="This month"

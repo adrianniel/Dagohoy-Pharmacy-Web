@@ -46,13 +46,7 @@ export function CashierLayout() {
           onCloseMobile={() => setMobileOpen(false)}
         />
         <div className={`cashier-workspace${isPos ? ' is-pos' : ''}`}>
-          <CashierHeader
-            title={title}
-            subtitle={
-              location.pathname.startsWith('/admin') ? 'Owner workspace' : 'Cashier workspace'
-            }
-            onOpenSidebar={() => setMobileOpen(true)}
-          />
+          <CashierHeader title={title} onOpenSidebar={() => setMobileOpen(true)} />
           <main className="cashier-content" id="workspace-content" tabIndex={-1}>
             <Outlet />
           </main>

@@ -1,7 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
 import {
@@ -93,23 +92,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       ),
     [products, query],
   );
-  const title: Record<AdminSection, string> = {
-    dashboard: 'Good morning, Ana',
-    products: 'Products & stock',
-    suppliers: 'Suppliers',
-    reports: 'Business reports',
-    staff: 'Team & access',
-    settings: 'Pharmacy settings',
-  };
-  const description: Record<AdminSection, string> = {
-    dashboard: 'Here’s what’s happening at your pharmacy today.',
-    products: 'Monitor stock levels, pricing, and product availability.',
-    suppliers: 'Keep supplier contacts and purchasing relationships organized.',
-    reports: 'Review sales performance and inventory health.',
-    staff: 'Manage staff visibility and daily shift status.',
-    settings: 'Manage the details shown across your pharmacy workspace.',
-  };
-
   async function categorizeProducts() {
     setIsCategorizing(true);
     try {
@@ -163,11 +145,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Owner workspace"
-        title={title[section]}
-        description={description[section]}
-      />
       {section === 'products' && (
         <>
           <div className="cashier-summary-grid">
@@ -782,16 +759,6 @@ function InventoryForm({
 function AdminDashboard() {
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Owner workspace · Today"
-        title="Good morning, Ana"
-        description="Your pharmacy at a glance. Here are the items that need your attention."
-        action={
-          <Link className="cashier-primary-action" to="/cashier/pos">
-            Start a sale <CashierIcon name="arrow" />
-          </Link>
-        }
-      />
       <div className="cashier-summary-grid">
         <Summary label="Sales today" value={money(18460.5)} detail="Demo data · 24 transactions" />
         <Summary label="Transactions" value="24" detail="Sample register activity" />

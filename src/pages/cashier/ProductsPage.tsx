@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BarcodeScannerInput } from '../../components/BarcodeScannerInput';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
 import {
@@ -203,11 +202,6 @@ export function CashierProductsPage() {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Products & stock · cashier"
-        title="Products & Stock"
-        description="Receive incoming supply with a barcode scan and browse stock organized by category."
-      />
       <section className="cashier-panel product-receiving-panel">
         <div className="cashier-panel__heading">
           <div>

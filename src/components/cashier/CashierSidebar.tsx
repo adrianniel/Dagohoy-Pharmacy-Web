@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import pharmacyLogo from '../../assets/logo.png';
 import { ADMIN_NAV_ITEMS, CASHIER_NAV_ITEMS } from '../../constants/navigation';
 import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../../constants/app';
@@ -20,9 +20,14 @@ export function CashierSidebar({
   onCloseMobile,
 }: CashierSidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
   const navigation = role === 'ADMIN' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS;
   const profile = role === 'ADMIN' ? adminProfile : cashierProfile;
+  const workspaceLabel =
+    role === 'ADMIN' || location.pathname.startsWith('/admin')
+      ? 'Owner workspace'
+      : 'Cashier workspace';
 
   function handleLogout() {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -48,6 +53,7 @@ export function CashierSidebar({
             <small>PHARMACY</small>
           </span>
         </div>
+        <p className="cashier-sidebar__workspace">{workspaceLabel}</p>
 
         <nav className="cashier-sidebar__nav" aria-label="Main navigation">
           {navigation.map((group) => (

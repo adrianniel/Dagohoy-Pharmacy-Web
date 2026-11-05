@@ -1019,6 +1019,58 @@
   color: #75877b;
 }
 
+/* Compact workspace chrome and contextual actions */
+.cashier-shell.is-cashier :where(.cashier-header__title h1) {
+  color: var(--cashier-green-dark);
+  font-size: clamp(1.15rem, 2vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.cashier-shell.is-cashier :where(.dashboard-demo-note) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.cashier-shell.is-cashier :where(.dashboard-pos-link) {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cashier-shell.is-cashier :where(.register-state-card) {
+  flex-wrap: wrap;
+}
+
+.cashier-shell.is-cashier :where(.register-state-actions) {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cashier-shell.is-cashier :where(.register-state-card .register-demo-label) {
+  margin-left: 0;
+}
+
+.cashier-shell.is-cashier :where(.register-state-action) {
+  min-height: 44px;
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 /* Shared responsive treatment */
 @media (min-width: 1081px) {
   .cashier-shell.is-cashier :where(.cashier-dashboard-grid) {

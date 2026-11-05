@@ -5,11 +5,10 @@ import { CashierProfileMenu } from './CashierProfileMenu';
 
 interface CashierHeaderProps {
   title: string;
-  subtitle: string;
   onOpenSidebar: () => void;
 }
 
-export function CashierHeader({ title, subtitle, onOpenSidebar }: CashierHeaderProps) {
+export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
   const [storeOpen, setStoreOpen] = useState(isStoreOpen);
   const today = new Intl.DateTimeFormat('en-PH', {
     weekday: 'long',
@@ -43,7 +42,6 @@ export function CashierHeader({ title, subtitle, onOpenSidebar }: CashierHeaderP
         <CashierIcon name="menu" />
       </button>
       <div className="cashier-header__title">
-        <p>{subtitle}</p>
         <h1>{title}</h1>
       </div>
       <div className="cashier-header__meta">

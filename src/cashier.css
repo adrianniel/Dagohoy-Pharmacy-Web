@@ -68,12 +68,25 @@
 }
 .cashier-sidebar__brand {
   min-height: 52px;
-  padding: 0 0.55rem 1rem;
+  padding: 0 0.55rem 0.7rem;
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border-bottom: 1px solid rgb(255 255 255 / 9%);
   white-space: nowrap;
+}
+.cashier-sidebar__workspace {
+  margin: 0;
+  padding: 0.55rem 0.65rem 0.75rem;
+  display: block;
+  color: #8fd4a8;
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+}
+.cashier-sidebar.is-collapsed .cashier-sidebar__workspace {
+  display: none;
 }
 .cashier-sidebar__brand img {
   width: 40px;
@@ -2225,6 +2238,25 @@
   color: #81652b;
   font-size: 0.67rem;
 }
+.operations-demo-banner--with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.operations-demo-banner--with-action > span {
+  min-width: 0;
+  line-height: 1.6;
+}
+.operations-demo-action {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
 .operations-select {
   min-height: 40px;
   padding: 0.55rem 0.7rem;
@@ -2707,8 +2739,7 @@
 .cashier-content {
   padding: clamp(1.5rem, 2.6vw, 2.6rem) clamp(1.35rem, 3vw, 2.75rem);
   background:
-    radial-gradient(circle at 94% 0%, rgb(23 98 70 / 7%), transparent 28rem),
-    var(--cashier-page);
+    radial-gradient(circle at 94% 0%, rgb(23 98 70 / 7%), transparent 28rem), var(--cashier-page);
 }
 
 /* Sidebar: landing green, roomier rows */

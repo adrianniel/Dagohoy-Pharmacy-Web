@@ -1,4 +1,3 @@
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { USER_ROLE_KEY } from '../../constants/app';
 import { adminProfile, cashierProfile } from '../../data/cashierMockData';
 
@@ -6,11 +5,6 @@ export function CashierProfilePage() {
   const profile = localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Account"
-        title="My Profile"
-        description="Basic information for the currently displayed cashier account."
-      />
       <div className="cashier-profile-grid">
         <section className="cashier-panel cashier-profile-card">
           <div className="cashier-profile-card__identity">

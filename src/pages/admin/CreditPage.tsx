@@ -1,5 +1,4 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { CashierPageHeader } from '../../components/cashier/CashierPageHeader';
 import { useToast } from '../../components/toast';
 
 type CreditSale = {
@@ -60,11 +59,6 @@ export function CreditPage() {
 
   return (
     <div className="cashier-page">
-      <CashierPageHeader
-        eyebrow="Owner controls · local demo"
-        title="Credit Accounts"
-        description="Review unpaid credit sales and record payments against customer balances."
-      />
       <p className="operations-demo-banner">
         Credit balances are saved in this browser only. They are not connected to live receivables
         or accounting.
