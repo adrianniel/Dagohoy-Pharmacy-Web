@@ -1318,8 +1318,8 @@
 .cashier-pos-page .pos-workbench .cashier-panel__heading p {
   max-width: 62ch;
   color: var(--pos-muted);
-  font-size: 0.84rem;
-  line-height: 1.55;
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 .cashier-pos-page .pos-workbench .pos-find-panel {
