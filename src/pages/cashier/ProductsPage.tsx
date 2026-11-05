@@ -221,10 +221,7 @@ export function CashierProductsPage() {
             {isOrganizing ? 'Organizing categories…' : categoryStatus}
           </span>
         </div>
-        <BarcodeScannerInput
-          onScan={selectScannedProduct}
-          placeholder="Scan supplied product barcode…"
-        />
+        <BarcodeScannerInput onScan={selectScannedProduct} placeholder="Scan barcode…" />
         <div className="product-manual-select">
           <label htmlFor="manual-receive-product">Or select a product manually</label>
           <select
@@ -297,7 +294,7 @@ export function CashierProductsPage() {
             <CashierIcon name="search" />
             <input
               type="search"
-              placeholder="Search barcode, product, or category"
+              placeholder="Search products…"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />

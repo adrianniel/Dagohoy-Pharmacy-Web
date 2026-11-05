@@ -218,18 +218,125 @@ export function CashierPosPage() {
       <CashierPageHeader
         eyebrow="Checkout workspace"
         title="Point of Sale"
-        description="Scan a barcode or search for a product to build the current sale."
+        description="Review the current sale, then scan or find products in the helper panel."
       />
       <div className="pos-layout">
-        <section className="cashier-panel pos-workbench">
+        <section className="cashier-panel pos-order-panel" aria-labelledby="pos-sale-heading">
           <div className="cashier-panel__heading">
             <div>
-              <h3>Scan or find a product</h3>
-              <p>Use a barcode scanner or type a product name, generic name, or brand.</p>
+              <h3 id="pos-sale-heading">Current sale</h3>
+              <p>
+                {totalItems} item{totalItems === 1 ? '' : 's'} · {cart.length} product
+                {cart.length === 1 ? '' : 's'}
+              </p>
+            </div>
+            <button
+              className="cashier-text-button"
+              type="button"
+              disabled={!cart.length}
+              onClick={() => {
+                setCart([]);
+                showToast('Sale cleared.', 'info');
+              }}
+            >
+              Clear
+            </button>
+          </div>
+          <div className="pos-order-lines">
+            {cart.map(({ product, quantity }) => (
+              <div className="pos-order-line" key={product.barcode}>
+                <div className="pos-order-line__name">
+                  <strong>{product.product}</strong>
+                  <small>
+                    {formatMoney(toAmount(product.price))} / {product.unit}
+                  </small>
+                </div>
+                <div className="pos-quantity">
+                  <button
+                    type="button"
+                    aria-label={`Decrease ${product.product}`}
+                    onClick={() => changeQuantity(product.barcode, -1)}
+                  >
+                    −
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    type="button"
+                    aria-label={`Increase ${product.product}`}
+                    onClick={() => changeQuantity(product.barcode, 1)}
+                  >
+                    +
+                  </button>
+                </div>
+                <strong className="pos-line-total">
+                  {formatMoney(toAmount(product.price) * quantity)}
+                </strong>
+              </div>
+            ))}
+            {!cart.length && (
+              <div className="pos-order-empty">
+                <CashierIcon name="pos" />
+                <strong>Your sale is empty</strong>
+                <span>
+                  Scan a barcode or search for a product in the helper panel to get started.
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="pos-order-totals">
+            <div>
+              <span>Subtotal</span>
+              <strong>{formatMoney(subtotal)}</strong>
+            </div>
+            <div>
+              <span>Discount (%)</span>
+              <label className="pos-discount-input">
+                <input
+                  aria-label="Discount percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={discountPercent}
+                  onChange={(event) =>
+                    setDiscountPercent(Math.min(100, Math.max(0, Number(event.target.value))))
+                  }
+                />
+                <span>%</span>
+              </label>
+            </div>
+            {discount > 0 && (
+              <div>
+                <span>Discount applied</span>
+                <strong>−{formatMoney(discount)}</strong>
+              </div>
+            )}
+            <div className="pos-order-grand-total">
+              <span>Total due</span>
+              <strong>{formatMoney(totalDue)}</strong>
+            </div>
+          </div>
+          <button
+            className="pos-checkout-button"
+            type="button"
+            disabled={!cart.length}
+            onClick={() => setPaymentOpen(true)}
+          >
+            Continue to payment <CashierIcon name="arrow" />
+          </button>
+          <p className="pos-demo-disclaimer">
+            Demo checkout only · does not record a live pharmacy sale.
+          </p>
+        </section>
+        <aside className="cashier-panel pos-workbench" aria-labelledby="pos-workbench-heading">
+          <div className="cashier-panel__heading">
+            <div>
+              <h3 id="pos-workbench-heading">Scan or find a product</h3>
+              <p>Check a price or add an item with a barcode scan or product search.</p>
             </div>
           </div>
           <div className="pos-input-panel pos-scan-panel">
-            <BarcodeScannerInput onScan={handleBarcodeScan} autoFocus />
+            <BarcodeScannerInput onScan={handleBarcodeScan} autoFocus placeholder="Scan barcode…" />
             <label className="pos-barcode-field pos-catalog-search">
               <span>Find a product</span>
               <div>
@@ -240,7 +347,7 @@ export function CashierPosPage() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   autoComplete="off"
-                  placeholder="Search name, generic, or brand…"
+                  placeholder="Search products…"
                 />
               </div>
             </label>
@@ -248,7 +355,10 @@ export function CashierPosPage() {
           {query.trim() ? (
             <div className="pos-search-results" aria-live="polite">
               <div className="pos-search-results__heading">
-                <strong>{filteredProducts.length} matching products</strong>
+                <strong>
+                  {filteredProducts.length} matching product
+                  {filteredProducts.length === 1 ? '' : 's'}
+                </strong>
                 <button type="button" onClick={() => setQuery('')}>
                   Clear search
                 </button>
@@ -310,111 +420,6 @@ export function CashierPosPage() {
               <span>Scan a barcode or start typing to show matching products.</span>
             </div>
           )}
-        </section>
-        <aside className="cashier-panel pos-order-panel">
-          <div className="cashier-panel__heading">
-            <div>
-              <h3>Current sale</h3>
-              <p>
-                {totalItems} item{totalItems === 1 ? '' : 's'} · {cart.length} product
-                {cart.length === 1 ? '' : 's'}
-              </p>
-            </div>
-            <button
-              className="cashier-text-button"
-              type="button"
-              disabled={!cart.length}
-              onClick={() => {
-                setCart([]);
-                showToast('Sale cleared.', 'info');
-              }}
-            >
-              Clear
-            </button>
-          </div>
-          <div className="pos-order-lines">
-            {cart.map(({ product, quantity }) => (
-              <div className="pos-order-line" key={product.barcode}>
-                <div className="pos-order-line__name">
-                  <strong>{product.product}</strong>
-                  <small>
-                    {formatMoney(toAmount(product.price))} / {product.unit}
-                  </small>
-                </div>
-                <div className="pos-quantity">
-                  <button
-                    type="button"
-                    aria-label={`Decrease ${product.product}`}
-                    onClick={() => changeQuantity(product.barcode, -1)}
-                  >
-                    −
-                  </button>
-                  <span>{quantity}</span>
-                  <button
-                    type="button"
-                    aria-label={`Increase ${product.product}`}
-                    onClick={() => changeQuantity(product.barcode, 1)}
-                  >
-                    +
-                  </button>
-                </div>
-                <strong className="pos-line-total">
-                  {formatMoney(toAmount(product.price) * quantity)}
-                </strong>
-              </div>
-            ))}
-            {!cart.length && (
-              <div className="pos-order-empty">
-                <CashierIcon name="pos" />
-                <strong>Your sale is empty</strong>
-                <span>Scan a barcode or select a product to get started.</span>
-              </div>
-            )}
-          </div>
-          <div className="pos-order-totals">
-            <div>
-              <span>Subtotal</span>
-              <strong>{formatMoney(subtotal)}</strong>
-            </div>
-            <div>
-              <span>Discount (%)</span>
-              <label className="pos-discount-input">
-                <input
-                  aria-label="Discount percent"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={discountPercent}
-                  onChange={(event) =>
-                    setDiscountPercent(Math.min(100, Math.max(0, Number(event.target.value))))
-                  }
-                />
-                <span>%</span>
-              </label>
-            </div>
-            {discount > 0 && (
-              <div>
-                <span>Discount applied</span>
-                <strong>−{formatMoney(discount)}</strong>
-              </div>
-            )}
-            <div className="pos-order-grand-total">
-              <span>Total due</span>
-              <strong>{formatMoney(totalDue)}</strong>
-            </div>
-          </div>
-          <button
-            className="pos-checkout-button"
-            type="button"
-            disabled={!cart.length}
-            onClick={() => setPaymentOpen(true)}
-          >
-            Continue to payment <CashierIcon name="arrow" />
-          </button>
-          <p className="pos-demo-disclaimer">
-            Demo checkout only · does not record a live pharmacy sale.
-          </p>
         </aside>
       </div>
       {paymentOpen && (
