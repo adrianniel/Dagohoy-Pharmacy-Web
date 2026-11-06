@@ -3498,3 +3498,44 @@
     font-size: 0.76rem;
   }
 }
+
+/* Top bar: who is on duty and how long the shift has been running */
+.cashier-store-status div {
+  gap: 2px;
+}
+.cashier-store-status strong {
+  max-width: 15rem;
+  overflow: hidden;
+  color: #176246;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cashier-shift-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #5c6d63;
+  font-size: 0.72rem;
+}
+.cashier-shift-clock b {
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: #e8f2ec;
+  color: #176246;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+@media (max-width: 1120px) {
+  .cashier-store-status strong {
+    max-width: 9rem;
+  }
+}
+@media (max-width: 900px) {
+  .cashier-store-status {
+    display: none;
+  }
+}
