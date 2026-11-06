@@ -7,8 +7,8 @@
   padding: 22px 24px 24px;
   margin-bottom: 18px;
   border-radius: 20px;
-  border: 1px solid #dbe7dd;
-  background: #fff;
+  border: 1px solid #cfe1d6;
+  background: linear-gradient(180deg, #f7fbf8 0%, #ffffff 62%);
 }
 
 .stock-index__head {
@@ -40,9 +40,9 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: #fff5e2;
-  border: 1px solid #f0d79b;
-  color: #8a6a12;
+  background: #e8f2ea;
+  border: 1px solid #bfd8c6;
+  color: #176246;
   font-size: 0.88rem;
   font-weight: 800;
   white-space: nowrap;
@@ -66,7 +66,7 @@
   font: inherit;
   border: 1px solid #cfe1d6;
   border-radius: 16px;
-  background: #fff;
+  background: #f2f8f4;
   color: inherit;
   cursor: pointer;
   transition:
@@ -79,9 +79,9 @@
 .stock-index__tile:hover,
 .stock-index__tile:focus-visible {
   border-color: #176246;
-  background: #f2f8f4;
+  background: #e8f2ea;
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(23, 98, 70, 0.1);
+  box-shadow: 0 10px 22px rgba(23, 98, 70, 0.16);
   outline: none;
 }
 
@@ -96,8 +96,8 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #e8f2ea;
-  color: #176246;
+  background: #176246;
+  color: #ffffff;
 }
 
 .stock-index__icon .cashier-icon {
@@ -110,7 +110,7 @@
   font-size: 1.15rem;
   font-weight: 800;
   line-height: 1.2;
-  color: #141414;
+  color: #176246;
 }
 
 .stock-index__tile small {
@@ -122,7 +122,7 @@
 
 .stock-index__tile[aria-expanded='true'] {
   border-color: #176246;
-  background: #f2f8f4;
+  background: #dfeee3;
 }
 
 .stock-index__tile:disabled {
@@ -137,8 +137,8 @@
   gap: 14px;
   padding: 16px 18px;
   border-radius: 14px;
-  background: #f7faf7;
-  border: 1px solid #e1ece2;
+  background: #f2f8f4;
+  border: 1px solid #cfe1d6;
 }
 
 .stock-index__stat span {
