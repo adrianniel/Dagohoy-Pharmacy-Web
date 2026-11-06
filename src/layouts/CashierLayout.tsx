@@ -28,7 +28,6 @@ export function CashierLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const title = routeTitles[location.pathname] ?? 'Cashier Workspace';
-  const isCashier = location.pathname.startsWith('/cashier');
   const isPos = location.pathname === '/cashier/pos';
 
   return (
@@ -37,7 +36,7 @@ export function CashierLayout() {
         Skip to workspace content
       </a>
       <div
-        className={`cashier-shell${collapsed ? ' is-sidebar-collapsed' : ''}${isCashier ? ' is-cashier' : ''}`}
+        className={`cashier-shell is-themed${collapsed ? ' is-sidebar-collapsed' : ''}`}
       >
         <CashierSidebar
           collapsed={collapsed}
