@@ -7,7 +7,6 @@ const routeTitles: Record<string, string> = {
   '/cashier/dashboard': 'Dashboard',
   '/cashier/pos': 'Point of Sale',
   '/cashier/register': 'Cash drawer',
-  '/cashier/products': 'Product lookup',
   '/cashier/transactions': 'Transactions',
   '/cashier/profile': 'My Profile',
   '/cashier/shift-report': 'Shift report',

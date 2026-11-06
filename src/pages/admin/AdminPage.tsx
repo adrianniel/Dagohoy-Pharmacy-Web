@@ -185,17 +185,16 @@ export function AdminPage({ section }: { section: AdminSection }) {
               >
                 Add product <span>＋</span>
               </button>
-              <Link className="cashier-primary-action" to="/cashier/products">
-                Cashier lookup <CashierIcon name="arrow" />
-              </Link>
-              <button
-                className="cashier-view-button"
-                type="button"
-                disabled={isCategorizing || products.length === 0}
-                onClick={() => void categorizeProducts()}
-              >
-                {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
-              </button>
+              {products.length > 0 && (
+                <button
+                  className="cashier-view-button"
+                  type="button"
+                  disabled={isCategorizing}
+                  onClick={() => void categorizeProducts()}
+                >
+                  {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
+                </button>
+              )}
             </div>
             <div className="product-restock-panel">
               <div>

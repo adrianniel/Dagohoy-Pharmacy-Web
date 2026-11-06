@@ -18,11 +18,6 @@ const CashierDashboardPage = lazy(() =>
 const CashierPosPage = lazy(() =>
   import('./pages/cashier/PosPage').then((module) => ({ default: module.CashierPosPage })),
 );
-const CashierProductsPage = lazy(() =>
-  import('./pages/cashier/ProductsPage').then((module) => ({
-    default: module.CashierProductsPage,
-  })),
-);
 const CashierProfilePage = lazy(() =>
   import('./pages/cashier/ProfilePage').then((module) => ({
     default: module.CashierProfilePage,
@@ -83,7 +78,6 @@ export function App() {
             <Route path="dashboard" element={<CashierDashboardPage />} />
             <Route path="pos" element={<CashierPosPage />} />
             <Route path="register" element={<RegisterPage />} />
-            <Route path="products" element={<CashierProductsPage />} />
             <Route path="transactions" element={<CashierTransactionsPage />} />
             <Route path="shift-report" element={<ShiftReportPage />} />
             <Route path="profile" element={<CashierProfilePage />} />

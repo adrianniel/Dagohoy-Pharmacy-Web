@@ -7,7 +7,6 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
       { label: 'Dashboard', path: '/cashier/dashboard', icon: 'dashboard' },
       { label: 'POS', path: '/cashier/pos', icon: 'pos', emphasis: true },
       { label: 'Cash drawer', path: '/cashier/register', icon: 'register' },
-      { label: 'Product lookup', path: '/cashier/products', icon: 'products' },
     ],
   },
   {
