@@ -45,7 +45,7 @@ export const CURRENT_ACCOUNT_KEY = 'dagohoy_pharmacy_account_id';
 
 const OWNER_ACCOUNT: Account = {
   id: 'owner',
-  username: 'jeanetteboncales',
+  username: 'jeanette.admin',
   displayName: 'Jeanette Boncales',
   role: 'ADMIN',
   passwordHash: 'd8ef13d850de805ac15d0bee0355851e271a8cf008e2445ab2ed09eedb47586a',
