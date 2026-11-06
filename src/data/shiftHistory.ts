@@ -6,7 +6,12 @@
 
 export type ShiftRecord = {
   id: string;
+  /** The first name on duty: what receipts and summaries show. */
   cashierName: string;
+  /** Everyone who served the shift, for the full handover record. */
+  onDutyNames?: string[];
+  /** Present when the float carried over from the last shift was changed. */
+  floatAdjustment?: { carriedOver: number; reason: string };
   openedAt: string;
   closedAt: string;
   openingFloat: number;

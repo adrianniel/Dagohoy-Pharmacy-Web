@@ -16,6 +16,15 @@ import {
   updateAccount,
 } from '../../data/accountStore';
 
+import {
+  addStaff,
+  loadRoster,
+  removeStaff,
+  renameStaff,
+  setStaffStatus,
+  type RosterStaff,
+} from '../../data/staffRoster';
+
 type FormState =
   | { kind: 'create'; role: AccountRole }
   | { kind: 'edit'; account: Account }
@@ -24,6 +33,7 @@ type FormState =
 
 export function StaffAccounts() {
   const [accounts, setAccounts] = useState<Account[]>(loadAccounts);
+  const [roster, setRoster] = useState<RosterStaff[]>(loadRoster);
   const [form, setForm] = useState<FormState>(null);
   const { showToast } = useToast();
   const me = getCurrentAccount();
@@ -32,6 +42,7 @@ export function StaffAccounts() {
 
   function refresh() {
     setAccounts(loadAccounts());
+    setRoster(loadRoster());
   }
 
   function toggleStatus(account: Account) {
@@ -47,6 +58,37 @@ export function StaffAccounts() {
 
   return (
     <div className="staff-accounts">
+      <StaffRoster
+        roster={roster}
+        onAdd={(name) => {
+          try {
+            addStaff(name);
+            refresh();
+            showToast(`${name.trim()} added to the roster.`, 'success');
+          } catch (caught) {
+            showToast(caught instanceof Error ? caught.message : 'Could not add the staff member.');
+          }
+        }}
+        onToggle={(staff) => {
+          setStaffStatus(staff.id, staff.status === 'Active' ? 'Inactive' : 'Active');
+          refresh();
+        }}
+        onRename={(staff, name) => {
+          try {
+            renameStaff(staff.id, name);
+            refresh();
+            showToast('Name updated.', 'success');
+          } catch (caught) {
+            showToast(caught instanceof Error ? caught.message : 'Could not rename the staff member.');
+          }
+        }}
+        onRemove={(staff) => {
+          removeStaff(staff.id);
+          refresh();
+          showToast(`${staff.name} was removed from the roster.`);
+        }}
+      />
+
       <section className="cashier-panel" aria-labelledby="cashier-account-title">
         <div className="cashier-panel__heading">
           <div>
@@ -507,6 +549,137 @@ function ConfirmRemoveModal({
         </button>
       </div>
     </div>
+  );
+}
+
+function StaffRoster({
+  roster,
+  onAdd,
+  onToggle,
+  onRename,
+  onRemove,
+}: {
+  roster: RosterStaff[];
+  onAdd: (name: string) => void;
+  onToggle: (staff: RosterStaff) => void;
+  onRename: (staff: RosterStaff, name: string) => void;
+  onRemove: (staff: RosterStaff) => void;
+}) {
+  const [newName, setNewName] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const activeCount = roster.filter((staff) => staff.status === 'Active').length;
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!newName.trim()) return;
+    onAdd(newName);
+    setNewName('');
+  }
+
+  return (
+    <section className="cashier-panel staff-roster" aria-labelledby="staff-roster-title">
+      <div className="cashier-panel__heading">
+        <div>
+          <h3 id="staff-roster-title">Staff roster</h3>
+          <p>
+            Only these names appear when a cashier starts a shift. Several can be on duty together.
+          </p>
+        </div>
+      </div>
+      <form className="staff-roster__add" onSubmit={submit}>
+        <label>
+          Staff name
+          <input
+            autoComplete="off"
+            value={newName}
+            onChange={(event) => setNewName(event.target.value)}
+            placeholder="e.g. Maria Dela Cruz"
+          />
+        </label>
+        <button className="cashier-primary-action" type="submit">
+          Add to roster <span>＋</span>
+        </button>
+      </form>
+      {roster.length ? (
+        <ul className="staff-roster__list">
+          {roster.map((staff) => (
+            <li key={staff.id} className={staff.status === 'Inactive' ? 'is-inactive' : ''}>
+              {editing === staff.id ? (
+                <form
+                  className="staff-roster__rename"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    onRename(staff, editName);
+                    setEditing(null);
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={editName}
+                    onChange={(event) => setEditName(event.target.value)}
+                    aria-label={`New name for ${staff.name}`}
+                  />
+                  <button className="cashier-view-button" type="submit">
+                    Save
+                  </button>
+                  <button
+                    className="cashier-view-button"
+                    type="button"
+                    onClick={() => setEditing(null)}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <span>
+                    <strong>{staff.name}</strong>
+                    <StatusBadge value={staff.status} />
+                  </span>
+                  <div className="staff-row-actions">
+                    <button
+                      className="cashier-view-button"
+                      type="button"
+                      onClick={() => {
+                        setEditing(staff.id);
+                        setEditName(staff.name);
+                      }}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className="cashier-view-button"
+                      type="button"
+                      onClick={() => onToggle(staff)}
+                    >
+                      {staff.status === 'Active' ? 'Set inactive' : 'Set active'}
+                    </button>
+                    <button
+                      className="cashier-view-button"
+                      type="button"
+                      onClick={() => onRemove(staff)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="cashier-shift-empty">
+          No staff on the roster yet. Add the cashiers working the counter.
+        </p>
+      )}
+      <div className="cashier-table-footer">
+        <span>
+          {roster.length} name{roster.length === 1 ? '' : 's'} · {activeCount} active
+        </span>
+        <span>Cashiers can only pick names from this list.</span>
+      </div>
+    </section>
   );
 }
 

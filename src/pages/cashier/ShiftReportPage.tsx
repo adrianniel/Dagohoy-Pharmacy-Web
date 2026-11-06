@@ -44,6 +44,7 @@ export function ShiftReportPage() {
   const variance = shift.countedCash - shift.expectedCash;
   const varianceLabel = Math.abs(variance) < 0.005 ? 'Balanced' : variance > 0 ? 'Over' : 'Short';
   const payments = Object.entries(shift.salesByPayment);
+  const onDuty = shift.onDutyNames?.length ? shift.onDutyNames : [shift.cashierName];
 
   return (
     <div className="cashier-page shift-report">
@@ -84,6 +85,29 @@ export function ShiftReportPage() {
           detail="Counted at closing"
         />
       </div>
+
+      <section className="cashier-panel shift-report__duty">
+        <div className="cashier-panel__heading">
+          <div>
+            <h3>Staff on duty</h3>
+            <p>
+              {onDuty.length} {onDuty.length === 1 ? 'person served' : 'people served'} this
+              shift.{onDuty.length > 1 && ' The first name is the one printed on receipts.'}
+            </p>
+          </div>
+        </div>
+        <ol className="shift-report__duty-list">
+          {onDuty.map((name, index) => (
+            <li key={`${name}-${index}`}>
+              <span className="shift-report__duty-index">{index + 1}</span>
+              <strong>{name}</strong>
+              {index === 0 && onDuty.length > 1 && (
+                <span className="shift-report__duty-tag">Named on receipts</span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <section className="cashier-panel">
         <div className="cashier-panel__heading">

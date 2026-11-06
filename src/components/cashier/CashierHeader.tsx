@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { isStoreOpen, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
+import { getSession, isStoreOpen, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
 import { CashierIcon } from './CashierIcon';
 import { CashierProfileMenu } from './CashierProfileMenu';
+import { ShiftControls } from './ShiftControls';
 
 interface CashierHeaderProps {
   title: string;
@@ -10,6 +11,7 @@ interface CashierHeaderProps {
 
 export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
   const [storeOpen, setStoreOpen] = useState(isStoreOpen);
+  const [onDuty, setOnDuty] = useState(() => getSession()?.onDutyNames ?? []);
   const today = new Intl.DateTimeFormat('en-PH', {
     weekday: 'long',
     timeZone: 'Asia/Manila',
@@ -22,7 +24,10 @@ export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
   }).format(new Date());
 
   useEffect(() => {
-    const syncStoreStatus = () => setStoreOpen(isStoreOpen());
+    const syncStoreStatus = () => {
+      setStoreOpen(isStoreOpen());
+      setOnDuty(getSession()?.onDutyNames ?? []);
+    };
     window.addEventListener(STORE_STATUS_CHANGE_EVENT, syncStoreStatus);
     window.addEventListener('storage', syncStoreStatus);
     return () => {
@@ -49,9 +54,16 @@ export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
           <span aria-hidden="true" />
           <div>
             <strong>Store {storeOpen ? 'Open' : 'Closed'}</strong>
-            <small>{storeOpen ? 'Register active' : 'Open register to start'}</small>
+            <small>
+              {storeOpen
+                ? onDuty.length
+                  ? `On duty: ${onDuty.join(', ')}`
+                  : 'Register active'
+                : 'Start a shift to begin'}
+            </small>
           </div>
         </div>
+        <ShiftControls />
         <div className="cashier-header__date">
           <CashierIcon name="calendar" />
           <span>
