@@ -144,27 +144,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
     <div className="cashier-page">
       {section === 'products' && (
         <>
-          <div className="cashier-summary-grid cashier-summary-grid--compact">
-            <Summary
-              label="Catalog products"
-              value={String(products.length)}
-              detail="Sample catalog records"
-            />
-            <Summary
-              label="Low stock"
-              value={String(
-                products.filter((product) => product.stock > 0 && product.stock < restockThreshold)
-                  .length,
-              )}
-              detail={`Below ${restockThreshold} units`}
-            />
-            <Summary
-              label="Out of stock"
-              value={String(products.filter((product) => product.stock <= 0).length)}
-              detail="Needs replenishment"
-            />
-            <Summary label="Expiry tracking" value="Open batches" detail="Review lot-level dates" />
-          </div>
           <section className="cashier-panel cashier-list-panel">
             <div className="cashier-list-toolbar">
               <label className="cashier-search-field cashier-search-field--wide">
