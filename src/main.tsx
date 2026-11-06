@@ -12,6 +12,7 @@ import './public-polish.css';
 import './landing-modern.css';
 import './workspace-hallmark.css';
 import './cashier-pos-theme.css';
+import './cashier-dashboard.css';
 import './components/landing/workflow-cards.css';
 
 createRoot(document.getElementById('root')!).render(
