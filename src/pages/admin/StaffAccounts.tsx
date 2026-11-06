@@ -5,19 +5,20 @@ import { useToast } from '../../components/toast';
 import {
   type Account,
   type AccountRole,
+  canEditAccount,
   createAccount,
   deleteAccount,
   getCashierAccount,
   getCurrentAccount,
   loadAccounts,
   MIN_PASSWORD_LENGTH,
-  resetPassword,
   setAccountStatus,
+  updateAccount,
 } from '../../data/accountStore';
 
 type FormState =
   | { kind: 'create'; role: AccountRole }
-  | { kind: 'reset'; account: Account }
+  | { kind: 'edit'; account: Account }
   | { kind: 'remove'; account: Account }
   | null;
 
@@ -69,9 +70,9 @@ export function StaffAccounts() {
               <button
                 className="cashier-view-button"
                 type="button"
-                onClick={() => setForm({ kind: 'reset', account: cashier })}
+                onClick={() => setForm({ kind: 'edit', account: cashier })}
               >
-                Reset password
+                Edit username / password
               </button>
               <button
                 className="cashier-view-button"
@@ -129,7 +130,7 @@ export function StaffAccounts() {
             <tbody>
               {admins.map((account) => {
                 const isMe = account.id === me?.id;
-                const canReset = account.builtIn ? isMe : true;
+                const canEdit = canEditAccount(me, account);
                 return (
                   <tr key={account.id}>
                     <td>
@@ -151,16 +152,16 @@ export function StaffAccounts() {
                     </td>
                     <td>
                       <div className="staff-row-actions">
-                        {canReset && (
+                        {canEdit && (
                           <button
                             className="cashier-view-button"
                             type="button"
-                            onClick={() => setForm({ kind: 'reset', account })}
+                            onClick={() => setForm({ kind: 'edit', account })}
                           >
-                            {isMe ? 'Change password' : 'Reset password'}
+                            {isMe ? 'Edit my account' : 'Edit account'}
                           </button>
                         )}
-                        {!account.builtIn && !isMe && (
+                        {canEdit && !account.builtIn && !isMe && (
                           <>
                             <button
                               className="cashier-view-button"
@@ -190,7 +191,11 @@ export function StaffAccounts() {
           <span>
             {admins.length} administrator{admins.length === 1 ? '' : 's'}
           </span>
-          <span>The owner account cannot be disabled or removed.</span>
+          <span>
+            {me?.builtIn
+              ? 'The owner account cannot be disabled or removed.'
+              : 'Only the owner can change other administrators.'}
+          </span>
         </div>
       </section>
 
@@ -210,20 +215,19 @@ export function StaffAccounts() {
           }}
         />
       )}
-      {form?.kind === 'reset' && (
-        <AccountFormModal
-          title={
-            form.account.id === me?.id
-              ? 'Change your password'
-              : `Reset ${labelOf(form.account)} password`
-          }
-          resetFor={form.account}
+      {form?.kind === 'edit' && (
+        <EditAccountModal
+          account={form.account}
+          isSelf={form.account.id === me?.id}
           onClose={() => setForm(null)}
-          onSubmit={async ({ password }) => {
-            await resetPassword(form.account.id, password);
+          onSubmit={async (changes) => {
+            await updateAccount(form.account.id, changes);
             refresh();
             setForm(null);
-            showToast('Password updated.', 'success');
+            showToast(
+              changes.password ? 'Account and password updated.' : 'Account updated.',
+              'success',
+            );
           }}
         />
       )}
@@ -248,13 +252,11 @@ type FormValues = { username: string; displayName: string; password: string };
 function AccountFormModal({
   title,
   role,
-  resetFor,
   onClose,
   onSubmit,
 }: {
   title: string;
-  role?: AccountRole;
-  resetFor?: Account;
+  role: AccountRole;
   onClose: () => void;
   onSubmit: (values: FormValues) => Promise<void>;
 }) {
@@ -264,7 +266,6 @@ function AccountFormModal({
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const isReset = Boolean(resetFor);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -289,13 +290,11 @@ function AccountFormModal({
         </button>
         <h2>{title}</h2>
         <p className="inventory-form-note">
-          {isReset
-            ? `Signs in as ${resetFor?.username}. Share the new password in person.`
-            : role === 'CASHIER'
-              ? 'Every cashier will log in with this username and password.'
-              : 'No email needed. Give the username and password to the new administrator.'}
+          {role === 'CASHIER'
+            ? 'Every cashier will log in with this username and password.'
+            : 'No email needed. Give the username and password to the new administrator.'}
         </p>
-        {!isReset && role === 'ADMIN' && (
+        {role === 'ADMIN' && (
           <label>
             Full name
             <input
@@ -310,28 +309,25 @@ function AccountFormModal({
             />
           </label>
         )}
-        {!isReset && (
-          <label>
-            Username
-            <input
-              required
-              autoFocus={role === 'CASHIER'}
-              autoCapitalize="none"
-              autoComplete="off"
-              spellCheck={false}
-              value={username}
-              onChange={(event) => {
-                setUsername(event.target.value.toLowerCase());
-                setError('');
-              }}
-            />
-          </label>
-        )}
         <label>
-          {isReset ? 'New password' : 'Password'}
+          Username
+          <input
+            required
+            autoFocus={role === 'CASHIER'}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            value={username}
+            onChange={(event) => {
+              setUsername(event.target.value.toLowerCase());
+              setError('');
+            }}
+          />
+        </label>
+        <label>
+          Password
           <PasswordInput
             required
-            autoFocus={isReset}
             autoComplete="new-password"
             minLength={MIN_PASSWORD_LENGTH}
             value={password}
@@ -359,7 +355,123 @@ function AccountFormModal({
           </p>
         )}
         <button className="pos-checkout-button" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : isReset ? 'Save new password' : 'Create account'}
+          {saving ? 'Saving…' : 'Create account'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function EditAccountModal({
+  account,
+  isSelf,
+  onClose,
+  onSubmit,
+}: {
+  account: Account;
+  isSelf: boolean;
+  onClose: () => void;
+  onSubmit: (changes: { username: string; displayName: string; password: string }) => Promise<void>;
+}) {
+  const isCashier = account.role === 'CASHIER';
+  const [displayName, setDisplayName] = useState(account.displayName);
+  const [username, setUsername] = useState(account.username);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (password !== confirm) {
+      setError('The two passwords do not match.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSubmit({ username, displayName, password });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not save the account.');
+      setSaving(false);
+    }
+  }
+
+  const title = isCashier
+    ? 'Edit cashier account'
+    : isSelf
+      ? 'Edit my account'
+      : `Edit ${account.displayName}`;
+
+  return (
+    <div className="pos-modal-backdrop">
+      <form className="pos-payment-modal" onSubmit={submit} noValidate>
+        <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close form">
+          ×
+        </button>
+        <h2>{title}</h2>
+        <p className="inventory-form-note">
+          {isCashier
+            ? 'Only administrators can change the cashier login. Tell your cashiers the new details.'
+            : 'Leave the password fields empty to keep the current password.'}
+        </p>
+        {!isCashier && (
+          <label>
+            Full name
+            <input
+              required
+              autoComplete="off"
+              value={displayName}
+              onChange={(event) => {
+                setDisplayName(event.target.value);
+                setError('');
+              }}
+            />
+          </label>
+        )}
+        <label>
+          Username
+          <input
+            required
+            autoFocus
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            value={username}
+            onChange={(event) => {
+              setUsername(event.target.value.toLowerCase());
+              setError('');
+            }}
+          />
+        </label>
+        <label>
+          New password (optional)
+          <PasswordInput
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setError('');
+            }}
+          />
+        </label>
+        <label>
+          Confirm new password
+          <PasswordInput
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(event) => {
+              setConfirm(event.target.value);
+              setError('');
+            }}
+          />
+        </label>
+        {error && (
+          <p className="pos-notice" role="alert">
+            {error}
+          </p>
+        )}
+        <button className="pos-checkout-button" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
     </div>

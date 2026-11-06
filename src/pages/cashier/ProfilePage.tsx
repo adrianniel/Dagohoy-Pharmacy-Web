@@ -36,7 +36,9 @@ export function CashierProfilePage() {
             </div>
             <div>
               <dt>Password</dt>
-              <dd>{isCashier ? 'Reset by the owner' : 'Change in Staff accounts'}</dd>
+              <dd>
+                {isCashier ? 'Changed by an administrator' : 'Change in Staff, Edit my account'}
+              </dd>
             </div>
           </dl>
         </section>

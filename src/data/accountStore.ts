@@ -72,9 +72,12 @@ export function loadAccounts(): Account[] {
   }
   const others = stored.filter((account) => account.id !== OWNER_ACCOUNT.id);
   const storedOwner = stored.find((account) => account.id === OWNER_ACCOUNT.id);
-  // The owner always exists and stays active; only its password may change.
-  const owner = {
+  // The owner always exists and stays an active administrator; only its name,
+  // username and password may change.
+  const owner: Account = {
     ...OWNER_ACCOUNT,
+    username: storedOwner?.username ?? OWNER_ACCOUNT.username,
+    displayName: storedOwner?.displayName ?? OWNER_ACCOUNT.displayName,
     passwordHash: storedOwner?.passwordHash ?? OWNER_ACCOUNT.passwordHash,
   };
   return [owner, ...others];
@@ -146,7 +149,7 @@ export function validateDraft(draft: AccountDraft, accounts = loadAccounts()): s
     return 'That username is already taken.';
   }
   if (draft.role === 'CASHIER' && getCashierAccount(accounts)) {
-    return 'The pharmacy already has its cashier account. Reset its password instead.';
+    return 'The pharmacy already has its cashier account. Edit it instead.';
   }
   if (draft.role === 'ADMIN' && !draft.displayName.trim()) {
     return 'Enter the administrator’s name.';
@@ -174,14 +177,53 @@ export async function createAccount(draft: AccountDraft): Promise<Account> {
   return account;
 }
 
-export async function resetPassword(id: string, password: string): Promise<void> {
-  if (password.length < MIN_PASSWORD_LENGTH) {
+export type AccountChanges = {
+  username: string;
+  displayName: string;
+  /** Leave empty to keep the current password. */
+  password: string;
+};
+
+/**
+ * Who may edit an account: the owner can edit everyone; other administrators
+ * can edit themselves and the cashier account. Cashiers cannot edit accounts.
+ */
+export function canEditAccount(editor: Account | undefined, target: Account): boolean {
+  if (!editor || editor.role !== 'ADMIN') return false;
+  if (editor.builtIn) return true;
+  return target.id === editor.id || target.role === 'CASHIER';
+}
+
+export async function updateAccount(id: string, changes: AccountChanges): Promise<Account> {
+  const accounts = loadAccounts();
+  const target = accounts.find((account) => account.id === id);
+  if (!target) throw new Error('That account no longer exists.');
+  if (!canEditAccount(getCurrentAccount(), target)) {
+    throw new Error('You do not have permission to change this account.');
+  }
+  const username = changes.username.trim().toLowerCase();
+  if (!USERNAME_PATTERN.test(username)) {
+    throw new Error(
+      'Username must be 4–32 characters: lowercase letters, numbers, dots or underscores.',
+    );
+  }
+  if (accounts.some((account) => account.id !== id && account.username === username)) {
+    throw new Error('That username is already taken.');
+  }
+  if (target.role === 'ADMIN' && !changes.displayName.trim()) {
+    throw new Error('Enter the administrator’s name.');
+  }
+  if (changes.password && changes.password.length < MIN_PASSWORD_LENGTH) {
     throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
-  const passwordHash = await hashPassword(password);
-  saveAccounts(
-    loadAccounts().map((account) => (account.id === id ? { ...account, passwordHash } : account)),
-  );
+  const updated: Account = {
+    ...target,
+    username,
+    displayName: target.role === 'ADMIN' ? changes.displayName.trim() : target.displayName,
+    passwordHash: changes.password ? await hashPassword(changes.password) : target.passwordHash,
+  };
+  saveAccounts(accounts.map((account) => (account.id === id ? updated : account)));
+  return updated;
 }
 
 export function setAccountStatus(id: string, status: AccountStatus) {
