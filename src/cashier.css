@@ -3221,6 +3221,7 @@
 .cashier-shift-actions {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
 }
 .cashier-shift-action {
   padding: 0.55rem 1.05rem;
@@ -3246,6 +3247,18 @@
 .cashier-shift-action.is-end:hover {
   background: #fdf1ee;
   box-shadow: 0 6px 14px rgb(207 117 101 / 16%);
+}
+.cashier-shift-action:disabled {
+  border-color: #dfe6e1;
+  background: #f4f7f5;
+  color: #97a49b;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.cashier-shift-action.is-end:disabled {
+  border-color: #e6ddd9;
+  background: #fbf7f5;
+  color: #b9a49c;
 }
 .register-state-action.is-muted {
   padding: 0.55rem 0.9rem;

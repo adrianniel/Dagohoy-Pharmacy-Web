@@ -46,23 +46,24 @@ export function ShiftControls() {
   return (
     <>
       <div className="cashier-shift-actions">
-        {session ? (
-          <button
-            className="cashier-shift-action is-end"
-            type="button"
-            onClick={() => setMode('end')}
-          >
-            End shift
-          </button>
-        ) : (
-          <button
-            className="cashier-shift-action"
-            type="button"
-            onClick={() => setMode('start')}
-          >
-            Start shift
-          </button>
-        )}
+        <button
+          className="cashier-shift-action"
+          type="button"
+          disabled={Boolean(session)}
+          title={session ? 'A shift is already running.' : 'Pick the staff on duty and open the drawer.'}
+          onClick={() => setMode('start')}
+        >
+          Start shift
+        </button>
+        <button
+          className="cashier-shift-action is-end"
+          type="button"
+          disabled={!session}
+          title={session ? 'Count the drawer and hand the shift over.' : 'Start a shift first.'}
+          onClick={() => setMode('end')}
+        >
+          Close shift
+        </button>
       </div>
       {mode === 'start' && <StartShiftModal onClose={() => setMode(null)} />}
       {mode === 'end' && <EndShiftModal onClose={() => setMode(null)} />}
@@ -264,7 +265,7 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
     try {
       const result = endShift(value);
       showToast(
-        `Shift ended · counted ${money(value)}${result ? ` · variance ${money(result.variance)}` : ''}`,
+        `Shift closed · counted ${money(value)}${result ? ` · variance ${money(result.variance)}` : ''}`,
         'success',
       );
       onClose();
@@ -280,7 +281,7 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
           ×
         </button>
         <p className="eyebrow">Cash control</p>
-        <h2>End shift</h2>
+        <h2>Close shift</h2>
         <p className="inventory-form-note">
           Count the drawer, then close the register. The handover is saved for the next shift.
         </p>
@@ -320,7 +321,7 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
           </p>
         )}
         <button className="pos-checkout-button" type="submit">
-          End shift and reconcile
+          Close shift and reconcile
         </button>
       </form>
     </div>,
