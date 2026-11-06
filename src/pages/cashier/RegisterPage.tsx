@@ -1,7 +1,9 @@
 import { FormEvent, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useToast } from '../../components/toast';
 import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
 import { getCurrentAccount } from '../../data/accountStore';
+import { getPreviousShift, recordShift } from '../../data/shiftHistory';
 
 const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
 const SALES_KEY = 'dagohoy_demo_sales';
@@ -33,6 +35,7 @@ export function RegisterPage() {
   // The cashier account is shared, so whoever opens the register types their own name.
   const defaultCashierName = account?.role === 'ADMIN' ? account.displayName : '';
   const { showToast } = useToast();
+  const previousShift = getPreviousShift();
   const cashSales = useMemo(
     () =>
       sales
@@ -67,6 +70,31 @@ export function RegisterPage() {
     showToast('Demo register opened. No live drawer is connected.', 'info');
   }
   function closeSession(counted: number) {
+    if (session) {
+      const closedAt = new Date();
+      const shiftSales = readJson<Sale[]>(SALES_KEY, []).filter((sale) => {
+        const date = new Date(sale.date);
+        return date >= new Date(session.openedAt) && date <= closedAt;
+      });
+      const salesByPayment = shiftSales.reduce<Record<string, number>>((counts, sale) => {
+        counts[sale.payment] = (counts[sale.payment] ?? 0) + 1;
+        return counts;
+      }, {});
+      recordShift({
+        id: crypto.randomUUID(),
+        cashierName: session.cashierName || 'Cashier',
+        openedAt: session.openedAt,
+        closedAt: closedAt.toISOString(),
+        openingFloat: session.openingFloat,
+        salesCount: shiftSales.length,
+        salesByPayment,
+        cashSales,
+        paidIn: cashIn,
+        paidOut: cashOut,
+        expectedCash: expected,
+        countedCash: counted,
+      });
+    }
     setSession(null);
     localStorage.removeItem(REGISTER_SESSION_KEY);
     notifyStoreStatusChange();
@@ -92,6 +120,11 @@ export function RegisterPage() {
               ? `Opened by ${session.cashierName || 'Cashier'} · ${new Date(session.openedAt).toLocaleString('en-PH')}`
               : 'Open the register to begin a shift.'}
           </span>
+          {!session && previousShift && (
+            <Link className="register-previous-link" to="/cashier/shift-report">
+              Review the previous shift ({previousShift.cashierName}) before opening
+            </Link>
+          )}
         </div>
         <div className="register-state-actions">
           {session && <span className="register-demo-label">LOCAL DEMO</span>}

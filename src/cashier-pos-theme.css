@@ -698,6 +698,110 @@
   }
 }
 
+/* Shift report (previous shift handover) */
+.cashier-shell.is-themed :where(.shift-report) {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.cashier-shell.is-themed :where(.shift-report__header) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+}
+
+.cashier-shell.is-themed :where(.shift-report__label) {
+  margin: 0 0 0.2rem;
+  color: var(--cashier-green);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.cashier-shell.is-themed :where(.shift-report__header h3) {
+  margin: 0;
+  color: var(--cashier-green-dark);
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+
+.cashier-shell.is-themed :where(.shift-report__header span) {
+  color: var(--cashier-muted);
+  font-size: 0.9rem;
+}
+
+.cashier-shell.is-themed :where(.shift-variance) {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cashier-shell.is-themed :where(.shift-variance--balanced) {
+  background: #e8f3e5;
+  color: #0e6b42;
+}
+
+.cashier-shell.is-themed :where(.shift-variance--over) {
+  background: #fff4db;
+  color: #946511;
+}
+
+.cashier-shell.is-themed :where(.shift-variance--short) {
+  background: #fbe9e7;
+  color: #a0473b;
+}
+
+.cashier-shell.is-themed :where(.shift-report__lines) {
+  margin: 0;
+  padding: 0.5rem 1.4rem 1.25rem;
+  display: grid;
+}
+
+.cashier-shell.is-themed :where(.shift-report__lines > div) {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--cashier-line);
+}
+
+.cashier-shell.is-themed :where(.shift-report__lines dt) {
+  color: var(--cashier-muted);
+}
+
+.cashier-shell.is-themed :where(.shift-report__lines dd) {
+  margin: 0;
+  color: var(--cashier-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cashier-shell.is-themed :where(.shift-report__total dt, .shift-report__total dd) {
+  color: var(--cashier-green-dark);
+  font-weight: 700;
+}
+
+.cashier-shell.is-themed :where(.shift-report__note) {
+  margin: 0;
+  color: var(--cashier-muted);
+  font-size: 0.88rem;
+}
+
+.cashier-shell.is-themed :where(.shift-report__note a, .register-previous-link) {
+  color: var(--cashier-green);
+  font-weight: 700;
+}
+
+.cashier-shell.is-themed :where(.register-previous-link) {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+}
+
 /* Register */
 .cashier-shell.is-themed :where(.register-state-card) {
   min-height: 84px;

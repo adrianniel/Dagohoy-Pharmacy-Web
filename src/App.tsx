@@ -45,6 +45,11 @@ const RegisterPage = lazy(() =>
 const ExpensesPage = lazy(() =>
   import('./pages/admin/ExpensesPage').then((module) => ({ default: module.ExpensesPage })),
 );
+const ShiftReportPage = lazy(() =>
+  import('./pages/cashier/ShiftReportPage').then((module) => ({
+    default: module.ShiftReportPage,
+  })),
+);
 const CreditPage = lazy(() =>
   import('./pages/admin/CreditPage').then((module) => ({ default: module.CreditPage })),
 );
@@ -80,20 +85,23 @@ export function App() {
             <Route path="register" element={<RegisterPage />} />
             <Route path="products" element={<CashierProductsPage />} />
             <Route path="transactions" element={<CashierTransactionsPage />} />
+            <Route path="shift-report" element={<ShiftReportPage />} />
             <Route path="profile" element={<CashierProfilePage />} />
           </Route>
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<CashierLayout />}>
+          <Route path="/admin" element={<CashierLayout />}>
+            {/* Shared with the cashier account so daily work continues when the owner is away. */}
+            <Route path="products" element={<AdminPage section="products" />} />
+            <Route path="batches" element={<OperationsPage section="batches" />} />
+            <Route path="purchases" element={<OperationsPage section="purchases" />} />
+            <Route path="stock" element={<OperationsPage section="stock" />} />
+            <Route path="suppliers" element={<AdminPage section="suppliers" />} />
+            <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="credits" element={<CreditPage />} />
+            {/* Owner and administrators only: income, staff accounts and pharmacy settings. */}
+            <Route element={<AdminRoute />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminPage section="dashboard" />} />
-              <Route path="products" element={<AdminPage section="products" />} />
-              <Route path="batches" element={<OperationsPage section="batches" />} />
-              <Route path="purchases" element={<OperationsPage section="purchases" />} />
-              <Route path="stock" element={<OperationsPage section="stock" />} />
-              <Route path="suppliers" element={<AdminPage section="suppliers" />} />
               <Route path="reports" element={<AdminPage section="reports" />} />
-              <Route path="expenses" element={<ExpensesPage />} />
-              <Route path="credits" element={<CreditPage />} />
               <Route path="staff" element={<AdminPage section="staff" />} />
               <Route path="settings" element={<AdminPage section="settings" />} />
             </Route>
