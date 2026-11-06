@@ -13,6 +13,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
   const location = useLocation();
   const dialogRef = useRef<HTMLElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
+  const [role, setRole] = useState<'ADMIN' | 'CASHIER'>('CASHIER');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const destination =
@@ -64,13 +65,13 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
     const result = await signIn(
       String(form.get('username') ?? ''),
       String(form.get('password') ?? ''),
+      role,
     );
     setSubmitting(false);
     if (!result.ok) {
       setError(result.message);
       return;
     }
-    const role = result.account.role;
     const target =
       role === 'ADMIN'
         ? destination === '/cashier/dashboard'
@@ -92,7 +93,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
       <section
         aria-labelledby="login-title"
         aria-modal="true"
-        className="auth-card auth-card--modal"
+        className={`auth-card auth-card--modal${role === 'ADMIN' ? ' auth-card--admin' : ''}`}
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
@@ -142,6 +143,37 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             aria-describedby={error ? 'login-error' : undefined}
             onChange={() => setError('')}
           />
+          <fieldset className="login-role-group">
+            <legend>Role</legend>
+            <div className="login-role-options">
+              <label className="login-role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value="CASHIER"
+                  checked={role === 'CASHIER'}
+                  onChange={() => {
+                    setRole('CASHIER');
+                    setError('');
+                  }}
+                />
+                <span>Cashier</span>
+              </label>
+              <label className="login-role-option">
+                <input
+                  type="radio"
+                  name="role"
+                  value="ADMIN"
+                  checked={role === 'ADMIN'}
+                  onChange={() => {
+                    setRole('ADMIN');
+                    setError('');
+                  }}
+                />
+                <span>Administrator</span>
+              </label>
+            </div>
+          </fieldset>
           {error && (
             <p className="login-error" id="login-error" role="alert">
               {error}

@@ -95,12 +95,25 @@ export function getCurrentAccount(): Account | undefined {
 
 export type SignInResult = { ok: true; account: Account } | { ok: false; message: string };
 
-export async function signIn(username: string, password: string): Promise<SignInResult> {
+export async function signIn(
+  username: string,
+  password: string,
+  role: AccountRole,
+): Promise<SignInResult> {
   const normalized = username.trim().toLowerCase();
   const account = loadAccounts().find((item) => item.username === normalized);
   const hash = await hashPassword(password);
   if (!account || account.passwordHash !== hash) {
     return { ok: false, message: 'Incorrect username or password.' };
+  }
+  if (account.role !== role) {
+    return {
+      ok: false,
+      message:
+        account.role === 'ADMIN'
+          ? 'This is an administrator account. Select Administrator to sign in.'
+          : 'This is the cashier account. Select Cashier to sign in.',
+    };
   }
   if (account.status === 'Disabled') {
     return { ok: false, message: 'This account is disabled. Ask the owner to enable it.' };

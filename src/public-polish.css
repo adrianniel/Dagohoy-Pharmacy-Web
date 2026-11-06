@@ -215,6 +215,83 @@
   background: #fff;
 }
 
+.login-role-group {
+  min-width: 0;
+  margin: 0.2rem 0 0.1rem;
+  padding: 0;
+  border: 0;
+}
+
+.login-role-group legend {
+  margin-bottom: 0.4rem;
+  padding: 0;
+  color: #304c3a;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.login-role-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.login-role-option {
+  position: relative;
+  min-height: 48px;
+  padding: 0.5rem 0.7rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid #8fa596;
+  border-radius: 10px;
+  background: #fbfefc;
+  color: #28533f;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 650;
+  text-align: center;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.login-role-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.auth-card--modal .stack .login-role-option input {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  appearance: none;
+}
+
+.auth-card--modal .stack .login-role-option:has(input:checked) {
+  border-color: #176246;
+  background: #176246;
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgb(23 98 70 / 18%);
+}
+
+.login-role-option:has(input:focus-visible) {
+  outline: 3px solid rgb(23 98 70 / 30%);
+  outline-offset: 2px;
+}
+
+.login-role-option:hover:not(:has(input:checked)) {
+  border-color: #8eb7a0;
+  background: #f2f8f4;
+}
+
 .auth-card--modal .stack input[aria-invalid='true'] {
   border-color: #b4412f;
 }
@@ -246,6 +323,83 @@
   font-size: 0.75rem;
   line-height: 1.5;
   text-align: center;
+}
+
+.auth-card.auth-card--modal.auth-card--admin {
+  border-color: #147765;
+  background: #006451;
+  color: #fffdf1;
+}
+
+.auth-card--admin .login-modal-close {
+  border-color: #b8d9cd;
+  background: #fffff0;
+  color: #006451;
+}
+
+.auth-card--admin .login-modal-close:hover {
+  background: #e8f1e7;
+}
+
+.auth-card--admin .login-modal-brand__text strong,
+.auth-card--admin h1,
+.auth-card--admin .stack label,
+.auth-card--admin .login-role-group legend {
+  color: #fffdf1;
+}
+
+.auth-card--admin .login-modal-brand__text > span,
+.auth-card--admin > .muted,
+.auth-card--admin .auth-note {
+  color: #d8e6df;
+}
+
+.auth-card--admin .login-modal-brand img {
+  filter: brightness(0) invert(1);
+}
+
+.auth-card--admin .stack input,
+.auth-card--admin .stack select {
+  border-color: #b8d9cd;
+  background: #fffff8;
+  color: #173b31;
+}
+
+.auth-card--admin .stack input::placeholder {
+  color: #71877c;
+}
+
+.auth-card--admin .login-role-option {
+  border-color: #a9d2c4;
+  background: transparent;
+  color: #f5fff9;
+}
+
+.auth-card--admin .login-role-option:not(:has(input:checked)) {
+  border-color: #fffff0;
+  background: #fffff0;
+  color: #006451;
+}
+
+.auth-card--admin .login-role-option:hover:not(:has(input:checked)) {
+  border-color: #e8f1e7;
+  background: #e8f1e7;
+}
+
+.auth-card--admin .stack .login-role-option:has(input:checked) {
+  border: 2px solid #fffff0;
+  background: var(--landing-green, #176246);
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgb(0 35 27 / 18%);
+}
+
+.auth-card--admin .stack .button {
+  background: #fffff0;
+  color: #006451;
+}
+
+.auth-card--admin .stack .button:hover {
+  background: #e8f1e7;
 }
 
 @keyframes login-overlay-in {
