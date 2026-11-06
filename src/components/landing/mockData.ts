@@ -53,6 +53,7 @@ export const developerProfile = {
   email: 'adrianniel.garig@gmail.com',
   services: ['Web Systems', 'POS Systems', 'Inventory Systems', 'Custom Business Software'],
   contacts: [
+    { label: 'Phone', value: '09381437790', href: 'tel:09381437790' },
     {
       label: 'Email',
       value: 'adrianniel.garig@gmail.com',

@@ -35,6 +35,8 @@ type PharmacySettings = {
   name: string;
   phone: string;
   address: string;
+  email?: string;
+  businessHours?: string;
   threshold: string;
   gcashNumber?: string;
   gcashQrUrl?: string;
@@ -43,6 +45,8 @@ const defaultSettings: PharmacySettings = {
   name: 'Dagohoy Pharmacy',
   phone: '+63 2 8123 4567',
   address: 'Bohol, Philippines',
+  email: '[Pharmacy email]',
+  businessHours: 'Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM',
   threshold: '15',
 };
 function loadLocalList<T>(key: string, initial: T[]): T[] {
@@ -465,6 +469,27 @@ export function AdminPage({ section }: { section: AdminSection }) {
             />
           </label>
           <label>
+            Email
+            <input
+              type="email"
+              value={pharmacySettings.email ?? ''}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, email: event.target.value })
+              }
+              placeholder="[Pharmacy email]"
+            />
+          </label>
+          <label>
+            Business hours
+            <input
+              value={pharmacySettings.businessHours ?? ''}
+              onChange={(event) =>
+                setPharmacySettings({ ...pharmacySettings, businessHours: event.target.value })
+              }
+              placeholder="Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM"
+            />
+          </label>
+          <label>
             Low-stock alert threshold
             <input
               type="number"
@@ -507,6 +532,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
             type="button"
             onClick={() => {
               localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
+              window.dispatchEvent(new Event('pharmacy-settings-changed'));
               showToast('Settings saved in this browser.');
             }}
           >

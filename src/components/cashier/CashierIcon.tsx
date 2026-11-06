@@ -10,7 +10,10 @@ interface CashierIconProps {
     | 'arrow'
     | 'clock'
     | 'cash'
-    | 'phone';
+    | 'phone'
+    | 'mail'
+    | 'map'
+    | 'store';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -40,6 +43,23 @@ export function CashierIcon({ name }: CashierIconProps) {
       <>
         <rect x="9" y="3" width="14" height="26" rx="3" />
         <path d="M13 7h6M16 24.5h.01" />
+      </>
+    ),
+    mail: (
+      <>
+        <rect x="4" y="8" width="24" height="16" rx="2" />
+        <path d="m4 10 12 8 12-8" />
+      </>
+    ),
+    map: (
+      <>
+        <path d="M16 4a7 7 0 0 1 7 7c0 5.25-7 17-7 17S9 16.25 9 11a7 7 0 0 1 7-7z" />
+        <circle cx="16" cy="11" r="2.5" />
+      </>
+    ),
+    store: (
+      <>
+        <path d="M2 6h28v5H2zM4 11h24v16H4zM10 16h4v11h-4zM18 16h4v11h-4z" />
       </>
     ),
     products: (
