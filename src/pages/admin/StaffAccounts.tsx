@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { PasswordInput } from '../../components/PasswordInput';
 import { useToast } from '../../components/toast';
 import {
   type Account,
@@ -328,10 +329,9 @@ function AccountFormModal({
         )}
         <label>
           {isReset ? 'New password' : 'Password'}
-          <input
+          <PasswordInput
             required
             autoFocus={isReset}
-            type="password"
             autoComplete="new-password"
             minLength={MIN_PASSWORD_LENGTH}
             value={password}
@@ -343,9 +343,8 @@ function AccountFormModal({
         </label>
         <label>
           Confirm password
-          <input
+          <PasswordInput
             required
-            type="password"
             autoComplete="new-password"
             value={confirm}
             onChange={(event) => {
