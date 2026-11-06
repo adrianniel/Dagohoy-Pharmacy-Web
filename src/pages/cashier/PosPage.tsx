@@ -446,9 +446,7 @@ export function CashierPosPage() {
           >
             Continue to payment <CashierIcon name="arrow" />
           </button>
-          <p className="pos-demo-disclaimer">
-            Records the sale in this browser and updates stock.
-          </p>
+          <p className="pos-demo-disclaimer">Records the sale in this browser and updates stock.</p>
         </section>
         <aside className="cashier-panel pos-workbench" aria-labelledby="pos-workbench-heading">
           <div className="cashier-panel__heading">
@@ -573,152 +571,154 @@ export function CashierPosPage() {
             ) : (
               <>
                 <p className="eyebrow">Payment</p>
-            <h2>Collect payment</h2>
-            <div className="pos-payment-total">
-              <span>Total due</span>
-              <strong>{formatMoney(totalDue)}</strong>
-            </div>
-            <fieldset className="payment-method-options">
-              <legend className="payment-method-options__legend">Payment method</legend>
-              <div className="payment-method-options__grid">
-                {PAYMENT_METHOD_OPTIONS.map((method) => (
-                  <button
-                    key={method.id}
-                    className={`payment-method-option${
-                      paymentMethod === method.id ? ' is-selected' : ''
-                    }`}
-                    type="button"
-                    aria-pressed={paymentMethod === method.id}
-                    onClick={() => selectPaymentMethod(method.id)}
-                  >
-                    <span className="payment-method-option__icon" aria-hidden="true">
-                      <CashierIcon name={method.icon} />
-                    </span>
-                    <span className="payment-method-option__copy">
-                      <strong>{method.name}</strong>
-                      <small>{method.detail}</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-            {paymentMethod === 'Cash' && (
-              <>
-                <label>
-                  Amount received
-                  <input
-                    autoFocus
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    className="pos-amount-input"
-                    value={tendered}
-                    onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
-                    placeholder="0.00"
-                    required
-                  />
-                </label>
-                <div className="pos-payment-change">
-                  <span>Change</span>
-                  <strong>{formatMoney(change)}</strong>
+                <h2>Collect payment</h2>
+                <div className="pos-payment-total">
+                  <span>Total due</span>
+                  <strong>{formatMoney(totalDue)}</strong>
                 </div>
-              </>
-            )}
-            {paymentMethod === 'Credit' && (
-              <>
-                <label>
-                  Customer name
-                  <input
-                    name="credit-customer"
-                    value={creditCustomer}
-                    onChange={(event) => setCreditCustomer(event.target.value)}
-                    autoComplete="name"
-                    placeholder="Customer name…"
-                    required
-                    autoFocus
-                  />
-                </label>
-                <label>
-                  Amount paid
-                  <input
-                    name="credit-amount-paid"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    className="pos-amount-input"
-                    value={tendered}
-                    onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
-                    placeholder="0.00"
-                    required
-                  />
-                </label>
-                <div className="pos-payment-change pos-payment-change--credit">
-                  <span>Remaining balance</span>
-                  <strong>{formatMoney(creditBalance)}</strong>
-                </div>
-              </>
-            )}
-            {paymentMethod === 'GCash' && (
-              <>
-                <div className="gcash-payment-details">
-                  <div>
-                    <strong>Pay via GCash</strong>
-                    <span>
-                      Ask the customer to send the exact amount. No payment is processed in this
-                      system.
-                    </span>
-                    {gcashDetails.number ? (
-                      <span>
-                        GCash number: <b>{gcashDetails.number}</b>
-                      </span>
-                    ) : (
-                      <span>GCash number not configured. Add it in Owner → Pharmacy settings.</span>
-                    )}
+                <fieldset className="payment-method-options">
+                  <legend className="payment-method-options__legend">Payment method</legend>
+                  <div className="payment-method-options__grid">
+                    {PAYMENT_METHOD_OPTIONS.map((method) => (
+                      <button
+                        key={method.id}
+                        className={`payment-method-option${
+                          paymentMethod === method.id ? ' is-selected' : ''
+                        }`}
+                        type="button"
+                        aria-pressed={paymentMethod === method.id}
+                        onClick={() => selectPaymentMethod(method.id)}
+                      >
+                        <span className="payment-method-option__icon" aria-hidden="true">
+                          <CashierIcon name={method.icon} />
+                        </span>
+                        <span className="payment-method-option__copy">
+                          <strong>{method.name}</strong>
+                          <small>{method.detail}</small>
+                        </span>
+                      </button>
+                    ))}
                   </div>
-                  {gcashDetails.qrUrl && (
-                    <img src={gcashDetails.qrUrl} alt="Pharmacy GCash QR code" />
-                  )}
-                </div>
-                <label>
-                  GCash reference number
-                  <input
-                    value={gcashReference}
-                    onChange={(event) => setGcashReference(event.target.value)}
-                    placeholder="Enter transaction reference number"
-                    required
-                  />
-                </label>
-                <label className="gcash-paid-check">
-                  <input
-                    type="checkbox"
-                    checked={gcashPaid}
-                    onChange={(event) => setGcashPaid(event.target.checked)}
-                  />
-                  I manually verified this GCash payment as received
-                </label>
-                <div className={`gcash-manual-status${gcashPaid ? ' is-paid' : ''}`}>
-                  Manual payment status:{' '}
-                  <strong>{gcashPaid ? 'Paid' : 'Unpaid / pending verification'}</strong>
-                </div>
-              </>
-            )}
-            <button
-              className="pos-checkout-button pos-complete-button"
-              type="submit"
-              disabled={
-                (paymentMethod === 'Cash' && Number(tendered) < totalDue) ||
-                (paymentMethod === 'Credit' &&
-                  (!creditCustomer.trim() ||
-                    Number(tendered) < 0 ||
-                    Number(tendered) > totalDue)) ||
-                (paymentMethod === 'GCash' && !gcashReference.trim())
-              }
-            >
-              Complete transaction
-            </button>
-            <p className="pos-demo-disclaimer">
-              Saving records this sale in this browser and updates stock.
-            </p>
+                </fieldset>
+                {paymentMethod === 'Cash' && (
+                  <>
+                    <label>
+                      Amount received
+                      <input
+                        autoFocus
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        className="pos-amount-input"
+                        value={tendered}
+                        onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
+                        placeholder="0.00"
+                        required
+                      />
+                    </label>
+                    <div className="pos-payment-change">
+                      <span>Change</span>
+                      <strong>{formatMoney(change)}</strong>
+                    </div>
+                  </>
+                )}
+                {paymentMethod === 'Credit' && (
+                  <>
+                    <label>
+                      Customer name
+                      <input
+                        name="credit-customer"
+                        value={creditCustomer}
+                        onChange={(event) => setCreditCustomer(event.target.value)}
+                        autoComplete="name"
+                        placeholder="Customer name…"
+                        required
+                        autoFocus
+                      />
+                    </label>
+                    <label>
+                      Amount paid
+                      <input
+                        name="credit-amount-paid"
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        className="pos-amount-input"
+                        value={tendered}
+                        onChange={(event) => setTendered(sanitizeMoneyInput(event.target.value))}
+                        placeholder="0.00"
+                        required
+                      />
+                    </label>
+                    <div className="pos-payment-change pos-payment-change--credit">
+                      <span>Remaining balance</span>
+                      <strong>{formatMoney(creditBalance)}</strong>
+                    </div>
+                  </>
+                )}
+                {paymentMethod === 'GCash' && (
+                  <>
+                    <div className="gcash-payment-details">
+                      <div>
+                        <strong>Pay via GCash</strong>
+                        <span>
+                          Ask the customer to send the exact amount. No payment is processed in this
+                          system.
+                        </span>
+                        {gcashDetails.number ? (
+                          <span>
+                            GCash number: <b>{gcashDetails.number}</b>
+                          </span>
+                        ) : (
+                          <span>
+                            GCash number not configured. Add it in Owner → Pharmacy settings.
+                          </span>
+                        )}
+                      </div>
+                      {gcashDetails.qrUrl && (
+                        <img src={gcashDetails.qrUrl} alt="Pharmacy GCash QR code" />
+                      )}
+                    </div>
+                    <label>
+                      GCash reference number
+                      <input
+                        value={gcashReference}
+                        onChange={(event) => setGcashReference(event.target.value)}
+                        placeholder="Enter transaction reference number"
+                        required
+                      />
+                    </label>
+                    <label className="gcash-paid-check">
+                      <input
+                        type="checkbox"
+                        checked={gcashPaid}
+                        onChange={(event) => setGcashPaid(event.target.checked)}
+                      />
+                      I manually verified this GCash payment as received
+                    </label>
+                    <div className={`gcash-manual-status${gcashPaid ? ' is-paid' : ''}`}>
+                      Manual payment status:{' '}
+                      <strong>{gcashPaid ? 'Paid' : 'Unpaid / pending verification'}</strong>
+                    </div>
+                  </>
+                )}
+                <button
+                  className="pos-checkout-button pos-complete-button"
+                  type="submit"
+                  disabled={
+                    (paymentMethod === 'Cash' && Number(tendered) < totalDue) ||
+                    (paymentMethod === 'Credit' &&
+                      (!creditCustomer.trim() ||
+                        Number(tendered) < 0 ||
+                        Number(tendered) > totalDue)) ||
+                    (paymentMethod === 'GCash' && !gcashReference.trim())
+                  }
+                >
+                  Complete transaction
+                </button>
+                <p className="pos-demo-disclaimer">
+                  Saving records this sale in this browser and updates stock.
+                </p>
               </>
             )}
           </form>
@@ -754,6 +754,22 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
         <p className="pos-sale-complete__note">
           {sale.payment} · {formatMoney(sale.total)}
         </p>
+      </div>
+      <div className="pos-receipt-preview__toolbar">
+        <button
+          className="pos-receipt-preview__action pos-receipt-preview__action--print"
+          type="button"
+          onClick={() => window.print()}
+        >
+          Print receipt
+        </button>
+        <button
+          className="pos-receipt-preview__action pos-receipt-preview__action--close"
+          type="button"
+          onClick={onDone}
+        >
+          Close
+        </button>
       </div>
       <div className="pos-receipt-preview">
         <div className="pos-receipt-preview__head">
@@ -849,9 +865,6 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
           Served by {sale.cashier}. Thank you. Keep this receipt for your records.
         </p>
       </div>
-      <button className="pos-checkout-button" type="button" onClick={onDone}>
-        New sale
-      </button>
     </div>
   );
 }

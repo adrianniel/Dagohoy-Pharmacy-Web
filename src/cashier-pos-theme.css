@@ -2604,15 +2604,56 @@
   }
 }
 
+.pos-receipt-preview__toolbar {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: stretch;
+}
+
+.pos-receipt-preview__action {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid #dce3d0;
+  border-radius: 10px;
+  background: #fffefa;
+  color: var(--pos-green-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.pos-receipt-preview__action--print {
+  border-color: var(--pos-green);
+  background: linear-gradient(145deg, var(--pos-green-bright), var(--pos-green));
+  color: #fffdf1;
+}
+
+.pos-receipt-preview__action--print:hover {
+  background: linear-gradient(145deg, #09836b, #005344);
+}
+
+.pos-receipt-preview__action--close:hover {
+  background: #edf4ef;
+}
+
 /* Receipt preview, revealed after the success animation */
 .pos-receipt-preview {
   display: grid;
-  gap: 0.85rem;
-  padding: 1.25rem 1.25rem 1.1rem;
-  border: 1px dashed #cdd8c4;
-  border-radius: 18px;
-  background: #fffefa;
+  gap: 0.65rem;
+  width: min(100%, 320px);
+  margin: 0 auto;
+  padding: 1rem 0.95rem 0.9rem;
+  border: 1px dashed #9fa89a;
+  border-radius: 2px;
+  background: #fff;
+  color: #111;
+  font-family: 'Courier New', Consolas, ui-monospace, monospace;
   text-align: left;
+  box-shadow: none;
   opacity: 0;
   transform: translateY(12px);
   transition:
@@ -2634,22 +2675,23 @@
 }
 
 .pos-receipt-preview__head strong {
-  font-size: 1.02rem;
-  color: #176246;
+  font-size: 1rem;
+  color: #111;
+  font-weight: 700;
 }
 
 .pos-receipt-preview__head span {
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.68;
+  opacity: 0.7;
 }
 
 .pos-receipt-preview__meta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem 1rem;
-  font-size: 0.8rem;
+  gap: 0.45rem 0.8rem;
+  font-size: 0.78rem;
 }
 
 .pos-receipt-preview__meta > div,
@@ -2686,7 +2728,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.9rem;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
 }
 
 .pos-receipt-preview__lines li > div {
@@ -2695,7 +2737,7 @@
 }
 
 .pos-receipt-preview__lines li small {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   opacity: 0.7;
 }
 
@@ -2706,26 +2748,26 @@
 
 .pos-receipt-preview__totals {
   display: grid;
-  gap: 0.45rem;
-  font-size: 0.86rem;
+  gap: 0.35rem;
+  font-size: 0.8rem;
 }
 
 .pos-receipt-preview__totals .is-total {
   margin-top: 0.15rem;
   padding-top: 0.55rem;
   border-top: 1px solid #e4ebdd;
-  font-size: 1rem;
+  font-size: 0.86rem;
 }
 
 .pos-receipt-preview__totals .is-total strong {
-  color: #176246;
-  font-size: 1.22rem;
+  color: #111;
+  font-size: 1.08rem;
 }
 
 .pos-receipt-preview__thanks {
   margin: 0;
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   opacity: 0.72;
 }
 
@@ -2753,6 +2795,53 @@
 
   .pos-receipt-preview__meta {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .pos-receipt-preview,
+  .pos-receipt-preview * {
+    visibility: visible;
+  }
+
+  .pos-receipt-preview {
+    position: fixed;
+    inset: 0;
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0 auto;
+    padding: 4mm 3mm;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', Consolas, ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    box-shadow: none;
+  }
+
+  .pos-receipt-preview__toolbar {
+    display: none !important;
+  }
+
+  .pos-receipt-preview__lines {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .pos-receipt-preview__head strong,
+  .pos-receipt-preview__totals .is-total strong {
+    color: #000;
   }
 }
 
