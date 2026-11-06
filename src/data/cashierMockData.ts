@@ -1,6 +1,6 @@
 export const dashboardSummary = [
   { label: "Today's Transactions", value: '24', detail: 'Since 8:00 AM', tone: 'neutral' },
-  { label: "Today's Sales", value: '₱18,460.50', detail: 'Mock total', tone: 'green' },
+  // Sales totals are intentionally left out: income stays in the owner's Reports.
   { label: 'Current Shift', value: 'Morning', detail: '8:00 AM – 4:00 PM', tone: 'neutral' },
   { label: 'Register Status', value: 'Open', detail: 'Register 01', tone: 'success' },
 ];

@@ -329,6 +329,10 @@
   margin-bottom: 1.2rem;
 }
 
+.cashier-shell.is-themed .cashier-summary-grid--three {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
 .cashier-shell.is-themed :where(.cashier-summary-card) {
   min-height: 148px;
   padding: 1.35rem 1.4rem;

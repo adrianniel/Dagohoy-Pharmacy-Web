@@ -51,7 +51,10 @@ export function CashierDashboardPage() {
           Open POS <CashierIcon name="arrow" />
         </Link>
       </div>
-      <section className="cashier-summary-grid" aria-label="Today's cashier summary">
+      <section
+        className="cashier-summary-grid cashier-summary-grid--three"
+        aria-label="Today's cashier summary"
+      >
         {dashboardSummary.map((summary) => (
           <article
             className={`cashier-summary-card cashier-summary-card--${summary.tone}`}
