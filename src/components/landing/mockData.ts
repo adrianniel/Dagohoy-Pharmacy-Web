@@ -64,7 +64,5 @@ export const developerProfile = {
       value: 'facebook.com/niel.adrn',
       href: 'https://www.facebook.com/niel.adrn',
     },
-    { label: 'Portfolio', value: '[Portfolio link]', href: '#' },
-    { label: 'GitHub', value: 'github.com/adrianniel', href: 'https://github.com/adrianniel' },
   ],
 };

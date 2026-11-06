@@ -100,15 +100,6 @@ export function ContactSection() {
             </div>
           </header>
           <div className="contact-card__rows">
-            <div className="contact-row">
-              <span className="contact-row__icon" aria-hidden="true">
-                <CashierIcon name="profile" />
-              </span>
-              <div className="contact-row__content">
-                <span className="contact-row__label">Developer</span>
-                <span className="contact-row__value">{developerProfile.name}</span>
-              </div>
-            </div>
             {developerProfile.contacts.map((contact) => (
               <div className="contact-row" key={contact.label}>
                 <span className="contact-row__icon" aria-hidden="true">
