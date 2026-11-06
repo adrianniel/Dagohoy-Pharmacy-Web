@@ -673,9 +673,9 @@ html:has(.landing-page) {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .landing-page .business-starfield__layer {
-    animation: none;
+@media (max-width: 850px) {
+  .landing-page .contact-section {
+    margin-inline: 0;
   }
 }
 
@@ -4350,5 +4350,11 @@ html:has(.landing-page) {
 @media (max-width: 700px) {
   .landing-page {
     --landing-nav-height: 102px;
+  }
+}
+
+@media (max-width: 850px) {
+  .landing-page .contact-section {
+    margin-inline: 0;
   }
 }
