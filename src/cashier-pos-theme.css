@@ -2810,7 +2810,7 @@
 
   .pos-receipt-preview,
   .pos-receipt-preview * {
-    visibility: visible;
+    visibility: visible !important;
   }
 
   .pos-receipt-preview {
@@ -2828,6 +2828,9 @@
     font-size: 11px;
     line-height: 1.35;
     box-shadow: none;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 
   .pos-receipt-preview__toolbar {
