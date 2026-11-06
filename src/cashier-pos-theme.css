@@ -2636,8 +2636,14 @@
   background: linear-gradient(145deg, #09836b, #005344);
 }
 
+.pos-receipt-preview__action--close {
+  border-color: var(--pos-green);
+  color: var(--pos-green);
+}
+
 .pos-receipt-preview__action--close:hover {
   background: #edf4ef;
+  border-color: var(--pos-green-bright);
 }
 
 /* Receipt preview, revealed after the success animation */
