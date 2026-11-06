@@ -3247,6 +3247,25 @@
   background: #fdf1ee;
   box-shadow: 0 6px 14px rgb(207 117 101 / 16%);
 }
+.register-state-action.is-muted {
+  padding: 0.55rem 0.9rem;
+  border: 1px dashed #cfd8d2;
+  border-radius: 9px;
+  background: #f6f8f7;
+  color: #7c8981;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: default;
+}
+.register-float-note {
+  margin: 0.2rem 0 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid #176246;
+  border-radius: 8px;
+  background: #f2f8f4;
+  color: #47584e;
+  font-size: 0.78rem;
+}
 .cashier-shift-modal {
   width: min(560px, calc(100vw - 2rem));
 }

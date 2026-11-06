@@ -1,153 +1,109 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../../components/toast';
-import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
-import { getCurrentAccount } from '../../data/accountStore';
-import { getPreviousShift, recordShift } from '../../data/shiftHistory';
+import {
+  addCashEvent,
+  endShift,
+  getCashEvents,
+  getSession,
+  getShiftTotals,
+  STORE_STATUS_CHANGE_EVENT,
+} from '../../data/registerSession';
+import { getPreviousShift } from '../../data/shiftHistory';
 
-const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
-const SALES_KEY = 'dagohoy_demo_sales';
-type Session = { openedAt: string; openingFloat: number; cashierName?: string } | null;
-type CashEvent = {
-  id: string;
-  type: 'Paid in' | 'Paid out';
-  amount: number;
-  reason: string;
-  date: string;
-};
-type Sale = { payment: string; total: number; date: string };
+type MovementType = 'Paid in' | 'Paid out';
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
-const readJson = <T,>(key: string, fallback: T): T => {
-  try {
-    return JSON.parse(localStorage.getItem(key) ?? 'null') ?? fallback;
-  } catch {
-    return fallback;
-  }
-};
 
+/*
+ * The Cash drawer page is the record of the open shift: the float, cash sales
+ * and non-sale cash movements. The shift itself is started and ended from the
+ * top bar, so this page no longer opens a register of its own.
+ */
 export function RegisterPage() {
-  const [session, setSession] = useState<Session>(() => readJson(REGISTER_SESSION_KEY, null));
-  const [events, setEvents] = useState<CashEvent[]>(() => readJson(CASH_EVENTS_KEY, []));
-  const [sales] = useState<Sale[]>(() => readJson(SALES_KEY, []));
-  const [mode, setMode] = useState<'open' | 'movement' | 'close' | null>(null);
-  const account = getCurrentAccount();
-  // The cashier account is shared, so whoever opens the register types their own name.
-  const defaultCashierName = account?.role === 'ADMIN' ? account.displayName : '';
+  const session = getSession();
+  const [, refresh] = useReducer((count: number) => count + 1, 0);
+  const [mode, setMode] = useState<'movement' | 'close' | null>(null);
   const { showToast } = useToast();
   const previousShift = getPreviousShift();
-  const cashSales = useMemo(
-    () =>
-      sales
-        .filter(
-          (sale) =>
-            sale.payment === 'Cash' && session && new Date(sale.date) >= new Date(session.openedAt),
-        )
-        .reduce((sum, sale) => sum + sale.total, 0),
-    [sales, session],
-  );
-  const cashIn = events
-    .filter((event) => event.type === 'Paid in')
-    .reduce((sum, event) => sum + event.amount, 0);
-  const cashOut = events
-    .filter((event) => event.type === 'Paid out')
-    .reduce((sum, event) => sum + event.amount, 0);
-  const expected = (session?.openingFloat ?? 0) + cashSales + cashIn - cashOut;
+  const events = getCashEvents();
+  const totals = getShiftTotals(session);
 
-  function saveEvent(event: CashEvent) {
-    const next = [event, ...events];
-    setEvents(next);
-    localStorage.setItem(CASH_EVENTS_KEY, JSON.stringify(next));
-    setMode(null);
-    showToast(`${event.type} recorded in the local demo register.`);
-  }
-  function openSession(float: number, cashierName: string) {
-    const next = { openingFloat: float, openedAt: new Date().toISOString(), cashierName };
-    setSession(next);
-    localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(next));
-    notifyStoreStatusChange();
-    setMode(null);
-    showToast('Demo register opened. No live drawer is connected.', 'info');
-  }
+  useEffect(() => {
+    const sync = () => refresh();
+    window.addEventListener(STORE_STATUS_CHANGE_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(STORE_STATUS_CHANGE_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+
   function closeSession(counted: number) {
-    if (session) {
-      const closedAt = new Date();
-      const shiftSales = readJson<Sale[]>(SALES_KEY, []).filter((sale) => {
-        const date = new Date(sale.date);
-        return date >= new Date(session.openedAt) && date <= closedAt;
-      });
-      const salesByPayment = shiftSales.reduce<Record<string, number>>((counts, sale) => {
-        counts[sale.payment] = (counts[sale.payment] ?? 0) + 1;
-        return counts;
-      }, {});
-      recordShift({
-        id: crypto.randomUUID(),
-        cashierName: session.cashierName || 'Cashier',
-        openedAt: session.openedAt,
-        closedAt: closedAt.toISOString(),
-        openingFloat: session.openingFloat,
-        salesCount: shiftSales.length,
-        salesByPayment,
-        cashSales,
-        paidIn: cashIn,
-        paidOut: cashOut,
-        expectedCash: expected,
-        countedCash: counted,
-      });
-    }
-    setSession(null);
-    localStorage.removeItem(REGISTER_SESSION_KEY);
-    notifyStoreStatusChange();
-    setEvents([]);
-    localStorage.removeItem(CASH_EVENTS_KEY);
+    const result = endShift(counted);
     setMode(null);
     showToast(
-      `Demo register closed. Expected ${money(expected)} · counted ${money(counted)} · variance ${money(counted - expected)}.`,
+      result
+        ? `Shift closed. Expected ${money(result.expected)} · counted ${money(counted)} · variance ${money(result.variance)}.`
+        : 'The shift was already closed.',
+      'success',
     );
   }
 
   return (
     <div className="cashier-page">
-      <div className="operations-demo-banner">
-        Demo register · cash activity and reconciliation are stored in this browser only.
-      </div>
-      <div className="register-state-card">
+      <div className={`register-state-card${session ? ' is-open' : ''}`}>
         <span className={`register-state-light${session ? ' is-open' : ''}`} />
         <div>
           <strong>{session ? 'Register open' : 'Register closed'}</strong>
           <span>
             {session
-              ? `Opened by ${session.cashierName || 'Cashier'} · ${new Date(session.openedAt).toLocaleString('en-PH')}`
-              : 'Open the register to begin a shift.'}
+              ? `Start of shift ${new Date(session.openedAt).toLocaleString('en-PH')} · ${
+                  (session.onDutyNames ?? [session.cashierName]).join(', ')
+                } on duty`
+              : 'Start a shift from the top bar to open the register.'}
           </span>
           {!session && previousShift && (
             <Link className="register-previous-link" to="/cashier/shift-report">
-              Review the previous shift ({previousShift.cashierName}) before opening
+              Review the previous shift ({previousShift.cashierName}) before starting
             </Link>
           )}
         </div>
         <div className="register-state-actions">
-          {session && <span className="register-demo-label">LOCAL DEMO</span>}
-          <button
-            className="cashier-primary-action register-state-action"
-            type="button"
-            onClick={() => setMode(session ? 'close' : 'open')}
-          >
-            {session ? 'Close register' : 'Open register'}
-          </button>
+          {session ? (
+            <button
+              className="cashier-primary-action register-state-action"
+              type="button"
+              onClick={() => setMode('close')}
+            >
+              Close register
+            </button>
+          ) : (
+            <span className="cashier-view-button register-state-action is-muted">
+              Use Start shift in the top bar
+            </span>
+          )}
         </div>
       </div>
       <div className="cashier-summary-grid">
         <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />
-        <RegisterStat label="Cash sales" value={money(cashSales)} />
-        <RegisterStat label="Paid in / out" value={`${money(cashIn)} / ${money(cashOut)}`} />
-        <RegisterStat label="Expected in drawer" value={money(expected)} />
+        <RegisterStat label="Cash sales" value={money(totals.cashSales)} />
+        <RegisterStat
+          label="Paid in / out"
+          value={`${money(totals.paidIn)} / ${money(totals.paidOut)}`}
+        />
+        <RegisterStat label="Expected in drawer" value={money(totals.expected)} />
       </div>
+      {session?.floatAdjustment && (
+        <p className="register-float-note">
+          Float adjusted from {money(session.floatAdjustment.carriedOver)} — reason: “{session.floatAdjustment.reason}”
+        </p>
+      )}
       <div className="cashier-panel register-activity-panel">
         <div className="cashier-panel__heading">
           <div>
             <h3>Cash movements</h3>
-            <p>Non-sale cash movements associated with this register session.</p>
+            <p>Non-sale cash movements associated with this shift.</p>
           </div>
           <div className="register-actions">
             <button
@@ -196,17 +152,19 @@ export function RegisterPage() {
             </table>
           </div>
         ) : (
-          <p className="register-empty">No cash movements for this demo session yet.</p>
+          <p className="register-empty">No cash movements for this shift yet.</p>
         )}
       </div>
       {mode && (
         <RegisterModal
           mode={mode}
-          expected={expected}
-          defaultCashierName={defaultCashierName}
+          expected={totals.expected}
           onClose={() => setMode(null)}
-          onOpen={openSession}
-          onEvent={saveEvent}
+          onEvent={(event) => {
+            addCashEvent(event);
+            setMode(null);
+            showToast(`${event.type} recorded.`, 'success');
+          }}
           onCloseSession={closeSession}
         />
       )}
@@ -219,7 +177,7 @@ function RegisterStat({ label, value }: { label: string; value: string }) {
     <article className="cashier-summary-card">
       <p>{label}</p>
       <strong>{value}</strong>
-      <span>Demo register totals</span>
+      <span>This shift</span>
     </article>
   );
 }
@@ -227,79 +185,80 @@ function RegisterStat({ label, value }: { label: string; value: string }) {
 function RegisterModal({
   mode,
   expected,
-  defaultCashierName,
   onClose,
-  onOpen,
   onEvent,
   onCloseSession,
 }: {
-  mode: 'open' | 'movement' | 'close';
+  mode: 'movement' | 'close';
   expected: number;
-  defaultCashierName: string;
   onClose: () => void;
-  onOpen: (float: number, cashierName: string) => void;
-  onEvent: (event: CashEvent) => void;
+  onEvent: (event: {
+    id: string;
+    type: MovementType;
+    amount: number;
+    reason: string;
+    date: string;
+  }) => void;
   onCloseSession: (counted: number) => void;
 }) {
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'Paid in' | 'Paid out'>('Paid out');
+  const [type, setType] = useState<MovementType>('Paid out');
   const [reason, setReason] = useState('');
-  const [cashierName, setCashierName] = useState(defaultCashierName);
+  const [error, setError] = useState('');
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const value = Number(amount);
-    if (mode === 'open') onOpen(value, cashierName.trim());
-    else if (mode === 'close') onCloseSession(value);
-    else
-      onEvent({
-        id: `CASH-${Date.now()}`,
-        type,
-        amount: value,
-        reason,
-        date: new Date().toISOString(),
-      });
+    const value = Number(amount || 0);
+    if (mode === 'close') {
+      if (!amount.trim()) {
+        setError('Enter the cash you counted in the drawer.');
+        return;
+      }
+      onCloseSession(value);
+      return;
+    }
+    if (!reason.trim()) {
+      setError('Type the reason for this cash movement.');
+      return;
+    }
+    onEvent({
+      id: `CASH-${Date.now()}`,
+      type,
+      amount: value,
+      reason: reason.trim(),
+      date: new Date().toISOString(),
+    });
   }
-  const title =
-    mode === 'open'
-      ? 'Open register'
-      : mode === 'close'
-        ? 'Close register & reconcile'
-        : 'Record cash movement';
+
   return (
     <div className="pos-modal-backdrop">
-      <form className="pos-payment-modal" onSubmit={submit}>
-        <button
-          className="pos-modal-close"
-          type="button"
-          onClick={onClose}
-          aria-label="Close dialog"
-        >
+      <form className="pos-payment-modal" onSubmit={submit} noValidate>
+        <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
-        <p className="eyebrow">Cash control · demo</p>
-        <h2>{title}</h2>
+        <p className="eyebrow">Cash control</p>
+        <h2>{mode === 'close' ? 'Close register' : 'Record cash movement'}</h2>
+        <p className="inventory-form-note">
+          {mode === 'close'
+            ? 'Count the drawer, then close the shift. The handover is saved for the next shift.'
+            : 'Cash taken out of or put into the drawer that is not a sale.'}
+        </p>
         {mode === 'close' && (
           <div className="pos-payment-total">
             <span>Expected cash</span>
             <strong>{money(expected)}</strong>
           </div>
         )}
-        {mode === 'open' && (
-          <label>
-            Your name (cashier on this shift)
-            <input
-              required
-              autoFocus
-              value={cashierName}
-              onChange={(event) => setCashierName(event.target.value)}
-              placeholder="e.g. Maria Dela Cruz"
-            />
-          </label>
-        )}
         {mode === 'movement' && (
           <label>
             Movement type
-            <select value={type} onChange={(event) => setType(event.target.value as typeof type)}>
+            <select
+              value={type}
+              onChange={(event) => {
+                setType(event.target.value as MovementType);
+                setError('');
+              }}
+            >
               <option>Paid out</option>
               <option>Paid in</option>
             </select>
@@ -309,32 +268,35 @@ function RegisterModal({
           <label>
             Reason
             <input
-              required
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) => {
+                setReason(event.target.value);
+                setError('');
+              }}
               placeholder="e.g. Petty cash"
             />
           </label>
         )}
         <label>
-          {mode === 'open' ? 'Opening float' : mode === 'close' ? 'Counted cash' : 'Amount'}
+          {mode === 'close' ? 'Counted cash' : 'Amount'}
           <input
-            type="number"
-            min="0"
-            step="0.01"
-            required
-            autoFocus={mode !== 'open'}
+            inputMode="decimal"
+            autoFocus
             value={amount}
-            onChange={(event) => setAmount(event.target.value)}
+            onChange={(event) => {
+              setAmount(event.target.value.replace(/[^\d.]/g, ''));
+              setError('');
+            }}
             placeholder="0.00"
           />
         </label>
+        {error && (
+          <p className="pos-notice" role="alert">
+            {error}
+          </p>
+        )}
         <button className="pos-checkout-button" type="submit">
-          {mode === 'open'
-            ? 'Open demo register'
-            : mode === 'close'
-              ? 'Close and reconcile'
-              : 'Save cash movement'}
+          {mode === 'close' ? 'Close and reconcile' : 'Save cash movement'}
         </button>
       </form>
     </div>

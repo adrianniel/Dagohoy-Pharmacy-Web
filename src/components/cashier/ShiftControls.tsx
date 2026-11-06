@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useReducer, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   endShift,
   getCarriedOverFloat,
@@ -12,6 +13,15 @@ import { useToast } from '../toast';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+
+/*
+ * The top bar has a blur effect, which traps fixed popups inside its own box.
+ * Rendering the popups into the workspace shell keeps them centered on the
+ * screen, styled by the same theme, exactly like the payment form.
+ */
+function getModalHost(): HTMLElement {
+  return document.querySelector<HTMLElement>('.cashier-shell') ?? document.body;
+}
 
 /**
  * The Start shift / End shift pair in the cashier top bar.
@@ -107,7 +117,7 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  return (
+  return createPortal(
     <div className="pos-modal-backdrop">
       <form className="pos-payment-modal cashier-shift-modal" onSubmit={submit} noValidate>
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close">
@@ -231,7 +241,8 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
           Start shift
         </button>
       </form>
-    </div>
+    </div>,
+    getModalHost(),
   );
 }
 
@@ -262,7 +273,7 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  return (
+  return createPortal(
     <div className="pos-modal-backdrop">
       <form className="pos-payment-modal cashier-shift-modal" onSubmit={submit} noValidate>
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close">
@@ -312,6 +323,7 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
           End shift and reconcile
         </button>
       </form>
-    </div>
+    </div>,
+    getModalHost(),
   );
 }
