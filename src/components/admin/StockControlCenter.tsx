@@ -129,10 +129,12 @@ export function StockControlCenter({
   return (
     <section className="stock-index" aria-label="Stock control center">
       <div className="stock-index__head">
-        <div>
-          <h3>Stock control center</h3>
-          <p>The everyday stock shortcuts, in one place.</p>
-        </div>
+        <span className="stock-index__pin">
+          <CashierIcon name="pin" />
+          Pinned
+        </span>
+        <h3>Stock control center</h3>
+        <p>The everyday stock shortcuts, in one place.</p>
         {restockCount > 0 && (
           <span className="stock-index__count">{restockCount} to restock</span>
         )}
@@ -147,8 +149,13 @@ export function StockControlCenter({
             aria-pressed={active === tile.key}
             onClick={() => toggle(tile.key)}
           >
-            <span className="stock-index__icon">
-              <CashierIcon name={tile.icon} />
+            <span className="stock-index__tile-top">
+              <span className="stock-index__icon">
+                <CashierIcon name={tile.icon} />
+              </span>
+              <span className="stock-index__chevron">
+                <CashierIcon name="chevron" />
+              </span>
             </span>
             <strong>{tile.title}</strong>
             <small>{tile.hint}</small>

@@ -13,7 +13,9 @@ interface CashierIconProps {
     | 'phone'
     | 'mail'
     | 'map'
-    | 'store';
+    | 'store'
+    | 'pin'
+    | 'chevron';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -181,6 +183,17 @@ export function CashierIcon({ name }: CashierIconProps) {
     register: (
       <>
         <path d="M5 10h22v17H5zM8 10V5h16v5M10 15h12v4H10zM12 23h2m4 0h2" />
+      </>
+    ),
+    pin: (
+      <>
+        <path d="M16 4a7 7 0 0 1 7 7c0 5-7 12-7 12S9 16 9 11a7 7 0 0 1 7-7z" />
+        <circle cx="16" cy="11" r="2.6" />
+      </>
+    ),
+    chevron: (
+      <>
+        <path d="m12 7 9 9-9 9" />
       </>
     ),
   };
