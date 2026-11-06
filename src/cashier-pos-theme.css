@@ -3040,3 +3040,87 @@
     transition: none;
   }
 }
+
+/* Products & Stock — compact capsule summary cards */
+.cashier-shell.is-themed .cashier-summary-grid--compact {
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cashier-shell.is-themed .cashier-summary-grid--compact > .cashier-summary-card {
+  min-height: 0;
+  padding: 0.7rem 1.15rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 0.5rem;
+  row-gap: 0.1rem;
+  border: 1px solid #dbe6d1;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #fbfdf6, #f0f6e6);
+  box-shadow: 0 6px 16px rgb(23 98 70 / 8%);
+}
+
+.cashier-shell.is-themed
+  .cashier-summary-grid--compact
+  > .cashier-summary-card:last-child {
+  border-right: 1px solid #dbe6d1;
+}
+
+.cashier-shell.is-themed .cashier-summary-grid--compact > .cashier-summary-card p {
+  order: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--cashier-green);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cashier-shell.is-themed .cashier-summary-grid--compact > .cashier-summary-card strong {
+  order: 2;
+  margin: 0;
+  color: var(--cashier-green-dark);
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.cashier-shell.is-themed .cashier-summary-grid--compact > .cashier-summary-card span {
+  order: 3;
+  flex: 1 1 100%;
+  min-width: 0;
+  margin: 0;
+  color: #7c8c80;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1080px) {
+  .cashier-shell.is-themed .cashier-summary-grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cashier-shell.is-themed .cashier-summary-grid--compact {
+    gap: 0.5rem;
+  }
+
+  .cashier-shell.is-themed .cashier-summary-grid--compact > .cashier-summary-card {
+    padding: 0.6rem 0.95rem;
+  }
+}

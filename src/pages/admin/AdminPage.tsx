@@ -144,7 +144,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
     <div className="cashier-page">
       {section === 'products' && (
         <>
-          <div className="cashier-summary-grid">
+          <div className="cashier-summary-grid cashier-summary-grid--compact">
             <Summary
               label="Catalog products"
               value={String(products.length)}
@@ -479,7 +479,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
 
 function Summary({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <article className="cashier-summary-card">
+    <article className="cashier-summary-card" title={`${label}: ${value} — ${detail}`}>
       <p>{label}</p>
       <strong>{value}</strong>
       <span>{detail}</span>
