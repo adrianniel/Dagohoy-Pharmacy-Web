@@ -1,6 +1,7 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
+import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
 import {
@@ -60,6 +61,7 @@ function loadLocalValue<T>(key: string, fallback: T): T {
 
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState(getInventory);
   const [editing, setEditing] = useState<InventoryProduct | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -144,11 +146,22 @@ export function AdminPage({ section }: { section: AdminSection }) {
     <div className="cashier-page">
       {section === 'products' && (
         <>
+          <StockControlCenter
+            products={products}
+            threshold={restockThreshold}
+            restockCount={restockProducts.length}
+            onFindProduct={() => {
+              searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              searchRef.current?.focus();
+            }}
+            onOrderRestock={downloadRestockCsv}
+          />
           <section className="cashier-panel cashier-list-panel">
             <div className="cashier-list-toolbar">
               <label className="cashier-search-field cashier-search-field--wide">
                 <CashierIcon name="search" />
                 <input
+                  ref={searchRef}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search product, generic, brand, or barcode"
@@ -174,17 +187,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
                 </button>
               )}
-            </div>
-            <div className="product-restock-panel">
-              <div>
-                <strong>Restock order basis</strong>
-                <span>
-                  {restockProducts.length} products below the {restockThreshold}-unit reorder point
-                </span>
-              </div>
-              <button type="button" onClick={downloadRestockCsv} disabled={!restockProducts.length}>
-                Download CSV
-              </button>
             </div>
             <div
               className="cashier-table-wrap"
