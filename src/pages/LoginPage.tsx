@@ -103,7 +103,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
           className="login-modal-close"
           type="button"
           onClick={onClose}
-          aria-label="Close sign in"
+          aria-label="Close log in"
         >
           <span aria-hidden="true">×</span>
         </button>
@@ -115,7 +115,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
           </span>
         </button>
         <h1 id="login-title">Welcome back!</h1>
-        <p className="muted">Sign in with the username and password the owner gave you.</p>
+        <p className="muted">Log in with the username and password the owner gave you.</p>
         <form onSubmit={handleSubmit} className="stack">
           <label htmlFor="username">Username</label>
           <input
@@ -195,7 +195,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             </p>
           )}
           <button className="button" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? 'Logging in…' : 'Log in'}
           </button>
         </form>
         <p className="auth-note">Forgot your password? Ask the pharmacy owner to reset it.</p>

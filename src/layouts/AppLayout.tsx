@@ -17,7 +17,7 @@ export function AppLayout() {
           <h1>{APP_NAME}</h1>
         </div>
         <button className="button button--secondary" type="button" onClick={signOut}>
-          Sign out
+          Log out
         </button>
       </header>
       <nav className="app-nav" aria-label="Primary navigation">

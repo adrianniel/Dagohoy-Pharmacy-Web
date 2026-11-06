@@ -111,8 +111,8 @@ export async function signIn(
       ok: false,
       message:
         account.role === 'ADMIN'
-          ? 'This is an administrator account. Select Administrator to sign in.'
-          : 'This is the cashier account. Select Cashier to sign in.',
+          ? 'This is an administrator account. Select Administrator to log in.'
+          : 'This is the cashier account. Select Cashier to log in.',
     };
   }
   if (account.status === 'Disabled') {

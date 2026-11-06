@@ -33,7 +33,7 @@ export function LandingNav() {
           <a href="#contact">Contact</a>
         </div>
         <Link className="landing-nav__login" to="/login" state={{ backgroundLocation: location }}>
-          Login
+          Log in
         </Link>
       </nav>
     </header>

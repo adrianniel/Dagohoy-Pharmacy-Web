@@ -15,7 +15,7 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
     label: 'Account',
     items: [
       { label: 'Profile', path: '/cashier/profile', icon: 'profile' },
-      { label: 'Logout', icon: 'logout', action: 'logout' },
+      { label: 'Log out', icon: 'logout', action: 'logout' },
     ],
   },
 ];
@@ -54,7 +54,7 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
     items: [
       { label: 'Settings', path: '/admin/settings', icon: 'settings' },
       { label: 'Profile', path: '/cashier/profile', icon: 'profile' },
-      { label: 'Logout', icon: 'logout', action: 'logout' },
+      { label: 'Log out', icon: 'logout', action: 'logout' },
     ],
   },
 ];

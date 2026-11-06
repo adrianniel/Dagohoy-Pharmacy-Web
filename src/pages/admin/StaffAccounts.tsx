@@ -38,8 +38,8 @@ export function StaffAccounts() {
     refresh();
     showToast(
       next === 'Disabled'
-        ? `${labelOf(account)} can no longer sign in.`
-        : `${labelOf(account)} can sign in again.`,
+        ? `${labelOf(account)} can no longer log in.`
+        : `${labelOf(account)} can log in again.`,
     );
   }
 
@@ -291,7 +291,7 @@ function AccountFormModal({
           {isReset
             ? `Signs in as ${resetFor?.username}. Share the new password in person.`
             : role === 'CASHIER'
-              ? 'Every cashier will sign in with this username and password.'
+              ? 'Every cashier will log in with this username and password.'
               : 'No email needed. Give the username and password to the new administrator.'}
         </p>
         {!isReset && role === 'ADMIN' && (
@@ -389,7 +389,7 @@ function ConfirmRemoveModal({
         </button>
         <h2 id="remove-title">Remove {account.displayName}?</h2>
         <p className="inventory-form-note">
-          They will no longer be able to sign in. Their past activity stays in the records.
+          They will no longer be able to log in. Their past activity stays in the records.
         </p>
         <button className="pos-checkout-button" type="button" onClick={onConfirm} autoFocus>
           Remove administrator
