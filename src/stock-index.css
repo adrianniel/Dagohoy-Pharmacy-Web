@@ -120,9 +120,224 @@
   color: #5d7367;
 }
 
-.stock-index__tile[aria-expanded='true'] {
+/* The preview panel under the tiles: the selected shortcut shows its content right here. */
+
+.stock-index__tile.is-active {
   border-color: #176246;
-  background: #dfeee3;
+  background: #176246;
+  box-shadow: 0 10px 22px rgba(23, 98, 70, 0.24);
+}
+
+.stock-index__tile.is-active .stock-index__icon {
+  background: #ffffff;
+  color: #176246;
+}
+
+.stock-index__tile.is-active strong,
+.stock-index__tile.is-active small {
+  color: #ffffff;
+}
+
+.stock-index__tile.is-active small {
+  opacity: 0.82;
+}
+
+.stock-index__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  border: 1px solid #cfe1d6;
+  border-radius: 16px;
+  background: #ffffff;
+  animation: stock-panel-in 180ms ease-out both;
+}
+
+@keyframes stock-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stock-index__panel .stock-index__health {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.stock-index__panel .stock-index__note {
+  margin: 0;
+}
+
+.stock-index__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stock-index__chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #cfe1d6;
+  background: #f2f8f4;
+  color: #3d5a4c;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.stock-index__chips b {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #176246;
+}
+
+.stock-index__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.stock-index__table thead th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5d7367;
+  border-bottom: 1px solid #dfeae2;
+  white-space: nowrap;
+}
+
+.stock-index__table tbody td {
+  padding: 10px;
+  vertical-align: top;
+  color: #24352c;
+  border-bottom: 1px solid #edf3ee;
+}
+
+.stock-index__table tbody td strong {
+  color: #141414;
+}
+
+.stock-index__mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.85rem;
+  color: #5d7367;
+  white-space: nowrap;
+}
+
+.stock-index__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #5d7367;
+}
+
+.stock-index__empty {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #f7fbf8;
+  border: 1px dashed #cfe1d6;
+  font-size: 0.92rem;
+  color: #5d7367;
+}
+
+.stock-index__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.stock-index__status--ok {
+  background: #e5f0e8;
+  color: #176246;
+}
+
+.stock-index__status--low {
+  background: #fbf0d6;
+  color: #8a5f0c;
+}
+
+.stock-index__status--out {
+  background: #f7e1de;
+  color: #a2372c;
+}
+
+.stock-index__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stock-index__action {
+  appearance: none;
+  font: inherit;
+  font-weight: 800;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid #176246;
+  background: #176246;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.stock-index__action:hover:not(:disabled) {
+  background: #12513a;
+  border-color: #12513a;
+}
+
+.stock-index__action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.stock-index__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #cfe1d6;
+  background: #f7fbf8;
+}
+
+.stock-index__search .cashier-icon {
+  width: 20px;
+  height: 20px;
+  color: #176246;
+  flex: none;
+}
+
+.stock-index__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  color: #141414;
+  outline: none;
+}
+
+.stock-index__search input::placeholder {
+  color: #7b8f83;
 }
 
 .stock-index__tile:disabled {
@@ -198,6 +413,11 @@
 @media (max-width: 640px) {
   .stock-index {
     padding: 18px 16px 20px;
+  }
+
+  .stock-index__panel {
+    padding: 14px 14px 16px;
+    overflow-x: auto;
   }
 
   .stock-index__grid,

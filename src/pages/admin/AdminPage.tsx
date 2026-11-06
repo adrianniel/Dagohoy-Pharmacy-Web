@@ -150,10 +150,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
             products={products}
             threshold={restockThreshold}
             restockCount={restockProducts.length}
-            onFindProduct={() => {
-              searchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              searchRef.current?.focus();
-            }}
             onOrderRestock={downloadRestockCsv}
           />
           <section className="cashier-panel cashier-list-panel">

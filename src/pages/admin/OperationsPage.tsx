@@ -32,7 +32,7 @@ const plusDays = (days: number) => {
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 };
-const initialBatches: InventoryBatch[] = [
+export const initialBatches: InventoryBatch[] = [
   {
     id: 'B-10248',
     product: 'Biogesic 500mg',
