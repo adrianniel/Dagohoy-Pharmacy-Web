@@ -13,6 +13,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
   const location = useLocation();
   const dialogRef = useRef<HTMLElement>(null);
   const usernameRef = useRef<HTMLInputElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'ADMIN' | 'CASHIER'>('CASHIER');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -132,17 +133,31 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             onChange={() => setError('')}
           />
           <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            required
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'login-error' : undefined}
-            onChange={() => setError('')}
-          />
+          <div className="password-field">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="••••••••"
+              required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'login-error' : undefined}
+              onChange={() => setError('')}
+            />
+            <button
+              className="password-toggle"
+              type="button"
+              aria-controls="password"
+              aria-pressed={showPassword}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword((current) => !current)}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
           <fieldset className="login-role-group">
             <legend>Role</legend>
             <div className="login-role-options">
