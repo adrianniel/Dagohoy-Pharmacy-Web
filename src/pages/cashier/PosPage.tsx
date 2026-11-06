@@ -786,7 +786,7 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
             <strong>{formatReceiptDate(sale.date)}</strong>
           </div>
           <div>
-            <span>Served by</span>
+            <span>Cashier</span>
             <strong>{sale.cashier}</strong>
           </div>
           <div>
@@ -862,7 +862,7 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
           )}
         </div>
         <p className="pos-receipt-preview__thanks">
-          Served by {sale.cashier}. Thank you. Keep this receipt for your records.
+          Thank you. Keep this receipt for your records.
         </p>
       </div>
     </div>
