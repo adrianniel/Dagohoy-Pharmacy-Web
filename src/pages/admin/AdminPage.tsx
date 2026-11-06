@@ -691,12 +691,6 @@ function AdminDashboard() {
           <Link to="/admin/products">
             <CashierIcon name="inventory" /> Review stock <span>→</span>
           </Link>
-          <Link to="/admin/batches">
-            <CashierIcon name="batches" /> Check expiry dates <span>→</span>
-          </Link>
-          <Link to="/admin/purchases">
-            <CashierIcon name="purchases" /> Receive stock <span>→</span>
-          </Link>
           <Link to="/admin/reports">
             <CashierIcon name="reports" /> Sales report <span>→</span>
           </Link>

@@ -12,8 +12,6 @@ const routeTitles: Record<string, string> = {
   '/cashier/shift-report': 'Shift report',
   '/admin/dashboard': 'Overview',
   '/admin/products': 'Products & Stock',
-  '/admin/batches': 'Batches & Expiry',
-  '/admin/purchases': 'Purchasing & Receiving',
   '/admin/stock': 'Stock Movements',
   '/admin/suppliers': 'Suppliers',
   '/admin/reports': 'Reports',

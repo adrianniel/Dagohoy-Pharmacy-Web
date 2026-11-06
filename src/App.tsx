@@ -85,9 +85,7 @@ export function App() {
           <Route path="/admin" element={<CashierLayout />}>
             {/* Shared with the cashier account so daily work continues when the owner is away. */}
             <Route path="products" element={<AdminPage section="products" />} />
-            <Route path="batches" element={<OperationsPage section="batches" />} />
-            <Route path="purchases" element={<OperationsPage section="purchases" />} />
-            <Route path="stock" element={<OperationsPage section="stock" />} />
+            <Route path="stock" element={<OperationsPage />} />
             <Route path="suppliers" element={<AdminPage section="suppliers" />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="credits" element={<CreditPage />} />

@@ -13,8 +13,6 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
     label: 'Inventory',
     items: [
       { label: 'Products & Stock', path: '/admin/products', icon: 'inventory' },
-      { label: 'Batches & Expiry', path: '/admin/batches', icon: 'batches' },
-      { label: 'Purchasing', path: '/admin/purchases', icon: 'purchases' },
       { label: 'Stock movements', path: '/admin/stock', icon: 'stock' },
       { label: 'Suppliers', path: '/admin/suppliers', icon: 'suppliers' },
     ],
@@ -50,8 +48,6 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
     label: 'Inventory',
     items: [
       { label: 'Products & Stock', path: '/admin/products', icon: 'inventory' },
-      { label: 'Batches & Expiry', path: '/admin/batches', icon: 'batches' },
-      { label: 'Purchasing', path: '/admin/purchases', icon: 'purchases' },
       { label: 'Stock movements', path: '/admin/stock', icon: 'stock' },
       { label: 'Suppliers', path: '/admin/suppliers', icon: 'suppliers' },
     ],
