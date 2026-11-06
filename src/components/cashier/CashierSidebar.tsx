@@ -1,8 +1,9 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import pharmacyLogo from '../../assets/logo.png';
 import { ADMIN_NAV_ITEMS, CASHIER_NAV_ITEMS } from '../../constants/navigation';
-import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../../constants/app';
-import { adminProfile, cashierProfile } from '../../data/cashierMockData';
+import { USER_ROLE_KEY } from '../../constants/app';
+import { getWorkspaceProfile, signOut } from '../../data/accountStore';
+import { useStoreStatusRefresh } from '../../data/useStoreStatusRefresh';
 import { CashierIcon } from './CashierIcon';
 import type { UserRole } from '../../types/navigation';
 
@@ -23,15 +24,15 @@ export function CashierSidebar({
   const location = useLocation();
   const role = localStorage.getItem(USER_ROLE_KEY) as UserRole | null;
   const navigation = role === 'ADMIN' ? ADMIN_NAV_ITEMS : CASHIER_NAV_ITEMS;
-  const profile = role === 'ADMIN' ? adminProfile : cashierProfile;
+  useStoreStatusRefresh();
+  const profile = getWorkspaceProfile();
   const workspaceLabel =
     role === 'ADMIN' || location.pathname.startsWith('/admin')
       ? 'Owner workspace'
       : 'Cashier workspace';
 
   function handleLogout() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(USER_ROLE_KEY);
+    signOut();
     navigate('/login', { replace: true });
   }
 

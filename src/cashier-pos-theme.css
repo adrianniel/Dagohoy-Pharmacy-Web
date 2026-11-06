@@ -611,7 +611,7 @@
   font-weight: 700;
 }
 
-.cashier-shell.is-themed :where(.cashier-status--completed, .cashier-status--in-stock) {
+.cashier-shell.is-themed :where(.cashier-status--completed, .cashier-status--in-stock, .cashier-status--active) {
   background: #e8f3e5;
   color: #0e6b42;
 }
@@ -621,7 +621,7 @@
   color: #946511;
 }
 
-.cashier-shell.is-themed :where(.cashier-status--out-of-stock) {
+.cashier-shell.is-themed :where(.cashier-status--out-of-stock, .cashier-status--disabled) {
   background: #fbe9e7;
   color: #a0473b;
 }
@@ -644,6 +644,58 @@
 .cashier-shell.is-themed :where(.cashier-status--damaged) {
   background: #fbe8e8;
   color: #a44545;
+}
+
+/* Staff accounts */
+.cashier-shell.is-themed :where(.staff-accounts) {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.cashier-shell.is-themed :where(.staff-cashier-card) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.cashier-shell.is-themed :where(.staff-cashier-card__copy) {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.cashier-shell.is-themed :where(.staff-cashier-card__copy strong) {
+  color: var(--cashier-green-dark);
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.cashier-shell.is-themed :where(.staff-cashier-card__copy span) {
+  color: var(--cashier-muted);
+  font-size: 0.86rem;
+}
+
+.cashier-shell.is-themed :where(.staff-cashier-card__actions, .staff-row-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cashier-shell.is-themed :where(.staff-username) {
+  color: var(--cashier-muted);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 720px) {
+  .cashier-shell.is-themed :where(.staff-cashier-card) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .cashier-shell.is-themed :where(.staff-cashier-card__actions) {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Register */

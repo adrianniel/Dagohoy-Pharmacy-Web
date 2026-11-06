@@ -1,25 +1,3 @@
-export const cashierProfile = {
-  name: 'Maria Dela Cruz',
-  shortName: 'Maria D.',
-  initials: 'MD',
-  role: 'Cashier',
-  email: 'maria@dagohoypharmacy.local',
-  username: 'maria.cashier',
-  status: 'Active shift',
-  shift: 'Morning Shift',
-};
-
-export const adminProfile = {
-  name: 'Ana Lim',
-  shortName: 'Ana Lim',
-  initials: 'AL',
-  role: 'Administrator',
-  email: 'ana@dagohoypharmacy.local',
-  username: 'ana.admin',
-  status: 'Owner workspace',
-  shift: 'Day Shift',
-};
-
 export const dashboardSummary = [
   { label: "Today's Transactions", value: '24', detail: 'Since 8:00 AM', tone: 'neutral' },
   { label: "Today's Sales", value: '₱18,460.50', detail: 'Mock total', tone: 'green' },

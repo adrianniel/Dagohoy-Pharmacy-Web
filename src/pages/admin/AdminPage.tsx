@@ -11,6 +11,7 @@ import {
   stockStatus,
 } from '../../data/inventoryStore';
 import { suggestProductCategories } from '../../services/productsApi';
+import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 
@@ -21,15 +22,8 @@ const suppliers = [
   { name: 'Mercury Drug Wholesale', contact: 'Taguig City', products: 16, status: 'Active' },
   { name: 'Natrapharm, Inc.', contact: 'Makati City', products: 12, status: 'Active' },
 ];
-const staff = [
-  { initials: 'MD', name: 'Maria Dela Cruz', role: 'Cashier', status: 'On shift' },
-  { initials: 'JR', name: 'Jose Reyes', role: 'Cashier', status: 'Off shift' },
-  { initials: 'AL', name: 'Ana Lim', role: 'Administrator', status: 'Active' },
-];
 type Supplier = (typeof suppliers)[number];
-type TeamMember = (typeof staff)[number] & { email?: string };
 const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
-const STAFF_KEY = 'dagohoy_demo_staff';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 type PharmacySettings = {
   name: string;
@@ -72,8 +66,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [supplierList, setSupplierList] = useState<Supplier[]>(() =>
     loadLocalList(SUPPLIER_KEY, suppliers),
   );
-  const [teamList, setTeamList] = useState<TeamMember[]>(() => loadLocalList(STAFF_KEY, staff));
-  const [directoryForm, setDirectoryForm] = useState<'supplier' | 'staff' | null>(null);
+  const [supplierFormOpen, setSupplierFormOpen] = useState(false);
   const { showToast } = useToast();
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
@@ -308,7 +301,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
             <button
               className="cashier-primary-action"
               type="button"
-              onClick={() => setDirectoryForm('supplier')}
+              onClick={() => setSupplierFormOpen(true)}
             >
               Add supplier <span>＋</span>
             </button>
@@ -366,78 +359,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
         </section>
       )}
       {section === 'reports' && <Reports />}
-      {section === 'staff' && (
-        <section className="cashier-panel cashier-list-panel">
-          <div className="cashier-panel__heading">
-            <div>
-              <h3>Staff accounts</h3>
-              <p>Example roles and shift availability.</p>
-            </div>
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setDirectoryForm('staff')}
-            >
-              Invite staff <span>＋</span>
-            </button>
-          </div>
-          <div className="cashier-table-wrap" role="region" aria-label="Staff table" tabIndex={0}>
-            <table className="cashier-table">
-              <thead>
-                <tr>
-                  <th>Team member</th>
-                  <th>Role</th>
-                  <th>Shift status</th>
-                  <th>Access</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teamList.map((person, index) => (
-                  <tr key={person.name}>
-                    <td>
-                      <span className="cashier-avatar cashier-avatar--table">
-                        {person.initials}
-                      </span>
-                      <strong>{person.name}</strong>
-                    </td>
-                    <td>{person.role}</td>
-                    <td>
-                      <StatusBadge value={person.status} />
-                    </td>
-                    <td>
-                      <button
-                        className="cashier-view-button"
-                        type="button"
-                        onClick={() =>
-                          (() => {
-                            const next = teamList.map((member, memberIndex) =>
-                              memberIndex === index
-                                ? {
-                                    ...member,
-                                    status: member.status === 'Disabled' ? 'Active' : 'Disabled',
-                                  }
-                                : member,
-                            );
-                            setTeamList(next);
-                            localStorage.setItem(STAFF_KEY, JSON.stringify(next));
-                            showToast('Staff access updated in this browser.');
-                          })()
-                        }
-                      >
-                        Manage access
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="cashier-table-footer">
-            <span>{teamList.length} staff profiles</span>
-            <span>Login credentials and role security require server authentication.</span>
-          </div>
-        </section>
-      )}
+      {section === 'staff' && <StaffAccounts />}
       {section === 'settings' && (
         <section className="cashier-panel settings-form">
           <p className="demo-note">Settings are saved locally in this browser for preview only.</p>
@@ -540,24 +462,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
           </button>
         </section>
       )}
-      {directoryForm && (
-        <DirectoryForm
-          kind={directoryForm}
-          onClose={() => setDirectoryForm(null)}
+      {supplierFormOpen && (
+        <SupplierForm
+          onClose={() => setSupplierFormOpen(false)}
           onSave={(value) => {
-            if (directoryForm === 'supplier') {
-              const next = [...supplierList, value as Supplier];
-              setSupplierList(next);
-              localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
-            } else {
-              const next = [...teamList, value as TeamMember];
-              setTeamList(next);
-              localStorage.setItem(STAFF_KEY, JSON.stringify(next));
-            }
-            setDirectoryForm(null);
-            showToast(
-              `${directoryForm === 'supplier' ? 'Supplier' : 'Staff invitation'} saved in this browser.`,
-            );
+            const next = [...supplierList, value];
+            setSupplierList(next);
+            localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
+            setSupplierFormOpen(false);
+            showToast('Supplier saved in this browser.');
           }}
         />
       )}
@@ -575,55 +488,32 @@ function Summary({ label, value, detail }: { label: string; value: string; detai
   );
 }
 
-function DirectoryForm({
-  kind,
+function SupplierForm({
   onClose,
   onSave,
 }: {
-  kind: 'supplier' | 'staff';
   onClose: () => void;
-  onSave: (value: Supplier | TeamMember) => void;
+  onSave: (value: Supplier) => void;
 }) {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Cashier');
   return (
     <div className="pos-modal-backdrop">
       <form
         className="pos-payment-modal"
         onSubmit={(event) => {
           event.preventDefault();
-          if (kind === 'supplier')
-            onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
-          else
-            onSave({
-              initials: name
-                .trim()
-                .split(/\s+/)
-                .map((part) => part[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase(),
-              name: name.trim(),
-              role,
-              status: 'Invited',
-              email,
-            });
+          onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
         }}
       >
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close form">
           ×
         </button>
-        <p className="eyebrow">
-          {kind === 'supplier' ? 'Supplier directory' : 'Team access'} · demo
-        </p>
-        <h2>{kind === 'supplier' ? 'Add supplier' : 'Invite staff member'}</h2>
-        <p className="inventory-form-note">
-          This creates a local preview record only; no message or account will be created.
-        </p>
+        <p className="eyebrow">Supplier directory · demo</p>
+        <h2>Add supplier</h2>
+        <p className="inventory-form-note">This creates a local preview record only.</p>
         <label>
-          {kind === 'supplier' ? 'Supplier name' : 'Staff member name'}
+          Supplier name
           <input
             required
             autoFocus
@@ -631,33 +521,12 @@ function DirectoryForm({
             onChange={(event) => setName(event.target.value)}
           />
         </label>
-        {kind === 'supplier' ? (
-          <label>
-            Phone, email, or location
-            <input required value={contact} onChange={(event) => setContact(event.target.value)} />
-          </label>
-        ) : (
-          <>
-            <label>
-              Email
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
-            <label>
-              Role
-              <select value={role} onChange={(event) => setRole(event.target.value)}>
-                <option>Cashier</option>
-                <option>Administrator</option>
-              </select>
-            </label>
-          </>
-        )}
+        <label>
+          Phone, email, or location
+          <input required value={contact} onChange={(event) => setContact(event.target.value)} />
+        </label>
         <button className="pos-checkout-button" type="submit">
-          {kind === 'supplier' ? 'Save supplier' : 'Create demo invitation'}
+          Save supplier
         </button>
       </form>
     </div>

@@ -4,8 +4,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
 import CartIcon from '../../components/originkit/ui/CartIcon';
-import { adminProfile, cashierProfile } from '../../data/cashierMockData';
-import { USER_ROLE_KEY } from '../../constants/app';
+import { getWorkspaceProfile } from '../../data/accountStore';
 import { REGISTER_SESSION_KEY } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
@@ -66,8 +65,7 @@ function readCashierName(): string {
   } catch {
     // fall through to the account profile
   }
-  const profile = localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
-  return profile.name;
+  return getWorkspaceProfile().name;
 }
 
 function sanitizeMoneyInput(value: string): string {

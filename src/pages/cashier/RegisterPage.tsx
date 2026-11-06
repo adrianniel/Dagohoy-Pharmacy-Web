@@ -1,8 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { notifyStoreStatusChange, REGISTER_SESSION_KEY } from '../../data/registerSession';
-import { adminProfile, cashierProfile } from '../../data/cashierMockData';
-import { USER_ROLE_KEY } from '../../constants/app';
+import { getCurrentAccount } from '../../data/accountStore';
 
 const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
 const SALES_KEY = 'dagohoy_demo_sales';
@@ -30,8 +29,9 @@ export function RegisterPage() {
   const [events, setEvents] = useState<CashEvent[]>(() => readJson(CASH_EVENTS_KEY, []));
   const [sales] = useState<Sale[]>(() => readJson(SALES_KEY, []));
   const [mode, setMode] = useState<'open' | 'movement' | 'close' | null>(null);
-  const currentProfile =
-    localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
+  const account = getCurrentAccount();
+  // The cashier account is shared, so whoever opens the register types their own name.
+  const defaultCashierName = account?.role === 'ADMIN' ? account.displayName : '';
   const { showToast } = useToast();
   const cashSales = useMemo(
     () =>
@@ -170,7 +170,7 @@ export function RegisterPage() {
         <RegisterModal
           mode={mode}
           expected={expected}
-          defaultCashierName={currentProfile.name}
+          defaultCashierName={defaultCashierName}
           onClose={() => setMode(null)}
           onOpen={openSession}
           onEvent={saveEvent}
@@ -253,13 +253,13 @@ function RegisterModal({
         )}
         {mode === 'open' && (
           <label>
-            Cashier opening this register
+            Your name (cashier on this shift)
             <input
               required
               autoFocus
               value={cashierName}
               onChange={(event) => setCashierName(event.target.value)}
-              placeholder="Enter cashier name"
+              placeholder="e.g. Maria Dela Cruz"
             />
           </label>
         )}

@@ -1,8 +1,12 @@
-import { USER_ROLE_KEY } from '../../constants/app';
-import { adminProfile, cashierProfile } from '../../data/cashierMockData';
+import { getCurrentAccount, getWorkspaceProfile } from '../../data/accountStore';
+import { isStoreOpen } from '../../data/registerSession';
 
 export function CashierProfilePage() {
-  const profile = localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? adminProfile : cashierProfile;
+  const account = getCurrentAccount();
+  const profile = getWorkspaceProfile();
+  const isCashier = account?.role === 'CASHIER';
+  const storeOpen = isStoreOpen();
+
   return (
     <div className="cashier-page">
       <div className="cashier-profile-grid">
@@ -11,7 +15,7 @@ export function CashierProfilePage() {
             <span className="cashier-avatar cashier-avatar--large">{profile.initials}</span>
             <div>
               <h3>{profile.name}</h3>
-              <p>{profile.role} · Dagohoy Pharmacy</p>
+              <p>{profile.roleLabel} · Dagohoy Pharmacy</p>
               <span className="cashier-profile-status">
                 <i /> {profile.status}
               </span>
@@ -19,34 +23,41 @@ export function CashierProfilePage() {
           </div>
           <dl className="cashier-profile-details">
             <div>
-              <dt>Full name</dt>
-              <dd>{profile.name}</dd>
+              <dt>{isCashier ? 'Account' : 'Full name'}</dt>
+              <dd>{isCashier ? 'Shared cashier account' : account?.displayName}</dd>
             </div>
             <div>
               <dt>Role</dt>
-              <dd>{profile.role.toUpperCase()}</dd>
+              <dd>{profile.roleLabel}</dd>
             </div>
             <div>
               <dt>Username</dt>
               <dd>{profile.username}</dd>
             </div>
             <div>
-              <dt>Email</dt>
-              <dd>{profile.email}</dd>
+              <dt>Password</dt>
+              <dd>{isCashier ? 'Reset by the owner' : 'Change in Staff accounts'}</dd>
             </div>
           </dl>
         </section>
         <aside className="cashier-panel cashier-shift-card">
-          <p>Current assignment</p>
-          <h3>{profile.shift}</h3>
-          <span>8:00 AM – 4:00 PM</span>
+          <p>Current shift</p>
+          <h3>{storeOpen ? (isCashier ? profile.name : 'Register open') : 'No one on shift'}</h3>
+          <span>
+            {storeOpen
+              ? 'Recorded when the register was opened.'
+              : 'Open the cash drawer to start a shift.'}
+          </span>
           <div>
-            <small>Register</small>
-            <strong>Register 01</strong>
+            <small>Store</small>
+            <strong>{storeOpen ? 'Open' : 'Closed'}</strong>
           </div>
-          <p className="cashier-shift-card__note">
-            Shift and register information are mock placeholders.
-          </p>
+          {isCashier && (
+            <p className="cashier-shift-card__note">
+              Everyone on the cashier team signs in with this one account. The name typed when
+              opening the register is who appears on receipts and reports.
+            </p>
+          )}
         </aside>
       </div>
     </div>

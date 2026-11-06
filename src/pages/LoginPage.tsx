@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ACCESS_TOKEN_KEY, USER_ROLE_KEY } from '../constants/app';
+import { signIn } from '../data/accountStore';
 import pharmacyLogo from '../assets/logo.png';
 
 interface LoginPageProps {
@@ -12,8 +12,9 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const dialogRef = useRef<HTMLElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
-  const [role, setRole] = useState<'ADMIN' | 'CASHIER'>('CASHIER');
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const destination =
     (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
     '/cashier/dashboard';
@@ -24,7 +25,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement as HTMLElement | null;
     document.body.style.overflow = 'hidden';
-    emailRef.current?.focus();
+    usernameRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -56,14 +57,29 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
     };
   }, [isModal, onClose]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    localStorage.setItem(ACCESS_TOKEN_KEY, 'placeholder-token');
-    localStorage.setItem(USER_ROLE_KEY, role);
-    navigate(
-      destination === '/cashier/dashboard' && role === 'ADMIN' ? '/admin/dashboard' : destination,
-      { replace: true },
+    const form = new FormData(event.currentTarget);
+    setSubmitting(true);
+    const result = await signIn(
+      String(form.get('username') ?? ''),
+      String(form.get('password') ?? ''),
     );
+    setSubmitting(false);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    const role = result.account.role;
+    const target =
+      role === 'ADMIN'
+        ? destination === '/cashier/dashboard'
+          ? '/admin/dashboard'
+          : destination
+        : destination.startsWith('/admin')
+          ? '/cashier/dashboard'
+          : destination;
+    navigate(target, { replace: true });
   }
 
   return (
@@ -76,7 +92,7 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
       <section
         aria-labelledby="login-title"
         aria-modal="true"
-        className={`auth-card auth-card--modal${role === 'ADMIN' ? ' auth-card--admin' : ''}`}
+        className="auth-card auth-card--modal"
         ref={dialogRef}
         role="dialog"
         tabIndex={-1}
@@ -97,18 +113,22 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
           </span>
         </button>
         <h1 id="login-title">Welcome back!</h1>
-        <p className="muted">Sign in to manage sales, inventory, and your pharmacy team.</p>
+        <p className="muted">Sign in with the username and password the owner gave you.</p>
         <form onSubmit={handleSubmit} className="stack">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="username">Username</label>
           <input
-            ref={emailRef}
-            id="email"
-            name="email"
-            type="email"
+            ref={usernameRef}
+            id="username"
+            name="username"
+            type="text"
             autoComplete="username"
+            autoCapitalize="none"
             spellCheck={false}
-            placeholder="staff@example.com"
+            placeholder="Your username"
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
+            onChange={() => setError('')}
           />
           <label htmlFor="password">Password</label>
           <input
@@ -118,37 +138,20 @@ export function LoginPage({ onClose, isModal = false }: LoginPageProps) {
             autoComplete="current-password"
             placeholder="••••••••"
             required
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'login-error' : undefined}
+            onChange={() => setError('')}
           />
-          <fieldset className="login-role-group">
-            <legend>Role</legend>
-            <div className="login-role-options">
-              <label className="login-role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value="CASHIER"
-                  checked={role === 'CASHIER'}
-                  onChange={() => setRole('CASHIER')}
-                />
-                <span>Cashier</span>
-              </label>
-              <label className="login-role-option">
-                <input
-                  type="radio"
-                  name="role"
-                  value="ADMIN"
-                  checked={role === 'ADMIN'}
-                  onChange={() => setRole('ADMIN')}
-                />
-                <span>Administrator</span>
-              </label>
-            </div>
-          </fieldset>
-          <button className="button" type="submit">
-            Sign in
+          {error && (
+            <p className="login-error" id="login-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="button" type="submit" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <p className="auth-note">Demo workspace · Live authentication is not connected yet.</p>
+        <p className="auth-note">Forgot your password? Ask the pharmacy owner to reset it.</p>
       </section>
     </div>
   );

@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { USER_ROLE_KEY } from '../constants/app';
+import { getCurrentAccount } from '../data/accountStore';
 
 export function AdminRoute() {
-  return localStorage.getItem(USER_ROLE_KEY) === 'ADMIN' ? (
+  return getCurrentAccount()?.role === 'ADMIN' ? (
     <Outlet />
   ) : (
     <Navigate to="/cashier/dashboard" replace />
