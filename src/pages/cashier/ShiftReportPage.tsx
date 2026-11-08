@@ -186,16 +186,14 @@ export function ShiftReportPage() {
           <section className="cashier-panel shift-report__duty">
             <p className="inventory-form-note">
               {onDuty.length} {onDuty.length === 1 ? 'person served' : 'people served'} this shift.
-              {onDuty.length > 1 && ' The first name is the one printed on receipts.'}
+              {onDuty.length > 1 && ' The cashier in charge is the name printed on receipts.'}
             </p>
             <ol className="shift-report__duty-list">
               {onDuty.map((name, index) => (
                 <li key={`${name}-${index}`}>
                   <span className="shift-report__duty-index">{index + 1}</span>
                   <strong>{name}</strong>
-                  {index === 0 && onDuty.length > 1 && (
-                    <span className="shift-report__duty-tag">Named on receipts</span>
-                  )}
+                  {index === 0 && <span className="shift-report__duty-tag">Cashier in charge</span>}
                 </li>
               ))}
             </ol>

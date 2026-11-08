@@ -1,11 +1,20 @@
 import developerPhoto from '../../assets/developer.jpg';
-import { developerProfile, staffOnDuty, weeklyHours } from './mockData';
+import { getSession } from '../../data/registerSession';
+import { developerProfile, weeklyHours } from './mockData';
 import { BusinessStarfield } from './BusinessStarfield';
 import { DeveloperQuickInfo } from './DeveloperQuickInfo';
 
 export function DeveloperCta() {
   const contacts = developerProfile.contacts;
-  const onDuty = staffOnDuty.find((person) => person.role === 'Pharmacist') ?? staffOnDuty[0];
+  // The cashier picked when the shift was started; nobody is shown while the store is closed.
+  const session = getSession();
+  const onDuty = session
+    ? {
+        initials: session.cashierName.slice(0, 2).toUpperCase(),
+        role: 'Cashier',
+        displayName: session.cashierName,
+      }
+    : undefined;
   const emailContact = contacts.find((contact) => contact.label === 'Email');
   const facebookContact = contacts.find((contact) => contact.label === 'Facebook / Messenger');
   const githubContact = contacts.find((contact) => contact.label === 'GitHub');

@@ -3028,3 +3028,136 @@
 .cashier-shell .pos-payment-modal .product-form__grid select {
   width: 100%;
 }
+
+/* ------------------------------------------------------------------
+   Start shift: 1) the cashier in charge, 2) other staff on duty.
+   ------------------------------------------------------------------ */
+.start-shift__step {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid #e1e5d8;
+  border-radius: 12px;
+  background: #fffef9;
+}
+
+.start-shift__step legend {
+  padding: 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #176246;
+}
+
+.start-shift__hint {
+  margin: 0 0 0.7rem;
+  font-size: 0.82rem;
+  color: #5d7268;
+}
+
+.start-shift__people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+
+.start-shift__person {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.2rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d5dccb;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: left;
+  color: #13322a;
+  cursor: pointer;
+}
+
+.start-shift__person:hover {
+  border-color: #9fb6a0;
+}
+
+.start-shift__initials {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+  background: #e3ece3;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #176246;
+}
+
+.start-shift__person.is-picked {
+  border-color: #176246;
+  background: #176246;
+  color: #fffdf1;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.18);
+}
+
+.start-shift__person.is-picked .start-shift__initials {
+  background: #fffdf1;
+  color: #176246;
+}
+
+.start-shift__others {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.start-shift__chip {
+  padding: 0.45rem 0.8rem;
+  border: 1px dashed #c9cfbe;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #4f6258;
+  cursor: pointer;
+}
+
+.start-shift__chip.is-picked {
+  border-style: solid;
+  border-color: #176246;
+  background: #e8f1e9;
+  color: #176246;
+}
+
+.start-shift__person:focus-visible,
+.start-shift__chip:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.start-shift .pos-checkout-button:disabled {
+  opacity: 1;
+  background: #d9dfd3;
+  color: #8a978f;
+}
+
+/* Top bar: other staff count next to the cashier's name. */
+.cashier-store-status__others {
+  font-weight: 600;
+  color: #5d7268;
+}
+
+/* Duty report: other staff under the cashier's name. */
+.shift-doc__with {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #5d7268;
+}
+
+.developer-onduty__name.is-closed {
+  opacity: 0.75;
+}

@@ -89,30 +89,35 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
   const roster = useMemo(() => loadRoster(), []);
   const active = useMemo(() => getActiveRoster(), []);
   const carriedOver = useMemo(() => getCarriedOverFloat(), []);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [query, setQuery] = useState('');
+  /** The one person running the system: shown in the top bar, the landing page and receipts. */
+  const [cashier, setCashier] = useState('');
+  /** Others working the same shift, kept for the duty report only. */
+  const [others, setOthers] = useState<string[]>([]);
   const [floatInput, setFloatInput] = useState(String(carriedOver));
   const [adjusting, setAdjusting] = useState(false);
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const { showToast } = useToast();
 
-  const matches = active.filter((staff) =>
-    staff.name.toLowerCase().includes(query.trim().toLowerCase()),
-  );
   const adjusted = Math.abs(Number(floatInput || 0) - carriedOver) >= 0.005;
 
-  function toggle(name: string) {
-    setSelected((current) =>
+  function pickCashier(name: string) {
+    setCashier(name);
+    // The cashier cannot also be one of the "other staff".
+    setOthers((current) => current.filter((item) => item !== name));
+    setError('');
+  }
+
+  function toggleOther(name: string) {
+    setOthers((current) =>
       current.includes(name) ? current.filter((item) => item !== name) : [...current, name],
     );
-    setError('');
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected.length) {
-      setError('Select at least one name who is on duty.');
+    if (!cashier) {
+      setError('Pick who is the cashier for this shift.');
       return;
     }
     if (adjusted && !reason.trim()) {
@@ -121,11 +126,11 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
     }
     try {
       const started = startShift({
-        onDutyNames: selected,
+        onDutyNames: [cashier, ...others],
         openingFloat: Number(floatInput || 0),
         adjustmentReason: adjusted ? reason : undefined,
       });
-      showToast(`Shift started · ${started.cashierName}`, 'success');
+      showToast(`Shift started · Cashier: ${started.cashierName}`, 'success');
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not start the shift.');
@@ -134,66 +139,80 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div className="pos-modal-backdrop">
-      <form className="pos-payment-modal cashier-shift-modal" onSubmit={submit} noValidate>
+      <form
+        className="pos-payment-modal cashier-shift-modal start-shift"
+        onSubmit={submit}
+        noValidate
+      >
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close">
           ×
         </button>
         <p className="eyebrow">Cash control</p>
         <h2>Start shift</h2>
-        <p className="inventory-form-note">
-          Pick everyone who is working this shift. Receipts show the first name you pick; the full
-          list is kept in the shift report.
-        </p>
 
-        <label className="cashier-shift-field">
-          Search staff on duty
-          <input
-            type="search"
-            autoFocus
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Type a name…"
-          />
-        </label>
-
-        <div className="cashier-shift-roster" role="group" aria-label="Staff on duty">
-          {roster.length === 0 ? (
-            <p className="cashier-shift-empty">
-              No staff registered yet. Ask the administrator to add names in Staff.
-            </p>
-          ) : matches.length === 0 ? (
-            <p className="cashier-shift-empty">No staff matches “{query}”.</p>
-          ) : (
-            matches.map((staff) => {
-              const isSelected = selected.includes(staff.name);
-              return (
-                <button
-                  key={staff.id}
-                  type="button"
-                  aria-pressed={isSelected}
-                  className={`cashier-shift-chip${isSelected ? ' is-selected' : ''}`}
-                  onClick={() => toggle(staff.name)}
-                >
-                  <span>{staff.name}</span>
-                  {isSelected && (
-                    <span className="cashier-shift-chip__index">
-                      {selected.indexOf(staff.name) + 1}
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-
-        {selected.length > 0 && (
-          <p className="cashier-shift-picked">
-            On duty: <strong>{selected.join(', ')}</strong>
-            <br />
-            <span>Receipts will show “{selected[0]}”.</span>
+        {roster.length === 0 || active.length === 0 ? (
+          <p className="cashier-shift-empty">
+            No staff on the roster yet. Ask the owner to add names in Staff → Staff roster.
           </p>
-        )}
+        ) : (
+          <>
+            <fieldset className="start-shift__step">
+              <legend>1. Who is the cashier?</legend>
+              <p className="start-shift__hint">
+                This name shows in the top bar, on the website and on every receipt.
+              </p>
+              <div className="start-shift__people" role="radiogroup" aria-label="Cashier">
+                {active.map((staff) => (
+                  <button
+                    key={staff.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={cashier === staff.name}
+                    className={`start-shift__person${cashier === staff.name ? ' is-picked' : ''}`}
+                    onClick={() => pickCashier(staff.name)}
+                  >
+                    <span className="start-shift__initials" aria-hidden="true">
+                      {staff.name
+                        .split(' ')
+                        .map((part) => part[0])
+                        .join('')
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </span>
+                    {staff.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
 
+            {active.length > 1 && (
+              <fieldset className="start-shift__step">
+                <legend>2. Other staff on duty (optional)</legend>
+                <p className="start-shift__hint">
+                  Others working this shift. Only kept in the duty report.
+                </p>
+                <div className="start-shift__others">
+                  {active
+                    .filter((staff) => staff.name !== cashier)
+                    .map((staff) => (
+                      <button
+                        key={staff.id}
+                        type="button"
+                        aria-pressed={others.includes(staff.name)}
+                        className={`start-shift__chip${
+                          others.includes(staff.name) ? ' is-picked' : ''
+                        }`}
+                        onClick={() => toggleOther(staff.name)}
+                      >
+                        {others.includes(staff.name) ? '✓ ' : '+ '}
+                        {staff.name}
+                      </button>
+                    ))}
+                </div>
+              </fieldset>
+            )}
+          </>
+        )}
         <div className="cashier-shift-float">
           <div>
             <span className="cashier-shift-float__label">Cash float</span>
@@ -256,8 +275,8 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
           </p>
         )}
 
-        <button className="pos-checkout-button" type="submit">
-          Start shift
+        <button className="pos-checkout-button" type="submit" disabled={!cashier}>
+          {cashier ? `Start shift as ${cashier}` : 'Pick the cashier first'}
         </button>
       </form>
     </div>,

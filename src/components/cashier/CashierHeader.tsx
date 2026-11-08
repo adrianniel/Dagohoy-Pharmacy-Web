@@ -75,7 +75,15 @@ export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
           <div>
             {storeOpen && onDuty.length ? (
               <>
-                <strong title={onDuty.join(', ')}>On duty: {onDuty.join(', ')}</strong>
+                <strong title={onDuty.join(', ')}>
+                  Cashier: {onDuty[0]}
+                  {onDuty.length > 1 && (
+                    <span className="cashier-store-status__others">
+                      {' '}
+                      +{onDuty.length - 1} staff
+                    </span>
+                  )}
+                </strong>
                 <small className="cashier-shift-clock">
                   Time on shift: <b>{formatElapsed(openedAt, now)}</b>
                 </small>

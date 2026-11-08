@@ -68,8 +68,13 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
 
       <dl className="shift-doc__facts">
         <div>
-          <dt>On duty</dt>
-          <dd>{names.join(', ')}</dd>
+          <dt>Cashier</dt>
+          <dd>
+            {names[0]}
+            {names.length > 1 && (
+              <span className="shift-doc__with">With: {names.slice(1).join(', ')}</span>
+            )}
+          </dd>
         </div>
         <div>
           <dt>Shift</dt>

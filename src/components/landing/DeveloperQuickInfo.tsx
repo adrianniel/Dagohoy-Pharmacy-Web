@@ -46,10 +46,12 @@ export function DeveloperQuickInfo({ hours, onDuty }: DeveloperQuickInfoProps) {
       </div>
       <div className="developer-onduty">
         <span className="developer-onduty__label">ON DUTY:</span>
-        {onDuty && (
+        {onDuty ? (
           <strong className="developer-onduty__name" title={onDuty.displayName}>
             {onDuty.displayName}
           </strong>
+        ) : (
+          <strong className="developer-onduty__name is-closed">Store closed</strong>
         )}
       </div>
     </div>
