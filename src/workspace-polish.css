@@ -79,9 +79,7 @@ html:has(.cashier-shell) {
   flex: 0 1 auto;
 }
 
-.cashier-dashboard-grid,
-.pos-layout,
-.pos-workspace-grid {
+.pos-layout {
   gap: 1.5rem;
 }
 
@@ -227,20 +225,6 @@ html:has(.cashier-shell) {
   border-top: 3px solid #16815b;
 }
 
-.product-receive-confirm > div {
-  min-width: 180px;
-}
-
-.product-receive-confirm input[type='date'] {
-  width: 160px;
-}
-
-.product-category-group > h3,
-.product-restock-panel strong {
-  font-size: 0.88rem;
-}
-
-.operations-demo-banner,
 .pos-demo-disclaimer,
 .inventory-form-note {
   line-height: 1.6;
@@ -303,13 +287,11 @@ html:has(.cashier-shell) {
     flex-basis: 100%;
   }
 
-  .cashier-table-footer,
-  .product-restock-panel {
+  .cashier-table-footer {
     flex-wrap: wrap;
   }
 
-  .cashier-panel__heading > div,
-  .product-manual-select select {
+  .cashier-panel__heading > div {
     min-width: 0;
   }
 }

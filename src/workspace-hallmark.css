@@ -255,27 +255,6 @@ body:has(.cashier-shell) {
   background: var(--hm-summary-edge);
 }
 
-.cashier-summary-card--green {
-  border-color: var(--hm-accent);
-  background: var(--hm-summary-green);
-  box-shadow: 0 12px 30px var(--hm-summary-shadow);
-}
-
-.cashier-summary-card--green::before {
-  display: none;
-}
-
-.cashier-summary-card--green p,
-.cashier-summary-card--green strong,
-.cashier-summary-card--green span {
-  color: var(--hm-sidebar-text);
-}
-
-.cashier-summary-card--green p,
-.cashier-summary-card--green span {
-  color: var(--hm-sidebar-muted);
-}
-
 .cashier-summary-card p {
   margin-block-end: var(--hm-space-md);
   color: var(--hm-ink-soft);
@@ -319,9 +298,7 @@ body:has(.cashier-shell) {
   font-size: 0.83rem;
 }
 
-.cashier-dashboard-grid,
-.pos-layout,
-.pos-workspace-grid {
+.pos-layout {
   gap: 1.15rem;
 }
 
@@ -373,8 +350,7 @@ body:has(.cashier-shell) {
 
 .cashier-search-field,
 .cashier-filter-button,
-.cashier-view-button,
-.operations-select {
+.cashier-view-button {
   border-color: var(--hm-line-strong);
   border-radius: var(--hm-radius-sm);
   background: var(--hm-surface);
@@ -407,23 +383,12 @@ body:has(.cashier-shell) {
   background: var(--hm-surface);
 }
 
-.pos-order-panel > .cashier-panel__heading,
-.pos-order-totals {
+.pos-order-panel > .cashier-panel__heading {
   background: var(--hm-surface-muted);
 }
 
-.pos-workbench-empty {
-  color: var(--hm-muted);
-}
-
-.product-receiving-panel,
 .settings-form {
   background: var(--hm-surface);
-}
-
-.product-receive-confirm {
-  border-color: var(--hm-line);
-  background: var(--hm-surface-muted);
 }
 
 .pos-payment-modal {
@@ -464,27 +429,13 @@ body:has(.cashier-shell) {
   background: var(--hm-surface);
 }
 
-.pos-payment-total,
-.gcash-payment-details {
+.pos-payment-total {
   border-color: var(--hm-line);
   background: var(--hm-surface-muted);
 }
 
 .pos-payment-total strong {
   color: var(--hm-accent-strong);
-}
-
-.gcash-payment-details > div {
-  color: var(--hm-ink-soft);
-}
-
-.gcash-payment-details > div strong {
-  color: var(--hm-ink);
-}
-
-.gcash-payment-details img {
-  border-color: var(--hm-line);
-  background: var(--hm-surface);
 }
 
 @media (max-width: 820px) {

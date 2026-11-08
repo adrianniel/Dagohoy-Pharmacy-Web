@@ -441,38 +441,6 @@
   opacity: 0.5;
 }
 
-.stock-index__search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid #cfe1d6;
-  background: #f7fbf8;
-}
-
-.stock-index__search .cashier-icon {
-  width: 20px;
-  height: 20px;
-  color: #176246;
-  flex: none;
-}
-
-.stock-index__search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: 1rem;
-  color: #141414;
-  outline: none;
-}
-
-.stock-index__search input::placeholder {
-  color: #7b8f83;
-}
-
 .stock-index__tile:disabled {
   cursor: not-allowed;
   opacity: 0.55;
