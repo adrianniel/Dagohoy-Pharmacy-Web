@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
+import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import {
   loadMovements,
@@ -52,23 +53,31 @@ export const initialBatches: InventoryBatch[] = [
   },
 ];
 
+type MovementView = 'all' | 'in' | 'out' | 'adjust';
+
+const STOCK_IN_KINDS: StockMovement['kind'][] = ['Received'];
+const STOCK_OUT_KINDS: StockMovement['kind'][] = ['Sale', 'Damaged', 'Return'];
+
 export function OperationsPage() {
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [view, setView] = useState<MovementView>('all');
   const [movements, setMovements] = useState(loadMovements);
-  const [modal, setModal] = useState<'adjustment' | null>(null);
   const { showToast } = useToast();
-  const filteredMovements = useMemo(
-    () =>
-      movements.filter(
-        (movement) =>
-          `${movement.id} ${movement.product} ${movement.reference} ${movement.reason}`
-            .toLowerCase()
-            .includes(query.toLowerCase()) &&
-          (filter === 'all' || movement.kind === filter),
-      ),
-    [filter, movements, query],
-  );
+
+  const stockIn = movements.filter((movement) => STOCK_IN_KINDS.includes(movement.kind));
+  const stockOut = movements.filter((movement) => STOCK_OUT_KINDS.includes(movement.kind));
+
+  const visibleMovements = useMemo(() => {
+    const kinds = view === 'in' ? STOCK_IN_KINDS : view === 'out' ? STOCK_OUT_KINDS : null;
+    const needle = query.trim().toLowerCase();
+    return movements.filter(
+      (movement) =>
+        (!kinds || kinds.includes(movement.kind)) &&
+        `${movement.id} ${movement.product} ${movement.reference} ${movement.reason}`
+          .toLowerCase()
+          .includes(needle),
+    );
+  }, [movements, query, view]);
 
   function saveAdjustment(movement: StockMovement, productBarcode: string) {
     const inventory = getInventory();
@@ -88,102 +97,135 @@ export function OperationsPage() {
     const next = [movement, ...movements];
     setMovements(next);
     saveMovements(next);
-    setModal(null);
+    setView('all');
     showToast('Stock adjustment saved to this browser.');
   }
 
+  const items: Array<ControlItem<MovementView>> = [
+    {
+      key: 'all',
+      icon: 'stock',
+      title: 'All movements',
+      hint: 'Every stock change',
+      tone: 'forest',
+      count: movements.length,
+      about: 'Every time stock went in or out, newest first. Saved in this browser only.',
+    },
+    {
+      key: 'in',
+      icon: 'purchases',
+      title: 'Stock in',
+      hint: 'Deliveries received',
+      tone: 'blue',
+      count: stockIn.length,
+      about: 'Supplier deliveries that added units to the shelf.',
+    },
+    {
+      key: 'out',
+      icon: 'return',
+      title: 'Stock out',
+      hint: 'Sales, damaged, returns',
+      tone: 'rose',
+      count: stockOut.length,
+      about: 'Units that left the shelf through sales, damage or returns to the supplier.',
+    },
+    {
+      key: 'adjust',
+      icon: 'adjustments',
+      title: 'Adjust stock',
+      hint: 'Fix a count',
+      tone: 'amber',
+      about: 'Correct the shelf count. Every adjustment is added to the movement history.',
+    },
+  ];
+  const activeItem = items.find((item) => item.key === view) ?? items[0];
+
   return (
     <div className="cashier-page">
-      <div className="operations-demo-banner operations-demo-banner--with-action">
-        <span>
-          Demo inventory workspace · quantities and documents are stored in this browser only.
-        </span>
-        <button
-          className="cashier-primary-action operations-demo-action"
-          type="button"
-          onClick={() => setModal('adjustment')}
-        >
-          Adjust stock <span>＋</span>
-        </button>
-      </div>
-      <section className="cashier-panel cashier-list-panel">
-        <div className="cashier-list-toolbar">
-          <SearchField
-            query={query}
-            setQuery={setQuery}
-            placeholder="Search product, reference, reason"
-          />
-          <select
-            className="operations-select"
-            aria-label="Filter movement type"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          >
-            <option value="all">All movement types</option>
-            <option>Received</option>
-            <option>Adjustment</option>
-            <option>Damaged</option>
-            <option>Sale</option>
-            <option>Return</option>
-          </select>
-        </div>
-        <div
-          className="cashier-table-wrap"
-          role="region"
-          aria-label="Stock movements table"
-          tabIndex={0}
-        >
-          <table className="cashier-table">
-            <thead>
-              <tr>
-                <th>Reference</th>
-                <th>Date &amp; time</th>
-                <th>Product</th>
-                <th>Movement</th>
-                <th>Change</th>
-                <th>Reason / source</th>
-                <th>Staff</th>
+      <ControlDeck
+        id="stock-moves"
+        title="Stock movements"
+        subtitle="Pick a view. Its list or form opens in the card below."
+        items={items}
+        active={view}
+        onSelect={setView}
+      />
+      <ControlPanel
+        id="stock-moves"
+        activeKey={view}
+        title={activeItem.title}
+        about={activeItem.about}
+      >
+        {view === 'adjust' ? (
+          <AdjustmentForm onSave={saveAdjustment} />
+        ) : (
+          <>
+            <div className="cashier-list-toolbar">
+              <SearchField
+                query={query}
+                setQuery={setQuery}
+                placeholder="Search product, reference, reason"
+              />
+            </div>
+            <MovementTable movements={visibleMovements} />
+          </>
+        )}
+      </ControlPanel>
+    </div>
+  );
+}
+
+function MovementTable({ movements }: { movements: StockMovement[] }) {
+  return (
+    <div
+      className="cashier-table-wrap"
+      role="region"
+      aria-label="Stock movements table"
+      tabIndex={0}
+    >
+      <table className="cashier-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Date &amp; time</th>
+            <th>Product</th>
+            <th>Movement</th>
+            <th>Change</th>
+            <th>Reason / source</th>
+            <th>Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {movements.length ? (
+            movements.map((movement) => (
+              <tr key={movement.id}>
+                <td>
+                  <strong>{movement.id}</strong>
+                </td>
+                <td>{new Date(movement.date).toLocaleString('en-PH')}</td>
+                <td>{movement.product}</td>
+                <td>
+                  <StatusBadge value={movement.kind} />
+                </td>
+                <td className={movement.change > 0 ? 'movement-positive' : 'movement-negative'}>
+                  {movement.change > 0 ? '+' : ''}
+                  {movement.change}
+                </td>
+                <td>
+                  {movement.reason} <small>{movement.reference}</small>
+                </td>
+                <td>{movement.staff}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredMovements.length ? (
-                filteredMovements.map((movement) => (
-                  <tr key={movement.id}>
-                    <td>
-                      <strong>{movement.id}</strong>
-                    </td>
-                    <td>{new Date(movement.date).toLocaleString('en-PH')}</td>
-                    <td>{movement.product}</td>
-                    <td>
-                      <StatusBadge value={movement.kind} />
-                    </td>
-                    <td
-                      className={movement.change > 0 ? 'movement-positive' : 'movement-negative'}
-                    >
-                      {movement.change > 0 ? '+' : ''}
-                      {movement.change}
-                    </td>
-                    <td>
-                      {movement.reason} <small>{movement.reference}</small>
-                    </td>
-                    <td>{movement.staff}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="operations-empty">
-                    No demo adjustments recorded yet. Receive an order or create an adjustment to
-                    start the audit trail.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      {modal === 'adjustment' && (
-        <AdjustmentForm onClose={() => setModal(null)} onSave={saveAdjustment} />
-      )}
+            ))
+          ) : (
+            <tr>
+              <td colSpan={7} className="operations-empty">
+                No stock movements here yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -210,10 +252,8 @@ function SearchField({
 }
 
 function AdjustmentForm({
-  onClose,
   onSave,
 }: {
-  onClose: () => void;
   onSave: (movement: StockMovement, barcode: string) => void;
 }) {
   const products = getInventory();
@@ -223,43 +263,30 @@ function AdjustmentForm({
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState('');
   return (
-    <div className="pos-modal-backdrop">
-      <form
-        className="pos-payment-modal"
-        onSubmit={(event: FormEvent<HTMLFormElement>) => {
-          event.preventDefault();
-          const product = products.find((item) => item.barcode === barcode);
-          if (!product) return;
-          const qty = Number(quantity);
-          const change = direction === 'add' ? qty : -qty;
-          onSave(
-            {
-              id: `ADJ-${Date.now().toString().slice(-6)}`,
-              date: new Date().toISOString(),
-              product: product.product,
-              kind,
-              change,
-              reference: 'Manual adjustment',
-              staff: 'Demo admin',
-              reason,
-            },
-            barcode,
-          );
-        }}
-      >
-        <button
-          className="pos-modal-close"
-          type="button"
-          onClick={onClose}
-          aria-label="Close stock adjustment"
-        >
-          ×
-        </button>
-        <p className="eyebrow">Inventory control · demo</p>
-        <h2>Adjust stock</h2>
-        <p className="inventory-form-note">
-          Every adjustment is recorded in the local movement history.
-        </p>
+    <form
+      className="stock-index__form"
+      onSubmit={(event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const product = products.find((item) => item.barcode === barcode);
+        if (!product) return;
+        const qty = Number(quantity);
+        const change = direction === 'add' ? qty : -qty;
+        onSave(
+          {
+            id: `ADJ-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString(),
+            product: product.product,
+            kind,
+            change,
+            reference: 'Manual adjustment',
+            staff: 'Demo admin',
+            reason,
+          },
+          barcode,
+        );
+      }}
+    >
+      <div className="stock-index__form-grid">
         <label>
           Product
           <select value={barcode} onChange={(event) => setBarcode(event.target.value)}>
@@ -270,26 +297,24 @@ function AdjustmentForm({
             ))}
           </select>
         </label>
-        <div className="inventory-form-row">
-          <label>
-            Reason
-            <select value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
-              <option value="Adjustment">Count correction</option>
-              <option value="Damaged">Damaged / expired</option>
-              <option value="Return">Customer return</option>
-            </select>
-          </label>
-          <label>
-            Direction
-            <select
-              value={direction}
-              onChange={(event) => setDirection(event.target.value as typeof direction)}
-            >
-              <option value="remove">Remove stock</option>
-              <option value="add">Add stock</option>
-            </select>
-          </label>
-        </div>
+        <label>
+          Reason
+          <select value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
+            <option value="Adjustment">Count correction</option>
+            <option value="Damaged">Damaged / expired</option>
+            <option value="Return">Customer return</option>
+          </select>
+        </label>
+        <label>
+          Direction
+          <select
+            value={direction}
+            onChange={(event) => setDirection(event.target.value as typeof direction)}
+          >
+            <option value="remove">Remove stock</option>
+            <option value="add">Add stock</option>
+          </select>
+        </label>
         <label>
           Quantity
           <input
@@ -301,7 +326,7 @@ function AdjustmentForm({
             onChange={(event) => setQuantity(event.target.value)}
           />
         </label>
-        <label>
+        <label className="stock-index__field-wide">
           Reason / note
           <input
             required
@@ -310,10 +335,12 @@ function AdjustmentForm({
             placeholder="e.g. Physical count variance"
           />
         </label>
-        <button className="pos-checkout-button" type="submit">
+      </div>
+      <div className="stock-index__actions">
+        <button className="stock-index__action" type="submit">
           Save adjustment
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }
