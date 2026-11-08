@@ -305,16 +305,6 @@
   color: #5d7268;
 }
 
-/* Selected line in the current sale */
-.pos-order-line {
-  cursor: pointer;
-}
-
-.pos-order-line.is-selected {
-  background: #e4eee2;
-  box-shadow: inset 3px 0 0 #176246;
-}
-
 /* Void and no-charge dialogs */
 .pos-control-modal {
   max-width: 34rem;
@@ -415,5 +405,506 @@
 @media (max-width: 620px) {
   .pos-control-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Current sale as a register ticket.
+   Plain paper card, a stamped header with real ticket facts, numbered
+   lines in fixed columns, dotted leaders on the totals and a solid pay
+   bar. No gradients, glows or icon badges.
+   ------------------------------------------------------------------ */
+
+.cashier-pos-page .pos-order-panel.pos-ticket {
+  --ticket-ink: #13322a;
+  --ticket-green: #176246;
+  --ticket-muted: #6a7b71;
+  --ticket-rule: #e2e5d5;
+  --ticket-paper: #fffef9;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: visible;
+  border: 1px solid #d8ddcc;
+  border-top: 4px solid var(--ticket-green);
+  border-radius: 6px 6px 14px 14px;
+  background: var(--ticket-paper);
+  box-shadow: 0 1px 0 #e9ecdd, 0 10px 24px rgb(19 50 42 / 7%);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Header: state stamp + title on the left, ticket facts on the right. */
+.pos-ticket__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--ticket-rule);
+}
+
+.pos-ticket__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ticket-muted);
+}
+
+.pos-ticket__state::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c3c9bc;
+}
+
+.pos-ticket__state.is-open {
+  color: var(--ticket-green);
+}
+
+.pos-ticket__state.is-open::before {
+  background: #23a26b;
+  box-shadow: 0 0 0 3px rgb(35 162 107 / 18%);
+}
+
+.cashier-pos-page .pos-ticket__head h3 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ticket-ink);
+}
+
+.pos-ticket__meta {
+  display: flex;
+  margin: 0;
+}
+
+.pos-ticket__meta > div {
+  padding: 0 0.95rem;
+  border-left: 1px solid var(--ticket-rule);
+  text-align: right;
+}
+
+.pos-ticket__meta > div:first-child {
+  border-left: 0;
+}
+
+.pos-ticket__meta > div:last-child {
+  padding-right: 0;
+}
+
+.pos-ticket__meta dt {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ticket-muted);
+}
+
+.pos-ticket__meta dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ticket-ink);
+}
+
+/* Scan field sits flush in the ticket, like the input line of a register. */
+.cashier-pos-page .pos-ticket__scan {
+  margin: 0;
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px dashed #d3d8c6;
+}
+
+.cashier-pos-page .pos-ticket__scan .pos-scan-field {
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.cashier-pos-page .pos-ticket__scan .pos-scan-field:focus-within {
+  border-color: var(--ticket-green);
+  box-shadow: 0 0 0 3px rgb(23 98 70 / 12%);
+}
+
+.cashier-pos-page .pos-ticket__scan .pos-scan-results {
+  left: 1.5rem;
+  right: 1.5rem;
+}
+
+/* Column labels over the lines. */
+.pos-ticket__cols,
+.pos-ticket-line {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto 6.5rem;
+  align-items: center;
+  column-gap: 1rem;
+  padding: 0 1.5rem;
+}
+
+.pos-ticket__cols {
+  padding-top: 0.7rem;
+  padding-bottom: 0.45rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ticket-muted);
+}
+
+.pos-ticket__cols > span:nth-child(3) {
+  width: 6.4rem;
+  text-align: center;
+}
+
+.pos-ticket__cols > span:last-child {
+  text-align: right;
+}
+
+.pos-ticket__lines {
+  flex: 1 1 auto;
+  min-height: 15rem;
+  max-height: clamp(15rem, 44vh, 34rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c4cfbf transparent;
+}
+
+.pos-ticket-line {
+  position: relative;
+  min-height: 3.9rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #eef0e4;
+  cursor: pointer;
+}
+
+.pos-ticket-line:hover {
+  background: #f7f8ef;
+}
+
+.pos-ticket-line.is-selected {
+  background: #eef4ea;
+}
+
+.pos-ticket-line.is-selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ticket-green);
+}
+
+.pos-ticket-line__no {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9aa79f;
+}
+
+.pos-ticket-line__name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.pos-ticket-line__name strong {
+  overflow: hidden;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ticket-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pos-ticket-line__name small {
+  font-size: 0.8rem;
+  color: var(--ticket-muted);
+}
+
+.pos-ticket-qty {
+  display: grid;
+  grid-template-columns: 2rem 2.4rem 2rem;
+  align-items: center;
+  height: 2.1rem;
+  border: 1px solid #d5dccb;
+  border-radius: 7px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.pos-ticket-qty button {
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ticket-green);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pos-ticket-qty button:hover {
+  background: #edf3ea;
+}
+
+.pos-ticket-qty span {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-inline: 1px solid #e3e8dc;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ticket-ink);
+}
+
+.pos-ticket-line__amount {
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--ticket-ink);
+}
+
+/* Empty ticket: faint ruled lines like blank receipt paper, message on the left. */
+.pos-ticket__empty {
+  min-height: 15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1.5rem 1.5rem 4.5rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(3.9rem - 1px),
+    #f0f2e7 calc(3.9rem - 1px),
+    #f0f2e7 3.9rem
+  );
+}
+
+.pos-ticket__empty strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ticket-ink);
+}
+
+.pos-ticket__empty span {
+  max-width: 34ch;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ticket-muted);
+}
+
+.pos-ticket__start {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+  padding: 0.75rem 1.15rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ticket-green);
+  color: #fffdf1;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pos-ticket__start .cashier-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.pos-ticket__start:hover {
+  background: #11513a;
+}
+
+.pos-ticket__start:focus-visible,
+.pos-ticket__pay:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 3px;
+}
+
+/* Totals: dotted leaders between label and amount, a double rule above the total. */
+.pos-ticket__totals {
+  padding: 0.85rem 1.5rem 0.2rem;
+  border-top: 1px dashed #d3d8c6;
+}
+
+.pos-ticket__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-height: 2.3rem;
+  font-size: 0.92rem;
+  color: #4f6258;
+}
+
+.pos-ticket__row::after {
+  content: '';
+  order: 1;
+  flex: 1;
+  border-bottom: 1.5px dotted #c9cfbe;
+  transform: translateY(-0.25rem);
+}
+
+.pos-ticket__row > :last-child {
+  order: 2;
+}
+
+.pos-ticket__row strong {
+  font-weight: 700;
+  color: var(--ticket-ink);
+}
+
+.pos-ticket__discount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ticket-muted);
+  font-size: 0.88rem;
+}
+
+.pos-ticket__discount input {
+  width: 3.6rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ticket-ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: right;
+}
+
+.pos-ticket__discount input:focus {
+  outline: none;
+  border-color: var(--ticket-green);
+  box-shadow: 0 0 0 3px rgb(23 98 70 / 12%);
+}
+
+.pos-ticket__due {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.55rem;
+  padding: 0.8rem 0 0.7rem;
+  border-top: 3px double #c9cfbe;
+}
+
+.pos-ticket__due span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ticket-ink);
+}
+
+.pos-ticket__due strong {
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--ticket-ink);
+}
+
+/* Pay bar. */
+.pos-ticket__foot {
+  padding: 0.4rem 1.5rem 1.15rem;
+}
+
+.pos-ticket__pay {
+  width: 100%;
+  min-height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.2rem;
+  border: 0;
+  border-radius: 9px;
+  background: var(--ticket-green);
+  color: #fffdf1;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pos-ticket__pay .cashier-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.pos-ticket__pay:hover:not(:disabled) {
+  background: #11513a;
+}
+
+.pos-ticket__pay:disabled {
+  background: #e3e8de;
+  color: #8e9c93;
+  cursor: not-allowed;
+}
+
+.pos-ticket__note {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: #8a978f;
+}
+
+@media (max-width: 700px) {
+  .pos-ticket__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pos-ticket__meta > div:first-child {
+    padding-left: 0;
+  }
+
+  .pos-ticket__cols {
+    display: none;
+  }
+
+  .pos-ticket-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.5rem;
+  }
+
+  .pos-ticket-line__no {
+    display: none;
+  }
+
+  .pos-ticket-line__name {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .pos-ticket-qty {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pos-ticket-line__amount {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .pos-ticket__meta > div {
+    text-align: left;
+  }
+
+  .pos-ticket__empty {
+    padding-left: 1.5rem;
   }
 }

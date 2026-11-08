@@ -3,7 +3,6 @@ import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
-import CartIcon from '../../components/originkit/ui/CartIcon';
 import { getWorkspaceProfile } from '../../data/accountStore';
 import { REGISTER_SESSION_KEY } from '../../data/registerSession';
 
@@ -126,6 +125,7 @@ export function CashierPosPage() {
   const [products] = useState(getInventory);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [transactionActive, setTransactionActive] = useState(false);
+  const [openedAt, setOpenedAt] = useState<Date | null>(null);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountInput, setDiscountInput] = useState('0');
@@ -188,6 +188,7 @@ export function CashierPosPage() {
 
   function startTransaction() {
     setTransactionActive(true);
+    setOpenedAt(new Date());
     setQuery('');
     setExpandedProduct(null);
     showToast('Transaction started. Scan or search for the first item.', 'info');
@@ -346,6 +347,7 @@ export function CashierPosPage() {
     setSelectedLine(null);
     setDiscountInput('0');
     setTransactionActive(true);
+    setOpenedAt(new Date());
     showToast(`Transaction ${voidTarget} voided. Start the corrected sale.`, 'success');
   }
 
@@ -424,6 +426,7 @@ export function CashierPosPage() {
     setSelectedLine(null);
     setDiscountInput('0');
     setTransactionActive(false);
+    setOpenedAt(null);
     setPaymentOpen(true);
     showToast(`No-charge slip ${receipt} recorded.`, 'success');
   }
@@ -520,6 +523,7 @@ export function CashierPosPage() {
     });
     setCart([]);
     setTransactionActive(false);
+    setOpenedAt(null);
     setTendered('');
     setCreditCustomer('');
     setGcashReference('');
@@ -531,22 +535,34 @@ export function CashierPosPage() {
   return (
     <div className="cashier-page cashier-pos-page">
       <div className="pos-layout">
-        <section className="cashier-panel pos-order-panel" aria-labelledby="pos-sale-heading">
-          <div className="cashier-panel__heading">
-            <div className="pos-order-heading">
-              <span className="pos-order-heading__icon" aria-hidden="true">
-                <CartIcon size={23} color="#fffdf1" strokeWidth={1.8} />
+        <section className="cashier-panel pos-order-panel pos-ticket" aria-labelledby="pos-sale-heading">
+          <header className="pos-ticket__head">
+            <div>
+              <span className={`pos-ticket__state${transactionActive ? ' is-open' : ''}`}>
+                {transactionActive ? 'Ticket open' : 'No open ticket'}
               </span>
-              <div>
-                <h3 id="pos-sale-heading">Current sale</h3>
-                <p>
-                  {totalItems} item{totalItems === 1 ? '' : 's'} · {cart.length} product
-                  {cart.length === 1 ? '' : 's'}
-                </p>
-              </div>
+              <h3 id="pos-sale-heading">Current sale</h3>
             </div>
-          </div>
-          <div className="pos-scan-dock">
+            <dl className="pos-ticket__meta">
+              <div>
+                <dt>Opened</dt>
+                <dd>
+                  {openedAt
+                    ? openedAt.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
+                    : '--:--'}
+                </dd>
+              </div>
+              <div>
+                <dt>Lines</dt>
+                <dd>{cart.length}</dd>
+              </div>
+              <div>
+                <dt>Qty</dt>
+                <dd>{totalItems}</dd>
+              </div>
+            </dl>
+          </header>
+          <div className="pos-scan-dock pos-ticket__scan">
             <label className="pos-scan-field">
               <CashierIcon name="search" />
               <input
@@ -557,7 +573,9 @@ export function CashierPosPage() {
                 autoComplete="off"
                 autoFocus
                 disabled={!transactionActive}
-                placeholder="Scan barcode or search a product…"
+                placeholder={
+                  transactionActive ? 'Scan a barcode or type a product name' : 'Open a ticket to scan'
+                }
               />
             </label>
             {query.trim() && transactionActive && (
@@ -588,22 +606,29 @@ export function CashierPosPage() {
               </div>
             )}
           </div>
-          <div className="pos-order-lines">
-            {cart.map(({ product, quantity }) => (
+          {cart.length > 0 && (
+            <div className="pos-ticket__cols" aria-hidden="true">
+              <span>#</span>
+              <span>Item</span>
+              <span>Qty</span>
+              <span>Amount</span>
+            </div>
+          )}
+          <div className="pos-ticket__lines">
+            {cart.map(({ product, quantity }, index) => (
               <div
-                className={`pos-order-line${
-                  selectedLine === product.barcode ? ' is-selected' : ''
-                }`}
+                className={`pos-ticket-line${selectedLine === product.barcode ? ' is-selected' : ''}`}
                 key={product.barcode}
                 onClick={() => setSelectedLine(product.barcode)}
               >
-                <div className="pos-order-line__name">
+                <span className="pos-ticket-line__no">{String(index + 1).padStart(2, '0')}</span>
+                <div className="pos-ticket-line__name">
                   <strong>{product.product}</strong>
                   <small>
                     {formatMoney(toAmount(product.price))} / {product.unit}
                   </small>
                 </div>
-                <div className="pos-quantity">
+                <div className="pos-ticket-qty">
                   <button
                     type="button"
                     aria-label={`Decrease ${product.product}`}
@@ -626,47 +651,40 @@ export function CashierPosPage() {
                     +
                   </button>
                 </div>
-                <strong className="pos-line-total">
+                <strong className="pos-ticket-line__amount">
                   {formatMoney(toAmount(product.price) * quantity)}
                 </strong>
               </div>
             ))}
             {!cart.length && (
-              <div className={`pos-order-empty${transactionActive ? ' is-active' : ''}`}>
+              <div className={`pos-ticket__empty${transactionActive ? ' is-active' : ''}`}>
                 {transactionActive ? (
                   <>
-                    <strong>Ready for the first item</strong>
+                    <strong>Scan the first item.</strong>
                     <span>
-                      Scan a barcode or search for a product in the helper panel to add it here.
+                      Use the barcode scanner, or type part of a product name in the box above.
                     </span>
                   </>
                 ) : (
                   <>
-                    <button
-                      className="pos-start-transaction"
-                      type="button"
-                      onClick={startTransaction}
-                    >
+                    <strong>No sale is open.</strong>
+                    <span>Open a ticket when the customer is at the counter.</span>
+                    <button className="pos-ticket__start" type="button" onClick={startTransaction}>
                       Start transaction <CashierIcon name="arrow" />
                     </button>
-                    <span>
-                      Begin a transaction to unlock
-                      <br />
-                      scanning and build the current sale.
-                    </span>
                   </>
                 )}
               </div>
             )}
           </div>
-          <div className="pos-order-totals">
-            <div>
+          <div className="pos-ticket__totals">
+            <div className="pos-ticket__row">
               <span>Subtotal</span>
               <strong>{formatMoney(subtotal)}</strong>
             </div>
-            <div>
-              <span>Discount (%)</span>
-              <label className="pos-discount-input">
+            <div className="pos-ticket__row">
+              <span>Discount</span>
+              <label className="pos-ticket__discount">
                 <input
                   aria-label="Discount percent"
                   type="text"
@@ -681,25 +699,28 @@ export function CashierPosPage() {
               </label>
             </div>
             {discount > 0 && (
-              <div>
-                <span>Discount applied</span>
+              <div className="pos-ticket__row">
+                <span>Less discount</span>
                 <strong>−{formatMoney(discount)}</strong>
               </div>
             )}
-            <div className="pos-order-grand-total">
+            <div className="pos-ticket__due">
               <span>Total due</span>
               <strong>{formatMoney(totalDue)}</strong>
             </div>
           </div>
-          <button
-            className="pos-checkout-button"
-            type="button"
-            disabled={!cart.length}
-            onClick={() => setPaymentOpen(true)}
-          >
-            Continue to payment <CashierIcon name="arrow" />
-          </button>
-          <p className="pos-demo-disclaimer">Records the sale in this browser and updates stock.</p>
+          <div className="pos-ticket__foot">
+            <button
+              className="pos-ticket__pay"
+              type="button"
+              disabled={!cart.length}
+              onClick={() => setPaymentOpen(true)}
+            >
+              <span>Continue to payment</span>
+              <CashierIcon name="arrow" />
+            </button>
+            <p className="pos-ticket__note">Records the sale in this browser and updates stock.</p>
+          </div>
         </section>
         <aside className="cashier-panel pos-control-center" aria-labelledby="pos-control-heading">
           <div className="cashier-panel__heading">
