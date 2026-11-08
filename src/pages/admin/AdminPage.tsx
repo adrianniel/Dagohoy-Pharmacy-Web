@@ -13,6 +13,14 @@ import {
   saveInventory,
   stockStatus,
 } from '../../data/inventoryStore';
+import {
+  initialBatches,
+  loadBatches,
+  loadMovements,
+  saveBatches,
+  saveMovements,
+} from '../../data/operationsStore';
+import { getSession } from '../../data/registerSession';
 import { suggestProductCategories } from '../../services/productsApi';
 import { StaffAccounts } from './StaffAccounts';
 
@@ -304,8 +312,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
           {formOpen && (
             <InventoryForm
               product={editing}
+              products={products}
               onClose={() => setFormOpen(false)}
-              onSave={(product) => {
+              onSave={(product, opening) => {
                 if (
                   products.some(
                     (item) => item.barcode === product.barcode && item.barcode !== editing?.barcode,
@@ -318,6 +327,42 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   : [...products, product];
                 setProducts(next);
                 saveInventory(next);
+                // A new product with opening stock gets its first lot and a stock-in record,
+                // so the stock history and lots start right.
+                if (!editing && opening && product.stock > 0) {
+                  const now = new Date().toISOString();
+                  const id = Date.now().toString().slice(-6);
+                  const session = getSession();
+                  saveBatches([
+                    ...loadBatches(initialBatches),
+                    {
+                      id: `B-${id}`,
+                      product: product.product,
+                      barcode: product.barcode,
+                      lot: opening.lot,
+                      expiry: opening.expiry,
+                      stock: product.stock,
+                      receivedAt: now,
+                      unitCost: product.cost,
+                    },
+                  ]);
+                  saveMovements([
+                    {
+                      id: `RCV-${id}`,
+                      date: now,
+                      product: product.product,
+                      kind: 'Received',
+                      change: product.stock,
+                      reference: 'Opening stock',
+                      staff: session?.onDutyNames?.[0] ?? session?.cashierName ?? 'Admin',
+                      reason: `Opening stock · lot ${opening.lot}${
+                        product.cost ? ` · ₱${product.cost.toFixed(2)}/unit` : ''
+                      }`,
+                      unitCost: product.cost,
+                    },
+                    ...loadMovements(),
+                  ]);
+                }
                 setFormOpen(false);
                 showToast(`${product.product} saved in this browser.`);
                 return true;
@@ -613,38 +658,110 @@ function SupplierForm({
     </form>
   );
 }
+const UNITS = ['Tablet', 'Capsule', 'Sachet', 'Bottle', 'Tube', 'Pack', 'Box', 'Piece'];
+const COMMON_CATEGORIES = [
+  'Pain & fever',
+  'Cough & cold',
+  'Vitamins & supplements',
+  'Antibiotics (Rx)',
+  'Maintenance (Rx)',
+  'Stomach & digestion',
+  'Allergy',
+  'First aid',
+  'Personal care',
+  'Other',
+];
+const MARKUPS = [20, 30, 50];
+
+const peso = (amount: number) =>
+  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+
+/**
+ * Add or edit a product: what it is, what it costs, what it sells for, and (for a new
+ * product) the stock already on the shelf with its lot and expiry. Stock of an existing
+ * product is changed through Receive stock or Adjustments so every change is recorded.
+ */
 function InventoryForm({
   product,
+  products,
   onClose,
   onSave,
 }: {
   product: InventoryProduct | null;
+  products: InventoryProduct[];
   onClose: () => void;
-  onSave: (product: InventoryProduct) => boolean;
+  onSave: (product: InventoryProduct, opening?: { lot: string; expiry: string }) => boolean;
 }) {
+  const isNew = !product;
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? '');
   const [detail, setDetail] = useState(product?.detail ?? '');
-  const [category, setCategory] = useState(product?.category ?? 'Other');
+  const [category, setCategory] = useState(product?.category ?? '');
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
+  const [cost, setCost] = useState(product?.cost ? String(product.cost) : '');
   const [price, setPrice] = useState(product ? product.price.replace(/[₱,]/g, '') : '');
-  const [stock, setStock] = useState(String(product?.stock ?? 0));
+  const [stock, setStock] = useState('');
+  const [lot, setLot] = useState('');
+  const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
+
+  const costValue = Number(cost);
+  const priceValue = Number(price);
+  const hasCost = cost.trim() !== '' && costValue > 0;
+  const hasPrice = price.trim() !== '' && priceValue > 0;
+  const profit = hasCost && hasPrice ? priceValue - costValue : null;
+  const markup = profit !== null ? (profit / costValue) * 100 : null;
+  const openingQty = Math.max(0, Math.floor(Number(stock) || 0));
+  const categories = [
+    ...new Set([
+      ...COMMON_CATEGORIES,
+      ...products.map((item) => item.category).filter((value): value is string => !!value),
+    ]),
+  ];
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const quantity = Math.max(0, Number(stock));
-    const saved = onSave({
-      barcode,
-      product: name.trim(),
-      detail: detail.trim(),
-      category: category.trim(),
-      unit,
-      price: `₱${Number(price).toFixed(2)}`,
-      stock: quantity,
-      status: stockStatus(quantity),
-    });
-    if (!saved) setError('That barcode is already assigned to another product.');
+    if (!name.trim() || !barcode.trim() || !detail.trim()) {
+      setError('Fill in the product name, barcode and generic / brand.');
+      return;
+    }
+    if (!hasPrice) {
+      setError('Enter the selling price.');
+      return;
+    }
+    if (cost.trim() !== '' && !hasCost) {
+      setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
+      return;
+    }
+    if (isNew && openingQty > 0) {
+      if (!lot.trim()) {
+        setError('Enter the lot number of the stock you are adding.');
+        return;
+      }
+      if (!expiry) {
+        setError('Enter the expiry date of the stock you are adding.');
+        return;
+      }
+    }
+    const quantity = isNew ? openingQty : product.stock;
+    const saved = onSave(
+      {
+        ...(product ?? {}),
+        barcode: barcode.trim(),
+        product: name.trim(),
+        detail: detail.trim(),
+        category: category.trim() || 'Other',
+        unit,
+        price: `₱${priceValue.toFixed(2)}`,
+        cost: hasCost ? Math.round(costValue * 100) / 100 : product?.cost,
+        stock: quantity,
+        status: stockStatus(quantity),
+      },
+      isNew && openingQty > 0 ? { lot: lot.trim().toUpperCase(), expiry } : undefined,
+    );
+    if (!saved) setError('That barcode is already used by another product.');
   }
+
   return (
     <div
       className="pos-modal-backdrop"
@@ -653,7 +770,7 @@ function InventoryForm({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <form className="pos-payment-modal inventory-form" onSubmit={submit}>
+      <form className="pos-payment-modal inventory-form product-form" onSubmit={submit} noValidate>
         <button
           className="pos-modal-close"
           type="button"
@@ -662,75 +779,205 @@ function InventoryForm({
         >
           ×
         </button>
-        <p className="eyebrow">Inventory · demo mode</p>
-        <h2>{product ? 'Update product' : 'Add product'}</h2>
+        <p className="eyebrow">Products &amp; Stock</p>
+        <h2>{isNew ? 'New product' : `Edit ${product.product}`}</h2>
         <p className="inventory-form-note">
-          Changes are saved to this browser only and are not sent to the pharmacy server.
+          {isNew
+            ? 'For a medicine or item that is not in the list yet. Saved in this browser only.'
+            : 'Change the details and prices. Saved in this browser only.'}
         </p>
-        <label>
-          Product name
-          <input required value={name} onChange={(event) => setName(event.target.value)} />
-        </label>
-        <label>
-          Barcode / SKU
-          <input required value={barcode} onChange={(event) => setBarcode(event.target.value)} />
-        </label>
-        <label>
-          Generic / brand
-          <input required value={detail} onChange={(event) => setDetail(event.target.value)} />
-        </label>
-        <label>
-          Category
-          <input required value={category} onChange={(event) => setCategory(event.target.value)} />
-        </label>
-        <div className="inventory-form-row">
-          <label>
-            Unit
-            <select value={unit} onChange={(event) => setUnit(event.target.value)}>
-              <option>Tablet</option>
-              <option>Capsule</option>
-              <option>Bottle</option>
-              <option>Pack</option>
-              <option>Box</option>
-              <option>Piece</option>
-            </select>
-          </label>
-          <label>
-            Price (₱)
-            <input
-              required
-              min="0"
-              step="0.01"
-              type="number"
-              value={price}
-              onChange={(event) => setPrice(event.target.value)}
-            />
-          </label>
-        </div>
-        <label>
-          On-hand quantity
-          <input
-            required
-            min="0"
-            step="1"
-            type="number"
-            value={stock}
-            onChange={(event) => setStock(event.target.value)}
-          />
-        </label>
+
+        <fieldset className="product-form__section">
+          <legend>1. What it is</legend>
+          <div className="product-form__grid">
+            <label className="product-form__wide">
+              Product name
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="e.g. Biogesic 500mg"
+                autoFocus
+              />
+            </label>
+            <label>
+              Barcode / SKU
+              <input
+                value={barcode}
+                onChange={(event) => setBarcode(event.target.value)}
+                placeholder="Scan or type it"
+                inputMode="numeric"
+              />
+            </label>
+            <label>
+              Generic / brand
+              <input
+                value={detail}
+                onChange={(event) => setDetail(event.target.value)}
+                placeholder="e.g. Paracetamol / Unilab"
+              />
+            </label>
+            <label>
+              Category
+              <input
+                list="product-form-categories"
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                placeholder="Pick or type one"
+              />
+              <datalist id="product-form-categories">
+                {categories.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+            </label>
+            <label>
+              Sold per
+              <select value={unit} onChange={(event) => setUnit(event.target.value)}>
+                {UNITS.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="product-form__section">
+          <legend>2. Price per {unit.toLowerCase()}</legend>
+          <div className="product-form__grid">
+            <label>
+              Cost (what you pay the supplier)
+              <span className="product-form__money">
+                <i aria-hidden="true">₱</i>
+                <input
+                  value={cost}
+                  onChange={(event) => setCost(event.target.value.replace(/[^\d.]/g, ''))}
+                  placeholder="0.00"
+                  inputMode="decimal"
+                />
+              </span>
+            </label>
+            <label>
+              Selling price (what the customer pays)
+              <span className="product-form__money">
+                <i aria-hidden="true">₱</i>
+                <input
+                  value={price}
+                  onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ''))}
+                  placeholder="0.00"
+                  inputMode="decimal"
+                />
+              </span>
+            </label>
+          </div>
+          {hasCost && (
+            <div className="product-form__markups" role="group" aria-label="Set price from cost">
+              <span>Price from cost:</span>
+              {MARKUPS.map((percent) => (
+                <button
+                  key={percent}
+                  type="button"
+                  onClick={() => setPrice((costValue * (1 + percent / 100)).toFixed(2))}
+                >
+                  +{percent}% = {peso(costValue * (1 + percent / 100))}
+                </button>
+              ))}
+            </div>
+          )}
+          <div
+            className={`product-form__profit${
+              profit === null ? '' : profit <= 0 ? ' is-loss' : ' is-gain'
+            }`}
+            aria-live="polite"
+          >
+            {profit === null ? (
+              <span>Enter the cost and selling price to see the profit.</span>
+            ) : profit <= 0 ? (
+              <span>
+                Selling at a loss: {peso(Math.abs(profit))} less than the cost per{' '}
+                {unit.toLowerCase()}.
+              </span>
+            ) : (
+              <>
+                <span>Profit per {unit.toLowerCase()}</span>
+                <strong>
+                  {peso(profit)} <small>({Math.round(markup ?? 0)}% markup)</small>
+                </strong>
+              </>
+            )}
+          </div>
+        </fieldset>
+
+        <fieldset className="product-form__section">
+          <legend>3. Stock</legend>
+          {isNew ? (
+            <>
+              <div className="product-form__grid product-form__grid--three">
+                <label>
+                  Units on the shelf now
+                  <input
+                    value={stock}
+                    onChange={(event) => setStock(event.target.value.replace(/\D/g, ''))}
+                    placeholder="0"
+                    inputMode="numeric"
+                  />
+                </label>
+                <label>
+                  Lot number {openingQty > 0 ? '' : '(if any)'}
+                  <input
+                    value={lot}
+                    onChange={(event) => setLot(event.target.value)}
+                    placeholder="e.g. BGC-250114"
+                    disabled={openingQty === 0}
+                  />
+                </label>
+                <label>
+                  Expiry date
+                  <input
+                    type="date"
+                    value={expiry}
+                    onChange={(event) => setExpiry(event.target.value)}
+                    disabled={openingQty === 0}
+                  />
+                </label>
+              </div>
+              <p className="product-form__hint">
+                {openingQty > 0
+                  ? `${openingQty} ${unit.toLowerCase()}(s) will be added as opening stock${
+                      hasCost ? `, worth ${peso(openingQty * costValue)} at cost` : ''
+                    }.`
+                  : 'Leave it at 0 if the first delivery has not arrived. Add it later with Receive stock.'}
+              </p>
+            </>
+          ) : (
+            <p className="product-form__stock">
+              <strong>
+                {product.stock} {product.unit.toLowerCase()}(s) on hand
+              </strong>
+              <span>
+                To change the stock, use Receive stock (a delivery) or Adjustments (damaged, missing
+                or a recount) in the Stock control center, so every change is recorded.
+              </span>
+            </p>
+          )}
+        </fieldset>
+
         {error && (
           <p className="pos-notice" role="alert">
             {error}
           </p>
         )}
-        <button className="pos-checkout-button" type="submit">
-          Save product
-        </button>
+        <div className="product-form__actions">
+          <button className="product-form__cancel" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="product-form__save" type="submit">
+            {isNew ? 'Add product' : 'Save changes'}
+          </button>
+        </div>
       </form>
     </div>
   );
 }
-
 type OverviewTab = 'today' | 'alerts' | 'actions';
 
 function AdminDashboard() {

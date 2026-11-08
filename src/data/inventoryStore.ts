@@ -1,6 +1,10 @@
 import { mockProducts } from './cashierMockData';
 
-export type InventoryProduct = (typeof mockProducts)[number] & { category?: string };
+export type InventoryProduct = (typeof mockProducts)[number] & {
+  category?: string;
+  /** Latest cost per unit paid to the supplier (from Receive stock or the product form). */
+  cost?: number;
+};
 const INVENTORY_KEY = 'dagohoy_demo_inventory';
 
 export function getInventory(): InventoryProduct[] {

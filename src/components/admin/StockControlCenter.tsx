@@ -901,6 +901,7 @@ function ReceiveForm({
               ...item,
               stock: nextStock,
               status: stockStatus(nextStock),
+              cost: unitCost,
               ...(priceChanged ? { price: `₱${newPrice.toFixed(2)}` } : {}),
             }
           : item,

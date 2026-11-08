@@ -2809,3 +2809,222 @@
     print-color-adjust: exact;
   }
 }
+
+/* ------------------------------------------------------------------
+   Product form (New product / Edit): what it is, price, stock.
+   ------------------------------------------------------------------ */
+.cashier-shell .pos-payment-modal.product-form {
+  width: min(46rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+
+.product-form__section {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid #e1e5d8;
+  border-radius: 12px;
+  background: #fffef9;
+}
+
+.product-form__section legend {
+  padding: 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #176246;
+}
+
+.product-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.9rem;
+}
+
+.product-form__grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.product-form__wide {
+  grid-column: 1 / -1;
+}
+
+.product-form__money {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.85rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.product-form__money:focus-within {
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.14);
+}
+
+.product-form__money i {
+  font-style: normal;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #8a978f;
+}
+
+.cashier-shell .pos-payment-modal .product-form__money input,
+.cashier-shell.is-themed .pos-payment-modal .product-form__money input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.cashier-shell .pos-payment-modal .product-form__money input:focus {
+  outline: none;
+}
+
+.product-form__markups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  color: #5d7268;
+}
+
+.product-form__markups button {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #d5dccb;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #176246;
+  cursor: pointer;
+}
+
+.product-form__markups button:hover {
+  border-color: #9fb6a0;
+}
+
+.product-form__profit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: #f1f3ea;
+  font-size: 0.86rem;
+  color: #5d7268;
+}
+
+.product-form__profit strong {
+  font-size: 1.2rem;
+}
+
+.product-form__profit small {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.product-form__profit.is-gain {
+  background: #e5f0e8;
+  color: #176246;
+}
+
+.product-form__profit.is-loss {
+  background: #fbebe8;
+  color: #a2372c;
+  font-weight: 700;
+}
+
+.product-form__hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.82rem;
+  color: #5d7268;
+}
+
+.product-form__stock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0;
+  font-size: 0.86rem;
+  color: #5d7268;
+}
+
+.product-form__stock strong {
+  font-size: 1.1rem;
+  color: #13322a;
+}
+
+.product-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.product-form__cancel,
+.product-form__save {
+  min-height: 3.1rem;
+  padding: 0 1.4rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.product-form__cancel {
+  border: 1px solid #c9cfbe;
+  background: #fff;
+  color: #13322a;
+}
+
+.product-form__save {
+  flex: 1;
+  border: 0;
+  background: #176246;
+  color: #fffdf1;
+}
+
+.product-form__save:hover {
+  background: #11513a;
+}
+
+.product-form__markups button:focus-visible,
+.product-form__cancel:focus-visible,
+.product-form__save:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .product-form__grid,
+  .product-form__grid--three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.product-form__grid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cashier-shell .pos-payment-modal .product-form__grid select {
+  width: 100%;
+}
