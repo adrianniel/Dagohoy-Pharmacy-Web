@@ -356,9 +356,10 @@ export function ShiftReportModal({
       setPrinting(false);
     };
     window.addEventListener('afterprint', done, { once: true });
-    const frame = window.requestAnimationFrame(() => window.print());
+    // A short timer (not requestAnimationFrame) so printing also starts when the tab is not drawing.
+    const timer = window.setTimeout(() => window.print(), 60);
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
       window.removeEventListener('afterprint', done);
       document.body.classList.remove('print-shift-report');
       document.title = previousTitle;

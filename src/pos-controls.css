@@ -2740,3 +2740,72 @@
 .duty-reports__filters > button {
   align-self: flex-end;
 }
+
+/* Monthly sales report (Reports): empty days are dimmed, totals row stands out. */
+.monthly-table tr.is-empty td {
+  color: #a3ada6;
+}
+
+.monthly-table tfoot td,
+.monthly-doc__table tfoot td {
+  border-top: 2px solid #13322a;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.duty-reports__filters input[type='month'] {
+  min-height: 2.6rem;
+  padding: 0 0.7rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #13322a;
+}
+
+.monthly-doc__table {
+  font-size: 0.78rem;
+}
+
+.monthly-doc__table tr.is-empty td {
+  color: #9aa49d;
+}
+
+@media screen {
+  #report-print-root {
+    display: none;
+  }
+}
+
+/* The monthly table is wide, so its PDF uses A4 landscape. */
+@page report-landscape {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  body.print-report-doc > *:not(#report-print-root) {
+    display: none !important;
+  }
+
+  body.print-report-doc #report-print-root,
+  body.print-report-doc #report-print-root * {
+    visibility: visible !important;
+  }
+
+  body.print-report-doc #report-print-root {
+    page: report-landscape;
+  }
+
+  body.print-report-doc .shift-doc {
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+    font-size: 9.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
+import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
@@ -864,12 +865,21 @@ function AdminDashboard() {
   );
 }
 
-type ReportsTab = 'summary' | 'weekly';
+type ReportsTab = 'monthly' | 'summary' | 'weekly';
 
 function Reports() {
-  const [tab, setTab] = useState<ReportsTab>('summary');
+  const [tab, setTab] = useState<ReportsTab>('monthly');
   const values = [42, 56, 48, 72, 64, 88, 73];
   const items: Array<ControlItem<ReportsTab>> = [
+    {
+      key: 'monthly',
+      icon: 'calendar',
+      title: 'Monthly sales',
+      hint: 'Per day, for BIR checks',
+      tone: 'blue',
+      about:
+        'Sales for each day of the month from the receipts saved here, with totals. Export to Excel or save as PDF.',
+    },
     {
       key: 'summary',
       icon: 'reports',
@@ -905,6 +915,7 @@ function Reports() {
         title={current?.title ?? 'Reports'}
         about={current?.about}
       >
+        {tab === 'monthly' && <MonthlySalesReport />}
         {tab === 'summary' && (
           <div className="cashier-summary-grid">
             <Summary
