@@ -511,6 +511,8 @@ export function CashierPosPage() {
       amountPaid: amountPaidValue,
       change: salePayment === 'Cash' ? change : 0,
       creditBalance: salePayment === 'Credit' ? creditBalance : 0,
+      // Cash the credit customer paid now; it goes into the drawer this shift.
+      downPayment: salePayment === 'Credit' ? amountPaidValue : undefined,
       gcashReference: salePayment === 'GCash' ? gcashReference.trim() : undefined,
       paymentStatus: salePayment === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
       status:

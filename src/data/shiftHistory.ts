@@ -18,6 +18,8 @@ export type ShiftRecord = {
   salesCount: number;
   salesByPayment: Record<string, number>;
   cashSales: number;
+  /** Utang cash taken during the shift. Missing on shifts closed before it was tracked. */
+  creditCash?: number;
   paidIn: number;
   paidOut: number;
   expectedCash: number;

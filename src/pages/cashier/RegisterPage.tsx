@@ -58,9 +58,9 @@ export function RegisterPage() {
           <strong>{session ? 'Register open' : 'Register closed'}</strong>
           <span>
             {session
-              ? `Start of shift ${new Date(session.openedAt).toLocaleString('en-PH')} · ${
-                  (session.onDutyNames ?? [session.cashierName]).join(', ')
-                } on duty`
+              ? `Start of shift ${new Date(session.openedAt).toLocaleString('en-PH')} · ${(
+                  session.onDutyNames ?? [session.cashierName]
+                ).join(', ')} on duty`
               : 'Start a shift from the top bar to open the register.'}
           </span>
           {!session && previousShift && (
@@ -85,9 +85,14 @@ export function RegisterPage() {
           )}
         </div>
       </div>
-      <div className="cashier-summary-grid">
+      <div className="cashier-summary-grid register-summary-grid">
         <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />
         <RegisterStat label="Cash sales" value={money(totals.cashSales)} />
+        <RegisterStat
+          label="Utang cash"
+          value={money(totals.creditCash)}
+          detail="Down payments and paid balances"
+        />
         <RegisterStat
           label="Paid in / out"
           value={`${money(totals.paidIn)} / ${money(totals.paidOut)}`}
@@ -96,7 +101,8 @@ export function RegisterPage() {
       </div>
       {session?.floatAdjustment && (
         <p className="register-float-note">
-          Float adjusted from {money(session.floatAdjustment.carriedOver)} — reason: “{session.floatAdjustment.reason}”
+          Float adjusted from {money(session.floatAdjustment.carriedOver)} — reason: “
+          {session.floatAdjustment.reason}”
         </p>
       )}
       <div className="cashier-panel register-activity-panel">
@@ -140,10 +146,10 @@ export function RegisterPage() {
                     <td>{event.reason}</td>
                     <td
                       className={
-                        event.type === 'Paid in' ? 'movement-positive' : 'movement-negative'
+                        event.type === 'Paid out' ? 'movement-negative' : 'movement-positive'
                       }
                     >
-                      {event.type === 'Paid in' ? '+' : '−'}
+                      {event.type === 'Paid out' ? '−' : '+'}
                       {money(event.amount)}
                     </td>
                   </tr>
@@ -172,12 +178,20 @@ export function RegisterPage() {
   );
 }
 
-function RegisterStat({ label, value }: { label: string; value: string }) {
+function RegisterStat({
+  label,
+  value,
+  detail = 'This shift',
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
   return (
     <article className="cashier-summary-card">
       <p>{label}</p>
       <strong>{value}</strong>
-      <span>This shift</span>
+      <span>{detail}</span>
     </article>
   );
 }
@@ -217,6 +231,10 @@ function RegisterModal({
       onCloseSession(value);
       return;
     }
+    if (!Number.isFinite(value) || value <= 0) {
+      setError('Enter an amount greater than ₱0.00.');
+      return;
+    }
     if (!reason.trim()) {
       setError('Type the reason for this cash movement.');
       return;
@@ -233,7 +251,12 @@ function RegisterModal({
   return (
     <div className="pos-modal-backdrop">
       <form className="pos-payment-modal" onSubmit={submit} noValidate>
-        <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close dialog">
+        <button
+          className="pos-modal-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close dialog"
+        >
           ×
         </button>
         <p className="eyebrow">Cash control</p>

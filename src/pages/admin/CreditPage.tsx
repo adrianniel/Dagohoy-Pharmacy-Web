@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
+import { addCashEvent, getSession } from '../../data/registerSession';
 
 type CreditSale = {
   receipt: string;
@@ -51,11 +52,30 @@ export function CreditPage() {
       };
     });
     localStorage.setItem(SALES_KEY, JSON.stringify(nextSales));
+    // The cash goes into the drawer, so the open shift has to expect it at closing.
+    const shiftOpen = Boolean(getSession());
+    if (shiftOpen) {
+      const customer = allSales.find((sale) => sale.receipt === receipt)?.customer;
+      addCashEvent({
+        id: `UTANG-${Date.now()}`,
+        type: 'Utang payment',
+        amount,
+        reason: `${customer || 'Customer'} paid toward ${receipt}`,
+        date: new Date().toISOString(),
+      });
+    }
     setCredits(
-      nextSales.filter((sale) => sale.payment === 'Credit' && Number(sale.creditBalance) > 0),
+      nextSales.filter(
+        (sale) =>
+          sale.payment === 'Credit' && sale.status !== 'Voided' && Number(sale.creditBalance) > 0,
+      ),
     );
     setSelectedCredit(null);
-    showToast(`Payment of ${money(amount)} recorded for ${receipt}.`);
+    showToast(
+      shiftOpen
+        ? `Payment of ${money(amount)} recorded for ${receipt} and added to the cash drawer.`
+        : `Payment of ${money(amount)} recorded for ${receipt}. No shift is open, so it is not in a drawer count.`,
+    );
   }
 
   return (
@@ -198,6 +218,11 @@ function CreditPaymentForm({
           <span>{credit.customer || 'Customer'} balance</span>
           <strong>{money(balance)}</strong>
         </div>
+        <p className="inventory-form-note">
+          {getSession()
+            ? 'Cash received here is added to the open shift, so the drawer count at closing includes it.'
+            : 'No shift is open. Start a shift first if this cash goes into the drawer.'}
+        </p>
         <label>
           Amount received
           <input

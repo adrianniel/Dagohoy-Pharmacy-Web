@@ -91,8 +91,8 @@ export function ShiftReportPage() {
           <div>
             <h3>Staff on duty</h3>
             <p>
-              {onDuty.length} {onDuty.length === 1 ? 'person served' : 'people served'} this
-              shift.{onDuty.length > 1 && ' The first name is the one printed on receipts.'}
+              {onDuty.length} {onDuty.length === 1 ? 'person served' : 'people served'} this shift.
+              {onDuty.length > 1 && ' The first name is the one printed on receipts.'}
             </p>
           </div>
         </div>
@@ -125,6 +125,12 @@ export function ShiftReportPage() {
             <dt>Cash sales</dt>
             <dd>+ {money(shift.cashSales)}</dd>
           </div>
+          {shift.creditCash !== undefined && (
+            <div>
+              <dt>Utang cash</dt>
+              <dd>+ {money(shift.creditCash)}</dd>
+            </div>
+          )}
           <div>
             <dt>Paid in</dt>
             <dd>+ {money(shift.paidIn)}</dd>

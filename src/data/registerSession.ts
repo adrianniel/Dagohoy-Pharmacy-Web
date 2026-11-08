@@ -24,13 +24,21 @@ export type RegisterSession = {
 
 export type CashEvent = {
   id: string;
-  type: 'Paid in' | 'Paid out';
+  /** "Utang payment" is cash a customer paid toward an open credit balance. */
+  type: 'Paid in' | 'Paid out' | 'Utang payment';
   amount: number;
   reason: string;
   date: string;
 };
 
-type Sale = { payment: string; total: number; date: string; status?: string };
+type Sale = {
+  payment: string;
+  total: number;
+  date: string;
+  status?: string;
+  /** Cash a credit customer paid at the counter when the sale was made. */
+  downPayment?: number;
+};
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -68,21 +76,31 @@ export function getCarriedOverFloat(): number {
 
 export type ShiftTotals = {
   cashSales: number;
+  /** Utang cash: down payments on credit sales plus payments on old balances. */
+  creditCash: number;
   paidIn: number;
   paidOut: number;
   expected: number;
 };
 
 export function getShiftTotals(session = getSession(), until = new Date()): ShiftTotals {
-  if (!session) return { cashSales: 0, paidIn: 0, paidOut: 0, expected: 0 };
+  if (!session) return { cashSales: 0, creditCash: 0, paidIn: 0, paidOut: 0, expected: 0 };
   const opened = new Date(session.openedAt);
-  const cashSales = readJson<Sale[]>(SALES_KEY, [])
-    .filter((sale) => {
-      const date = new Date(sale.date);
-      return sale.payment === 'Cash' && sale.status !== 'Voided' && date >= opened && date <= until;
-    })
+  const shiftSales = readJson<Sale[]>(SALES_KEY, []).filter((sale) => {
+    const date = new Date(sale.date);
+    return sale.status !== 'Voided' && date >= opened && date <= until;
+  });
+  const cashSales = shiftSales
+    .filter((sale) => sale.payment === 'Cash')
     .reduce((sum, sale) => sum + sale.total, 0);
+  const downPayments = shiftSales
+    .filter((sale) => sale.payment === 'Credit')
+    .reduce((sum, sale) => sum + Number(sale.downPayment ?? 0), 0);
   const events = getCashEvents();
+  const utangPayments = events
+    .filter((event) => event.type === 'Utang payment')
+    .reduce((sum, event) => sum + event.amount, 0);
+  const creditCash = downPayments + utangPayments;
   const paidIn = events
     .filter((event) => event.type === 'Paid in')
     .reduce((sum, event) => sum + event.amount, 0);
@@ -91,9 +109,10 @@ export function getShiftTotals(session = getSession(), until = new Date()): Shif
     .reduce((sum, event) => sum + event.amount, 0);
   return {
     cashSales,
+    creditCash,
     paidIn,
     paidOut,
-    expected: session.openingFloat + cashSales + paidIn - paidOut,
+    expected: session.openingFloat + cashSales + creditCash + paidIn - paidOut,
   };
 }
 
@@ -148,6 +167,7 @@ export function endShift(countedCash: number) {
     salesCount: shiftSales.length,
     salesByPayment,
     cashSales: totals.cashSales,
+    creditCash: totals.creditCash,
     paidIn: totals.paidIn,
     paidOut: totals.paidOut,
     expectedCash: totals.expected,
