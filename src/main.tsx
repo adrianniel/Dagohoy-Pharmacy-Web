@@ -14,6 +14,7 @@ import './workspace-hallmark.css';
 import './cashier-pos-theme.css';
 import './cashier-dashboard.css';
 import './stock-index.css';
+import './pos-controls.css';
 import './components/landing/workflow-cards.css';
 
 createRoot(document.getElementById('root')!).render(

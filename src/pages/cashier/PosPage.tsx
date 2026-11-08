@@ -21,7 +21,7 @@ type CompletedSale = {
   subtotal: number;
   discount: number;
   total: number;
-  payment: PaymentMethod;
+  payment: SalePaymentLabel;
   amountPaid: number;
   change: number;
   customer?: string;
@@ -29,8 +29,21 @@ type CompletedSale = {
   cashier: string;
   paymentStatus?: string;
   creditBalance?: number;
+  noChargeReason?: string;
 };
 type PaymentMethod = 'Cash' | 'GCash' | 'Credit';
+type SalePaymentLabel = PaymentMethod | 'No charge';
+type StoredSale = {
+  receipt: string;
+  date: string;
+  items?: number;
+  total?: number;
+  subtotal?: number;
+  discount?: number;
+  payment?: string;
+  status?: string;
+  lines?: Array<{ product: string; barcode: string; quantity: number; unitPrice: number }>;
+};
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -43,6 +56,20 @@ const formatReceiptDate = (value: string) =>
     minute: '2-digit',
   });
 const SALES_KEY = 'dagohoy_demo_sales';
+const VOID_LOG_KEY = 'dagohoy_demo_void_log';
+type VoidRecord = { receipt: string; date: string; reason: string; cashier: string; total: number };
+
+function readSales(): StoredSale[] {
+  return JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as StoredSale[];
+}
+
+function readVoidLog(): VoidRecord[] {
+  try {
+    return JSON.parse(localStorage.getItem(VOID_LOG_KEY) ?? '[]') as VoidRecord[];
+  } catch {
+    return [];
+  }
+}
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 const PAYMENT_METHOD_OPTIONS: Array<{
   id: PaymentMethod;
@@ -120,6 +147,12 @@ export function CashierPosPage() {
     }
   });
   const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
+  const [selectedLine, setSelectedLine] = useState<string | null>(null);
+  const [controlModal, setControlModal] = useState<'void' | 'charge' | null>(null);
+  const [voidTarget, setVoidTarget] = useState('');
+  const [voidReason, setVoidReason] = useState('');
+  const [recentSales, setRecentSales] = useState<StoredSale[]>([]);
+  const [noChargeReason, setNoChargeReason] = useState('');
   const { showToast } = useToast();
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
@@ -211,6 +244,188 @@ export function CashierPosPage() {
         return [{ ...line, quantity }];
       }),
     );
+  }
+
+  function clearSale() {
+    setCart([]);
+    setSelectedLine(null);
+    setDiscountInput('0');
+    showToast('All scanned items cleared.', 'info');
+    window.requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
+    );
+  }
+
+  function removeSelectedItem() {
+    if (!selectedLine) {
+      showToast('Select an item in the current sale first.', 'info');
+      return;
+    }
+    const removed = cart.find((line) => line.product.barcode === selectedLine);
+    setCart((current) => current.filter((line) => line.product.barcode !== selectedLine));
+    setSelectedLine(null);
+    if (removed) showToast(`${removed.product.product} removed from the sale.`, 'info');
+  }
+
+  function stepSelectedQuantity(delta: number) {
+    if (!selectedLine) {
+      showToast('Select an item in the current sale first.', 'info');
+      return;
+    }
+    changeQuantity(selectedLine, delta);
+  }
+
+  function openVoidDialog() {
+    const latest = readSales().filter((sale) => sale.status !== 'Voided').slice(0, 5);
+    if (!latest.length) {
+      showToast('No recent transactions to void yet.', 'info');
+      return;
+    }
+    setRecentSales(latest);
+    setVoidTarget(latest[0].receipt);
+    setVoidReason('');
+    setControlModal('void');
+  }
+
+  function submitVoid(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const reason = voidReason.trim();
+    if (!voidTarget || !reason) return;
+    const sales = readSales();
+    const target = sales.find((sale) => sale.receipt === voidTarget);
+    if (!target) {
+      showToast('That transaction could not be found.', 'error');
+      return;
+    }
+    const stock = getInventory();
+    const inventory = stock.map((product) => {
+      const returned = (target.lines ?? []).find((line) => line.barcode === product.barcode);
+      if (!returned) return product;
+      const nextStock = product.stock + returned.quantity;
+      return { ...product, stock: nextStock, status: stockStatus(nextStock) };
+    });
+    saveInventory(inventory);
+    localStorage.setItem(
+      SALES_KEY,
+      JSON.stringify(
+        sales.map((sale) =>
+          sale.receipt === voidTarget ? { ...sale, status: 'Voided' } : sale,
+        ),
+      ),
+    );
+    localStorage.setItem(
+      VOID_LOG_KEY,
+      JSON.stringify([
+        {
+          receipt: voidTarget,
+          date: new Date().toISOString(),
+          reason,
+          cashier: readCashierName(),
+          total: Number(target.total ?? 0),
+        },
+        ...readVoidLog(),
+      ]),
+    );
+    const previousMovements = loadMovements();
+    saveMovements([
+      ...(target.lines ?? []).map((line) => ({
+        id: `VOID-${voidTarget}-${line.barcode}`,
+        date: new Date().toISOString(),
+        product: line.product,
+        kind: 'Adjustment' as const,
+        change: line.quantity,
+        reference: voidTarget,
+        staff: 'Cashier',
+        reason: `Voided sale: ${reason}`,
+      })),
+      ...previousMovements,
+    ]);
+    setControlModal(null);
+    setVoidReason('');
+    setCart([]);
+    setSelectedLine(null);
+    setDiscountInput('0');
+    setTransactionActive(true);
+    showToast(`Transaction ${voidTarget} voided. Start the corrected sale.`, 'success');
+  }
+
+  function openNoChargeDialog() {
+    if (!cart.length) {
+      showToast('Add the items first, then mark them as no charge.', 'info');
+      return;
+    }
+    setNoChargeReason('');
+    setControlModal('charge');
+  }
+
+  function submitNoCharge(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const reason = noChargeReason.trim();
+    if (!reason || !cart.length) return;
+    const receipt = `NC-${String(Date.now()).slice(-6)}`;
+    const saleLines = cart.map((line) => ({ ...line }));
+    const cashierName = readCashierName();
+    const sales = readSales();
+    sales.unshift({
+      receipt,
+      date: new Date().toISOString(),
+      items: totalItems,
+      total: 0,
+      subtotal,
+      discount: 0,
+      payment: 'No charge',
+      status: 'No charge',
+      lines: saleLines.map((line) => ({
+        product: line.product.product,
+        barcode: line.product.barcode,
+        quantity: line.quantity,
+        unitPrice: toAmount(line.product.price),
+      })),
+    });
+    localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+    const stock = getInventory();
+    saveInventory(
+      stock.map((product) => {
+        const taken = cart.find((line) => line.product.barcode === product.barcode)?.quantity ?? 0;
+        if (!taken) return product;
+        const nextStock = Math.max(0, product.stock - taken);
+        return { ...product, stock: nextStock, status: stockStatus(nextStock) };
+      }),
+    );
+    saveMovements([
+      ...cart.map((line) => ({
+        id: `NOC-${receipt}-${line.product.barcode}`,
+        date: new Date().toISOString(),
+        product: line.product.product,
+        kind: 'Sale' as const,
+        change: -line.quantity,
+        reference: receipt,
+        staff: 'Cashier',
+        reason: `No charge: ${reason}`,
+      })),
+      ...loadMovements(),
+    ]);
+    setCompletedSale({
+      receipt,
+      date: new Date().toISOString(),
+      lines: saleLines,
+      subtotal,
+      discount: 0,
+      total: 0,
+      payment: 'No charge',
+      amountPaid: 0,
+      change: 0,
+      cashier: cashierName,
+      noChargeReason: reason,
+    });
+    setControlModal(null);
+    setNoChargeReason('');
+    setCart([]);
+    setSelectedLine(null);
+    setDiscountInput('0');
+    setTransactionActive(false);
+    setPaymentOpen(true);
+    showToast(`No-charge slip ${receipt} recorded.`, 'success');
   }
 
   function completeSale(event: FormEvent<HTMLFormElement>) {
@@ -334,20 +549,62 @@ export function CashierPosPage() {
               className="cashier-text-button pos-clear-sale"
               type="button"
               disabled={!transactionActive || !cart.length}
-              onClick={() => {
-                setCart([]);
-                showToast('All scanned items cleared.', 'info');
-                window.requestAnimationFrame(() =>
-                  document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
-                );
-              }}
+              onClick={clearSale}
             >
-              Clear all
+              Clear sale
             </button>
+          </div>
+          <div className="pos-scan-dock">
+            <label className="pos-scan-field">
+              <CashierIcon name="search" />
+              <input
+                name="product-search"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                autoComplete="off"
+                autoFocus
+                disabled={!transactionActive}
+                placeholder="Scan barcode or search a product…"
+              />
+            </label>
+            {query.trim() && transactionActive && (
+              <div className="pos-scan-results" aria-live="polite">
+                {filteredProducts.slice(0, 6).map((product) => (
+                  <button
+                    key={product.barcode}
+                    className="pos-scan-result"
+                    type="button"
+                    onClick={() => addProduct(product)}
+                    disabled={product.stock < 1}
+                  >
+                    <span>
+                      <strong>{product.product}</strong>
+                      <small>
+                        {product.detail} · {product.barcode}
+                      </small>
+                    </span>
+                    <span>
+                      <b>{product.price}</b>
+                      <small>{product.stock > 0 ? `${product.stock} left` : 'Out of stock'}</small>
+                    </span>
+                  </button>
+                ))}
+                {filteredProducts.length === 0 && (
+                  <p className="pos-scan-empty">No products match this search.</p>
+                )}
+              </div>
+            )}
           </div>
           <div className="pos-order-lines">
             {cart.map(({ product, quantity }) => (
-              <div className="pos-order-line" key={product.barcode}>
+              <div
+                className={`pos-order-line${
+                  selectedLine === product.barcode ? ' is-selected' : ''
+                }`}
+                key={product.barcode}
+                onClick={() => setSelectedLine(product.barcode)}
+              >
                 <div className="pos-order-line__name">
                   <strong>{product.product}</strong>
                   <small>
@@ -358,7 +615,10 @@ export function CashierPosPage() {
                   <button
                     type="button"
                     aria-label={`Decrease ${product.product}`}
-                    onClick={() => changeQuantity(product.barcode, -1)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      changeQuantity(product.barcode, -1);
+                    }}
                   >
                     −
                   </button>
@@ -366,7 +626,10 @@ export function CashierPosPage() {
                   <button
                     type="button"
                     aria-label={`Increase ${product.product}`}
-                    onClick={() => changeQuantity(product.barcode, 1)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      changeQuantity(product.barcode, 1);
+                    }}
                   >
                     +
                   </button>
@@ -446,107 +709,180 @@ export function CashierPosPage() {
           </button>
           <p className="pos-demo-disclaimer">Records the sale in this browser and updates stock.</p>
         </section>
-        <aside className="cashier-panel pos-workbench" aria-labelledby="pos-workbench-heading">
+        <aside className="cashier-panel pos-workbench pos-control-center" aria-labelledby="pos-control-heading">
           <div className="cashier-panel__heading">
             <div>
-              <h3 id="pos-workbench-heading">Find a product or check the price</h3>
+              <h3 id="pos-control-heading">Sale controls</h3>
               <p>
-                Search by product, generic name, brand, or barcode. Add it to the current sale only
-                if you want it.
+                {transactionActive
+                  ? selectedLine
+                    ? 'An item is selected in the current sale.'
+                    : 'Click an item in the current sale to select it.'
+                  : 'Start a transaction to unlock these controls.'}
               </p>
             </div>
           </div>
-          <div className="pos-input-panel pos-find-panel">
-            <label className="pos-barcode-field pos-catalog-search">
-              <span>Search or scan</span>
-              <div>
-                <CashierIcon name="search" />
-                <input
-                  name="product-search"
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  autoComplete="off"
-                  autoFocus
-                  placeholder="Type or scan a barcode…"
-                />
-              </div>
-            </label>
+          <div className="pos-control-grid">
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive || !cart.length}
+              onClick={clearSale}
+            >
+              <span>Clear sale</span>
+              <small>Remove every item</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive || !cart.length}
+              onClick={removeSelectedItem}
+            >
+              <span>✕ Delete item</span>
+              <small>{selectedLine ? 'Selected item' : 'Select an item first'}</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive || !selectedLine}
+              onClick={() => stepSelectedQuantity(1)}
+            >
+              <span>+ Quantity up</span>
+              <small>Add one more</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive || !selectedLine}
+              onClick={() => stepSelectedQuantity(-1)}
+            >
+              <span>− Quantity down</span>
+              <small>Take one away</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive}
+              onClick={openVoidDialog}
+            >
+              <span>Void sale</span>
+              <small>Cancel a recent receipt</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive}
+              onClick={openNoChargeDialog}
+            >
+              <span>No charge</span>
+              <small>Own use, free of charge</small>
+            </button>
           </div>
-          {query.trim() ? (
-            <div className="pos-search-results" aria-live="polite">
-              <div className="pos-search-results__heading">
-                <strong>
-                  {filteredProducts.length} matching product
-                  {filteredProducts.length === 1 ? '' : 's'}
-                </strong>
-                <button type="button" onClick={() => setQuery('')}>
-                  Clear search
-                </button>
-              </div>
-              {filteredProducts.map((product) => (
-                <article className="pos-search-result" key={product.barcode}>
-                  <div className="pos-search-result__summary">
-                    <span>
-                      <strong>{product.product}</strong>
-                      <small>
-                        {product.detail} · {product.unit} · {product.barcode}
-                      </small>
-                    </span>
-                    <span>
-                      <b>{product.price}</b>
-                      <small>
-                        {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-                      </small>
-                    </span>
-                  </div>
-                  <div className="pos-search-result__actions">
-                    <button
-                      className="pos-search-result__info"
-                      type="button"
-                      aria-expanded={expandedProduct?.barcode === product.barcode}
-                      onClick={() =>
-                        setExpandedProduct((current) =>
-                          current?.barcode === product.barcode ? null : product,
-                        )
-                      }
-                    >
-                      Info
-                    </button>
-                    <button
-                      className="pos-search-result__add"
-                      type="button"
-                      onClick={() => addProduct(product)}
-                      disabled={product.stock < 1}
-                      title="Add to the current sale list"
-                    >
-                      {product.stock > 0 ? 'Add to sale' : 'Out of stock'}
-                    </button>
-                  </div>
-                  {expandedProduct?.barcode === product.barcode && (
-                    <p className="pos-search-result__details">
-                      Available stock: {product.stock} {product.unit.toLowerCase()}
-                      {product.stock === 1 ? '' : 's'} · Barcode: {product.barcode}
-                    </p>
-                  )}
-                </article>
-              ))}
-              {filteredProducts.length === 0 && (
-                <p className="pos-empty-state">No products match this search.</p>
-              )}
-            </div>
-          ) : (
-            <div className="pos-workbench-empty">
-              <CashierIcon name="search" />
-              <strong>Product and price lookup</strong>
-              <span>
-                Type a product name, generic name, brand, or scan a barcode to check price and
-                stock.
-              </span>
-            </div>
-          )}
         </aside>
       </div>
+      {controlModal && (
+        <div
+          className="pos-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setControlModal(null);
+          }}
+        >
+          {controlModal === 'void' ? (
+            <form className="pos-payment-modal pos-control-modal" onSubmit={submitVoid}>
+              <button
+                className="pos-modal-close"
+                type="button"
+                onClick={() => setControlModal(null)}
+                aria-label="Close void sale"
+              >
+                ×
+              </button>
+              <p className="eyebrow">Correction</p>
+              <h2>Void a transaction</h2>
+              <p className="pos-control-modal__note">
+                Pick one of the last 5 receipts. The items go back to stock and a new sale starts
+                right after so you can correct it.
+              </p>
+              <fieldset className="pos-void-list">
+                <legend>Recent transactions</legend>
+                {recentSales.map((sale) => (
+                  <label
+                    key={sale.receipt}
+                    className={`pos-void-option${voidTarget === sale.receipt ? ' is-selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="void-target"
+                      checked={voidTarget === sale.receipt}
+                      onChange={() => setVoidTarget(sale.receipt)}
+                    />
+                    <span>
+                      <strong>{sale.receipt}</strong>
+                      <small>
+                        {formatReceiptDate(sale.date)} · {sale.items ?? 0} item
+                        {Number(sale.items ?? 0) === 1 ? '' : 's'}
+                      </small>
+                    </span>
+                    <b>{formatMoney(Number(sale.total ?? 0))}</b>
+                  </label>
+                ))}
+              </fieldset>
+              <label>
+                Reason for void
+                <textarea
+                  value={voidReason}
+                  onChange={(event) => setVoidReason(event.target.value)}
+                  placeholder="Example: wrong item charged, customer cancelled"
+                  rows={3}
+                  required
+                />
+              </label>
+              <button
+                className="pos-checkout-button pos-control-modal__submit"
+                type="submit"
+                disabled={!voidTarget || !voidReason.trim()}
+              >
+                Void transaction
+              </button>
+            </form>
+          ) : (
+            <form className="pos-payment-modal pos-control-modal" onSubmit={submitNoCharge}>
+              <button
+                className="pos-modal-close"
+                type="button"
+                onClick={() => setControlModal(null)}
+                aria-label="Close no charge"
+              >
+                ×
+              </button>
+              <p className="eyebrow">No charge</p>
+              <h2>Release items without charging</h2>
+              <p className="pos-control-modal__note">
+                {totalItems} item{totalItems === 1 ? '' : 's'} worth {formatMoney(subtotal)} will
+                leave stock and a slip is still recorded. A reason is required.
+              </p>
+              <label>
+                Reason
+                <textarea
+                  value={noChargeReason}
+                  onChange={(event) => setNoChargeReason(event.target.value)}
+                  placeholder="Example: owner's personal use, staff medical kit"
+                  rows={3}
+                  required
+                />
+              </label>
+              <button
+                className="pos-checkout-button pos-control-modal__submit"
+                type="submit"
+                disabled={!noChargeReason.trim()}
+              >
+                Record no-charge slip
+              </button>
+            </form>
+          )}
+        </div>
+      )}
       {paymentOpen && (
         <div
           className="pos-modal-backdrop"
@@ -858,9 +1194,17 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
               <strong>{sale.paymentStatus}</strong>
             </div>
           )}
+          {sale.noChargeReason && (
+            <div>
+              <span>Reason</span>
+              <strong>{sale.noChargeReason}</strong>
+            </div>
+          )}
         </div>
         <p className="pos-receipt-preview__thanks">
-          Thank you. Keep this receipt for your records.
+          {sale.payment === 'No charge'
+            ? 'Released without charge. Keep this slip for your records.'
+            : 'Thank you. Keep this receipt for your records.'}
         </p>
       </div>
     </div>

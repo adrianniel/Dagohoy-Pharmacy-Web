@@ -1,0 +1,307 @@
+/* POS sale controls: large red buttons beside the current sale. */
+
+.pos-control-center {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.pos-control-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.pos-control-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 5.4rem;
+  padding: 1.05rem 1.35rem;
+  border: 0;
+  border-radius: 0.95rem;
+  background: #c0392b;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
+}
+
+.pos-control-button span {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.pos-control-button small {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.2;
+}
+
+.pos-control-button:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.pos-control-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pos-control-button:focus-visible {
+  outline: 3px solid #176246;
+  outline-offset: 2px;
+}
+
+.pos-control-button:disabled {
+  background: #f0d4d0;
+  color: #c98d86;
+  cursor: not-allowed;
+}
+
+.pos-control-button:disabled small {
+  color: #cfa9a4;
+}
+
+/* Barcode / search dock inside the Current sale panel */
+.pos-scan-dock {
+  position: relative;
+  margin: 0.55rem 0 0.2rem;
+}
+
+.pos-scan-field {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(23, 98, 70, 0.22);
+  border-radius: 0.85rem;
+  background: #fffdf1;
+}
+
+.pos-scan-field:focus-within {
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.12);
+}
+
+.pos-scan-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+  padding: 0.35rem 0;
+  color: #14342a;
+}
+
+.pos-scan-field input:focus {
+  outline: none;
+}
+
+.pos-scan-field input:disabled {
+  color: #8b9a93;
+  cursor: not-allowed;
+}
+
+.pos-scan-results {
+  position: absolute;
+  z-index: 12;
+  left: 0;
+  right: 0;
+  margin-top: 0.4rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  background: #fffdf1;
+  border: 1px solid rgba(23, 98, 70, 0.2);
+  border-radius: 0.85rem;
+  box-shadow: 0 14px 34px rgba(15, 46, 34, 0.16);
+}
+
+.pos-scan-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: #f3f7f2;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pos-scan-result:hover:not(:disabled) {
+  background: #e4eee2;
+}
+
+.pos-scan-result:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pos-scan-result > span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pos-scan-result strong {
+  font-size: 0.98rem;
+  color: #14342a;
+}
+
+.pos-scan-result small {
+  font-size: 0.8rem;
+  color: #5d7268;
+}
+
+.pos-scan-result > span:last-child {
+  align-items: flex-end;
+  flex: 0 0 auto;
+}
+
+.pos-scan-result b {
+  font-size: 0.98rem;
+  color: #176246;
+}
+
+.pos-scan-empty {
+  margin: 0.5rem;
+  font-size: 0.9rem;
+  color: #5d7268;
+}
+
+/* Selected line in the current sale */
+.pos-order-line {
+  cursor: pointer;
+}
+
+.pos-order-line.is-selected {
+  background: #e4eee2;
+  box-shadow: inset 3px 0 0 #176246;
+}
+
+/* Void and no-charge dialogs */
+.pos-control-modal {
+  max-width: 34rem;
+}
+
+.pos-control-modal__note {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #4a6358;
+}
+
+.pos-void-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  border: 0;
+}
+
+.pos-void-list legend {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5d7268;
+  margin-bottom: 0.5rem;
+}
+
+.pos-void-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(23, 98, 70, 0.18);
+  border-radius: 0.75rem;
+  background: #fffdf1;
+  cursor: pointer;
+}
+
+.pos-void-option.is-selected {
+  border-color: #176246;
+  background: #eef4ec;
+}
+
+.pos-void-option > span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.pos-void-option strong {
+  font-size: 1rem;
+  color: #14342a;
+}
+
+.pos-void-option small {
+  font-size: 0.82rem;
+  color: #5d7268;
+}
+
+.pos-void-option b {
+  font-size: 1rem;
+  color: #176246;
+}
+
+.pos-control-modal textarea {
+  width: 100%;
+  min-height: 4.6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(23, 98, 70, 0.22);
+  border-radius: 0.7rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.pos-control-modal textarea:focus {
+  outline: none;
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.12);
+}
+
+.pos-control-modal__submit {
+  background: #c0392b;
+}
+
+.pos-control-modal__submit:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.pos-control-modal__submit:disabled {
+  background: #f0d4d0;
+  color: #c98d86;
+}
+
+@media (min-width: 1200px) {
+  .pos-control-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .pos-control-button {
+    min-height: 4.4rem;
+    padding: 0.9rem 1.1rem;
+  }
+
+  .pos-control-button span {
+    font-size: 1.15rem;
+  }
+}
