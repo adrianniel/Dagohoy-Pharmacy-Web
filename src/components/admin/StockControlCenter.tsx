@@ -426,6 +426,8 @@ export function StockControlCenter({
                     <th>Product</th>
                     <th>Units</th>
                     <th>Details</th>
+                    <th>Cost/unit</th>
+                    <th>Total cost</th>
                     <th>Receipt no.</th>
                     <th>By</th>
                   </tr>
@@ -439,6 +441,12 @@ export function StockControlCenter({
                       </td>
                       <td className="movement-positive">+{movement.change}</td>
                       <td>{movement.reason}</td>
+                      <td>{movement.unitCost !== undefined ? peso(movement.unitCost) : '—'}</td>
+                      <td>
+                        {movement.unitCost !== undefined
+                          ? peso(movement.unitCost * movement.change)
+                          : '—'}
+                      </td>
                       <td className="stock-index__mono">{movement.reference}</td>
                       <td>{movement.staff}</td>
                     </tr>
@@ -532,6 +540,12 @@ export function StockControlCenter({
               <span>
                 Products with lots <b>{new Set(data.lots.map((lot) => lot.barcode)).size}</b>
               </span>
+              <span>
+                Stock value at cost{' '}
+                <b>
+                  {peso(data.lots.reduce((sum, lot) => sum + lot.stock * (lot.unitCost ?? 0), 0))}
+                </b>
+              </span>
             </div>
             {data.lots.length === 0 ? (
               <p className="stock-index__empty">
@@ -545,6 +559,8 @@ export function StockControlCenter({
                     <th>Lot</th>
                     <th>Expiry</th>
                     <th>Units</th>
+                    <th>Cost/unit</th>
+                    <th>Stock value</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -569,6 +585,10 @@ export function StockControlCenter({
                           <td className="stock-index__mono">{lot.lot}</td>
                           <td>{shortDate(lot.expiry)}</td>
                           <td>{lot.stock}</td>
+                          <td>{lot.unitCost !== undefined ? peso(lot.unitCost) : '—'}</td>
+                          <td>
+                            {lot.unitCost !== undefined ? peso(lot.unitCost * lot.stock) : '—'}
+                          </td>
                           <td>
                             <span
                               className={`stock-index__status stock-index__status--${LOT_TONE[state]}`}
@@ -603,6 +623,8 @@ export function StockControlCenter({
                     <th>On hand</th>
                     <th>Reorder point</th>
                     <th>Order</th>
+                    <th>Last cost</th>
+                    <th>Est. cost</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -619,6 +641,19 @@ export function StockControlCenter({
                         <strong>{suggestedOrder(product.stock, threshold)}</strong>{' '}
                         {product.unit.toLowerCase()}s
                       </td>
+                      {(() => {
+                        const lastCost = lastLotCost(data.allBatches, product.barcode);
+                        return (
+                          <>
+                            <td>{lastCost !== undefined ? peso(lastCost) : '—'}</td>
+                            <td>
+                              {lastCost !== undefined
+                                ? peso(lastCost * suggestedOrder(product.stock, threshold))
+                                : '—'}
+                            </td>
+                          </>
+                        );
+                      })()}
                     </tr>
                   ))}
                 </tbody>
@@ -757,9 +792,29 @@ export function StockControlCenter({
   );
 }
 
+/** "₱5.50" → 5.5 */
+const priceValue = (price: string | undefined) => Number((price ?? '').replace(/[₱,]/g, '')) || 0;
+
+const peso = (amount: number) =>
+  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+
+/** Cost per unit of the newest lot of a product that has one recorded. */
+function lastLotCost(batches: InventoryBatch[], barcode: string): number | undefined {
+  const withCost = batches
+    .map((batch, index) => ({ batch, index }))
+    .filter(({ batch }) => batch.barcode === barcode && batch.unitCost !== undefined)
+    .sort(
+      (a, b) =>
+        (b.batch.receivedAt ?? '').localeCompare(a.batch.receivedAt ?? '') || b.index - a.index,
+    );
+  return withCost[0]?.batch.unitCost;
+}
+
 /**
  * Records a supplier delivery: adds the units to the product, saves the lot with its expiry
- * date (adding to the same lot if it is already on the shelf) and writes a Received movement.
+ * date and its cost per unit (adding to the same lot if it is already on the shelf), and
+ * writes a Received movement. The supplier price changes from delivery to delivery, so the
+ * cost is entered each time; the selling price can be updated in the same step.
  */
 function ReceiveForm({
   batches,
@@ -775,11 +830,36 @@ function ReceiveForm({
   const [barcode, setBarcode] = useState(products[0]?.barcode ?? '');
   const [supplier, setSupplier] = useState(suppliers[0] ?? '');
   const [quantity, setQuantity] = useState('');
+  const [cost, setCost] = useState('');
+  const [selling, setSelling] = useState(() => {
+    const value = priceValue(products[0]?.price);
+    return value ? value.toFixed(2) : '';
+  });
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [reference, setReference] = useState('');
 
   const expiryDays = expiry ? daysUntil(expiry) : null;
+  const currentPrice = priceValue(products.find((item) => item.barcode === barcode)?.price);
+  const costValue = Number(cost);
+  const sellingValue = Number(selling);
+  const qtyValue = Number(quantity);
+  const hasCost = cost.trim() !== '' && Number.isFinite(costValue) && costValue > 0;
+  const hasSelling = selling.trim() !== '' && Number.isFinite(sellingValue) && sellingValue > 0;
+  const profit = hasCost && hasSelling ? sellingValue - costValue : null;
+  const markup = profit !== null && costValue > 0 ? (profit / costValue) * 100 : null;
+  const previousCost = lastLotCost(batches, barcode);
+  const costChanged =
+    hasCost &&
+    previousCost !== undefined &&
+    previousCost > 0 &&
+    Math.abs(costValue - previousCost) / previousCost > 0.1;
+
+  function pickProduct(next: string) {
+    setBarcode(next);
+    const value = priceValue(products.find((item) => item.barcode === next)?.price);
+    setSelling(value ? value.toFixed(2) : '');
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -794,6 +874,14 @@ function ReceiveForm({
       showToast('Enter how many units arrived, as a whole number.', 'error');
       return;
     }
+    if (!hasCost) {
+      showToast('Enter the cost per unit from the delivery receipt.', 'error');
+      return;
+    }
+    if (!hasSelling) {
+      showToast('Enter the selling price per unit.', 'error');
+      return;
+    }
     if (!lot.trim()) {
       showToast('Enter the lot number printed on the box.', 'error');
       return;
@@ -802,11 +890,19 @@ function ReceiveForm({
       showToast('Enter an expiry date that has not passed yet.', 'error');
       return;
     }
+    const unitCost = Math.round(costValue * 100) / 100;
+    const newPrice = Math.round(sellingValue * 100) / 100;
+    const priceChanged = Math.abs(newPrice - priceValue(product.price)) >= 0.005;
     const nextStock = product.stock + qty;
     saveInventory(
       inventory.map((item) =>
         item.barcode === barcode
-          ? { ...item, stock: nextStock, status: stockStatus(nextStock) }
+          ? {
+              ...item,
+              stock: nextStock,
+              status: stockStatus(nextStock),
+              ...(priceChanged ? { price: `₱${newPrice.toFixed(2)}` } : {}),
+            }
           : item,
       ),
     );
@@ -816,9 +912,20 @@ function ReceiveForm({
     );
     saveBatches(
       existing
-        ? batches.map((batch) =>
-            batch.id === existing.id ? { ...batch, stock: batch.stock + qty } : batch,
-          )
+        ? batches.map((batch) => {
+            if (batch.id !== existing.id) return batch;
+            // Same lot topped up: keep the weighted average cost of what is on the shelf.
+            const averageCost =
+              batch.unitCost !== undefined && batch.stock > 0
+                ? (batch.stock * batch.unitCost + qty * unitCost) / (batch.stock + qty)
+                : unitCost;
+            return {
+              ...batch,
+              stock: batch.stock + qty,
+              unitCost: Math.round(averageCost * 100) / 100,
+              supplier: batch.supplier ?? (supplier || undefined),
+            };
+          })
         : [
             ...batches,
             {
@@ -829,6 +936,8 @@ function ReceiveForm({
               expiry,
               stock: qty,
               receivedAt: new Date().toISOString(),
+              unitCost,
+              supplier: supplier || undefined,
             },
           ],
     );
@@ -840,26 +949,33 @@ function ReceiveForm({
       change: qty,
       reference: reference.trim() || 'No receipt no.',
       staff: staffName(),
-      reason: `${supplier || 'Supplier'} · lot ${lotCode} · expires ${shortDate(expiry)}`,
+      reason: `${supplier || 'Supplier'} · lot ${lotCode} · ${peso(unitCost)}/unit · expires ${shortDate(expiry)}`,
+      unitCost,
     };
     saveMovements([movement, ...loadMovements()]);
     setQuantity('');
+    setCost('');
     setLot('');
     setExpiry('');
     setReference('');
-    showToast(`${qty} unit(s) of ${product.product} received into lot ${lotCode}.`);
+    showToast(
+      `${qty} unit(s) of ${product.product} received into lot ${lotCode}.${
+        priceChanged ? ` Selling price updated to ${peso(newPrice)}.` : ''
+      }`,
+    );
     onSaved();
   }
 
   return (
     <form className="stock-index__form" onSubmit={submit}>
       <p className="stock-index__form-title">
-        Copy the details from the delivery receipt and the box label.
+        Copy the details from the delivery receipt and the box label. The supplier price can change
+        each delivery, so enter the cost every time.
       </p>
       <div className="stock-index__form-grid">
         <label>
           Product
-          <select value={barcode} onChange={(event) => setBarcode(event.target.value)}>
+          <select value={barcode} onChange={(event) => pickProduct(event.target.value)}>
             {products.map((item) => (
               <option value={item.barcode} key={item.barcode}>
                 {item.product} · {item.stock} on hand
@@ -890,6 +1006,34 @@ function ReceiveForm({
           />
         </label>
         <label>
+          Cost per unit (what you paid)
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            inputMode="decimal"
+            value={cost}
+            onChange={(event) => setCost(event.target.value)}
+            placeholder={
+              previousCost !== undefined ? `Last time ${peso(previousCost)}` : 'e.g. 3.80'
+            }
+          />
+        </label>
+        <label>
+          Selling price per unit
+          <input
+            type="number"
+            min="0.01"
+            step="0.01"
+            required
+            inputMode="decimal"
+            value={selling}
+            onChange={(event) => setSelling(event.target.value)}
+            placeholder={currentPrice ? currentPrice.toFixed(2) : 'e.g. 5.50'}
+          />
+        </label>
+        <label>
           Lot number
           <input
             required
@@ -916,6 +1060,40 @@ function ReceiveForm({
           />
         </label>
       </div>
+      <div className="stock-index__chips">
+        <span>
+          Profit per unit{' '}
+          <b>
+            {profit === null
+              ? '—'
+              : `${peso(profit)}${markup !== null ? ` (${markup.toFixed(0)}% markup)` : ''}`}
+          </b>
+        </span>
+        <span>
+          Delivery total{' '}
+          <b>
+            {hasCost && Number.isFinite(qtyValue) && qtyValue > 0
+              ? peso(qtyValue * costValue)
+              : '—'}
+          </b>
+        </span>
+        {hasSelling && currentPrice > 0 && Math.abs(sellingValue - currentPrice) >= 0.005 && (
+          <span>
+            New selling price <b>{peso(sellingValue)}</b> (was {peso(currentPrice)})
+          </span>
+        )}
+      </div>
+      {profit !== null && profit <= 0 && (
+        <p className="stock-index__warn">
+          You would sell at a loss: the selling price is not higher than the cost.
+        </p>
+      )}
+      {costChanged && previousCost !== undefined && (
+        <p className="stock-index__warn">
+          Cost changed from {peso(previousCost)} to {peso(costValue)} since the last delivery. Check
+          the selling price.
+        </p>
+      )}
       {expiryDays !== null && expiryDays >= 0 && expiryDays <= EXPIRY_WATCH_DAYS && (
         <p className="stock-index__warn">
           This lot expires in {expiryDays} day{expiryDays === 1 ? '' : 's'}. Check that the supplier
@@ -930,7 +1108,6 @@ function ReceiveForm({
     </form>
   );
 }
-
 type AdjustmentType = 'damaged' | 'missing' | 'count-less' | 'count-more' | 'customer-return';
 
 const ADJUSTMENT_TYPES: Record<

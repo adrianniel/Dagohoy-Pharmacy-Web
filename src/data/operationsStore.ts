@@ -11,6 +11,8 @@ export type StockMovement = {
   reference: string;
   staff: string;
   reason: string;
+  /** Cost per unit paid to the supplier, on Received movements. */
+  unitCost?: number;
 };
 
 export type PurchaseOrder = {
@@ -31,6 +33,9 @@ export type InventoryBatch = {
   expiry: string;
   stock: number;
   receivedAt?: string;
+  /** Cost per unit paid to the supplier for this lot. */
+  unitCost?: number;
+  supplier?: string;
 };
 
 const MOVEMENTS_KEY = 'dagohoy_demo_stock_movements';
