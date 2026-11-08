@@ -200,6 +200,12 @@ export function ShiftReportPage() {
                   {money(Math.abs(variance))}
                 </dd>
               </div>
+              {shift.varianceNote && (
+                <div>
+                  <dt>Cashier's note</dt>
+                  <dd>{shift.varianceNote}</dd>
+                </div>
+              )}
             </dl>
           </section>
         )}

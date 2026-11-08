@@ -143,7 +143,8 @@ export function startShift(input: {
   return session;
 }
 
-export function endShift(countedCash: number) {
+/** Counts the drawer and closes the shift. The note explains a short or over count. */
+export function endShift(countedCash: number, varianceNote?: string) {
   const session = getSession();
   if (!session) return;
   const closedAt = new Date();
@@ -172,6 +173,7 @@ export function endShift(countedCash: number) {
     paidOut: totals.paidOut,
     expectedCash: totals.expected,
     countedCash,
+    varianceNote: varianceNote?.trim() || undefined,
   });
   localStorage.removeItem(REGISTER_SESSION_KEY);
   localStorage.removeItem(CASH_EVENTS_KEY);

@@ -264,58 +264,147 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
 }
 
 export function EndShiftModal({ onClose }: { onClose: () => void }) {
-  const session = getSession();
-  const expected = getShiftTotals().expected;
-  const [counted, setCounted] = useState('');
-  const [error, setError] = useState('');
-  const { showToast } = useToast();
-  const value = Number(counted || 0);
-  const variance = value - expected;
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!counted.trim()) {
-      setError('Enter the cash you counted in the drawer.');
-      return;
-    }
-    try {
-      const result = endShift(value);
-      showToast(
-        `Shift closed · counted ${money(value)}${result ? ` · variance ${money(result.variance)}` : ''}`,
-        'success',
-      );
-      onClose();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not end the shift.');
-    }
-  }
-
   return createPortal(
     <div className="pos-modal-backdrop">
-      <form className="pos-payment-modal cashier-shift-modal" onSubmit={submit} noValidate>
+      <div className="pos-payment-modal cashier-shift-modal close-shift-modal">
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close">
           ×
         </button>
         <p className="eyebrow">Cash control</p>
         <h2>Close shift</h2>
-        <p className="inventory-form-note">
-          Count the drawer, then close the register. The handover is saved for the next shift.
-        </p>
-        {session && (
-          <p className="cashier-shift-picked">
-            On duty: <strong>{(session.onDutyNames ?? [session.cashierName]).join(', ')}</strong>
-          </p>
-        )}
-        <div className="pos-payment-total">
-          <span>Expected cash in drawer</span>
-          <strong>{money(expected)}</strong>
+        <CloseShiftForm onDone={onClose} onCancel={onClose} />
+      </div>
+    </div>,
+    getModalHost(),
+  );
+}
+
+const shiftLength = (openedAt: string) => {
+  const minutes = Math.max(0, Math.floor((Date.now() - new Date(openedAt).getTime()) / 60000));
+  const hours = Math.floor(minutes / 60);
+  return hours ? `${hours} hr ${minutes % 60} min` : `${minutes} min`;
+};
+
+/**
+ * Count the drawer and close the shift. Used by Close shift in the top bar and by the
+ * Close shift button on the Cash drawer page, so both do exactly the same thing.
+ */
+export function CloseShiftForm({
+  onDone,
+  onCancel,
+}: {
+  /** Called after the shift is closed. */
+  onDone: () => void;
+  /** Optional "Keep shift open" button. */
+  onCancel?: () => void;
+}) {
+  const session = getSession();
+  const totals = getShiftTotals(session);
+  const [counted, setCounted] = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+  const { showToast } = useToast();
+
+  if (!session) {
+    return (
+      <p className="close-shift__empty">
+        No shift is running, so there is nothing to close. Use Start shift in the top bar.
+      </p>
+    );
+  }
+
+  const value = Number(counted || 0);
+  const variance = Math.round((value - totals.expected) * 100) / 100;
+  const hasCount = counted.trim() !== '';
+  const balanced = hasCount && Math.abs(variance) < 0.005;
+  const state = !hasCount ? 'waiting' : balanced ? 'balanced' : variance < 0 ? 'short' : 'over';
+  const names = session.onDutyNames ?? [session.cashierName];
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!hasCount) {
+      setError('Count the cash in the drawer and enter the total.');
+      return;
+    }
+    if (!balanced && !note.trim()) {
+      setError('The count does not match. Write a short note on why before closing.');
+      return;
+    }
+    try {
+      const result = endShift(value, balanced ? undefined : note);
+      showToast(
+        result
+          ? `Shift closed. Counted ${money(value)}${
+              balanced
+                ? ', drawer balanced.'
+                : `, ${variance < 0 ? 'short' : 'over'} by ${money(Math.abs(variance))}.`
+            }`
+          : 'The shift was already closed.',
+        'success',
+      );
+      onDone();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not close the shift.');
+    }
+  }
+
+  return (
+    <form className="close-shift" onSubmit={submit} noValidate>
+      <p className="close-shift__who">
+        <span>
+          On duty: <strong>{names.join(', ')}</strong>
+        </span>
+        <span>
+          Started{' '}
+          {new Date(session.openedAt).toLocaleTimeString('en-PH', {
+            hour: 'numeric',
+            minute: '2-digit',
+          })}{' '}
+          · {shiftLength(session.openedAt)}
+        </span>
+      </p>
+
+      <dl className="close-shift__lines" aria-label="What should be in the drawer">
+        <div>
+          <dt>Opening float</dt>
+          <dd>{money(session.openingFloat)}</dd>
         </div>
-        <label>
-          Counted cash
+        <div>
+          <dt>Cash sales</dt>
+          <dd>+ {money(totals.cashSales)}</dd>
+        </div>
+        {totals.creditCash > 0 && (
+          <div>
+            <dt>Utang cash</dt>
+            <dd>+ {money(totals.creditCash)}</dd>
+          </div>
+        )}
+        {totals.paidIn > 0 && (
+          <div>
+            <dt>Cash in</dt>
+            <dd>+ {money(totals.paidIn)}</dd>
+          </div>
+        )}
+        {totals.paidOut > 0 && (
+          <div>
+            <dt>Cash out</dt>
+            <dd>− {money(totals.paidOut)}</dd>
+          </div>
+        )}
+        <div className="close-shift__expected">
+          <dt>Should be in the drawer</dt>
+          <dd>{money(totals.expected)}</dd>
+        </div>
+      </dl>
+
+      <label className="close-shift__field">
+        <span>Cash you counted</span>
+        <span className="close-shift__money">
+          <i aria-hidden="true">₱</i>
           <input
-            required
             autoFocus
             inputMode="decimal"
+            autoComplete="off"
             value={counted}
             onChange={(event) => {
               setCounted(event.target.value.replace(/[^\d.]/g, ''));
@@ -323,26 +412,60 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
             }}
             placeholder="0.00"
           />
+        </span>
+      </label>
+
+      <div className={`close-shift__result is-${state}`} aria-live="polite">
+        {state === 'waiting' && <span>Count every bill and coin, then type the total.</span>}
+        {state === 'balanced' && (
+          <>
+            <span>Drawer balanced</span>
+            <strong>{money(0)}</strong>
+          </>
+        )}
+        {(state === 'short' || state === 'over') && (
+          <>
+            <span>{state === 'short' ? 'Short by' : 'Over by'}</span>
+            <strong>{money(Math.abs(variance))}</strong>
+          </>
+        )}
+      </div>
+
+      {(state === 'short' || state === 'over') && (
+        <label className="close-shift__field">
+          <span>Why it does not match</span>
+          <input
+            value={note}
+            onChange={(event) => {
+              setNote(event.target.value);
+              setError('');
+            }}
+            placeholder={
+              state === 'short' ? 'e.g. ₱20 change given twice' : 'e.g. Customer left the change'
+            }
+          />
         </label>
-        {counted.trim() !== '' && (
-          <p
-            className={`cashier-shift-variance${Math.abs(variance) < 0.005 ? ' is-balanced' : ''}`}
-          >
-            {Math.abs(variance) < 0.005
-              ? 'Drawer is balanced.'
-              : `${variance > 0 ? 'Over' : 'Short'} by ${money(Math.abs(variance))}`}
-          </p>
+      )}
+
+      {error && (
+        <p className="close-shift__error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="close-shift__actions">
+        {onCancel && (
+          <button className="close-shift__keep" type="button" onClick={onCancel}>
+            Keep shift open
+          </button>
         )}
-        {error && (
-          <p className="pos-notice" role="alert">
-            {error}
-          </p>
-        )}
-        <button className="pos-checkout-button" type="submit">
-          Close shift and reconcile
+        <button className="close-shift__submit" type="submit">
+          Close shift
         </button>
-      </form>
-    </div>,
-    getModalHost(),
+      </div>
+      <p className="close-shift__after">
+        The count is saved in the Shift report. The store shows Closed until the next shift starts.
+      </p>
+    </form>
   );
 }

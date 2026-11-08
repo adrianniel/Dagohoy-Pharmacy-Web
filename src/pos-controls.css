@@ -2053,3 +2053,245 @@
     display: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   Close shift: one form for the top-bar popup and the Cash drawer page.
+   ------------------------------------------------------------------ */
+.close-shift {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.close-shift__who {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: #eef3ea;
+  font-size: 0.86rem;
+  color: #4f6258;
+}
+
+.close-shift__who strong {
+  color: #13322a;
+}
+
+/* What should be in the drawer, as a short receipt-style sum. */
+.close-shift__lines {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.close-shift__lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.18rem 0;
+  font-size: 0.9rem;
+  color: #4f6258;
+}
+
+.close-shift__lines dd {
+  margin: 0;
+  font-weight: 700;
+  color: #13322a;
+}
+
+.close-shift__lines .close-shift__expected {
+  margin-top: 0.4rem;
+  padding-top: 0.55rem;
+  border-top: 3px double #c9cfbe;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.close-shift__lines .close-shift__expected dd {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.close-shift__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.close-shift__field > span:first-child {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5d7268;
+}
+
+.close-shift__money {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 1rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.close-shift__money:focus-within {
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.14);
+}
+
+.close-shift__money i {
+  font-style: normal;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #8a978f;
+}
+
+.cashier-shell .close-shift .close-shift__money input,
+.cashier-shell.is-themed .pos-payment-modal .close-shift__money input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.cashier-shell .close-shift .close-shift__money input:focus {
+  outline: none;
+}
+
+/* Live result: balanced, short or over. */
+.close-shift__result {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  min-height: 3.2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #f1f3ea;
+  color: #5d7268;
+  font-size: 0.88rem;
+}
+
+.close-shift__result span {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.close-shift__result.is-waiting span {
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.close-shift__result strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.close-shift__result.is-balanced {
+  background: #e5f0e8;
+  color: #176246;
+}
+
+.close-shift__result.is-short {
+  background: #fbebe8;
+  color: #a2372c;
+}
+
+.close-shift__result.is-over {
+  background: #fbf2db;
+  color: #7f5609;
+}
+
+.close-shift__error {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  border-radius: 9px;
+  background: #fbebe8;
+  color: #8f2f25;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.close-shift__empty {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px dashed #cfe1d6;
+  border-radius: 12px;
+  background: #f7fbf8;
+  color: #5d7367;
+  font-size: 0.92rem;
+}
+
+.close-shift__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.close-shift__keep,
+.close-shift__submit {
+  min-height: 3.2rem;
+  padding: 0 1.4rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.close-shift__keep {
+  border: 1px solid #c9cfbe;
+  background: #fff;
+  color: #13322a;
+}
+
+.close-shift__keep:hover {
+  background: #f4f6ee;
+}
+
+.close-shift__submit {
+  flex: 1;
+  border: 0;
+  background: #a63a55;
+  color: #fff;
+}
+
+.close-shift__submit:hover {
+  background: #8c2f47;
+}
+
+.close-shift__keep:focus-visible,
+.close-shift__submit:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.close-shift__after {
+  margin: -0.3rem 0 0;
+  font-size: 0.78rem;
+  text-align: center;
+  color: #7a8a80;
+}
+
+/* Inside the Cash drawer card the form stays a comfortable width. */
+.control-panel .close-shift {
+  max-width: 34rem;
+}

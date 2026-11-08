@@ -24,6 +24,8 @@ export type ShiftRecord = {
   paidOut: number;
   expectedCash: number;
   countedCash: number;
+  /** Why the counted cash did not match, written by the cashier at closing. */
+  varianceNote?: string;
 };
 
 const SHIFT_HISTORY_KEY = 'dagohoy_demo_shift_history';

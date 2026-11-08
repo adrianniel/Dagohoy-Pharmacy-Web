@@ -1,10 +1,10 @@
 import { FormEvent, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
+import { CloseShiftForm } from '../../components/cashier/ShiftControls';
 import { useToast } from '../../components/toast';
 import {
   addCashEvent,
-  endShift,
   getCashEvents,
   getSession,
   getShiftTotals,
@@ -42,17 +42,6 @@ export function RegisterPage() {
     };
   }, []);
 
-  function closeSession(counted: number) {
-    const result = endShift(counted);
-    setActive('status');
-    showToast(
-      result
-        ? `Shift closed. Expected ${money(result.expected)} · counted ${money(counted)} · variance ${money(result.variance)}.`
-        : 'The shift was already closed.',
-      'success',
-    );
-  }
-
   const tiles: Array<ControlItem<DrawerTask>> = [
     {
       key: 'status',
@@ -82,10 +71,11 @@ export function RegisterPage() {
     {
       key: 'close',
       icon: 'clock',
-      title: 'Close register',
+      title: 'Close shift',
       hint: session ? 'Count the drawer' : 'No shift to close',
       tone: 'rose',
-      about: 'Count the cash in the drawer, then close the shift. The handover is saved.',
+      about:
+        'Count the cash in the drawer, then close the shift. Same as Close shift in the top bar.',
     },
   ];
   const activeTile = tiles.find((tile) => tile.key === active) ?? tiles[0];
@@ -205,15 +195,7 @@ export function RegisterPage() {
             </p>
           ))}
 
-        {active === 'close' &&
-          (session ? (
-            <CloseRegisterForm expected={totals.expected} onClose={closeSession} />
-          ) : (
-            <p className="register-empty">
-              No shift is open, so there is nothing to close. Use Start shift in the top bar to open
-              the register.
-            </p>
-          ))}
+        {active === 'close' && <CloseShiftForm onDone={() => setActive('status')} />}
       </ControlPanel>
     </div>
   );
@@ -328,71 +310,6 @@ function CashMovementForm({
       <div className="stock-index__actions">
         <button className="stock-index__action" type="submit">
           Save cash movement
-        </button>
-      </div>
-    </form>
-  );
-}
-
-/** Count the drawer and close the shift; shows over or short as the cashier types. */
-function CloseRegisterForm({
-  expected,
-  onClose,
-}: {
-  expected: number;
-  onClose: (counted: number) => void;
-}) {
-  const [counted, setCounted] = useState('');
-  const [error, setError] = useState('');
-  const value = Number(counted || 0);
-  const variance = value - expected;
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!counted.trim()) {
-      setError('Enter the cash you counted in the drawer.');
-      return;
-    }
-    onClose(value);
-  }
-
-  return (
-    <form className="stock-index__form" onSubmit={submit} noValidate>
-      <div className="stock-index__chips">
-        <span>
-          Expected in drawer <b>{money(expected)}</b>
-        </span>
-        {counted.trim() !== '' && (
-          <span className={Math.abs(variance) < 0.005 ? undefined : 'is-low'}>
-            {Math.abs(variance) < 0.005
-              ? 'Drawer is balanced'
-              : `${variance > 0 ? 'Over' : 'Short'} by`}{' '}
-            {Math.abs(variance) >= 0.005 && <b>{money(Math.abs(variance))}</b>}
-          </span>
-        )}
-      </div>
-      <div className="stock-index__form-grid">
-        <label>
-          Counted cash
-          <input
-            inputMode="decimal"
-            value={counted}
-            onChange={(event) => {
-              setCounted(event.target.value.replace(/[^\d.]/g, ''));
-              setError('');
-            }}
-            placeholder="0.00"
-          />
-        </label>
-      </div>
-      {error && (
-        <p className="stock-index__warn" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="stock-index__actions">
-        <button className="stock-index__action" type="submit">
-          Close and reconcile
         </button>
       </div>
     </form>
