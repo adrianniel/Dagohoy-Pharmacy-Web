@@ -1,0 +1,319 @@
+/* Control buttons at the top of each section, and the card that shows what they open.
+   Same keycap look as Sale controls on the POS. Used through components/ControlDeck.tsx. */
+
+.control-deck,
+.control-panel {
+  margin-bottom: 18px;
+  padding: 20px 22px 22px;
+  border-radius: 18px;
+  border: 1px solid #d8e2d6;
+  background: #fffef9;
+  box-shadow:
+    0 1px 0 #e9ecdd,
+    0 12px 28px rgba(19, 50, 42, 0.06);
+}
+
+.control-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.control-deck__head,
+.control-panel__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.control-deck__head h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #13322a;
+}
+
+.control-deck__head p,
+.control-panel__head p {
+  margin: 3px 0 0;
+  font-size: 0.86rem;
+  color: #6a7b71;
+}
+
+/* Keys */
+.control-deck__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 12px;
+  padding-bottom: 4px;
+}
+
+.control-deck__grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-deck__grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.control-deck__key {
+  --cap-face: #1b6b4c;
+  --cap-edge: #13573c;
+  --cap-hover: #186145;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 6.8rem;
+  padding: 14px 10px 15px;
+  appearance: none;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cap-face);
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  box-shadow:
+    0 5px 0 var(--cap-edge),
+    0 10px 20px rgba(15, 46, 34, 0.14);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.control-deck__key:hover {
+  background: var(--cap-hover);
+}
+
+.control-deck__key:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 var(--cap-edge),
+    0 3px 8px rgba(15, 46, 34, 0.12);
+}
+
+.control-deck__key:focus-visible {
+  outline: 3px solid #13322a;
+  outline-offset: 3px;
+}
+
+.control-deck__key[data-tone='forest'] {
+  --cap-face: #1b6b4c;
+  --cap-edge: #13573c;
+  --cap-hover: #186145;
+}
+
+.control-deck__key[data-tone='green'] {
+  --cap-face: #229a69;
+  --cap-edge: #1a7f55;
+  --cap-hover: #1f8c5f;
+}
+
+.control-deck__key[data-tone='blue'] {
+  --cap-face: #2f6fb0;
+  --cap-edge: #245891;
+  --cap-hover: #2a64a0;
+}
+
+.control-deck__key[data-tone='amber'] {
+  --cap-face: #c98a2c;
+  --cap-edge: #a8701f;
+  --cap-hover: #bb7f27;
+}
+
+.control-deck__key[data-tone='slate'] {
+  --cap-face: #566a86;
+  --cap-edge: #44566f;
+  --cap-hover: #4e617b;
+}
+
+.control-deck__key[data-tone='teal'] {
+  --cap-face: #1d8585;
+  --cap-edge: #156b6b;
+  --cap-hover: #1a7878;
+}
+
+.control-deck__key[data-tone='rose'] {
+  --cap-face: #a63a55;
+  --cap-edge: #872e45;
+  --cap-hover: #97354d;
+}
+
+.control-deck__key[data-tone='red'] {
+  --cap-face: #cd4f40;
+  --cap-edge: #ab3f32;
+  --cap-hover: #c24738;
+}
+
+.control-deck__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.control-deck__icon .cashier-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  stroke-width: 2.4;
+  color: #fff;
+}
+
+.control-deck__key strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.control-deck__key small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.88);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.control-deck__count {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  min-width: 1.7rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.control-deck__key.has-alert .control-deck__count {
+  background: #fff4cf;
+  color: #7a4a00;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.control-deck__key.is-active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 var(--cap-edge),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.85),
+    0 3px 8px rgba(15, 46, 34, 0.12);
+}
+
+.control-deck__key.is-active::after {
+  content: 'Open';
+  position: absolute;
+  top: 8px;
+  left: 9px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--cap-edge);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Result card */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: control-panel-in 160ms ease-out both;
+}
+
+@keyframes control-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.control-panel__head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e3e6d6;
+}
+
+.control-panel__head h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.control-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Existing page blocks placed inside the result card drop their own card look. */
+.control-panel > .cashier-panel,
+.control-panel > .cashier-summary-grid {
+  margin: 0;
+}
+
+.control-panel > .cashier-panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .control-deck__grid,
+  .control-deck__grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .control-deck,
+  .control-panel {
+    padding: 14px 12px 16px;
+  }
+
+  .control-panel {
+    overflow-x: auto;
+  }
+
+  .control-deck__key {
+    min-height: 6.2rem;
+    padding-top: 26px;
+  }
+
+  .control-deck__key strong {
+    font-size: 0.92rem;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-panel {
+    animation: none;
+  }
+}
