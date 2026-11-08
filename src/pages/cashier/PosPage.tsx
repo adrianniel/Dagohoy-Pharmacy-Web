@@ -729,8 +729,13 @@ export function CashierPosPage() {
               disabled={!transactionActive || !cart.length}
               onClick={clearSale}
             >
-              <span>Clear sale</span>
-              <small>Remove every item</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="trash" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>Clear sale</strong>
+                <small>Remove every item</small>
+              </span>
             </button>
             <button
               className="pos-control-button"
@@ -738,8 +743,13 @@ export function CashierPosPage() {
               disabled={!transactionActive || !cart.length}
               onClick={removeSelectedItem}
             >
-              <span>✕ Delete item</span>
-              <small>{selectedLine ? 'Drop this item' : 'Select an item first'}</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="close" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>Delete item</strong>
+                <small>Drop this item</small>
+              </span>
             </button>
             <button
               className="pos-control-button"
@@ -747,8 +757,13 @@ export function CashierPosPage() {
               disabled={!transactionActive || !selectedLine}
               onClick={() => stepSelectedQuantity(-1)}
             >
-              <span>− Quantity</span>
-              <small>One less</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="minus" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>- Quantity</strong>
+                <small>One less</small>
+              </span>
             </button>
             <button
               className="pos-control-button"
@@ -756,8 +771,13 @@ export function CashierPosPage() {
               disabled={!transactionActive || !selectedLine}
               onClick={() => stepSelectedQuantity(1)}
             >
-              <span>+ Quantity</span>
-              <small>One more</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="plus" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>+ Quantity</strong>
+                <small>One more</small>
+              </span>
             </button>
             <button
               className="pos-control-button"
@@ -765,8 +785,13 @@ export function CashierPosPage() {
               disabled={!transactionActive}
               onClick={openVoidDialog}
             >
-              <span>Void sale</span>
-              <small>Correct a receipt</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="transactions" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>Void sale</strong>
+                <small>Correct a receipt</small>
+              </span>
             </button>
             <button
               className="pos-control-button pos-control-button--no-charge"
@@ -774,8 +799,13 @@ export function CashierPosPage() {
               disabled={!transactionActive || !cart.length}
               onClick={openNoChargeDialog}
             >
-              <span>Don't charge</span>
-              <small>Own use, no payment</small>
+              <span className="pos-control-button__icon">
+                <CashierIcon name="nocharge" />
+              </span>
+              <span className="pos-control-button__text">
+                <strong>Don't charge</strong>
+                <small>Own use, no payment</small>
+              </span>
             </button>
           </div>
         </aside>

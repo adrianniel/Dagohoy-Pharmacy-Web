@@ -17,7 +17,12 @@ interface CashierIconProps {
     | 'pin'
     | 'chevron'
     | 'return'
-    | 'adjustments';
+    | 'adjustments'
+    | 'trash'
+    | 'close'
+    | 'minus'
+    | 'plus'
+    | 'nocharge';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -210,6 +215,34 @@ export function CashierIcon({ name }: CashierIconProps) {
     chevron: (
       <>
         <path d="m12 7 9 9-9 9" />
+      </>
+    ),
+    trash: (
+      <>
+        <path d="M7 10h18l-2 19H9L7 10z" />
+        <path d="M6 7h20M13 4h6M13 15v10M19 15v10" />
+      </>
+    ),
+    close: (
+      <>
+        <path d="M8 8l16 16M24 8L8 24" />
+      </>
+    ),
+    minus: (
+      <>
+        <path d="M8 16h16" />
+      </>
+    ),
+    plus: (
+      <>
+        <path d="M8 16h16M16 8v16" />
+      </>
+    ),
+    nocharge: (
+      <>
+        <circle cx="16" cy="16" r="11" />
+        <path d="M16 9v14M13 12.5h6M13 19h6" />
+        <path d="M7 7l18 18" />
       </>
     ),
   };
