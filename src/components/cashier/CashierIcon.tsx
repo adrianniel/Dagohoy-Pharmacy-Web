@@ -19,6 +19,7 @@ interface CashierIconProps {
     | 'return'
     | 'adjustments'
     | 'trash'
+    | 'receipt'
     | 'close'
     | 'minus'
     | 'plus'
@@ -219,8 +220,16 @@ export function CashierIcon({ name }: CashierIconProps) {
     ),
     trash: (
       <>
-        <path d="M7 10h18l-2 19H9L7 10z" />
-        <path d="M6 7h20M13 4h6M13 15v10M19 15v10" />
+        <path d="M6 9h20" />
+        <path d="M13 9V5.5h6V9" />
+        <path d="M8 9l1.6 17.2a2 2 0 0 0 2 1.8h8.8a2 2 0 0 0 2-1.8L24 9" />
+        <path d="M13.5 14v8.5M18.5 14v8.5" />
+      </>
+    ),
+    receipt: (
+      <>
+        <path d="M8 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v22l-2.7-2-2.6 2-2.7-2-2.7 2-2.6-2L8 28z" />
+        <path d="M12 10h8M12 15h8M12 20h5" />
       </>
     ),
     close: (
@@ -240,9 +249,10 @@ export function CashierIcon({ name }: CashierIconProps) {
     ),
     nocharge: (
       <>
-        <circle cx="16" cy="16" r="11" />
-        <path d="M16 9v14M13 12.5h6M13 19h6" />
-        <path d="M7 7l18 18" />
+        <circle cx="16" cy="16" r="12.5" />
+        <path d="M13.5 22.5V10h3a3 3 0 0 1 0 6h-3" />
+        <path d="M11 12.2h9.5M11 14.6h9.5" />
+        <path d="M7.4 7.4l17.2 17.2" />
       </>
     ),
   };

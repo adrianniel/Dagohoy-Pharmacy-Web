@@ -709,7 +709,7 @@ export function CashierPosPage() {
           </button>
           <p className="pos-demo-disclaimer">Records the sale in this browser and updates stock.</p>
         </section>
-        <aside className="cashier-panel pos-workbench pos-control-center" aria-labelledby="pos-control-heading">
+        <aside className="cashier-panel pos-control-center" aria-labelledby="pos-control-heading">
           <div className="cashier-panel__heading">
             <div>
               <h3 id="pos-control-heading">Sale controls</h3>
@@ -761,7 +761,7 @@ export function CashierPosPage() {
                 <CashierIcon name="minus" />
               </span>
               <span className="pos-control-button__text">
-                <strong>- Quantity</strong>
+                <strong>Quantity −</strong>
                 <small>One less</small>
               </span>
             </button>
@@ -775,7 +775,7 @@ export function CashierPosPage() {
                 <CashierIcon name="plus" />
               </span>
               <span className="pos-control-button__text">
-                <strong>+ Quantity</strong>
+                <strong>Quantity +</strong>
                 <small>One more</small>
               </span>
             </button>
@@ -786,7 +786,7 @@ export function CashierPosPage() {
               onClick={openVoidDialog}
             >
               <span className="pos-control-button__icon">
-                <CashierIcon name="transactions" />
+                <CashierIcon name="receipt" />
               </span>
               <span className="pos-control-button__text">
                 <strong>Void sale</strong>
