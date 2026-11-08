@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { PasswordInput } from '../../components/PasswordInput';
 import { useToast } from '../../components/toast';
 import {
@@ -25,6 +26,8 @@ import {
   type RosterStaff,
 } from '../../data/staffRoster';
 
+type StaffTab = 'roster' | 'cashier' | 'admins';
+
 type FormState =
   | { kind: 'create'; role: AccountRole }
   | { kind: 'edit'; account: Account }
@@ -39,6 +42,42 @@ export function StaffAccounts() {
   const me = getCurrentAccount();
   const cashier = getCashierAccount(accounts);
   const admins = accounts.filter((account) => account.role === 'ADMIN');
+  const [tab, setTab] = useState<StaffTab>('roster');
+  const activeStaff = roster.filter((staff) => staff.status === 'Active').length;
+
+  const items: Array<ControlItem<StaffTab>> = [
+    {
+      key: 'roster',
+      icon: 'staff',
+      title: 'Staff roster',
+      hint: `${activeStaff} active`,
+      tone: 'forest',
+      count: roster.length,
+      about:
+        'Only these names appear when a cashier starts a shift. Several can be on duty together.',
+    },
+    {
+      key: 'cashier',
+      icon: 'register',
+      title: 'Cashier account',
+      hint: cashier ? `Login: ${cashier.username}` : 'Not created yet',
+      tone: 'teal',
+      alert: !cashier,
+      count: cashier ? undefined : '!',
+      about:
+        'One shared login for the whole cashier team. Each cashier picks their name when the shift starts, so receipts and reports show who was on duty.',
+    },
+    {
+      key: 'admins',
+      icon: 'profile',
+      title: 'Administrators',
+      hint: 'Owner and managers',
+      tone: 'slate',
+      count: admins.length,
+      about: 'Administrators manage products, stock, reports, staff and settings.',
+    },
+  ];
+  const current = items.find((item) => item.key === tab);
 
   function refresh() {
     setAccounts(loadAccounts());
@@ -58,188 +97,202 @@ export function StaffAccounts() {
 
   return (
     <div className="staff-accounts">
-      <StaffRoster
-        roster={roster}
-        onAdd={(name) => {
-          try {
-            addStaff(name);
-            refresh();
-            showToast(`${name.trim()} added to the roster.`, 'success');
-          } catch (caught) {
-            showToast(caught instanceof Error ? caught.message : 'Could not add the staff member.');
-          }
-        }}
-        onToggle={(staff) => {
-          setStaffStatus(staff.id, staff.status === 'Active' ? 'Inactive' : 'Active');
-          refresh();
-        }}
-        onRename={(staff, name) => {
-          try {
-            renameStaff(staff.id, name);
-            refresh();
-            showToast('Name updated.', 'success');
-          } catch (caught) {
-            showToast(caught instanceof Error ? caught.message : 'Could not rename the staff member.');
-          }
-        }}
-        onRemove={(staff) => {
-          removeStaff(staff.id);
-          refresh();
-          showToast(`${staff.name} was removed from the roster.`);
-        }}
+      <ControlDeck
+        id="staff"
+        title="Staff"
+        subtitle="Pick who to manage. It opens in the card below."
+        active={tab}
+        onSelect={setTab}
+        items={items}
       />
-
-      <section className="cashier-panel" aria-labelledby="cashier-account-title">
-        <div className="cashier-panel__heading">
-          <div>
-            <h3 id="cashier-account-title">Cashier account</h3>
-            <p>
-              One shared login for the whole cashier team. Each cashier types their name when they
-              open the register, so receipts and reports show who was on shift.
-            </p>
-          </div>
-        </div>
-        {cashier ? (
-          <div className="staff-cashier-card">
-            <span className="cashier-avatar cashier-avatar--table">CA</span>
-            <div className="staff-cashier-card__copy">
-              <strong>{cashier.username}</strong>
-              <span>
-                Created {formatDate(cashier.createdAt)} · <StatusBadge value={cashier.status} />
-              </span>
-            </div>
-            <div className="staff-cashier-card__actions">
-              <button
-                className="cashier-view-button"
-                type="button"
-                onClick={() => setForm({ kind: 'edit', account: cashier })}
-              >
-                Edit username / password
-              </button>
-              <button
-                className="cashier-view-button"
-                type="button"
-                onClick={() => toggleStatus(cashier)}
-              >
-                {cashier.status === 'Active' ? 'Disable' : 'Enable'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="expenses-empty-state">
-            <strong>No cashier account yet</strong>
-            <span>Create the login your cashiers will use at the counter.</span>
+      <ControlPanel
+        id="staff"
+        activeKey={tab}
+        title={current?.title ?? 'Staff'}
+        about={current?.about}
+        actions={
+          tab === 'admins' ? (
             <button
               className="cashier-primary-action"
               type="button"
-              onClick={() => setForm({ kind: 'create', role: 'CASHIER' })}
+              onClick={() => setForm({ kind: 'create', role: 'ADMIN' })}
             >
-              Create cashier account <span>＋</span>
+              Add administrator <span>＋</span>
             </button>
-          </div>
-        )}
-      </section>
-
-      <section className="cashier-panel cashier-list-panel" aria-labelledby="admin-accounts-title">
-        <div className="cashier-panel__heading">
-          <div>
-            <h3 id="admin-accounts-title">Administrators</h3>
-            <p>Administrators manage products, stock, reports, staff and settings.</p>
-          </div>
-          <button
-            className="cashier-primary-action"
-            type="button"
-            onClick={() => setForm({ kind: 'create', role: 'ADMIN' })}
-          >
-            Add administrator <span>＋</span>
-          </button>
-        </div>
-        <div
-          className="cashier-table-wrap"
-          role="region"
-          aria-label="Administrator accounts"
-          tabIndex={0}
-        >
-          <table className="cashier-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {admins.map((account) => {
-                const isMe = account.id === me?.id;
-                const canEdit = canEditAccount(me, account);
-                return (
-                  <tr key={account.id}>
-                    <td>
-                      <span className="cashier-avatar cashier-avatar--table">
-                        {initialsOf(account.displayName)}
-                      </span>
-                      <span>
-                        <strong>
-                          {account.displayName}
-                          {isMe ? ' (you)' : ''}
-                        </strong>
-                        <br />
-                        <span className="staff-username">{account.username}</span>
-                      </span>
-                    </td>
-                    <td>{account.builtIn ? 'Owner' : 'Administrator'}</td>
-                    <td>
-                      <StatusBadge value={account.status} />
-                    </td>
-                    <td>
-                      <div className="staff-row-actions">
-                        {canEdit && (
-                          <button
-                            className="cashier-view-button"
-                            type="button"
-                            onClick={() => setForm({ kind: 'edit', account })}
-                          >
-                            {isMe ? 'Edit my account' : 'Edit account'}
-                          </button>
-                        )}
-                        {canEdit && !account.builtIn && !isMe && (
-                          <>
-                            <button
-                              className="cashier-view-button"
-                              type="button"
-                              onClick={() => toggleStatus(account)}
-                            >
-                              {account.status === 'Active' ? 'Disable' : 'Enable'}
-                            </button>
-                            <button
-                              className="cashier-view-button"
-                              type="button"
-                              onClick={() => setForm({ kind: 'remove', account })}
-                            >
-                              Remove
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+          ) : undefined
+        }
+      >
+        {tab === 'roster' && (
+          <StaffRoster
+            roster={roster}
+            onAdd={(name) => {
+              try {
+                addStaff(name);
+                refresh();
+                showToast(`${name.trim()} added to the roster.`, 'success');
+              } catch (caught) {
+                showToast(
+                  caught instanceof Error ? caught.message : 'Could not add the staff member.',
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="cashier-table-footer">
-          <span>
-            {admins.length} administrator{admins.length === 1 ? '' : 's'}
-          </span>
-          <span>
-            {me?.builtIn
-              ? 'The owner account cannot be disabled or removed.'
-              : 'Only the owner can change other administrators.'}
-          </span>
-        </div>
-      </section>
+              }
+            }}
+            onToggle={(staff) => {
+              setStaffStatus(staff.id, staff.status === 'Active' ? 'Inactive' : 'Active');
+              refresh();
+            }}
+            onRename={(staff, name) => {
+              try {
+                renameStaff(staff.id, name);
+                refresh();
+                showToast('Name updated.', 'success');
+              } catch (caught) {
+                showToast(
+                  caught instanceof Error ? caught.message : 'Could not rename the staff member.',
+                );
+              }
+            }}
+            onRemove={(staff) => {
+              removeStaff(staff.id);
+              refresh();
+              showToast(`${staff.name} was removed from the roster.`);
+            }}
+          />
+        )}
+
+        {tab === 'cashier' && (
+          <section className="cashier-panel">
+            {cashier ? (
+              <div className="staff-cashier-card">
+                <span className="cashier-avatar cashier-avatar--table">CA</span>
+                <div className="staff-cashier-card__copy">
+                  <strong>{cashier.username}</strong>
+                  <span>
+                    Created {formatDate(cashier.createdAt)} · <StatusBadge value={cashier.status} />
+                  </span>
+                </div>
+                <div className="staff-cashier-card__actions">
+                  <button
+                    className="cashier-view-button"
+                    type="button"
+                    onClick={() => setForm({ kind: 'edit', account: cashier })}
+                  >
+                    Edit username / password
+                  </button>
+                  <button
+                    className="cashier-view-button"
+                    type="button"
+                    onClick={() => toggleStatus(cashier)}
+                  >
+                    {cashier.status === 'Active' ? 'Disable' : 'Enable'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="expenses-empty-state">
+                <strong>No cashier account yet</strong>
+                <span>Create the login your cashiers will use at the counter.</span>
+                <button
+                  className="cashier-primary-action"
+                  type="button"
+                  onClick={() => setForm({ kind: 'create', role: 'CASHIER' })}
+                >
+                  Create cashier account <span>＋</span>
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === 'admins' && (
+          <section className="cashier-panel cashier-list-panel">
+            <div
+              className="cashier-table-wrap"
+              role="region"
+              aria-label="Administrator accounts"
+              tabIndex={0}
+            >
+              <table className="cashier-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {admins.map((account) => {
+                    const isMe = account.id === me?.id;
+                    const canEdit = canEditAccount(me, account);
+                    return (
+                      <tr key={account.id}>
+                        <td>
+                          <span className="cashier-avatar cashier-avatar--table">
+                            {initialsOf(account.displayName)}
+                          </span>
+                          <span>
+                            <strong>
+                              {account.displayName}
+                              {isMe ? ' (you)' : ''}
+                            </strong>
+                            <br />
+                            <span className="staff-username">{account.username}</span>
+                          </span>
+                        </td>
+                        <td>{account.builtIn ? 'Owner' : 'Administrator'}</td>
+                        <td>
+                          <StatusBadge value={account.status} />
+                        </td>
+                        <td>
+                          <div className="staff-row-actions">
+                            {canEdit && (
+                              <button
+                                className="cashier-view-button"
+                                type="button"
+                                onClick={() => setForm({ kind: 'edit', account })}
+                              >
+                                {isMe ? 'Edit my account' : 'Edit account'}
+                              </button>
+                            )}
+                            {canEdit && !account.builtIn && !isMe && (
+                              <>
+                                <button
+                                  className="cashier-view-button"
+                                  type="button"
+                                  onClick={() => toggleStatus(account)}
+                                >
+                                  {account.status === 'Active' ? 'Disable' : 'Enable'}
+                                </button>
+                                <button
+                                  className="cashier-view-button"
+                                  type="button"
+                                  onClick={() => setForm({ kind: 'remove', account })}
+                                >
+                                  Remove
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="cashier-table-footer">
+              <span>
+                {admins.length} administrator{admins.length === 1 ? '' : 's'}
+              </span>
+              <span>
+                {me?.builtIn
+                  ? 'The owner account cannot be disabled or removed.'
+                  : 'Only the owner can change other administrators.'}
+              </span>
+            </div>
+          </section>
+        )}
+      </ControlPanel>
 
       {form?.kind === 'create' && (
         <AccountFormModal
@@ -578,15 +631,7 @@ function StaffRoster({
   }
 
   return (
-    <section className="cashier-panel staff-roster" aria-labelledby="staff-roster-title">
-      <div className="cashier-panel__heading">
-        <div>
-          <h3 id="staff-roster-title">Staff roster</h3>
-          <p>
-            Only these names appear when a cashier starts a shift. Several can be on duty together.
-          </p>
-        </div>
-      </div>
+    <section className="cashier-panel staff-roster">
       <form className="staff-roster__add" onSubmit={submit}>
         <label>
           Staff name

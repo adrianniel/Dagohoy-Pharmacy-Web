@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
+import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { useToast } from '../../components/toast';
@@ -15,6 +16,8 @@ import { suggestProductCategories } from '../../services/productsApi';
 import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
+type SupplierTab = 'list' | 'add';
+type SettingsTab = 'details' | 'alerts' | 'gcash';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -68,7 +71,8 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [supplierList, setSupplierList] = useState<Supplier[]>(() =>
     loadLocalList(SUPPLIER_KEY, suppliers),
   );
-  const [supplierFormOpen, setSupplierFormOpen] = useState(false);
+  const [supplierTab, setSupplierTab] = useState<SupplierTab>('list');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('details');
   const { showToast } = useToast();
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
@@ -138,6 +142,58 @@ export function AdminPage({ section }: { section: AdminSection }) {
     link.click();
     URL.revokeObjectURL(url);
     showToast('Restock order basis downloaded. Confirm quantities with your supplier.');
+  }
+
+  const supplierItems: Array<ControlItem<SupplierTab>> = [
+    {
+      key: 'list',
+      icon: 'suppliers',
+      title: 'Supplier list',
+      hint: 'Who supplies the stock',
+      tone: 'forest',
+      count: supplierList.length,
+    },
+    {
+      key: 'add',
+      icon: 'purchases',
+      title: 'Add supplier',
+      hint: 'Save a new supplier',
+      tone: 'blue',
+    },
+  ];
+
+  const settingsItems: Array<ControlItem<SettingsTab>> = [
+    {
+      key: 'details',
+      icon: 'store',
+      title: 'Pharmacy details',
+      hint: 'Name, contact, hours',
+      tone: 'forest',
+      about: 'Shown on receipts and the public page. Keep the name, number and address correct.',
+    },
+    {
+      key: 'alerts',
+      icon: 'inventory',
+      title: 'Stock alerts',
+      hint: `Low stock below ${pharmacySettings.threshold || '—'}`,
+      tone: 'amber',
+      about: 'A product is marked low stock when its count drops below this number.',
+    },
+    {
+      key: 'gcash',
+      icon: 'phone',
+      title: 'GCash payment',
+      hint: pharmacySettings.gcashNumber ? 'Number is set' : 'Number not set',
+      tone: 'blue',
+      alert: !pharmacySettings.gcashNumber,
+      about: 'The GCash number and QR the cashier shows the customer at checkout.',
+    },
+  ];
+
+  function saveSettings() {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
+    window.dispatchEvent(new Event('pharmacy-settings-changed'));
+    showToast('Settings saved in this browser.');
   }
 
   if (section === 'dashboard') return <AdminDashboard />;
@@ -270,188 +326,229 @@ export function AdminPage({ section }: { section: AdminSection }) {
         </>
       )}
       {section === 'suppliers' && (
-        <section className="cashier-panel cashier-list-panel">
-          <div className="cashier-panel__heading">
-            <div>
-              <h3>Supplier directory</h3>
-              <p>Sample supplier records for workspace planning.</p>
-            </div>
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setSupplierFormOpen(true)}
+        <>
+          <ControlDeck
+            id="suppliers"
+            title="Suppliers"
+            subtitle="Pick a task. Its tools open in the card below."
+            active={supplierTab}
+            onSelect={setSupplierTab}
+            items={supplierItems}
+          />
+          {supplierTab === 'list' && (
+            <ControlPanel
+              id="suppliers"
+              activeKey="list"
+              title="Supplier list"
+              about="Everyone the pharmacy buys stock from. These records are saved in this browser only."
             >
-              Add supplier <span>＋</span>
-            </button>
-          </div>
-          <div
-            className="cashier-table-wrap"
-            role="region"
-            aria-label="Suppliers table"
-            tabIndex={0}
-          >
-            <table className="cashier-table">
-              <thead>
-                <tr>
-                  <th>Supplier</th>
-                  <th>Location</th>
-                  <th>Products supplied</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {supplierList.map((supplier) => (
-                  <tr key={supplier.name}>
-                    <td>
-                      <strong>{supplier.name}</strong>
-                    </td>
-                    <td>{supplier.contact}</td>
-                    <td>{supplier.products} products</td>
-                    <td>
-                      <StatusBadge value={supplier.status} />
-                    </td>
-                    <td>
-                      <button
-                        className="cashier-view-button"
-                        type="button"
-                        onClick={() =>
-                          showToast(
-                            `${supplier.name} · ${supplier.contact} · ${supplier.products} sample products`,
-                            'info',
-                          )
-                        }
-                      >
-                        View details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="cashier-table-footer">
-            <span>{supplierList.length} supplier records</span>
-            <span>Supplier records are local demo data.</span>
-          </div>
-        </section>
-      )}
+              <section className="cashier-panel cashier-list-panel">
+                <div
+                  className="cashier-table-wrap"
+                  role="region"
+                  aria-label="Suppliers table"
+                  tabIndex={0}
+                >
+                  <table className="cashier-table">
+                    <thead>
+                      <tr>
+                        <th>Supplier</th>
+                        <th>Location</th>
+                        <th>Products supplied</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {supplierList.map((supplier) => (
+                        <tr key={supplier.name}>
+                          <td>
+                            <strong>{supplier.name}</strong>
+                          </td>
+                          <td>{supplier.contact}</td>
+                          <td>{supplier.products} products</td>
+                          <td>
+                            <StatusBadge value={supplier.status} />
+                          </td>
+                          <td>
+                            <button
+                              className="cashier-view-button"
+                              type="button"
+                              onClick={() =>
+                                showToast(
+                                  `${supplier.name} · ${supplier.contact} · ${supplier.products} sample products`,
+                                  'info',
+                                )
+                              }
+                            >
+                              View details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="cashier-table-footer">
+                  <span>{supplierList.length} supplier records</span>
+                  <span>Supplier records are local demo data.</span>
+                </div>
+              </section>
+            </ControlPanel>
+          )}
+          {supplierTab === 'add' && (
+            <ControlPanel
+              id="suppliers"
+              activeKey="add"
+              title="Add supplier"
+              about="Save a new supplier so you can pick it when stock is delivered."
+            >
+              <SupplierForm
+                onCancel={() => setSupplierTab('list')}
+                onSave={(value) => {
+                  const next = [...supplierList, value];
+                  setSupplierList(next);
+                  localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
+                  setSupplierTab('list');
+                  showToast('Supplier saved in this browser.');
+                }}
+              />
+            </ControlPanel>
+          )}
+        </>
+      )}{' '}
       {section === 'reports' && <Reports />}
       {section === 'staff' && <StaffAccounts />}
       {section === 'settings' && (
-        <section className="cashier-panel settings-form">
-          <p className="demo-note">Settings are saved locally in this browser for preview only.</p>
-          <label>
-            Pharmacy name
-            <input
-              value={pharmacySettings.name}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, name: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Contact number
-            <input
-              value={pharmacySettings.phone}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, phone: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Address
-            <input
-              value={pharmacySettings.address}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, address: event.target.value })
-              }
-            />
-          </label>
-          <label>
-            Email
-            <input
-              type="email"
-              value={pharmacySettings.email ?? ''}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, email: event.target.value })
-              }
-              placeholder="[Pharmacy email]"
-            />
-          </label>
-          <label>
-            Business hours
-            <input
-              value={pharmacySettings.businessHours ?? ''}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, businessHours: event.target.value })
-              }
-              placeholder="Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM"
-            />
-          </label>
-          <label>
-            Low-stock alert threshold
-            <input
-              type="number"
-              min="1"
-              value={pharmacySettings.threshold}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, threshold: event.target.value })
-              }
-            />
-          </label>
-          <h3>GCash payment display</h3>
-          <p className="demo-note">
-            These details are displayed to the cashier at checkout. No payment is processed by this
-            app.
-          </p>
-          <label>
-            GCash number
-            <input
-              inputMode="tel"
-              value={pharmacySettings.gcashNumber ?? ''}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, gcashNumber: event.target.value })
-              }
-              placeholder="09XX XXX XXXX"
-            />
-          </label>
-          <label>
-            GCash QR image URL
-            <input
-              type="url"
-              value={pharmacySettings.gcashQrUrl ?? ''}
-              onChange={(event) =>
-                setPharmacySettings({ ...pharmacySettings, gcashQrUrl: event.target.value })
-              }
-              placeholder="https://…"
-            />
-          </label>
-          <button
-            className="cashier-primary-action"
-            type="button"
-            onClick={() => {
-              localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
-              window.dispatchEvent(new Event('pharmacy-settings-changed'));
-              showToast('Settings saved in this browser.');
-            }}
+        <>
+          <ControlDeck
+            id="settings"
+            title="Settings"
+            subtitle="Pick what to change. Save keeps every setting at once."
+            active={settingsTab}
+            onSelect={setSettingsTab}
+            items={settingsItems}
+          />
+          <ControlPanel
+            id="settings"
+            activeKey={settingsTab}
+            title={settingsItems.find((item) => item.key === settingsTab)?.title ?? 'Settings'}
+            about={settingsItems.find((item) => item.key === settingsTab)?.about}
+            actions={
+              <button className="cashier-primary-action" type="button" onClick={saveSettings}>
+                Save changes
+              </button>
+            }
           >
-            Save changes
-          </button>
-        </section>
-      )}
-      {supplierFormOpen && (
-        <SupplierForm
-          onClose={() => setSupplierFormOpen(false)}
-          onSave={(value) => {
-            const next = [...supplierList, value];
-            setSupplierList(next);
-            localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
-            setSupplierFormOpen(false);
-            showToast('Supplier saved in this browser.');
-          }}
-        />
-      )}
+            <section className="cashier-panel settings-form">
+              <p className="demo-note">
+                Settings are saved locally in this browser for preview only.
+              </p>
+              {settingsTab === 'details' && (
+                <>
+                  <label>
+                    Pharmacy name
+                    <input
+                      value={pharmacySettings.name}
+                      onChange={(event) =>
+                        setPharmacySettings({ ...pharmacySettings, name: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Contact number
+                    <input
+                      value={pharmacySettings.phone}
+                      onChange={(event) =>
+                        setPharmacySettings({ ...pharmacySettings, phone: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Address
+                    <input
+                      value={pharmacySettings.address}
+                      onChange={(event) =>
+                        setPharmacySettings({ ...pharmacySettings, address: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Email
+                    <input
+                      type="email"
+                      value={pharmacySettings.email ?? ''}
+                      onChange={(event) =>
+                        setPharmacySettings({ ...pharmacySettings, email: event.target.value })
+                      }
+                      placeholder="[Pharmacy email]"
+                    />
+                  </label>
+                  <label>
+                    Business hours
+                    <input
+                      value={pharmacySettings.businessHours ?? ''}
+                      onChange={(event) =>
+                        setPharmacySettings({
+                          ...pharmacySettings,
+                          businessHours: event.target.value,
+                        })
+                      }
+                      placeholder="Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM"
+                    />
+                  </label>
+                </>
+              )}
+              {settingsTab === 'alerts' && (
+                <label>
+                  Low-stock alert threshold
+                  <input
+                    type="number"
+                    min="1"
+                    value={pharmacySettings.threshold}
+                    onChange={(event) =>
+                      setPharmacySettings({ ...pharmacySettings, threshold: event.target.value })
+                    }
+                  />
+                </label>
+              )}
+              {settingsTab === 'gcash' && (
+                <>
+                  <p className="demo-note">
+                    These details are displayed to the cashier at checkout. No payment is processed
+                    by this app.
+                  </p>
+                  <label>
+                    GCash number
+                    <input
+                      inputMode="tel"
+                      value={pharmacySettings.gcashNumber ?? ''}
+                      onChange={(event) =>
+                        setPharmacySettings({
+                          ...pharmacySettings,
+                          gcashNumber: event.target.value,
+                        })
+                      }
+                      placeholder="09XX XXX XXXX"
+                    />
+                  </label>
+                  <label>
+                    GCash QR image URL
+                    <input
+                      type="url"
+                      value={pharmacySettings.gcashQrUrl ?? ''}
+                      onChange={(event) =>
+                        setPharmacySettings({ ...pharmacySettings, gcashQrUrl: event.target.value })
+                      }
+                      placeholder="https://…"
+                    />
+                  </label>
+                </>
+              )}
+            </section>
+          </ControlPanel>
+        </>
+      )}{' '}
     </div>
   );
 }
@@ -466,51 +563,55 @@ function Summary({ label, value, detail }: { label: string; value: string; detai
   );
 }
 
+/** Add-supplier form, shown inside the Add supplier card. */
 function SupplierForm({
-  onClose,
+  onCancel,
   onSave,
 }: {
-  onClose: () => void;
+  onCancel: () => void;
   onSave: (value: Supplier) => void;
 }) {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   return (
-    <div className="pos-modal-backdrop">
-      <form
-        className="pos-payment-modal"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
-        }}
-      >
-        <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close form">
-          ×
-        </button>
-        <p className="eyebrow">Supplier directory · demo</p>
-        <h2>Add supplier</h2>
-        <p className="inventory-form-note">This creates a local preview record only.</p>
-        <label>
-          Supplier name
-          <input
-            required
-            autoFocus
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
-        <label>
-          Phone, email, or location
-          <input required value={contact} onChange={(event) => setContact(event.target.value)} />
-        </label>
-        <button className="pos-checkout-button" type="submit">
+    <form
+      className="cashier-panel settings-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
+      }}
+    >
+      <p className="demo-note">This creates a local preview record only.</p>
+      <label>
+        Supplier name
+        <input
+          required
+          autoFocus
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="e.g. Unilab, Inc."
+        />
+      </label>
+      <label>
+        Phone, email, or location
+        <input
+          required
+          value={contact}
+          onChange={(event) => setContact(event.target.value)}
+          placeholder="e.g. 0917 123 4567 · Tagbilaran City"
+        />
+      </label>
+      <div className="stock-index__actions">
+        <button className="cashier-primary-action" type="submit">
           Save supplier
         </button>
-      </form>
-    </div>
+        <button className="cashier-view-button" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
-
 function InventoryForm({
   product,
   onClose,
@@ -629,113 +730,206 @@ function InventoryForm({
   );
 }
 
+type OverviewTab = 'today' | 'alerts' | 'actions';
+
 function AdminDashboard() {
+  const [tab, setTab] = useState<OverviewTab>('today');
+  const threshold = getLowStockThreshold();
+  const lowStock = getInventory().filter((product) => product.stock < threshold);
+  const items: Array<ControlItem<OverviewTab>> = [
+    {
+      key: 'today',
+      icon: 'dashboard',
+      title: 'Today',
+      hint: 'Sales and stock value',
+      tone: 'forest',
+      about: 'A quick look at the day. These figures are sample data, not live pharmacy records.',
+    },
+    {
+      key: 'alerts',
+      icon: 'inventory',
+      title: 'Inventory alerts',
+      hint: lowStock.length ? 'Need restocking' : 'All above reorder point',
+      tone: 'amber',
+      count: lowStock.length,
+      alert: lowStock.length > 0,
+      about: `Products below the reorder point of ${threshold} units. Restock them to avoid missed sales.`,
+    },
+    {
+      key: 'actions',
+      icon: 'arrow',
+      title: 'Quick actions',
+      hint: 'Jump to a task',
+      tone: 'blue',
+      about: 'Shortcuts to the pages you use most.',
+    },
+  ];
+  const current = items.find((item) => item.key === tab);
+
   return (
     <div className="cashier-page">
-      <div className="cashier-summary-grid">
-        <Summary label="Sales today" value={money(18460.5)} detail="Demo data · 24 transactions" />
-        <Summary label="Transactions" value="24" detail="Sample register activity" />
-        <Summary label="Inventory value" value={money(283450)} detail="Illustrative retail value" />
-        <Summary
-          label="Needs attention"
-          value={`${getInventory().filter((product) => product.stock < 20).length} items`}
-          detail="Sample low-stock alerts"
-        />
-      </div>
-      <div className="cashier-dashboard-grid admin-dashboard-grid">
-        <section className="cashier-panel">
-          <div className="cashier-panel__heading">
-            <div>
-              <h3>Inventory alerts</h3>
-              <p>Replenish these products to avoid missed sales.</p>
-            </div>
-            <Link to="/admin/products">View inventory</Link>
+      <ControlDeck
+        id="overview"
+        title="Overview"
+        subtitle="Pick what to look at. It opens in the card below."
+        active={tab}
+        onSelect={setTab}
+        items={items}
+      />
+      <ControlPanel
+        id="overview"
+        activeKey={tab}
+        title={current?.title ?? 'Overview'}
+        about={current?.about}
+      >
+        {tab === 'today' && (
+          <div className="cashier-summary-grid">
+            <Summary
+              label="Sales today"
+              value={money(18460.5)}
+              detail="Demo data · 24 transactions"
+            />
+            <Summary label="Transactions" value="24" detail="Sample register activity" />
+            <Summary
+              label="Inventory value"
+              value={money(283450)}
+              detail="Illustrative retail value"
+            />
+            <Summary
+              label="Needs attention"
+              value={`${lowStock.length} items`}
+              detail={`Below ${threshold} units`}
+            />
           </div>
-          <div
-            className="cashier-table-wrap"
-            role="region"
-            aria-label="Recent sales table"
-            tabIndex={0}
-          >
-            <table className="cashier-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>On hand</th>
-                  <th>Reorder point</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {getInventory()
-                  .filter((product) => product.stock < getLowStockThreshold())
-                  .map((product) => (
-                    <tr key={product.barcode}>
-                      <td>
-                        <strong>{product.product}</strong>
-                      </td>
-                      <td>{product.stock}</td>
-                      <td>20</td>
-                      <td>
-                        <StatusBadge value={product.status} />
-                      </td>
+        )}
+        {tab === 'alerts' &&
+          (lowStock.length === 0 ? (
+            <p className="stock-index__empty">
+              Every product is at or above the reorder point of {threshold} units.
+            </p>
+          ) : (
+            <section className="cashier-panel">
+              <div
+                className="cashier-table-wrap"
+                role="region"
+                aria-label="Inventory alerts table"
+                tabIndex={0}
+              >
+                <table className="cashier-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>On hand</th>
+                      <th>Reorder point</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-        <aside className="cashier-panel admin-quick-actions">
-          <h3>Quick actions</h3>
-          <Link to="/cashier/pos">
-            <CashierIcon name="pos" /> New sale <span>→</span>
-          </Link>
-          <Link to="/admin/products">
-            <CashierIcon name="inventory" /> Review stock <span>→</span>
-          </Link>
-          <Link to="/admin/reports">
-            <CashierIcon name="reports" /> Sales report <span>→</span>
-          </Link>
-          <div className="demo-note">
-            Dashboard figures are sample data, not live pharmacy records.
-          </div>
-        </aside>
-      </div>
+                  </thead>
+                  <tbody>
+                    {lowStock.map((product) => (
+                      <tr key={product.barcode}>
+                        <td>
+                          <strong>{product.product}</strong>
+                        </td>
+                        <td>{product.stock}</td>
+                        <td>{threshold}</td>
+                        <td>
+                          <StatusBadge value={product.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="cashier-table-footer">
+                <span>{lowStock.length} product(s) to restock</span>
+                <Link to="/admin/products">View inventory</Link>
+              </div>
+            </section>
+          ))}
+        {tab === 'actions' && (
+          <aside className="cashier-panel admin-quick-actions">
+            <Link to="/cashier/pos">
+              <CashierIcon name="pos" /> New sale <span>→</span>
+            </Link>
+            <Link to="/admin/products">
+              <CashierIcon name="inventory" /> Review stock <span>→</span>
+            </Link>
+            <Link to="/admin/reports">
+              <CashierIcon name="reports" /> Sales report <span>→</span>
+            </Link>
+          </aside>
+        )}
+      </ControlPanel>
     </div>
   );
 }
 
+type ReportsTab = 'summary' | 'weekly';
+
 function Reports() {
+  const [tab, setTab] = useState<ReportsTab>('summary');
   const values = [42, 56, 48, 72, 64, 88, 73];
+  const items: Array<ControlItem<ReportsTab>> = [
+    {
+      key: 'summary',
+      icon: 'reports',
+      title: 'Sales summary',
+      hint: 'This week at a glance',
+      tone: 'forest',
+      about: 'Totals for the week. These are sample numbers until sales are connected.',
+    },
+    {
+      key: 'weekly',
+      icon: 'calendar',
+      title: 'Weekly sales',
+      hint: 'Day by day',
+      tone: 'teal',
+      about: 'Sales for each day of the last 7 days. Sample numbers until sales are connected.',
+    },
+  ];
+  const current = items.find((item) => item.key === tab);
+
   return (
     <>
-      <div className="cashier-summary-grid">
-        <Summary
-          label="Gross sales · this week"
-          value={money(94620)}
-          detail="Sample reporting period"
-        />
-        <Summary label="Transactions" value="138" detail="Average 20 per day" />
-        <Summary label="Average basket" value={money(685.65)} detail="Per completed sale" />
-        <Summary label="Top category" value="OTC medicine" detail="32% of sales" />
-      </div>
-      <section className="cashier-panel report-panel">
-        <div className="cashier-panel__heading">
-          <div>
-            <h3>Weekly sales</h3>
-            <p>Sales totals are mock examples pending a reporting API.</p>
+      <ControlDeck
+        id="reports"
+        title="Reports"
+        subtitle="Pick a report. It opens in the card below."
+        active={tab}
+        onSelect={setTab}
+        items={items}
+      />
+      <ControlPanel
+        id="reports"
+        activeKey={tab}
+        title={current?.title ?? 'Reports'}
+        about={current?.about}
+      >
+        {tab === 'summary' && (
+          <div className="cashier-summary-grid">
+            <Summary
+              label="Gross sales · this week"
+              value={money(94620)}
+              detail="Sample reporting period"
+            />
+            <Summary label="Transactions" value="138" detail="Average 20 per day" />
+            <Summary label="Average basket" value={money(685.65)} detail="Per completed sale" />
+            <Summary label="Top category" value="OTC medicine" detail="32% of sales" />
           </div>
-          <span className="report-period">Last 7 days</span>
-        </div>
-        <div className="report-chart" role="img" aria-label="Illustrative weekly sales chart">
-          {values.map((value, index) => (
-            <div className="report-chart__column" key={index}>
-              <span style={{ height: `${value}%` }} />
-              <small>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}</small>
+        )}
+        {tab === 'weekly' && (
+          <section className="cashier-panel report-panel">
+            <div className="report-chart" role="img" aria-label="Illustrative weekly sales chart">
+              {values.map((value, index) => (
+                <div className="report-chart__column" key={index}>
+                  <span style={{ height: `${value}%` }} />
+                  <small>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}</small>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+        )}
+      </ControlPanel>
     </>
   );
 }
