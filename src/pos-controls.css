@@ -1650,7 +1650,7 @@
   color: #13322a;
 }
 
-.pos-done__check span {
+.pos-done__change {
   font-size: 0.95rem;
   font-weight: 700;
   color: #176246;
@@ -1696,15 +1696,35 @@
 }
 
 /* The check shrinks into a header line once the receipt comes out. */
+/* Compact header: badge on the left, title with the change under it, clear of the close button. */
 .pos-done.is-receipt .pos-done__check {
-  flex-direction: row;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0;
+  padding: 0 2.6rem;
+  text-align: left;
 }
 
+.pos-done.is-receipt .pos-done__check strong,
+.pos-done.is-receipt .pos-done__change {
+  grid-column: 2;
+  white-space: nowrap;
+}
 .pos-done.is-receipt .pos-done__badge {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   width: 2rem;
   height: 2rem;
   animation: none;
+}
+
+/* The check is already drawn by now: keep it visible when the animation is dropped. */
+.pos-done.is-receipt .pos-done__badge path {
+  animation: none;
+  stroke-dashoffset: 0;
 }
 
 .pos-done.is-receipt .pos-done__badge svg {
@@ -1714,12 +1734,6 @@
 
 .pos-done.is-receipt .pos-done__check strong {
   font-size: 1rem;
-}
-
-.pos-done.is-receipt .pos-done__check span::before {
-  content: '·';
-  margin-right: 0.5rem;
-  color: #8a978f;
 }
 
 /* Paper slot: the receipt slides down out of it like a printer feed. */

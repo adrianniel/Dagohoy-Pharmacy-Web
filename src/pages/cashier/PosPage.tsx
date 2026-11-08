@@ -1390,7 +1390,9 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
               ? 'Utang saved'
               : 'Payment complete'}
         </strong>
-        {sale.change > 0 && <span>Change {formatMoney(sale.change)}</span>}
+        {sale.change > 0 && (
+          <span className="pos-done__change">Change {formatMoney(sale.change)}</span>
+        )}
       </div>
 
       <div className="pos-done__paper">
