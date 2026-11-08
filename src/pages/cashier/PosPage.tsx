@@ -104,6 +104,36 @@ function readVoidLog(): VoidRecord[] {
   }
 }
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
+
+/** "09171234567" → "0917 123 4567", "+639171234567" → "+63 917 123 4567". */
+function formatGcashNumber(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length === 11 && digits.startsWith('09')) {
+    return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+  }
+  if (digits.length === 12 && digits.startsWith('639')) {
+    return `+63 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+  }
+  return value.trim();
+}
+
+/** Store details printed on the receipt header, from Owner → Pharmacy settings. */
+function readStoreDetails() {
+  try {
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as {
+      name?: string;
+      address?: string;
+      phone?: string;
+    };
+    return {
+      name: settings.name?.trim() || 'Dagohoy Pharmacy',
+      address: settings.address?.trim() || '',
+      phone: settings.phone?.trim() || '',
+    };
+  } catch {
+    return { name: 'Dagohoy Pharmacy', address: '', phone: '' };
+  }
+}
 const PAYMENT_METHOD_OPTIONS: Array<{
   id: PaymentMethod;
   name: string;
@@ -217,8 +247,8 @@ export function CashierPosPage() {
           ? `The cash is ${formatMoney(totalDue - Number(tendered))} short of the total.`
           : ''
       : paymentMethod === 'GCash'
-        ? !gcashReference.trim()
-          ? 'Enter the GCash reference number from the customer.'
+        ? gcashReference.trim().length < 3
+          ? 'Enter at least the last 3 digits of the GCash reference number.'
           : ''
         : !creditCustomer.trim()
           ? 'Enter the customer name for the utang.'
@@ -500,7 +530,7 @@ export function CashierPosPage() {
 
   function completeSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (completedSale || !cart.length) return;
+    if (completedSale || !cart.length || paymentBlocker) return;
     if (paymentMethod === 'Cash' && Number(tendered) < totalDue) return;
     if (
       paymentMethod === 'Credit' &&
@@ -1067,7 +1097,7 @@ export function CashierPosPage() {
           }}
         >
           <form
-            className={`pos-payment-modal${completedSale ? '' : ' pos-payment-modal--collect'}`}
+            className={`pos-payment-modal ${completedSale ? 'pos-payment-modal--done' : 'pos-payment-modal--collect'}`}
             onSubmit={completeSale}
           >
             <button
@@ -1190,53 +1220,47 @@ export function CashierPosPage() {
                     {paymentMethod === 'GCash' && (
                       <div className="pos-pay__panel">
                         <div className="pos-pay__gcash">
-                          <div>
-                            <span>Send exactly</span>
+                          <div className="pos-pay__gcash-send">
+                            <span>Customer sends</span>
                             <strong>{formatMoney(totalDue)}</strong>
-                            <span>
-                              {gcashDetails.number ? (
-                                <>
-                                  to GCash <b>{gcashDetails.number}</b>
-                                </>
-                              ) : (
-                                'GCash number not set. Add it in Owner → Pharmacy settings.'
-                              )}
-                            </span>
+                            <span>to this GCash number</span>
                           </div>
+                          {gcashDetails.number ? (
+                            <p className="pos-pay__gcash-number" aria-label="Pharmacy GCash number">
+                              {formatGcashNumber(gcashDetails.number)}
+                            </p>
+                          ) : (
+                            <p className="pos-pay__gcash-missing">
+                              No GCash number is set yet. Add it in Owner → Pharmacy settings.
+                            </p>
+                          )}
                           {gcashDetails.qrUrl && (
                             <img src={gcashDetails.qrUrl} alt="Pharmacy GCash QR code" />
                           )}
                         </div>
                         <label className="pos-pay__field">
-                          <span>GCash reference no.</span>
+                          <span>GCash ref. no. (at least the last 3 digits)</span>
                           <input
                             value={gcashReference}
-                            onChange={(event) => setGcashReference(event.target.value)}
-                            placeholder="13-digit number on the customer's receipt"
+                            onChange={(event) =>
+                              setGcashReference(event.target.value.replace(/\D/g, '').slice(0, 13))
+                            }
+                            placeholder="e.g. 482"
                             inputMode="numeric"
                             autoComplete="off"
                             required
                           />
                         </label>
-                        <button
-                          type="button"
-                          className={`pos-pay__verify${gcashPaid ? ' is-on' : ''}`}
-                          aria-pressed={gcashPaid}
-                          onClick={() => setGcashPaid((value) => !value)}
-                        >
-                          <span aria-hidden="true" />
-                          {gcashPaid
-                            ? 'Received: I saw it in the pharmacy GCash app'
-                            : 'Not checked yet: tap after you see it in the GCash app'}
-                        </button>
-                        {!gcashPaid && (
-                          <p className="pos-pay__hint">
-                            You can still save it. It is marked Pending GCash until someone checks.
-                          </p>
-                        )}
+                        <label className="pos-pay__confirm">
+                          <input
+                            type="checkbox"
+                            checked={gcashPaid}
+                            onChange={(event) => setGcashPaid(event.target.checked)}
+                          />
+                          Payment confirmed
+                        </label>
                       </div>
                     )}
-
                     {paymentMethod === 'Credit' && (
                       <div className="pos-pay__panel">
                         <label className="pos-pay__field">
@@ -1309,155 +1333,202 @@ export function CashierPosPage() {
   );
 }
 
+const receiptAmount = (amount: number) =>
+  new Intl.NumberFormat('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    amount,
+  );
+
+function receiptDateTime(value: string) {
+  const date = new Date(value);
+  return {
+    date: date.toLocaleDateString('en-PH', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+    time: date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }),
+  };
+}
+
+/**
+ * After a sale: a quick check mark, then the receipt slides out like it is being printed.
+ * The receipt is laid out like a store thermal printer slip (monospace, dashed rules,
+ * right-aligned amounts) and prints at 80 mm wide.
+ */
 function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => void }) {
-  const [showReceipt, setShowReceipt] = useState(false);
+  const [stage, setStage] = useState<'check' | 'receipt'>('check');
+  const store = useMemo(readStoreDetails, []);
+  const { date, time } = receiptDateTime(sale.date);
+  const itemCount = sale.lines.reduce((sum, line) => sum + line.quantity, 0);
+  const discountPercent =
+    sale.subtotal > 0 ? Math.round((sale.discount / sale.subtotal) * 1000) / 10 : 0;
+  const reference = sale.reference
+    ? sale.reference.length < 13
+      ? `…${sale.reference}`
+      : sale.reference
+    : '';
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowReceipt(true), 900);
+    const timer = window.setTimeout(() => setStage('receipt'), 520);
     return () => window.clearTimeout(timer);
   }, []);
 
   return (
-    <div className={`pos-sale-complete${showReceipt ? ' is-showing-receipt' : ''}`}>
-      <div className="pos-sale-complete__success" aria-live="polite">
-        <span className="pos-success-badge" aria-hidden="true">
+    <div className={`pos-done is-${stage}`}>
+      <div className="pos-done__check" aria-live="polite">
+        <span className="pos-done__badge" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
             <path
               d="M5 12.6 9.6 17 19 7.4"
               stroke="currentColor"
-              strokeWidth="2.6"
+              strokeWidth="2.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </span>
-        <h2>Transaction complete</h2>
-        <p className="pos-sale-complete__note">
-          {sale.payment} · {formatMoney(sale.total)}
-        </p>
+        <strong>
+          {sale.payment === 'No charge'
+            ? 'No-charge slip saved'
+            : sale.payment === 'Credit'
+              ? 'Utang saved'
+              : 'Payment complete'}
+        </strong>
+        {sale.change > 0 && <span>Change {formatMoney(sale.change)}</span>}
       </div>
-      <div className="pos-receipt-preview__toolbar">
-        <button
-          className="pos-receipt-preview__action pos-receipt-preview__action--print"
-          type="button"
-          onClick={() => window.print()}
-        >
-          Print receipt
-        </button>
-        <button
-          className="pos-receipt-preview__action pos-receipt-preview__action--close"
-          type="button"
-          onClick={onDone}
-        >
-          Close
-        </button>
-      </div>
-      <div className="pos-receipt-preview">
-        <div className="pos-receipt-preview__head">
-          <strong>Dagohoy Pharmacy</strong>
-          <span>Sales receipt</span>
-        </div>
-        <div className="pos-receipt-preview__meta">
-          <div>
-            <span>Receipt no.</span>
-            <strong>{sale.receipt}</strong>
-          </div>
-          <div>
-            <span>Date</span>
-            <strong>{formatReceiptDate(sale.date)}</strong>
-          </div>
-          <div>
-            <span>Cashier</span>
-            <strong>{sale.cashier}</strong>
-          </div>
-          <div>
-            <span>Payment</span>
-            <strong>{sale.payment}</strong>
-          </div>
-        </div>
-        <ul className="pos-receipt-preview__lines">
-          {sale.lines.map((line) => (
-            <li key={`${line.product.barcode}-${line.product.product}`}>
+
+      <div className="pos-done__paper">
+        <article className="thermal" aria-label={`Receipt ${sale.receipt}`}>
+          <header className="thermal__head">
+            <strong>{store.name.toUpperCase()}</strong>
+            {store.address && <span>{store.address}</span>}
+            {store.phone && <span>Tel: {store.phone}</span>}
+          </header>
+          <p className="thermal__title">
+            {sale.payment === 'No charge' ? 'NO-CHARGE SLIP' : 'SALES RECEIPT'}
+          </p>
+          <div className="thermal__rule" />
+          <dl className="thermal__meta">
+            <div>
+              <dt>Receipt #</dt>
+              <dd>{sale.receipt}</dd>
+            </div>
+            <div>
+              <dt>Date</dt>
+              <dd>
+                {date} {time}
+              </dd>
+            </div>
+            <div>
+              <dt>Cashier</dt>
+              <dd>{sale.cashier}</dd>
+            </div>
+            {sale.customer && (
               <div>
-                <strong>{line.product.product}</strong>
-                <small>
-                  {line.quantity} × {formatMoney(toAmount(line.product.price))}
-                </small>
+                <dt>Customer</dt>
+                <dd>{sale.customer}</dd>
               </div>
-              <span>{formatMoney(toAmount(line.product.price) * line.quantity)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="pos-receipt-preview__totals">
-          <div>
-            <span>Subtotal</span>
-            <strong>{formatMoney(sale.subtotal)}</strong>
+            )}
+          </dl>
+          <div className="thermal__rule" />
+          <div className="thermal__cols" aria-hidden="true">
+            <span>ITEM</span>
+            <span>AMOUNT</span>
+          </div>
+          <ul className="thermal__items">
+            {sale.lines.map((line) => {
+              const price = toAmount(line.product.price);
+              return (
+                <li key={`${line.product.barcode}-${line.product.product}`}>
+                  <span className="thermal__name">{line.product.product}</span>
+                  <span className="thermal__row">
+                    <span>
+                      {line.quantity} x {receiptAmount(price)}
+                    </span>
+                    <span>{receiptAmount(price * line.quantity)}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="thermal__rule" />
+          <div className="thermal__row">
+            <span>
+              SUBTOTAL ({itemCount} item{itemCount === 1 ? '' : 's'})
+            </span>
+            <span>{receiptAmount(sale.subtotal)}</span>
           </div>
           {sale.discount > 0 && (
-            <div>
-              <span>Discount</span>
-              <strong>−{formatMoney(sale.discount)}</strong>
+            <div className="thermal__row">
+              <span>DISCOUNT {discountPercent}%</span>
+              <span>-{receiptAmount(sale.discount)}</span>
             </div>
           )}
-          <div className="is-total">
-            <span>Total</span>
-            <strong>{formatMoney(sale.total)}</strong>
+          <div className="thermal__rule thermal__rule--double" />
+          <div className="thermal__row thermal__total">
+            <span>TOTAL</span>
+            <span>PHP {receiptAmount(sale.total)}</span>
           </div>
-          <div>
-            <span>Payment method</span>
-            <strong>{sale.payment}</strong>
-          </div>
-          <div>
-            <span>Amount paid</span>
-            <strong>{formatMoney(sale.amountPaid)}</strong>
-          </div>
-          {sale.change > 0 && (
-            <div>
-              <span>Change</span>
-              <strong>{formatMoney(sale.change)}</strong>
-            </div>
+          <div className="thermal__rule thermal__rule--double" />
+          {sale.payment === 'Cash' && (
+            <>
+              <div className="thermal__row">
+                <span>CASH</span>
+                <span>{receiptAmount(sale.amountPaid)}</span>
+              </div>
+              <div className="thermal__row">
+                <span>CHANGE</span>
+                <span>{receiptAmount(sale.change)}</span>
+              </div>
+            </>
           )}
-          {sale.payment === 'Credit' && (sale.creditBalance ?? 0) > 0 && (
-            <div>
-              <span>Remaining balance</span>
-              <strong>{formatMoney(sale.creditBalance ?? 0)}</strong>
-            </div>
+          {sale.payment === 'GCash' && (
+            <>
+              <div className="thermal__row">
+                <span>GCASH</span>
+                <span>{receiptAmount(sale.total)}</span>
+              </div>
+              <div className="thermal__row">
+                <span>REF NO.</span>
+                <span>{reference}</span>
+              </div>
+              <div className="thermal__row">
+                <span>STATUS</span>
+                <span>{sale.paymentStatus === 'Paid' ? 'CONFIRMED' : 'PENDING'}</span>
+              </div>
+            </>
           )}
-          {sale.customer && (
-            <div>
-              <span>Customer</span>
-              <strong>{sale.customer}</strong>
-            </div>
+          {sale.payment === 'Credit' && (
+            <>
+              <div className="thermal__row">
+                <span>CASH PAID</span>
+                <span>{receiptAmount(sale.amountPaid)}</span>
+              </div>
+              <div className="thermal__row thermal__strong">
+                <span>BALANCE (UTANG)</span>
+                <span>{receiptAmount(sale.creditBalance ?? 0)}</span>
+              </div>
+            </>
           )}
-          {sale.reference && (
-            <div>
-              <span>GCash ref.</span>
-              <strong>{sale.reference}</strong>
-            </div>
+          {sale.payment === 'No charge' && sale.noChargeReason && (
+            <p className="thermal__note">Reason: {sale.noChargeReason}</p>
           )}
-          {sale.paymentStatus && (
-            <div>
-              <span>GCash status</span>
-              <strong>{sale.paymentStatus}</strong>
-            </div>
-          )}
-          {sale.noChargeReason && (
-            <div>
-              <span>Reason</span>
-              <strong>{sale.noChargeReason}</strong>
-            </div>
-          )}
-        </div>
-        <p className="pos-receipt-preview__thanks">
-          {sale.payment === 'No charge'
-            ? 'Released without charge. Keep this slip for your records.'
-            : 'Thank you. Keep this receipt for your records.'}
-        </p>
+          <div className="thermal__rule" />
+          <footer className="thermal__foot">
+            <strong>THANK YOU! PLEASE COME AGAIN.</strong>
+            <span>Keep this receipt for returns.</span>
+            <span>This is not an official receipt.</span>
+          </footer>
+        </article>
+      </div>
+
+      <div className="pos-done__actions">
+        <button className="pos-done__print" type="button" onClick={() => window.print()}>
+          Print receipt
+        </button>
+        <button className="pos-done__close" type="button" onClick={onDone} autoFocus>
+          Close
+        </button>
       </div>
     </div>
   );
 }
-
 function matchesCartLine(left: PosProduct, right: PosProduct): boolean {
   if (left.localProductId !== undefined && right.localProductId !== undefined) {
     return (

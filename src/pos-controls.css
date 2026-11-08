@@ -1471,84 +1471,95 @@
   color: #a2372c;
 }
 
-/* GCash */
+/* GCash: the number the customer sends to is the biggest thing on the panel. */
 .pos-pay__gcash {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid #c9d8e8;
-  border-radius: 10px;
-  background: #f1f6fc;
+  gap: 0.6rem 1rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 12px;
+  background: #0b57d0;
+  color: #fff;
 }
 
-.pos-pay__gcash div {
+.pos-pay__gcash-send {
+  grid-column: 1;
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  font-size: 0.86rem;
-  color: #2c4a66;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.45rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.pos-pay__gcash strong {
-  font-size: 1.6rem;
-  color: #12385e;
+.pos-pay__gcash-send strong {
+  font-size: 1.15rem;
+  color: #fff;
+}
+
+.pos-pay__gcash-number {
+  grid-column: 1;
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 9px;
+  background: #fff;
+  color: #0b3d91;
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  user-select: all;
+}
+
+.pos-pay__gcash-missing {
+  grid-column: 1;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 9px;
+  background: #fff4d6;
+  color: #6f4b08;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
 .pos-pay__gcash img {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   width: 6.5rem;
   height: 6.5rem;
+  padding: 0.3rem;
   border-radius: 8px;
   object-fit: contain;
   background: #fff;
 }
 
-.pos-pay__verify {
-  display: flex;
+/* Plain checkbox: Payment confirmed. */
+.pos-pay__confirm {
+  display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.75rem 0.9rem;
-  border: 1px dashed #c9cfbe;
-  border-radius: 10px;
-  background: #fff;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-align: left;
-  color: #4f6258;
+  gap: 0.6rem;
+  align-self: flex-start;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #13322a;
   cursor: pointer;
 }
 
-.pos-pay__verify span {
-  flex: none;
-  width: 1.3rem;
-  height: 1.3rem;
-  border: 2px solid #b9c4b5;
-  border-radius: 5px;
-  background: #fff;
+.cashier-shell .pos-payment-modal .pos-pay__confirm input,
+.cashier-shell.is-themed .pos-payment-modal .pos-pay__confirm input {
+  width: 1.2rem;
+  height: 1.2rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: #176246;
+  color-scheme: light;
+  cursor: pointer;
 }
-
-.pos-pay__verify.is-on {
-  border-style: solid;
-  border-color: #176246;
-  background: #e8f1e9;
-  color: #176246;
-}
-
-.pos-pay__verify.is-on span {
-  border-color: #176246;
-  background: #176246
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7.5'/%3E%3C/svg%3E")
-    center / 0.9rem no-repeat;
-}
-
-.pos-pay__hint {
-  margin: -0.2rem 0 0;
-  font-size: 0.8rem;
-  color: #7a6a3a;
-}
-
 /* Save */
 .pos-pay__submit {
   min-height: 3.6rem;
@@ -1585,7 +1596,6 @@
 
 .pos-pay__method:focus-visible,
 .pos-pay__quick button:focus-visible,
-.pos-pay__verify:focus-visible,
 .pos-pay__submit:focus-visible {
   outline: 3px solid #23a26b;
   outline-offset: 2px;
@@ -1605,6 +1615,377 @@
   }
 
   .pos-pay__method small {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   After payment: a quick check, then the receipt prints out.
+   ------------------------------------------------------------------ */
+.cashier-shell .pos-payment-modal.pos-payment-modal--done {
+  width: min(25rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background: #e9ecdf;
+}
+
+.pos-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.pos-done__check {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  text-align: center;
+}
+
+.pos-done__check strong {
+  font-size: 1.15rem;
+  color: #13322a;
+}
+
+.pos-done__check span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #176246;
+}
+
+.pos-done__badge {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: #1f9a63;
+  color: #fff;
+  animation: pos-done-pop 260ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.pos-done__badge svg {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.pos-done__badge path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: pos-done-draw 220ms 140ms ease-out forwards;
+}
+
+@keyframes pos-done-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pos-done-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The check shrinks into a header line once the receipt comes out. */
+.pos-done.is-receipt .pos-done__check {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.pos-done.is-receipt .pos-done__badge {
+  width: 2rem;
+  height: 2rem;
+  animation: none;
+}
+
+.pos-done.is-receipt .pos-done__badge svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.pos-done.is-receipt .pos-done__check strong {
+  font-size: 1rem;
+}
+
+.pos-done.is-receipt .pos-done__check span::before {
+  content: '·';
+  margin-right: 0.5rem;
+  color: #8a978f;
+}
+
+/* Paper slot: the receipt slides down out of it like a printer feed. */
+.pos-done__paper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pos-done.is-check .pos-done__paper,
+.pos-done.is-check .pos-done__actions {
+  display: none;
+}
+
+.pos-done.is-receipt .thermal {
+  animation: pos-receipt-feed 420ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.pos-done.is-receipt .pos-done__actions {
+  animation: pos-done-fade 200ms 300ms ease-out both;
+}
+
+@keyframes pos-receipt-feed {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-1.5rem);
+  }
+  to {
+    clip-path: inset(0 0 -1rem 0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes pos-done-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Thermal receipt: 80 mm paper, monospace, dashed rules, torn bottom edge. */
+.thermal {
+  position: relative;
+  width: 100%;
+  max-width: 19.5rem;
+  margin-bottom: 0.7rem;
+  padding: 1.1rem 1rem 1.2rem;
+  background: #fff;
+  color: #111;
+  font-family: 'Courier New', Courier, ui-monospace, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 8px 18px rgba(19, 50, 42, 0.12);
+}
+
+.thermal::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.6rem;
+  height: 0.6rem;
+  background:
+    linear-gradient(-45deg, transparent 0.42rem, #fff 0.42rem) 0 0 / 0.84rem 0.6rem repeat-x,
+    linear-gradient(45deg, transparent 0.42rem, #fff 0.42rem) 0 0 / 0.84rem 0.6rem repeat-x;
+}
+
+.thermal__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.thermal__head strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
+.thermal__title {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.thermal__rule {
+  margin: 0.45rem 0;
+  border-top: 1px dashed #111;
+}
+
+.thermal__rule--double {
+  height: 3px;
+  border-top: 1px solid #111;
+  border-bottom: 1px solid #111;
+}
+
+.thermal__meta {
+  margin: 0;
+}
+
+.thermal__meta div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.thermal__meta dt {
+  flex: 0 0 5.2rem;
+}
+
+.thermal__meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.thermal__cols,
+.thermal__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.thermal__cols {
+  font-weight: 700;
+}
+
+.thermal__row > span:last-child {
+  flex: none;
+  text-align: right;
+}
+
+.thermal__items {
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thermal__items li {
+  padding: 0.15rem 0;
+}
+
+.thermal__name {
+  display: block;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.thermal__items .thermal__row {
+  padding-left: 0.75rem;
+}
+
+.thermal__total {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.thermal__strong {
+  font-weight: 700;
+}
+
+.thermal__note {
+  margin: 0.4rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.thermal__foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  margin-top: 0.3rem;
+  text-align: center;
+}
+
+.thermal__foot span {
+  font-size: 0.72rem;
+}
+
+.pos-done__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.pos-done__print,
+.pos-done__close {
+  min-height: 3.1rem;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pos-done__print {
+  border: 0;
+  background: #176246;
+  color: #fffdf1;
+}
+
+.pos-done__print:hover {
+  background: #11513a;
+}
+
+.pos-done__close {
+  border: 1px solid #c9cfbe;
+  background: #fff;
+  color: #13322a;
+}
+
+.pos-done__close:hover {
+  background: #f4f6ee;
+}
+
+.pos-done__print:focus-visible,
+.pos-done__close:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-done__badge,
+  .pos-done__badge path,
+  .pos-done.is-receipt .thermal,
+  .pos-done.is-receipt .pos-done__actions {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Print only the receipt, sized for an 80 mm thermal printer. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  .thermal,
+  .thermal * {
+    visibility: visible !important;
+  }
+
+  .thermal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 72mm;
+    max-width: none;
+    margin: 0 4mm;
+    padding: 2mm 0 6mm;
+    box-shadow: none;
+    font-size: 11px;
+    color: #000;
+    animation: none !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+
+  .thermal::after {
     display: none;
   }
 }
