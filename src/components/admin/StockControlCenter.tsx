@@ -5,6 +5,7 @@ import type { InventoryProduct } from '../../data/inventoryStore';
 import {
   InventoryBatch,
   StockMovement,
+  initialBatches,
   loadBatches,
   loadMovements,
   saveBatches,
@@ -12,7 +13,6 @@ import {
 } from '../../data/operationsStore';
 import { getSession } from '../../data/registerSession';
 import { useToast } from '../toast';
-import { initialBatches } from '../../pages/admin/OperationsPage';
 
 type PanelKey =
   'products' | 'health' | 'receive' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments';
@@ -162,7 +162,10 @@ export function StockControlCenter({
     const received = movements.filter((movement) => movement.kind === 'Received');
     const returns = movements.filter((movement) => movement.kind === 'Return');
     const adjustments = movements.filter(
-      (movement) => movement.kind === 'Adjustment' || movement.kind === 'Damaged',
+      (movement) =>
+        movement.kind === 'Adjustment' ||
+        movement.kind === 'Damaged' ||
+        movement.kind === 'Customer return',
     );
     return {
       allBatches,
@@ -733,7 +736,7 @@ export function StockControlCenter({
                       <td>
                         <strong>{movement.product}</strong>
                       </td>
-                      <td>{movement.kind === 'Damaged' ? 'Damaged' : 'Count correction'}</td>
+                      <td>{movement.kind === 'Adjustment' ? 'Count correction' : movement.kind}</td>
                       <td
                         className={movement.change > 0 ? 'movement-positive' : 'movement-negative'}
                       >
@@ -928,23 +931,29 @@ function ReceiveForm({
   );
 }
 
-type AdjustmentType = 'damaged' | 'missing' | 'count-less' | 'count-more';
+type AdjustmentType = 'damaged' | 'missing' | 'count-less' | 'count-more' | 'customer-return';
 
-const ADJUSTMENT_TYPES: Record<AdjustmentType, { label: string; add: boolean; damaged: boolean }> =
-  {
-    damaged: { label: 'Damaged or broken (take out)', add: false, damaged: true },
-    missing: { label: 'Missing or lost (take out)', add: false, damaged: false },
-    'count-less': { label: 'Stock take: fewer than recorded', add: false, damaged: false },
-    'count-more': { label: 'Stock take: more than recorded', add: true, damaged: false },
-  };
-
+const ADJUSTMENT_TYPES: Record<
+  AdjustmentType,
+  { label: string; add: boolean; kind: 'Damaged' | 'Adjustment' | 'Customer return' }
+> = {
+  damaged: { label: 'Damaged or broken (take out)', add: false, kind: 'Damaged' },
+  missing: { label: 'Missing or lost (take out)', add: false, kind: 'Adjustment' },
+  'count-less': { label: 'Stock take: fewer than recorded', add: false, kind: 'Adjustment' },
+  'count-more': { label: 'Stock take: more than recorded', add: true, kind: 'Adjustment' },
+  'customer-return': {
+    label: 'Customer returned an item (put back)',
+    add: true,
+    kind: 'Customer return',
+  },
+};
 /**
  * One small form that changes shelf stock for a supplier return or an adjustment.
  * Returns go back to the supplier (expired, damaged or wrong item). Adjustments cover broken
  * packs, missing units and stock-take corrections. When a lot is picked, its units change too.
  * Both keep a reason and a reference so the audit trail stays readable.
  */
-function StockWriteOffForm({
+export function StockWriteOffForm({
   mode,
   batches,
   initialBatchId = '',
@@ -1022,7 +1031,7 @@ function StockWriteOffForm({
       id: movementId(isReturn ? 'RET' : 'ADJ'),
       date: new Date().toISOString(),
       product: product.product,
-      kind: isReturn ? 'Return' : adjustment.damaged ? 'Damaged' : 'Adjustment',
+      kind: isReturn ? 'Return' : adjustment.kind,
       change,
       reference: reference.trim() || (isReturn ? 'No return slip' : 'Manual adjustment'),
       staff: staffName(),
@@ -1112,7 +1121,9 @@ function StockWriteOffForm({
             placeholder={
               isReturn
                 ? 'e.g. Lot expired, supplier agreed to take it back'
-                : 'e.g. 3 blister packs crushed in storage'
+                : type === 'customer-return'
+                  ? 'e.g. Unopened box, bought on receipt DP-123456'
+                  : 'e.g. 3 blister packs crushed in storage'
             }
           />
         </label>

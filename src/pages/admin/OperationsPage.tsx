@@ -1,68 +1,23 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
-import { useToast } from '../../components/toast';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
-import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
+import { StockWriteOffForm } from '../../components/admin/StockControlCenter';
 import {
+  initialBatches,
+  loadBatches,
   loadMovements,
-  InventoryBatch,
-  saveMovements,
   StockMovement,
 } from '../../data/operationsStore';
-
-const plusDays = (days: number) => {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-};
-
-/** Starting batch lots, used as a fallback by the stock control center previews. */
-export const initialBatches: InventoryBatch[] = [
-  {
-    id: 'B-10248',
-    product: 'Biogesic 500mg',
-    barcode: '4800016642012',
-    lot: 'BGC-240811',
-    expiry: plusDays(23),
-    stock: 40,
-  },
-  {
-    id: 'B-10221',
-    product: 'Neozep Forte',
-    barcode: '4806516731010',
-    lot: 'NZF-240405',
-    expiry: plusDays(68),
-    stock: 19,
-  },
-  {
-    id: 'B-10184',
-    product: 'Bioflu',
-    barcode: '4800361412025',
-    lot: 'BIO-231206',
-    expiry: plusDays(148),
-    stock: 12,
-  },
-  {
-    id: 'B-10172',
-    product: 'Tuseran Forte',
-    barcode: '4800016021060',
-    lot: 'TSF-240210',
-    expiry: plusDays(320),
-    stock: 30,
-  },
-];
-
 type MovementView = 'all' | 'in' | 'out' | 'adjust';
 
-const STOCK_IN_KINDS: StockMovement['kind'][] = ['Received'];
+const STOCK_IN_KINDS: StockMovement['kind'][] = ['Received', 'Customer return'];
 const STOCK_OUT_KINDS: StockMovement['kind'][] = ['Sale', 'Damaged', 'Return'];
 
 export function OperationsPage() {
   const [query, setQuery] = useState('');
   const [view, setView] = useState<MovementView>('all');
   const [movements, setMovements] = useState(loadMovements);
-  const { showToast } = useToast();
 
   const stockIn = movements.filter((movement) => STOCK_IN_KINDS.includes(movement.kind));
   const stockOut = movements.filter((movement) => STOCK_OUT_KINDS.includes(movement.kind));
@@ -78,28 +33,6 @@ export function OperationsPage() {
           .includes(needle),
     );
   }, [movements, query, view]);
-
-  function saveAdjustment(movement: StockMovement, productBarcode: string) {
-    const inventory = getInventory();
-    const product = inventory.find((item) => item.barcode === productBarcode);
-    const newStock = (product?.stock ?? 0) + movement.change;
-    if (!product || newStock < 0) {
-      showToast('Adjustment cannot reduce available stock below zero.', 'error');
-      return;
-    }
-    saveInventory(
-      inventory.map((item) =>
-        item.barcode === productBarcode
-          ? { ...item, stock: newStock, status: stockStatus(newStock) }
-          : item,
-      ),
-    );
-    const next = [movement, ...movements];
-    setMovements(next);
-    saveMovements(next);
-    setView('all');
-    showToast('Stock adjustment saved to this browser.');
-  }
 
   const items: Array<ControlItem<MovementView>> = [
     {
@@ -157,7 +90,14 @@ export function OperationsPage() {
         about={activeItem.about}
       >
         {view === 'adjust' ? (
-          <AdjustmentForm onSave={saveAdjustment} />
+          <StockWriteOffForm
+            mode="adjustment"
+            batches={loadBatches(initialBatches)}
+            onSaved={() => {
+              setMovements(loadMovements());
+              setView('all');
+            }}
+          />
         ) : (
           <>
             <div className="cashier-list-toolbar">
@@ -248,99 +188,5 @@ function SearchField({
         placeholder={placeholder}
       />
     </label>
-  );
-}
-
-function AdjustmentForm({
-  onSave,
-}: {
-  onSave: (movement: StockMovement, barcode: string) => void;
-}) {
-  const products = getInventory();
-  const [barcode, setBarcode] = useState(products[0]?.barcode ?? '');
-  const [kind, setKind] = useState<'Adjustment' | 'Damaged' | 'Return'>('Adjustment');
-  const [direction, setDirection] = useState<'add' | 'remove'>('remove');
-  const [quantity, setQuantity] = useState('');
-  const [reason, setReason] = useState('');
-  return (
-    <form
-      className="stock-index__form"
-      onSubmit={(event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const product = products.find((item) => item.barcode === barcode);
-        if (!product) return;
-        const qty = Number(quantity);
-        const change = direction === 'add' ? qty : -qty;
-        onSave(
-          {
-            id: `ADJ-${Date.now().toString().slice(-6)}`,
-            date: new Date().toISOString(),
-            product: product.product,
-            kind,
-            change,
-            reference: 'Manual adjustment',
-            staff: 'Demo admin',
-            reason,
-          },
-          barcode,
-        );
-      }}
-    >
-      <div className="stock-index__form-grid">
-        <label>
-          Product
-          <select value={barcode} onChange={(event) => setBarcode(event.target.value)}>
-            {products.map((product) => (
-              <option value={product.barcode} key={product.barcode}>
-                {product.product} · {product.stock} on hand
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Reason
-          <select value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
-            <option value="Adjustment">Count correction</option>
-            <option value="Damaged">Damaged / expired</option>
-            <option value="Return">Customer return</option>
-          </select>
-        </label>
-        <label>
-          Direction
-          <select
-            value={direction}
-            onChange={(event) => setDirection(event.target.value as typeof direction)}
-          >
-            <option value="remove">Remove stock</option>
-            <option value="add">Add stock</option>
-          </select>
-        </label>
-        <label>
-          Quantity
-          <input
-            type="number"
-            min="1"
-            step="1"
-            required
-            value={quantity}
-            onChange={(event) => setQuantity(event.target.value)}
-          />
-        </label>
-        <label className="stock-index__field-wide">
-          Reason / note
-          <input
-            required
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="e.g. Physical count variance"
-          />
-        </label>
-      </div>
-      <div className="stock-index__actions">
-        <button className="stock-index__action" type="submit">
-          Save adjustment
-        </button>
-      </div>
-    </form>
   );
 }
