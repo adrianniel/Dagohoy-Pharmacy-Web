@@ -545,14 +545,6 @@ export function CashierPosPage() {
                 </p>
               </div>
             </div>
-            <button
-              className="cashier-text-button pos-clear-sale"
-              type="button"
-              disabled={!transactionActive || !cart.length}
-              onClick={clearSale}
-            >
-              Clear sale
-            </button>
           </div>
           <div className="pos-scan-dock">
             <label className="pos-scan-field">
