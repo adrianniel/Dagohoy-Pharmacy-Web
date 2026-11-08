@@ -572,3 +572,123 @@
     min-height: 0;
   }
 }
+
+/* Pieces used inside the task panels. */
+.stock-index__subhead {
+  margin: 4px 0 -4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7b71;
+}
+
+.stock-index__status--watch {
+  background: #eef1e4;
+  color: #55664f;
+}
+
+.stock-index__chips span.is-out {
+  border-color: #efc7c1;
+  background: #fbebe8;
+  color: #8f2f25;
+}
+
+.stock-index__chips span.is-out b {
+  color: #a2372c;
+}
+
+.stock-index__chips span.is-low {
+  border-color: #ecd49c;
+  background: #fbf2db;
+  color: #7f5609;
+}
+
+.stock-index__chips span.is-low b {
+  color: #8a5f0c;
+}
+
+.stock-index__tag {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #b7cbb8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #176246;
+  white-space: nowrap;
+}
+
+.stock-index__link {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  color: #a2372c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.stock-index__link:hover {
+  color: #7d2a21;
+}
+
+.stock-index__warn {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #ecd49c;
+  background: #fbf2db;
+  font-size: 0.86rem;
+  color: #6f4b08;
+}
+
+.stock-index__picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stock-index__pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  appearance: none;
+  border: 1px solid #efc7c1;
+  border-radius: 10px;
+  background: #fdf3f1;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stock-index__pick strong {
+  font-size: 0.9rem;
+  color: #13322a;
+}
+
+.stock-index__pick small {
+  font-size: 0.78rem;
+  color: #8f2f25;
+}
+
+.stock-index__pick:hover {
+  border-color: #d99a90;
+}
+
+.stock-index__pick.is-picked {
+  border-color: #a2372c;
+  box-shadow: inset 0 0 0 1px #a2372c;
+}
+
+.stock-index__pick:focus-visible,
+.stock-index__link:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
