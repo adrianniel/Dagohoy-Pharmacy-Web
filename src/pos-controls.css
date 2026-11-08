@@ -87,7 +87,9 @@
   text-align: center;
   opacity: 1;
   cursor: pointer;
-  box-shadow: 0 6px 0 var(--cap-edge), 0 14px 26px rgba(15, 46, 34, 0.13);
+  box-shadow:
+    0 6px 0 var(--cap-edge),
+    0 14px 26px rgba(15, 46, 34, 0.13);
   transition:
     background 0.15s ease,
     opacity 0.15s ease,
@@ -141,7 +143,9 @@
 /* Pressed: the cap sinks into its edge. */
 .cashier-pos-page .pos-control-button:active:not(:disabled) {
   transform: translateY(5px);
-  box-shadow: 0 1px 0 var(--cap-edge), 0 4px 10px rgba(15, 46, 34, 0.12);
+  box-shadow:
+    0 1px 0 var(--cap-edge),
+    0 4px 10px rgba(15, 46, 34, 0.12);
 }
 
 .pos-control-button:focus-visible {
@@ -317,62 +321,333 @@
   color: #4a6358;
 }
 
-.pos-void-list {
+/* Void a sale: receipts on the left, the picked receipt's items on the right. */
+.cashier-shell .pos-payment-modal.pos-void {
+  width: min(56rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+.pos-void__body {
   display: grid;
-  gap: 0.5rem;
-  margin: 0 0 0.4rem;
-  padding: 0;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin: 0.4rem 0 1rem;
+}
+
+.pos-void__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  max-height: 22rem;
+  margin: 0;
+  padding: 0 0.25rem 0 0;
+  overflow-y: auto;
   border: 0;
 }
 
-.pos-void-list legend {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.pos-void__list legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #5d7268;
-  margin-bottom: 0.5rem;
 }
 
-.pos-void-option {
-  display: flex;
+.pos-void__option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid rgba(23, 98, 70, 0.18);
-  border-radius: 0.75rem;
-  background: #fffdf1;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #dde3d4;
+  border-radius: 10px;
+  background: #fffef9;
   cursor: pointer;
 }
 
-.pos-void-option.is-selected {
-  border-color: #176246;
-  background: #eef4ec;
+.pos-void__option:hover {
+  border-color: #b9cbb9;
 }
 
-.pos-void-option > span {
+/* The real radio stays for keyboard and screen readers, drawn as the small mark instead. */
+.cashier-shell .pos-payment-modal.pos-void .pos-void__option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pos-void__mark {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #b9c4b5;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.pos-void__option.is-selected {
+  border-color: #a2372c;
+  background: #fdf3f1;
+}
+
+.pos-void__option.is-selected .pos-void__mark {
+  border-color: #a2372c;
+  box-shadow: inset 0 0 0 3px #fff;
+  background: #a2372c;
+}
+
+.pos-void__option:focus-within {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.pos-void__main {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  flex: 1;
   min-width: 0;
 }
 
-.pos-void-option strong {
-  font-size: 1rem;
-  color: #14342a;
+.pos-void__main strong {
+  font-size: 0.98rem;
+  color: #13322a;
 }
 
-.pos-void-option small {
-  font-size: 0.82rem;
+.pos-void__main small {
+  font-size: 0.8rem;
+  color: #5d7268;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-void__option b {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: #13322a;
+  white-space: nowrap;
+}
+
+.pos-void__detail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: 1px dashed #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-void__detail header {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed #d8ddcc;
+}
+
+.pos-void__detail header span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: #5d7268;
 }
 
-.pos-void-option b {
-  font-size: 1rem;
-  color: #176246;
+.pos-void__detail header strong {
+  font-size: 1.1rem;
+  color: #13322a;
 }
 
+.pos-void__detail header small {
+  font-size: 0.8rem;
+  color: #5d7268;
+}
+
+.pos-void__detail ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.7rem 0;
+  list-style: none;
+}
+
+.pos-void__detail li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #2b4238;
+}
+
+.pos-void__detail li b {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pos-void__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 0.6rem;
+  border-top: 3px double #d0d6c4;
+}
+
+.pos-void__total span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #13322a;
+}
+
+.pos-void__total strong {
+  font-size: 1.35rem;
+  color: #13322a;
+}
+
+.pos-void__money {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: #fbf2db;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #6f4b08;
+}
+
+.pos-void__reason {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pos-void__reason > span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5d7268;
+}
+
+.pos-void__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pos-void__chips button {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #d5dccb;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2b4238;
+  cursor: pointer;
+}
+
+.pos-void__chips button:hover {
+  border-color: #a9bca9;
+}
+
+.pos-void__chips button.is-picked {
+  border-color: #a2372c;
+  background: #fdf3f1;
+  color: #8f2f25;
+}
+
+.cashier-shell .pos-payment-modal.pos-void textarea {
+  width: 100%;
+  min-height: 3.6rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #d5dccb;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+
+.cashier-shell .pos-payment-modal.pos-void textarea:focus {
+  outline: none;
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.12);
+}
+
+.pos-void__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+
+.pos-void__cancel,
+.pos-void__submit {
+  min-height: 3rem;
+  padding: 0 1.3rem;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pos-void__cancel {
+  border: 1px solid #cfd6c4;
+  background: #fff;
+  color: #2b4238;
+}
+
+.pos-void__cancel:hover {
+  background: #f4f6ee;
+}
+
+.pos-void__submit {
+  border: 0;
+  background: #a2372c;
+  color: #fff;
+}
+
+.pos-void__submit:hover:not(:disabled) {
+  background: #872c23;
+}
+
+.pos-void__submit:disabled {
+  background: #ecd3cf;
+  color: #b58a84;
+  cursor: not-allowed;
+}
+
+.pos-void__cancel:focus-visible,
+.pos-void__submit:focus-visible,
+.pos-void__chips button:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .pos-void__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pos-void__list {
+    max-height: 14rem;
+  }
+
+  .pos-void__actions {
+    flex-direction: column-reverse;
+  }
+}
 .pos-control-modal textarea {
   width: 100%;
   min-height: 4.6rem;
@@ -429,7 +704,9 @@
   border-top: 4px solid var(--ticket-green);
   border-radius: 6px 6px 14px 14px;
   background: var(--ticket-paper);
-  box-shadow: 0 1px 0 #e9ecdd, 0 10px 24px rgb(19 50 42 / 7%);
+  box-shadow:
+    0 1px 0 #e9ecdd,
+    0 10px 24px rgb(19 50 42 / 7%);
   font-variant-numeric: tabular-nums;
 }
 

@@ -21,7 +21,8 @@ const formatDate = (value: string) =>
 function readCreditSales(): CreditSale[] {
   try {
     return (JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as CreditSale[]).filter(
-      (sale) => sale.payment === 'Credit' && Number(sale.creditBalance) > 0,
+      (sale) =>
+        sale.payment === 'Credit' && sale.status !== 'Voided' && Number(sale.creditBalance) > 0,
     );
   } catch {
     return [];

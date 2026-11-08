@@ -30,7 +30,7 @@ export type CashEvent = {
   date: string;
 };
 
-type Sale = { payment: string; total: number; date: string };
+type Sale = { payment: string; total: number; date: string; status?: string };
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -79,7 +79,7 @@ export function getShiftTotals(session = getSession(), until = new Date()): Shif
   const cashSales = readJson<Sale[]>(SALES_KEY, [])
     .filter((sale) => {
       const date = new Date(sale.date);
-      return sale.payment === 'Cash' && date >= opened && date <= until;
+      return sale.payment === 'Cash' && sale.status !== 'Voided' && date >= opened && date <= until;
     })
     .reduce((sum, sale) => sum + sale.total, 0);
   const events = getCashEvents();
@@ -89,7 +89,12 @@ export function getShiftTotals(session = getSession(), until = new Date()): Shif
   const paidOut = events
     .filter((event) => event.type === 'Paid out')
     .reduce((sum, event) => sum + event.amount, 0);
-  return { cashSales, paidIn, paidOut, expected: session.openingFloat + cashSales + paidIn - paidOut };
+  return {
+    cashSales,
+    paidIn,
+    paidOut,
+    expected: session.openingFloat + cashSales + paidIn - paidOut,
+  };
 }
 
 export function startShift(input: {
@@ -111,9 +116,7 @@ export function startShift(input: {
     openingFloat: input.openingFloat,
     cashierName: onDutyNames[0],
     onDutyNames,
-    floatAdjustment: adjusted
-      ? { carriedOver, reason: input.adjustmentReason!.trim() }
-      : undefined,
+    floatAdjustment: adjusted ? { carriedOver, reason: input.adjustmentReason!.trim() } : undefined,
   };
   localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(session));
   localStorage.removeItem(CASH_EVENTS_KEY);
@@ -128,7 +131,7 @@ export function endShift(countedCash: number) {
   const totals = getShiftTotals(session, closedAt);
   const shiftSales = readJson<Sale[]>(SALES_KEY, []).filter((sale) => {
     const date = new Date(sale.date);
-    return date >= new Date(session.openedAt) && date <= closedAt;
+    return sale.status !== 'Voided' && date >= new Date(session.openedAt) && date <= closedAt;
   });
   const salesByPayment = shiftSales.reduce<Record<string, number>>((counts, sale) => {
     counts[sale.payment] = (counts[sale.payment] ?? 0) + 1;

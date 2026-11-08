@@ -4,7 +4,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
 import { getWorkspaceProfile } from '../../data/accountStore';
-import { REGISTER_SESSION_KEY } from '../../data/registerSession';
+import { REGISTER_SESSION_KEY, getSession } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -41,8 +41,31 @@ type StoredSale = {
   discount?: number;
   payment?: string;
   status?: string;
+  creditBalance?: number;
   lines?: Array<{ product: string; barcode: string; quantity: number; unitPrice: number }>;
 };
+
+const VOID_REASONS = ['Wrong item', 'Wrong quantity', 'Wrong price', 'Customer cancelled'];
+const VOID_LIST_LIMIT = 10;
+
+/** What the cashier has to do with the money when a sale is voided. */
+function voidMoneyNote(sale: StoredSale) {
+  const total = Number(sale.total ?? 0);
+  switch (sale.payment) {
+    case 'Cash':
+      return `Give ${formatMoney(total)} back to the customer from the cash drawer.`;
+    case 'GCash':
+      return `Send ${formatMoney(total)} back to the customer through GCash.`;
+    case 'Credit':
+      return Number(sale.creditBalance ?? 0) > 0
+        ? `The customer's unpaid balance of ${formatMoney(Number(sale.creditBalance))} is cleared. Return any part they already paid.`
+        : `Return what the customer already paid on this credit sale.`;
+    case 'No charge':
+      return 'No money changed hands. The items only go back on the shelf.';
+    default:
+      return `Return ${formatMoney(total)} to the customer.`;
+  }
+}
 const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -277,9 +300,16 @@ export function CashierPosPage() {
   }
 
   function openVoidDialog() {
-    const latest = readSales().filter((sale) => sale.status !== 'Voided').slice(0, 5);
+    const session = getSession();
+    const since = session ? new Date(session.openedAt) : new Date(new Date().toDateString());
+    const latest = readSales()
+      .filter((sale) => sale.status !== 'Voided' && new Date(sale.date) >= since)
+      .slice(0, VOID_LIST_LIMIT);
     if (!latest.length) {
-      showToast('No recent transactions to void yet.', 'info');
+      showToast(
+        session ? 'No sales in this shift to void yet.' : 'No sales today to void yet.',
+        'info',
+      );
       return;
     }
     setRecentSales(latest);
@@ -310,7 +340,15 @@ export function CashierPosPage() {
       SALES_KEY,
       JSON.stringify(
         sales.map((sale) =>
-          sale.receipt === voidTarget ? { ...sale, status: 'Voided' } : sale,
+          sale.receipt === voidTarget
+            ? {
+                ...sale,
+                status: 'Voided',
+                creditBalance: 0,
+                voidedAt: new Date().toISOString(),
+                voidReason: reason,
+              }
+            : sale,
         ),
       ),
     );
@@ -336,19 +374,19 @@ export function CashierPosPage() {
         kind: 'Adjustment' as const,
         change: line.quantity,
         reference: voidTarget,
-        staff: 'Cashier',
+        staff: readCashierName(),
         reason: `Voided sale: ${reason}`,
       })),
       ...previousMovements,
     ]);
+    // The sale on the counter is left as it is; only open a ticket if none is open yet.
     setControlModal(null);
     setVoidReason('');
-    setCart([]);
-    setSelectedLine(null);
-    setDiscountInput('0');
-    setTransactionActive(true);
-    setOpenedAt(new Date());
-    showToast(`Transaction ${voidTarget} voided. Start the corrected sale.`, 'success');
+    if (!transactionActive) {
+      setTransactionActive(true);
+      setOpenedAt(new Date());
+    }
+    showToast(`Sale ${voidTarget} voided. ${voidMoneyNote(target)}`, 'success');
   }
 
   function openNoChargeDialog() {
@@ -535,7 +573,10 @@ export function CashierPosPage() {
   return (
     <div className="cashier-page cashier-pos-page">
       <div className="pos-layout">
-        <section className="cashier-panel pos-order-panel pos-ticket" aria-labelledby="pos-sale-heading">
+        <section
+          className="cashier-panel pos-order-panel pos-ticket"
+          aria-labelledby="pos-sale-heading"
+        >
           <header className="pos-ticket__head">
             <div>
               <span className={`pos-ticket__state${transactionActive ? ' is-open' : ''}`}>
@@ -574,7 +615,9 @@ export function CashierPosPage() {
                 autoFocus
                 disabled={!transactionActive}
                 placeholder={
-                  transactionActive ? 'Scan a barcode or type a product name' : 'Open a ticket to scan'
+                  transactionActive
+                    ? 'Scan a barcode or type a product name'
+                    : 'Open a ticket to scan'
                 }
               />
             </label>
@@ -792,12 +835,7 @@ export function CashierPosPage() {
                 <small>One more</small>
               </span>
             </button>
-            <button
-              className="pos-control-button"
-              type="button"
-              disabled={!transactionActive}
-              onClick={openVoidDialog}
-            >
+            <button className="pos-control-button" type="button" onClick={openVoidDialog}>
               <span className="pos-control-button__icon">
                 <CashierIcon name="receipt" />
               </span>
@@ -832,7 +870,7 @@ export function CashierPosPage() {
           }}
         >
           {controlModal === 'void' ? (
-            <form className="pos-payment-modal pos-control-modal" onSubmit={submitVoid}>
+            <form className="pos-payment-modal pos-control-modal pos-void" onSubmit={submitVoid}>
               <button
                 className="pos-modal-close"
                 type="button"
@@ -842,52 +880,115 @@ export function CashierPosPage() {
                 ×
               </button>
               <p className="eyebrow">Correction</p>
-              <h2>Void a transaction</h2>
+              <h2>Void a sale</h2>
               <p className="pos-control-modal__note">
-                Pick one of the last 5 receipts. The items go back to stock and a new sale starts
-                right after so you can correct it.
+                Pick the receipt to cancel. Its items go back on the shelf and it stops counting in
+                the shift totals. The sale on the counter is not touched.
               </p>
-              <fieldset className="pos-void-list">
-                <legend>Recent transactions</legend>
-                {recentSales.map((sale) => (
-                  <label
-                    key={sale.receipt}
-                    className={`pos-void-option${voidTarget === sale.receipt ? ' is-selected' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="void-target"
-                      checked={voidTarget === sale.receipt}
-                      onChange={() => setVoidTarget(sale.receipt)}
-                    />
-                    <span>
-                      <strong>{sale.receipt}</strong>
-                      <small>
-                        {formatReceiptDate(sale.date)} · {sale.items ?? 0} item
-                        {Number(sale.items ?? 0) === 1 ? '' : 's'}
-                      </small>
-                    </span>
-                    <b>{formatMoney(Number(sale.total ?? 0))}</b>
-                  </label>
-                ))}
-              </fieldset>
-              <label>
-                Reason for void
+              <div className="pos-void__body">
+                <fieldset className="pos-void__list">
+                  <legend>
+                    {getSession() ? 'Sales this shift' : 'Sales today'} · newest first
+                  </legend>
+                  {recentSales.map((sale) => (
+                    <label
+                      key={sale.receipt}
+                      className={`pos-void__option${voidTarget === sale.receipt ? ' is-selected' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="void-target"
+                        checked={voidTarget === sale.receipt}
+                        onChange={() => setVoidTarget(sale.receipt)}
+                      />
+                      <span className="pos-void__mark" aria-hidden="true" />
+                      <span className="pos-void__main">
+                        <strong>{sale.receipt}</strong>
+                        <small>
+                          {new Date(sale.date).toLocaleTimeString('en-PH', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}{' '}
+                          · {sale.payment ?? 'Cash'} · {sale.items ?? 0} item
+                          {Number(sale.items ?? 0) === 1 ? '' : 's'}
+                        </small>
+                      </span>
+                      <b>{formatMoney(Number(sale.total ?? 0))}</b>
+                    </label>
+                  ))}
+                </fieldset>
+                {(() => {
+                  const sale = recentSales.find((item) => item.receipt === voidTarget);
+                  if (!sale) return null;
+                  return (
+                    <section className="pos-void__detail" aria-label={`Items on ${sale.receipt}`}>
+                      <header>
+                        <span>Receipt</span>
+                        <strong>{sale.receipt}</strong>
+                        <small>{formatReceiptDate(sale.date)}</small>
+                      </header>
+                      <ul>
+                        {(sale.lines ?? []).map((line) => (
+                          <li key={line.barcode}>
+                            <span>
+                              {line.quantity} × {line.product}
+                            </span>
+                            <b>{formatMoney(line.quantity * line.unitPrice)}</b>
+                          </li>
+                        ))}
+                        {!sale.lines?.length && (
+                          <li>No item details were saved for this receipt.</li>
+                        )}
+                      </ul>
+                      <div className="pos-void__total">
+                        <span>Total</span>
+                        <strong>{formatMoney(Number(sale.total ?? 0))}</strong>
+                      </div>
+                      <p className="pos-void__money">{voidMoneyNote(sale)}</p>
+                    </section>
+                  );
+                })()}
+              </div>
+              <div className="pos-void__reason">
+                <span id="void-reason-label">Reason for voiding</span>
+                <div className="pos-void__chips" role="group" aria-labelledby="void-reason-label">
+                  {VOID_REASONS.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      className={voidReason === reason ? 'is-picked' : undefined}
+                      aria-pressed={voidReason === reason}
+                      onClick={() => setVoidReason(reason)}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
                 <textarea
+                  aria-labelledby="void-reason-label"
                   value={voidReason}
                   onChange={(event) => setVoidReason(event.target.value)}
-                  placeholder="Example: wrong item charged, customer cancelled"
-                  rows={3}
+                  placeholder="Or write what happened"
+                  rows={2}
                   required
                 />
-              </label>
-              <button
-                className="pos-checkout-button pos-control-modal__submit"
-                type="submit"
-                disabled={!voidTarget || !voidReason.trim()}
-              >
-                Void transaction
-              </button>
+              </div>
+              <div className="pos-void__actions">
+                <button
+                  className="pos-void__cancel"
+                  type="button"
+                  onClick={() => setControlModal(null)}
+                >
+                  Keep the sale
+                </button>
+                <button
+                  className="pos-void__submit"
+                  type="submit"
+                  disabled={!voidTarget || !voidReason.trim()}
+                >
+                  Void {voidTarget || 'sale'}
+                </button>
+              </div>
             </form>
           ) : (
             <form className="pos-payment-modal pos-control-modal" onSubmit={submitNoCharge}>

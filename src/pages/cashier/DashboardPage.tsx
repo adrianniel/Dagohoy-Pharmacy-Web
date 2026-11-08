@@ -54,13 +54,12 @@ export function CashierDashboardPage() {
 
   const shift = useMemo(() => getSession(), [tick]);
   const totals = useMemo(() => getShiftTotals(), [tick]);
-  const hoursOn = shift
-    ? (Date.now() - new Date(shift.openedAt).getTime()) / 3_600_000
-    : 0;
+  const hoursOn = shift ? (Date.now() - new Date(shift.openedAt).getTime()) / 3_600_000 : 0;
 
   /* ---- Today's sales, for the hourly bars ---- */
   const todaySales = sales.filter(
-    (sale) => new Date(sale.date).toDateString() === new Date().toDateString(),
+    (sale) =>
+      sale.status !== 'Voided' && new Date(sale.date).toDateString() === new Date().toDateString(),
   );
   const openHour = shift ? new Date(shift.openedAt).getHours() : 8;
   const closeHour = Math.max(openHour + 4, 20);
@@ -150,7 +149,9 @@ export function CashierDashboardPage() {
             {Math.floor(hoursOn)}h {Math.round((hoursOn % 1) * 60)}m
           </strong>
           <div className="dash-kpi__foot">
-            <span>{shift ? shift.onDutyNames?.join(', ') || shift.cashierName : 'No shift yet'}</span>
+            <span>
+              {shift ? shift.onDutyNames?.join(', ') || shift.cashierName : 'No shift yet'}
+            </span>
           </div>
         </article>
 
@@ -333,11 +334,7 @@ function mockStockLine(low: number, total: number) {
   return `${total - low} of ${total} products are healthy`;
 }
 
-function donutGradient(
-  entries: Array<[string, number]>,
-  sum: number,
-  colors: string[],
-) {
+function donutGradient(entries: Array<[string, number]>, sum: number, colors: string[]) {
   let start = 0;
   const stops = entries.map(([, value], index) => {
     const end = start + (value / sum) * 100;
