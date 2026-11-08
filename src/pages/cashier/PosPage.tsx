@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
+import { playSound } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
@@ -525,6 +526,7 @@ export function CashierPosPage() {
     setTransactionActive(false);
     setOpenedAt(null);
     setPaymentOpen(true);
+    playSound('success');
     showToast(`No-charge slip ${receipt} recorded.`, 'success');
   }
 
@@ -628,6 +630,7 @@ export function CashierPosPage() {
     setGcashReference('');
     setGcashPaid(false);
     setPaymentMethod('Cash');
+    playSound('success');
     showToast(`Transaction ${receipt} completed.`, 'success');
   }
 
@@ -844,7 +847,10 @@ export function CashierPosPage() {
               className="pos-control-button"
               type="button"
               disabled={!transactionActive || !cart.length}
-              onClick={clearSale}
+              onClick={() => {
+                playSound('warn');
+                clearSale();
+              }}
             >
               <span className="pos-control-button__icon">
                 <CashierIcon name="trash" />
@@ -858,7 +864,10 @@ export function CashierPosPage() {
               className="pos-control-button"
               type="button"
               disabled={!transactionActive || !cart.length}
-              onClick={removeSelectedItem}
+              onClick={() => {
+                playSound('warn');
+                removeSelectedItem();
+              }}
             >
               <span className="pos-control-button__icon">
                 <CashierIcon name="close" />
@@ -872,7 +881,10 @@ export function CashierPosPage() {
               className="pos-control-button"
               type="button"
               disabled={!transactionActive || !selectedLine}
-              onClick={() => stepSelectedQuantity(-1)}
+              onClick={() => {
+                playSound('tap');
+                stepSelectedQuantity(-1);
+              }}
             >
               <span className="pos-control-button__icon">
                 <CashierIcon name="minus" />
@@ -886,7 +898,10 @@ export function CashierPosPage() {
               className="pos-control-button"
               type="button"
               disabled={!transactionActive || !selectedLine}
-              onClick={() => stepSelectedQuantity(1)}
+              onClick={() => {
+                playSound('tap');
+                stepSelectedQuantity(1);
+              }}
             >
               <span className="pos-control-button__icon">
                 <CashierIcon name="plus" />
@@ -896,7 +911,14 @@ export function CashierPosPage() {
                 <small>One more</small>
               </span>
             </button>
-            <button className="pos-control-button" type="button" onClick={openVoidDialog}>
+            <button
+              className="pos-control-button"
+              type="button"
+              onClick={() => {
+                playSound('warn');
+                openVoidDialog();
+              }}
+            >
               <span className="pos-control-button__icon">
                 <CashierIcon name="receipt" />
               </span>
@@ -909,7 +931,10 @@ export function CashierPosPage() {
               className="pos-control-button pos-control-button--no-charge"
               type="button"
               disabled={!transactionActive || !cart.length}
-              onClick={openNoChargeDialog}
+              onClick={() => {
+                playSound('tap');
+                openNoChargeDialog();
+              }}
             >
               <span className="pos-control-button__icon">
                 <CashierIcon name="nocharge" />
