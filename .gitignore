@@ -8,6 +8,7 @@ dist/
 .DS_Store
 coverage/
 /AGENTS.md
+/CLAUDE.md
 # Local design skill installation and its generated sweep reports
 /.agents/skills/hallmark/
 # Large skill (35 MB of assets); restore with: npx skills experimental_install
