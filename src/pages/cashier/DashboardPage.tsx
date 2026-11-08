@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
+import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { getInventory } from '../../data/inventoryStore';
 import { getSession, getShiftTotals } from '../../data/registerSession';
 
 const SALES_KEY = 'dagohoy_demo_sales';
+
+type DashTask = 'today' | 'mix' | 'movers' | 'stock';
 
 type Sale = {
   receipt: string;
@@ -34,6 +37,7 @@ function readSales(): Sale[] {
 export function CashierDashboardPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [tick, setTick] = useState(0);
+  const [active, setActive] = useState<DashTask>('today');
 
   useEffect(() => {
     setSales(readSales());
@@ -107,106 +111,158 @@ export function CashierDashboardPage() {
   const itemCount = todaySales.reduce((sum, sale) => sum + sale.items, 0);
   const basket = todaySales.length ? itemCount / todaySales.length : 0;
 
+  const tiles: Array<ControlItem<DashTask>> = [
+    {
+      key: 'today',
+      icon: 'cash',
+      title: "Today's sales",
+      hint: `${todaySales.length} sale${todaySales.length === 1 ? '' : 's'} today`,
+      tone: 'forest',
+      count: todaySales.length,
+      about: 'Cash in the drawer, sales so far, and sales hour by hour while your shift runs.',
+    },
+    {
+      key: 'mix',
+      icon: 'credit',
+      title: 'Payment mix',
+      hint: 'Cash, GCash, credit',
+      tone: 'blue',
+      count: paymentEntries.length,
+      about: 'How customers paid today.',
+    },
+    {
+      key: 'movers',
+      icon: 'products',
+      title: 'Fast movers',
+      hint: 'Most sold today',
+      tone: 'teal',
+      count: bestSellers.length,
+      about: 'The medicines sold the most today.',
+    },
+    {
+      key: 'stock',
+      icon: 'stock',
+      title: 'Stock health',
+      hint: lowStock.length ? 'Need restocking' : 'All in stock',
+      tone: 'amber',
+      count: lowStock.length,
+      alert: lowStock.length > 0,
+      about: 'Where the shelves stand right now, and which products are low or out.',
+    },
+  ];
+  const activeTile = tiles.find((tile) => tile.key === active) ?? tiles[0];
+
   return (
     <div className="cashier-page dash-page">
-      <section className="dash-kpis" aria-label="Shift at a glance">
-        <article className="dash-kpi dash-kpi--hero">
-          <div className="dash-kpi__head">
-            <span className="dash-kpi__icon">
-              <CashierIcon name="cash" />
-            </span>
-            <small>Cash in drawer (expected)</small>
+      <ControlDeck
+        id="dash"
+        title="Dashboard"
+        subtitle="Pick what to look at. It opens in the card below."
+        items={tiles}
+        active={active}
+        onSelect={setActive}
+        aside={
+          <div className="dash-actions">
+            <Link className="dash-action dash-action--primary" to="/cashier/pos">
+              <CashierIcon name="pos" /> Open POS
+            </Link>
+            <Link className="dash-action" to="/cashier/transactions">
+              <CashierIcon name="transactions" /> Transactions
+            </Link>
+            <Link className="dash-action" to="/cashier/register">
+              <CashierIcon name="register" /> Cash drawer
+            </Link>
           </div>
-          <strong>{money(totals.expected)}</strong>
-          <div className="dash-kpi__foot">
-            <span>Float {money(shift?.openingFloat ?? 0)}</span>
-            <span>Cash sales {money(totals.cashSales)}</span>
-          </div>
-        </article>
+        }
+      />
 
-        <article className="dash-kpi">
-          <div className="dash-kpi__head">
-            <span className="dash-kpi__icon">
-              <CashierIcon name="transactions" />
-            </span>
-            <small>Transactions</small>
-          </div>
-          <strong>{todaySales.length}</strong>
-          <div className="dash-kpi__foot">
-            <span>{itemCount} items sold</span>
-            <span>{basket ? basket.toFixed(1) : '0'} items / basket</span>
-          </div>
-        </article>
-
-        <article className="dash-kpi">
-          <div className="dash-kpi__head">
-            <span className="dash-kpi__icon">
-              <CashierIcon name="clock" />
-            </span>
-            <small>Time on shift</small>
-          </div>
-          <strong>
-            {Math.floor(hoursOn)}h {Math.round((hoursOn % 1) * 60)}m
-          </strong>
-          <div className="dash-kpi__foot">
-            <span>
-              {shift ? shift.onDutyNames?.join(', ') || shift.cashierName : 'No shift yet'}
-            </span>
-          </div>
-        </article>
-
-        <article className="dash-kpi">
-          <div className="dash-kpi__head">
-            <span className="dash-kpi__icon">
-              <CashierIcon name="stock" />
-            </span>
-            <small>Needs restocking</small>
-          </div>
-          <strong>{lowStock.length}</strong>
-          <div className="dash-kpi__foot">
-            <span>{mockStockLine(lowStock.length, inventory.length)}</span>
-          </div>
-        </article>
-      </section>
-
-      <section className="dash-grid">
-        <article className="dash-card dash-card--wide">
-          <div className="dash-card__head">
-            <div>
-              <h3>Sales through the day</h3>
-              <p>Cash collected per hour while your shift runs.</p>
-            </div>
-            <span className="dash-pill">Today</span>
-          </div>
-          <div className="dash-bars" role="img" aria-label="Hourly cash sales bar chart">
-            {hourly.map((slot) => {
-              const height = Math.max(4, (slot.amount / peak) * 100);
-              return (
-                <div className="dash-bar" key={slot.hour}>
-                  <div className="dash-bar__track">
-                    <div
-                      className={`dash-bar__fill${slot.amount ? '' : ' is-empty'}`}
-                      style={{ height: `${height}%` }}
-                    >
-                      {slot.amount ? <span>₱{Math.round(slot.amount)}</span> : null}
-                    </div>
-                  </div>
-                  <small>{formatHour(slot.hour)}</small>
+      <ControlPanel id="dash" activeKey={active} title={activeTile.title} about={activeTile.about}>
+        {active === 'today' && (
+          <>
+            <section className="dash-kpis" aria-label="Shift at a glance">
+              <article className="dash-kpi dash-kpi--hero">
+                <div className="dash-kpi__head">
+                  <span className="dash-kpi__icon">
+                    <CashierIcon name="cash" />
+                  </span>
+                  <small>Cash in drawer (expected)</small>
                 </div>
-              );
-            })}
-          </div>
-        </article>
+                <strong>{money(totals.expected)}</strong>
+                <div className="dash-kpi__foot">
+                  <span>Float {money(shift?.openingFloat ?? 0)}</span>
+                  <span>Cash sales {money(totals.cashSales)}</span>
+                </div>
+              </article>
 
-        <article className="dash-card">
-          <div className="dash-card__head">
-            <div>
-              <h3>Payment mix</h3>
-              <p>How customers paid.</p>
+              <article className="dash-kpi">
+                <div className="dash-kpi__head">
+                  <span className="dash-kpi__icon">
+                    <CashierIcon name="transactions" />
+                  </span>
+                  <small>Transactions</small>
+                </div>
+                <strong>{todaySales.length}</strong>
+                <div className="dash-kpi__foot">
+                  <span>{itemCount} items sold</span>
+                  <span>{basket ? basket.toFixed(1) : '0'} items / basket</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi">
+                <div className="dash-kpi__head">
+                  <span className="dash-kpi__icon">
+                    <CashierIcon name="clock" />
+                  </span>
+                  <small>Time on shift</small>
+                </div>
+                <strong>
+                  {Math.floor(hoursOn)}h {Math.round((hoursOn % 1) * 60)}m
+                </strong>
+                <div className="dash-kpi__foot">
+                  <span>
+                    {shift ? shift.onDutyNames?.join(', ') || shift.cashierName : 'No shift yet'}
+                  </span>
+                </div>
+              </article>
+
+              <article className="dash-kpi">
+                <div className="dash-kpi__head">
+                  <span className="dash-kpi__icon">
+                    <CashierIcon name="stock" />
+                  </span>
+                  <small>Needs restocking</small>
+                </div>
+                <strong>{lowStock.length}</strong>
+                <div className="dash-kpi__foot">
+                  <span>{mockStockLine(lowStock.length, inventory.length)}</span>
+                </div>
+              </article>
+            </section>
+
+            <div className="dash-bars" role="img" aria-label="Hourly cash sales bar chart">
+              {hourly.map((slot) => {
+                const height = Math.max(4, (slot.amount / peak) * 100);
+                return (
+                  <div className="dash-bar" key={slot.hour}>
+                    <div className="dash-bar__track">
+                      <div
+                        className={`dash-bar__fill${slot.amount ? '' : ' is-empty'}`}
+                        style={{ height: `${height}%` }}
+                      >
+                        {slot.amount ? <span>₱{Math.round(slot.amount)}</span> : null}
+                      </div>
+                    </div>
+                    <small>{formatHour(slot.hour)}</small>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          {paymentEntries.length ? (
-            <>
+          </>
+        )}
+
+        {active === 'mix' &&
+          (paymentEntries.length ? (
+            <div>
               <div className="dash-donut">
                 <div
                   className="dash-donut__ring"
@@ -226,20 +282,13 @@ export function CashierDashboardPage() {
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           ) : (
             <p className="dash-empty">No sales yet today. Open the POS to start.</p>
-          )}
-        </article>
+          ))}
 
-        <article className="dash-card">
-          <div className="dash-card__head">
-            <div>
-              <h3>Fast movers</h3>
-              <p>Most sold medicines today.</p>
-            </div>
-          </div>
-          {bestSellers.length ? (
+        {active === 'movers' &&
+          (bestSellers.length ? (
             <ul className="dash-rank">
               {bestSellers.map(([name, value]) => (
                 <li key={name}>
@@ -258,19 +307,9 @@ export function CashierDashboardPage() {
             </ul>
           ) : (
             <p className="dash-empty">Nothing sold yet today.</p>
-          )}
-        </article>
+          ))}
 
-        <article className="dash-card dash-card--wide">
-          <div className="dash-card__head">
-            <div>
-              <h3>Stock health</h3>
-              <p>Where the shelves stand right now.</p>
-            </div>
-            <Link className="dash-link" to="/cashier/transactions">
-              Transactions <CashierIcon name="arrow" />
-            </Link>
-          </div>
+        {active === 'stock' && (
           <div className="dash-stock">
             <div className="dash-stock__bar" aria-hidden="true">
               <div
@@ -294,7 +333,7 @@ export function CashierDashboardPage() {
             </div>
             {lowStock.length ? (
               <ul className="dash-alerts">
-                {lowStock.slice(0, 4).map((product) => (
+                {lowStock.map((product) => (
                   <li key={product.barcode}>
                     <span>{product.product}</span>
                     <em className={product.stock > 0 ? 'is-low' : 'is-out'}>
@@ -305,24 +344,11 @@ export function CashierDashboardPage() {
               </ul>
             ) : null}
           </div>
-        </article>
-      </section>
-
-      <div className="dash-actions">
-        <Link className="dash-action dash-action--primary" to="/cashier/pos">
-          <CashierIcon name="pos" /> Open POS
-        </Link>
-        <Link className="dash-action" to="/cashier/transactions">
-          <CashierIcon name="transactions" /> Transactions
-        </Link>
-        <Link className="dash-action" to="/cashier/register">
-          <CashierIcon name="register" /> Cash drawer
-        </Link>
-      </div>
+        )}
+      </ControlPanel>
     </div>
   );
 }
-
 function formatHour(hour: number) {
   const suffix = hour >= 12 ? 'PM' : 'AM';
   const display = hour % 12 === 0 ? 12 : hour % 12;

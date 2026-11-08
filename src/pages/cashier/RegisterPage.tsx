@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { useToast } from '../../components/toast';
 import {
   addCashEvent,
@@ -12,18 +13,20 @@ import {
 import { getPreviousShift } from '../../data/shiftHistory';
 
 type MovementType = 'Paid in' | 'Paid out';
+type DrawerTask = 'status' | 'movements' | 'cash' | 'close';
+
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 
 /*
  * The Cash drawer page is the record of the open shift: the float, cash sales
- * and non-sale cash movements. The shift itself is started and ended from the
- * top bar, so this page no longer opens a register of its own.
+ * and non-sale cash movements. The shift is started from the top bar; it can be
+ * closed here or from the top bar. Each task opens in the card under the buttons.
  */
 export function RegisterPage() {
   const session = getSession();
   const [, refresh] = useReducer((count: number) => count + 1, 0);
-  const [mode, setMode] = useState<'movement' | 'close' | null>(null);
+  const [active, setActive] = useState<DrawerTask>('status');
   const { showToast } = useToast();
   const previousShift = getPreviousShift();
   const events = getCashEvents();
@@ -41,7 +44,7 @@ export function RegisterPage() {
 
   function closeSession(counted: number) {
     const result = endShift(counted);
-    setMode(null);
+    setActive('status');
     showToast(
       result
         ? `Shift closed. Expected ${money(result.expected)} · counted ${money(counted)} · variance ${money(result.variance)}.`
@@ -50,130 +53,168 @@ export function RegisterPage() {
     );
   }
 
+  const tiles: Array<ControlItem<DrawerTask>> = [
+    {
+      key: 'status',
+      icon: 'register',
+      title: 'Drawer status',
+      hint: session ? 'Register open' : 'Register closed',
+      tone: 'forest',
+      about: 'The float, cash taken this shift, and how much should be in the drawer now.',
+    },
+    {
+      key: 'movements',
+      icon: 'transactions',
+      title: 'Cash movements',
+      hint: 'Money in or out, not sales',
+      tone: 'blue',
+      count: events.length,
+      about: 'Every cash in, cash out and utang payment recorded this shift.',
+    },
+    {
+      key: 'cash',
+      icon: 'cash',
+      title: 'Cash in / out',
+      hint: session ? 'Record a movement' : 'Needs an open shift',
+      tone: 'teal',
+      about: 'Cash put into or taken out of the drawer that is not a sale, with the reason.',
+    },
+    {
+      key: 'close',
+      icon: 'clock',
+      title: 'Close register',
+      hint: session ? 'Count the drawer' : 'No shift to close',
+      tone: 'rose',
+      about: 'Count the cash in the drawer, then close the shift. The handover is saved.',
+    },
+  ];
+  const activeTile = tiles.find((tile) => tile.key === active) ?? tiles[0];
+
   return (
     <div className="cashier-page">
-      <div className={`register-state-card${session ? ' is-open' : ''}`}>
-        <span className={`register-state-light${session ? ' is-open' : ''}`} />
-        <div>
-          <strong>{session ? 'Register open' : 'Register closed'}</strong>
-          <span>
-            {session
-              ? `Start of shift ${new Date(session.openedAt).toLocaleString('en-PH')} · ${(
-                  session.onDutyNames ?? [session.cashierName]
-                ).join(', ')} on duty`
-              : 'Start a shift from the top bar to open the register.'}
-          </span>
-          {!session && previousShift && (
-            <Link className="register-previous-link" to="/cashier/shift-report">
-              Review the previous shift ({previousShift.cashierName}) before starting
-            </Link>
-          )}
-        </div>
-        <div className="register-state-actions">
-          {session ? (
-            <button
-              className="cashier-primary-action register-state-action"
-              type="button"
-              onClick={() => setMode('close')}
-            >
-              Close register
-            </button>
-          ) : (
-            <span className="cashier-view-button register-state-action is-muted">
-              Use Start shift in the top bar
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="cashier-summary-grid register-summary-grid">
-        <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />
-        <RegisterStat label="Cash sales" value={money(totals.cashSales)} />
-        <RegisterStat
-          label="Utang cash"
-          value={money(totals.creditCash)}
-          detail="Down payments and paid balances"
-        />
-        <RegisterStat
-          label="Paid in / out"
-          value={`${money(totals.paidIn)} / ${money(totals.paidOut)}`}
-        />
-        <RegisterStat label="Expected in drawer" value={money(totals.expected)} />
-      </div>
-      {session?.floatAdjustment && (
-        <p className="register-float-note">
-          Float adjusted from {money(session.floatAdjustment.carriedOver)} — reason: “
-          {session.floatAdjustment.reason}”
-        </p>
-      )}
-      <div className="cashier-panel register-activity-panel">
-        <div className="cashier-panel__heading">
-          <div>
-            <h3>Cash movements</h3>
-            <p>Non-sale cash movements associated with this shift.</p>
-          </div>
-          <div className="register-actions">
-            <button
-              type="button"
-              className="cashier-view-button"
-              disabled={!session}
-              onClick={() => setMode('movement')}
-            >
-              Record cash movement
-            </button>
-          </div>
-        </div>
-        {events.length ? (
-          <div
-            className="cashier-table-wrap"
-            role="region"
-            aria-label="Register history table"
-            tabIndex={0}
-          >
-            <table className="cashier-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Type</th>
-                  <th>Reason</th>
-                  <th>Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((event) => (
-                  <tr key={event.id}>
-                    <td>{new Date(event.date).toLocaleString('en-PH')}</td>
-                    <td>{event.type}</td>
-                    <td>{event.reason}</td>
-                    <td
-                      className={
-                        event.type === 'Paid out' ? 'movement-negative' : 'movement-positive'
-                      }
-                    >
-                      {event.type === 'Paid out' ? '−' : '+'}
-                      {money(event.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="register-empty">No cash movements for this shift yet.</p>
+      <ControlDeck
+        id="drawer"
+        title="Cash drawer"
+        subtitle="Pick a task. It opens in the card below."
+        items={tiles}
+        active={active}
+        onSelect={setActive}
+      />
+
+      <ControlPanel
+        id="drawer"
+        activeKey={active}
+        title={activeTile.title}
+        about={activeTile.about}
+      >
+        {active === 'status' && (
+          <>
+            <div className={`register-state-card${session ? ' is-open' : ''}`}>
+              <span className={`register-state-light${session ? ' is-open' : ''}`} />
+              <div>
+                <strong>{session ? 'Register open' : 'Register closed'}</strong>
+                <span>
+                  {session
+                    ? `Start of shift ${new Date(session.openedAt).toLocaleString('en-PH')} · ${(
+                        session.onDutyNames ?? [session.cashierName]
+                      ).join(', ')} on duty`
+                    : 'Start a shift from the top bar to open the register.'}
+                </span>
+                {!session && previousShift && (
+                  <Link className="register-previous-link" to="/cashier/shift-report">
+                    Review the previous shift ({previousShift.cashierName}) before starting
+                  </Link>
+                )}
+              </div>
+            </div>
+            <div className="cashier-summary-grid register-summary-grid">
+              <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />
+              <RegisterStat label="Cash sales" value={money(totals.cashSales)} />
+              <RegisterStat
+                label="Utang cash"
+                value={money(totals.creditCash)}
+                detail="Down payments and paid balances"
+              />
+              <RegisterStat
+                label="Paid in / out"
+                value={`${money(totals.paidIn)} / ${money(totals.paidOut)}`}
+              />
+              <RegisterStat label="Expected in drawer" value={money(totals.expected)} />
+            </div>
+            {session?.floatAdjustment && (
+              <p className="register-float-note">
+                Float adjusted from {money(session.floatAdjustment.carriedOver)} — reason: “
+                {session.floatAdjustment.reason}”
+              </p>
+            )}
+          </>
         )}
-      </div>
-      {mode && (
-        <RegisterModal
-          mode={mode}
-          expected={totals.expected}
-          onClose={() => setMode(null)}
-          onEvent={(event) => {
-            addCashEvent(event);
-            setMode(null);
-            showToast(`${event.type} recorded.`, 'success');
-          }}
-          onCloseSession={closeSession}
-        />
-      )}
+
+        {active === 'movements' &&
+          (events.length ? (
+            <div
+              className="cashier-table-wrap"
+              role="region"
+              aria-label="Cash movements table"
+              tabIndex={0}
+            >
+              <table className="cashier-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Reason</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.map((event) => (
+                    <tr key={event.id}>
+                      <td>{new Date(event.date).toLocaleString('en-PH')}</td>
+                      <td>{event.type}</td>
+                      <td>{event.reason}</td>
+                      <td
+                        className={
+                          event.type === 'Paid out' ? 'movement-negative' : 'movement-positive'
+                        }
+                      >
+                        {event.type === 'Paid out' ? '−' : '+'}
+                        {money(event.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="register-empty">No cash movements for this shift yet.</p>
+          ))}
+
+        {active === 'cash' &&
+          (session ? (
+            <CashMovementForm
+              onSave={(event) => {
+                addCashEvent(event);
+                showToast(`${event.type} recorded.`, 'success');
+                setActive('movements');
+              }}
+            />
+          ) : (
+            <p className="register-empty">
+              No shift is open. Use Start shift in the top bar first.
+            </p>
+          ))}
+
+        {active === 'close' &&
+          (session ? (
+            <CloseRegisterForm expected={totals.expected} onClose={closeSession} />
+          ) : (
+            <p className="register-empty">
+              No shift is open, so there is nothing to close. Use Start shift in the top bar to open
+              the register.
+            </p>
+          ))}
+      </ControlPanel>
     </div>
   );
 }
@@ -196,24 +237,17 @@ function RegisterStat({
   );
 }
 
-function RegisterModal({
-  mode,
-  expected,
-  onClose,
-  onEvent,
-  onCloseSession,
+/** Cash put into or taken out of the drawer that is not a sale. */
+function CashMovementForm({
+  onSave,
 }: {
-  mode: 'movement' | 'close';
-  expected: number;
-  onClose: () => void;
-  onEvent: (event: {
+  onSave: (event: {
     id: string;
     type: MovementType;
     amount: number;
     reason: string;
     date: string;
   }) => void;
-  onCloseSession: (counted: number) => void;
 }) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<MovementType>('Paid out');
@@ -223,14 +257,6 @@ function RegisterModal({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = Number(amount || 0);
-    if (mode === 'close') {
-      if (!amount.trim()) {
-        setError('Enter the cash you counted in the drawer.');
-        return;
-      }
-      onCloseSession(value);
-      return;
-    }
     if (!Number.isFinite(value) || value <= 0) {
       setError('Enter an amount greater than ₱0.00.');
       return;
@@ -239,72 +265,41 @@ function RegisterModal({
       setError('Type the reason for this cash movement.');
       return;
     }
-    onEvent({
+    onSave({
       id: `CASH-${Date.now()}`,
       type,
       amount: value,
       reason: reason.trim(),
       date: new Date().toISOString(),
     });
+    setAmount('');
+    setReason('');
   }
 
   return (
-    <div className="pos-modal-backdrop">
-      <form className="pos-payment-modal" onSubmit={submit} noValidate>
-        <button
-          className="pos-modal-close"
-          type="button"
-          onClick={onClose}
-          aria-label="Close dialog"
-        >
-          ×
-        </button>
-        <p className="eyebrow">Cash control</p>
-        <h2>{mode === 'close' ? 'Close register' : 'Record cash movement'}</h2>
-        <p className="inventory-form-note">
-          {mode === 'close'
-            ? 'Count the drawer, then close the shift. The handover is saved for the next shift.'
-            : 'Cash taken out of or put into the drawer that is not a sale.'}
-        </p>
-        {mode === 'close' && (
-          <div className="pos-payment-total">
-            <span>Expected cash</span>
-            <strong>{money(expected)}</strong>
-          </div>
-        )}
-        {mode === 'movement' && (
-          <label>
-            Movement type
-            <select
-              value={type}
-              onChange={(event) => {
-                setType(event.target.value as MovementType);
-                setError('');
-              }}
-            >
-              <option>Paid out</option>
-              <option>Paid in</option>
-            </select>
-          </label>
-        )}
-        {mode === 'movement' && (
-          <label>
-            Reason
-            <input
-              value={reason}
-              onChange={(event) => {
-                setReason(event.target.value);
-                setError('');
-              }}
-              placeholder="e.g. Petty cash"
-            />
-          </label>
-        )}
+    <form className="stock-index__form" onSubmit={submit} noValidate>
+      <p className="stock-index__form-title">
+        Cash out: money taken from the drawer (e.g. petty cash). Cash in: money added (e.g. more
+        change).
+      </p>
+      <div className="stock-index__form-grid">
         <label>
-          {mode === 'close' ? 'Counted cash' : 'Amount'}
+          Movement
+          <select
+            value={type}
+            onChange={(event) => {
+              setType(event.target.value as MovementType);
+              setError('');
+            }}
+          >
+            <option value="Paid out">Cash out (paid out)</option>
+            <option value="Paid in">Cash in (paid in)</option>
+          </select>
+        </label>
+        <label>
+          Amount
           <input
             inputMode="decimal"
-            autoFocus
             value={amount}
             onChange={(event) => {
               setAmount(event.target.value.replace(/[^\d.]/g, ''));
@@ -313,15 +308,93 @@ function RegisterModal({
             placeholder="0.00"
           />
         </label>
-        {error && (
-          <p className="pos-notice" role="alert">
-            {error}
-          </p>
-        )}
-        <button className="pos-checkout-button" type="submit">
-          {mode === 'close' ? 'Close and reconcile' : 'Save cash movement'}
+        <label>
+          Reason
+          <input
+            value={reason}
+            onChange={(event) => {
+              setReason(event.target.value);
+              setError('');
+            }}
+            placeholder="e.g. Petty cash for ice"
+          />
+        </label>
+      </div>
+      {error && (
+        <p className="stock-index__warn" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="stock-index__actions">
+        <button className="stock-index__action" type="submit">
+          Save cash movement
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
+  );
+}
+
+/** Count the drawer and close the shift; shows over or short as the cashier types. */
+function CloseRegisterForm({
+  expected,
+  onClose,
+}: {
+  expected: number;
+  onClose: (counted: number) => void;
+}) {
+  const [counted, setCounted] = useState('');
+  const [error, setError] = useState('');
+  const value = Number(counted || 0);
+  const variance = value - expected;
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!counted.trim()) {
+      setError('Enter the cash you counted in the drawer.');
+      return;
+    }
+    onClose(value);
+  }
+
+  return (
+    <form className="stock-index__form" onSubmit={submit} noValidate>
+      <div className="stock-index__chips">
+        <span>
+          Expected in drawer <b>{money(expected)}</b>
+        </span>
+        {counted.trim() !== '' && (
+          <span className={Math.abs(variance) < 0.005 ? undefined : 'is-low'}>
+            {Math.abs(variance) < 0.005
+              ? 'Drawer is balanced'
+              : `${variance > 0 ? 'Over' : 'Short'} by`}{' '}
+            {Math.abs(variance) >= 0.005 && <b>{money(Math.abs(variance))}</b>}
+          </span>
+        )}
+      </div>
+      <div className="stock-index__form-grid">
+        <label>
+          Counted cash
+          <input
+            inputMode="decimal"
+            value={counted}
+            onChange={(event) => {
+              setCounted(event.target.value.replace(/[^\d.]/g, ''));
+              setError('');
+            }}
+            placeholder="0.00"
+          />
+        </label>
+      </div>
+      {error && (
+        <p className="stock-index__warn" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="stock-index__actions">
+        <button className="stock-index__action" type="submit">
+          Close and reconcile
+        </button>
+      </div>
+    </form>
   );
 }
