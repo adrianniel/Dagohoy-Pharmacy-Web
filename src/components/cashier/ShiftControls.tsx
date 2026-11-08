@@ -32,6 +32,7 @@ export function ShiftControls() {
   const session = getSession();
   const [, refresh] = useReducer((count: number) => count + 1, 0);
   const [mode, setMode] = useState<'start' | 'end' | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const sync = () => refresh();
@@ -43,24 +44,35 @@ export function ShiftControls() {
     };
   }, []);
 
+  // Both buttons always show. The one that does not fit right now stays visible but
+  // faded, and clicking it says why instead of doing nothing.
+  const canStart = !session;
+  const canEnd = Boolean(session);
+  const startHint = canStart
+    ? 'Pick the staff on duty and open the drawer.'
+    : 'A shift is already running. Close it first before starting a new one.';
+  const endHint = canEnd
+    ? 'Count the drawer and hand the shift over.'
+    : 'No shift is running. Start a shift first.';
+
   return (
     <>
       <div className="cashier-shift-actions">
         <button
-          className="cashier-shift-action"
+          className={`cashier-shift-action${canStart ? '' : ' is-unavailable'}`}
           type="button"
-          disabled={Boolean(session)}
-          title={session ? 'A shift is already running.' : 'Pick the staff on duty and open the drawer.'}
-          onClick={() => setMode('start')}
+          aria-disabled={!canStart}
+          title={startHint}
+          onClick={() => (canStart ? setMode('start') : showToast(startHint, 'info'))}
         >
           Start shift
         </button>
         <button
-          className="cashier-shift-action is-end"
+          className={`cashier-shift-action is-end${canEnd ? '' : ' is-unavailable'}`}
           type="button"
-          disabled={!session}
-          title={session ? 'Count the drawer and hand the shift over.' : 'Start a shift first.'}
-          onClick={() => setMode('end')}
+          aria-disabled={!canEnd}
+          title={endHint}
+          onClick={() => (canEnd ? setMode('end') : showToast(endHint, 'info'))}
         >
           Close shift
         </button>
@@ -161,7 +173,11 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                   onClick={() => toggle(staff.name)}
                 >
                   <span>{staff.name}</span>
-                  {isSelected && <span className="cashier-shift-chip__index">{selected.indexOf(staff.name) + 1}</span>}
+                  {isSelected && (
+                    <span className="cashier-shift-chip__index">
+                      {selected.indexOf(staff.name) + 1}
+                    </span>
+                  )}
                 </button>
               );
             })
@@ -309,7 +325,9 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
           />
         </label>
         {counted.trim() !== '' && (
-          <p className={`cashier-shift-variance${Math.abs(variance) < 0.005 ? ' is-balanced' : ''}`}>
+          <p
+            className={`cashier-shift-variance${Math.abs(variance) < 0.005 ? ' is-balanced' : ''}`}
+          >
             {Math.abs(variance) < 0.005
               ? 'Drawer is balanced.'
               : `${variance > 0 ? 'Over' : 'Short'} by ${money(Math.abs(variance))}`}

@@ -3250,17 +3250,22 @@
   background: #fdf1ee;
   box-shadow: 0 6px 14px rgb(207 117 101 / 16%);
 }
-.cashier-shift-action:disabled {
-  border-color: #dfe6e1;
-  background: #f4f7f5;
-  color: #97a49b;
+/* Not the right time for this button: keep its colour so it is easy to find, but faded. */
+.cashier-shift-action.is-unavailable {
+  opacity: 0.42;
   box-shadow: none;
   cursor: not-allowed;
 }
-.cashier-shift-action.is-end:disabled {
-  border-color: #e6ddd9;
-  background: #fbf7f5;
-  color: #b9a49c;
+.cashier-shift-action.is-unavailable:hover {
+  background: #176246;
+  box-shadow: none;
+}
+.cashier-shift-action.is-end.is-unavailable:hover {
+  background: #fff;
+}
+.cashier-shift-action:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
 }
 .register-state-action.is-muted {
   padding: 0.55rem 0.9rem;
