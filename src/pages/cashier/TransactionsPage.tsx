@@ -3,6 +3,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { transactionHistory } from '../../data/cashierMockData';
+import { downloadXlsx } from '../../lib/xlsx';
 
 const SALES_KEY = 'dagohoy_demo_sales';
 type Sale = {
@@ -10,14 +11,29 @@ type Sale = {
   date: string;
   items: number;
   total: number;
+  subtotal?: number;
+  discount?: number;
   payment: string;
   status: string;
+  customer?: string;
   gcashReference?: string;
   paymentStatus?: string;
   lines?: Array<{ product: string; quantity: number; unitPrice: number }>;
 };
 
-type TransactionView = 'today' | 'week' | 'gcash' | 'voided';
+type TransactionView = 'today' | 'week' | 'month' | 'custom' | 'gcash' | 'voided';
+
+const VIEW_LABELS: Record<TransactionView, string> = {
+  today: 'Today',
+  week: 'Last 7 days',
+  month: 'Last 30 days',
+  custom: 'Custom range',
+  gcash: 'Pending GCash',
+  voided: 'Voided sales',
+};
+
+/** Local calendar date, YYYY-MM-DD. */
+const localDay = (value: Date | string | number) => new Date(value).toLocaleDateString('en-CA');
 
 const isPendingGcash = (sale: { payment: string; status: string; paymentStatus?: string }) =>
   sale.payment === 'GCash' &&
@@ -25,25 +41,46 @@ const isPendingGcash = (sale: { payment: string; status: string; paymentStatus?:
   (sale.status === 'Pending GCash' ||
     (sale.paymentStatus !== undefined && sale.paymentStatus !== 'Paid'));
 
+function readPharmacyName() {
+  try {
+    const settings = JSON.parse(localStorage.getItem('dagohoy_demo_pharmacy_settings') ?? '{}') as {
+      name?: string;
+    };
+    return settings.name?.trim() || 'Dagohoy Pharmacy';
+  } catch {
+    return 'Dagohoy Pharmacy';
+  }
+}
+
 export function CashierTransactionsPage() {
   const [query, setQuery] = useState('');
   const [view, setView] = useState<TransactionView>('today');
   const [selected, setSelected] = useState<Sale | null>(null);
+  const [rangeFrom, setRangeFrom] = useState(() => {
+    const now = new Date();
+    return localDay(new Date(now.getFullYear(), now.getMonth(), 1));
+  });
+  const [rangeTo, setRangeTo] = useState(() => localDay(Date.now()));
   const [demoSales] = useState(() => JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Sale[]);
   const allRecords = useMemo(
     () => [
       ...demoSales.map((sale) => ({
         ...sale,
         dateValue: sale.date,
+        amount: Number(sale.total ?? 0),
         date: new Date(sale.date).toLocaleString('en-PH'),
-        total: `₱${sale.total.toFixed(2)}`,
+        total: `₱${Number(sale.total ?? 0).toFixed(2)}`,
       })),
       ...transactionHistory.map((sale) => ({
         ...sale,
         lines: undefined,
+        subtotal: undefined,
+        discount: undefined,
+        customer: undefined,
         gcashReference: undefined,
         paymentStatus: undefined,
         dateValue: new Date(sale.date.replace(' · ', ' ')).toISOString(),
+        amount: Number(sale.total.replace(/[₱,]/g, '')),
         total: sale.total,
       })),
     ],
@@ -52,14 +89,22 @@ export function CashierTransactionsPage() {
   const groups = useMemo(() => {
     const startOfToday = new Date(new Date().toDateString()).getTime();
     const weekCutoff = Date.now() - 7 * 86400000;
+    const monthCutoff = Date.now() - 30 * 86400000;
     const kept = allRecords.filter((sale) => sale.status !== 'Voided');
+    const from = rangeFrom <= rangeTo ? rangeFrom : rangeTo;
+    const to = rangeFrom <= rangeTo ? rangeTo : rangeFrom;
     return {
       today: kept.filter((sale) => new Date(sale.dateValue).getTime() >= startOfToday),
       week: kept.filter((sale) => new Date(sale.dateValue).getTime() >= weekCutoff),
+      month: kept.filter((sale) => new Date(sale.dateValue).getTime() >= monthCutoff),
+      custom: kept.filter((sale) => {
+        const day = localDay(sale.dateValue);
+        return day >= from && day <= to;
+      }),
       gcash: allRecords.filter(isPendingGcash),
       voided: allRecords.filter((sale) => sale.status === 'Voided'),
     };
-  }, [allRecords]);
+  }, [allRecords, rangeFrom, rangeTo]);
   const records = groups[view].filter((transaction) =>
     transaction.receipt.toLowerCase().includes(query.trim().toLowerCase()),
   );
@@ -84,6 +129,24 @@ export function CashierTransactionsPage() {
       about: 'Sales from the last 7 days. Use the search to find one receipt.',
     },
     {
+      key: 'month',
+      icon: 'reports',
+      title: 'Last 30 days',
+      hint: 'Sales this month',
+      tone: 'teal',
+      count: groups.month.length,
+      about: 'Sales from the last 30 days. Use the search to find one receipt.',
+    },
+    {
+      key: 'custom',
+      icon: 'calendar',
+      title: 'Custom',
+      hint: 'Pick the dates',
+      tone: 'slate',
+      count: groups.custom.length,
+      about: 'Sales between two dates you pick, both days included.',
+    },
+    {
       key: 'gcash',
       icon: 'phone',
       title: 'Pending GCash',
@@ -106,38 +169,104 @@ export function CashierTransactionsPage() {
   ];
   const activeItem = items.find((item) => item.key === view);
 
-  function exportCsv() {
-    const rows = [
-      [
-        'Receipt',
-        'Date',
-        'Items',
-        'Total',
-        'Payment',
-        'Payment status',
-        'GCash reference',
-        'Status',
-      ],
-      ...records.map((item) => [
-        item.receipt,
-        item.date,
-        String(item.items),
-        item.total,
-        item.payment,
-        item.paymentStatus ?? '',
-        item.gcashReference ?? '',
-        item.status,
-      ]),
+  /** The date range the open view covers, in words, for the export title. */
+  function rangeLabel() {
+    const today = localDay(Date.now());
+    switch (view) {
+      case 'today':
+        return today;
+      case 'week':
+        return `${localDay(Date.now() - 7 * 86400000)} to ${today}`;
+      case 'month':
+        return `${localDay(Date.now() - 30 * 86400000)} to ${today}`;
+      case 'custom':
+        return rangeFrom <= rangeTo ? `${rangeFrom} to ${rangeTo}` : `${rangeTo} to ${rangeFrom}`;
+      default:
+        return 'All dates';
+    }
+  }
+
+  function exportExcel() {
+    const generated = new Date().toLocaleString('en-PH');
+    const title = [
+      readPharmacyName(),
+      `Transactions: ${VIEW_LABELS[view]} (${rangeLabel()})`,
+      `Generated ${generated}${query.trim() ? ` · receipt search “${query.trim()}”` : ''}`,
     ];
-    const csv = rows
-      .map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(','))
-      .join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `dagohoy-transactions-${view}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const kept = records.filter((sale) => sale.status !== 'Voided');
+
+    const itemTotals = new Map<string, { quantity: number; amount: number }>();
+    for (const sale of kept) {
+      for (const line of sale.lines ?? []) {
+        const row = itemTotals.get(line.product) ?? { quantity: 0, amount: 0 };
+        row.quantity += line.quantity;
+        row.amount += line.quantity * line.unitPrice;
+        itemTotals.set(line.product, row);
+      }
+    }
+    const dayTotals = new Map<string, { count: number; total: number }>();
+    for (const sale of kept) {
+      const day = localDay(sale.dateValue);
+      const row = dayTotals.get(day) ?? { count: 0, total: 0 };
+      row.count += 1;
+      row.total += sale.amount;
+      dayTotals.set(day, row);
+    }
+
+    downloadXlsx(`dagohoy-transactions-${view}-${localDay(Date.now())}.xlsx`, [
+      {
+        name: 'Transactions',
+        title,
+        header: [
+          'Receipt',
+          'Date',
+          'Time',
+          'Payment',
+          'Items',
+          'Subtotal',
+          'Discount',
+          'Total',
+          'Status',
+          'Customer',
+          'GCash ref',
+        ],
+        rows: records.map((sale) => {
+          const when = new Date(sale.dateValue);
+          return [
+            sale.receipt,
+            localDay(when),
+            when.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }),
+            sale.payment,
+            Number(sale.items ?? 0),
+            sale.subtotal ?? sale.amount,
+            sale.discount ?? 0,
+            sale.amount,
+            sale.status,
+            sale.customer ?? '',
+            sale.gcashReference ?? '',
+          ];
+        }),
+        widths: [16, 12, 10, 12, 8, 12, 10, 12, 14, 20, 14],
+      },
+      {
+        name: 'Items sold',
+        title,
+        header: ['Product', 'Qty', 'Amount'],
+        rows: [...itemTotals.entries()]
+          .sort((a, b) => b[1].amount - a[1].amount)
+          .map(([product, row]) => [product, row.quantity, Math.round(row.amount * 100) / 100]),
+        widths: [32, 8, 12],
+      },
+      {
+        name: 'By day',
+        title,
+        header: ['Date', 'Sales', 'Total'],
+        rows: [...dayTotals.entries()]
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([day, row]) => [day, row.count, Math.round(row.total * 100) / 100]),
+        widths: [12, 8, 12],
+      },
+    ]);
   }
   return (
     <div className="cashier-page">
@@ -158,14 +287,36 @@ export function CashierTransactionsPage() {
           <button
             className="cashier-filter-button"
             type="button"
-            onClick={exportCsv}
+            onClick={exportExcel}
             disabled={!records.length}
           >
-            Export CSV
+            Export Excel
           </button>
         }
       >
         <section className="cashier-panel cashier-list-panel">
+          {view === 'custom' && (
+            <div className="duty-reports__filters">
+              <label>
+                From
+                <input
+                  type="date"
+                  value={rangeFrom}
+                  max={rangeTo}
+                  onChange={(event) => setRangeFrom(event.target.value)}
+                />
+              </label>
+              <label>
+                To
+                <input
+                  type="date"
+                  value={rangeTo}
+                  min={rangeFrom}
+                  onChange={(event) => setRangeTo(event.target.value)}
+                />
+              </label>
+            </div>
+          )}
           <div className="cashier-list-toolbar">
             <label className="cashier-search-field cashier-search-field--wide">
               <CashierIcon name="search" />

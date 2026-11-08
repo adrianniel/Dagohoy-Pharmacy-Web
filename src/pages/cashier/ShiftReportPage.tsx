@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { getCurrentAccount } from '../../data/accountStore';
+import { downloadXlsx } from '../../lib/xlsx';
 import { ShiftReportModal } from '../../components/cashier/ShiftReport';
 import {
   getPreviousShift,
@@ -300,6 +301,76 @@ function DutyReports({ onOpen }: { onOpen: (shift: ShiftRecord) => void }) {
   const notBalanced = rows.filter((shift) => shiftVariance(shift).label !== 'Balanced');
   const netDifference = rows.reduce((sum, shift) => sum + shiftVariance(shift).variance, 0);
 
+  function exportExcel() {
+    let pharmacy = 'Dagohoy Pharmacy';
+    try {
+      const settings = JSON.parse(
+        localStorage.getItem('dagohoy_demo_pharmacy_settings') ?? '{}',
+      ) as { name?: string };
+      pharmacy = settings.name?.trim() || pharmacy;
+    } catch {
+      // keep the default name
+    }
+    const periodLabel = period === 'all' ? 'All saved shifts' : `Last ${period} days`;
+    const round = (value: number) => Math.round(value * 100) / 100;
+    downloadXlsx(`dagohoy-duty-reports-${new Date().toLocaleDateString('en-CA')}.xlsx`, [
+      {
+        name: 'Duty reports',
+        title: [
+          pharmacy,
+          `Duty reports: ${cashier === 'all' ? 'Everyone' : cashier} · ${periodLabel}`,
+          `Generated ${new Date().toLocaleString('en-PH')}`,
+        ],
+        header: [
+          'Closed date',
+          'Closed time',
+          'On duty',
+          'Length (minutes)',
+          'Length',
+          'Sales',
+          'Total sales',
+          'Opening float',
+          'Cash sales',
+          'Utang cash',
+          'Cash in',
+          'Cash out',
+          'Expected',
+          'Counted',
+          'Difference',
+          'Drawer',
+          'Note',
+        ],
+        rows: rows.map((shift) => {
+          const closed = new Date(shift.closedAt);
+          const { variance, label } = shiftVariance(shift);
+          return [
+            closed.toLocaleDateString('en-CA'),
+            closed.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }),
+            (shift.onDutyNames ?? [shift.cashierName]).join(', '),
+            Math.max(
+              0,
+              Math.round((Date.parse(shift.closedAt) - Date.parse(shift.openedAt)) / 60000),
+            ),
+            shiftDuration(shift.openedAt, shift.closedAt),
+            shift.salesCount,
+            shift.details ? round(shift.details.grossSales) : null,
+            round(shift.openingFloat),
+            round(shift.cashSales),
+            shift.creditCash !== undefined ? round(shift.creditCash) : null,
+            round(shift.paidIn),
+            round(shift.paidOut),
+            round(shift.expectedCash),
+            round(shift.countedCash),
+            variance,
+            label,
+            shift.varianceNote ?? '',
+          ];
+        }),
+        widths: [12, 11, 22, 10, 14, 7, 12, 12, 12, 11, 10, 10, 12, 12, 11, 10, 30],
+      },
+    ]);
+  }
+
   if (!history.length) {
     return <p className="register-empty">No shift has been closed yet.</p>;
   }
@@ -326,6 +397,14 @@ function DutyReports({ onOpen }: { onOpen: (shift: ShiftRecord) => void }) {
             <option value="all">All saved shifts</option>
           </select>
         </label>
+        <button
+          className="shift-report-modal__pdf"
+          type="button"
+          onClick={exportExcel}
+          disabled={!rows.length}
+        >
+          Export Excel
+        </button>
       </div>
       <div className="stock-index__chips">
         <span>
