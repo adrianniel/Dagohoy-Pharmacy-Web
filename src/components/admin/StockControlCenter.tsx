@@ -538,7 +538,11 @@ export function StockControlCenter({
                   All adjustments <b>{data.adjustments.length}</b>
                 </span>
               </div>
-              <StockWriteOffForm mode="adjustment" batches={data.batches} onSaved={handleStockSaved} />
+              <StockWriteOffForm
+                mode="adjustment"
+                batches={data.batches}
+                onSaved={handleStockSaved}
+              />
               {data.adjustments.length === 0 ? (
                 <p className="stock-index__empty">
                   No adjustments yet. Record broken packs, expired stock, or a count correction so
@@ -684,7 +688,12 @@ function StockWriteOffForm({
       return;
     }
     if (!reason.trim()) {
-      showToast(isReturn ? 'Say why the items go back to the supplier.' : 'Say why this adjustment is needed.', 'error');
+      showToast(
+        isReturn
+          ? 'Say why the items go back to the supplier.'
+          : 'Say why this adjustment is needed.',
+        'error',
+      );
       return;
     }
     const inventory = getInventory();
@@ -698,7 +707,9 @@ function StockWriteOffForm({
     }
     saveInventory(
       inventory.map((item) =>
-        item.barcode === barcode ? { ...item, stock: nextStock, status: stockStatus(nextStock) } : item,
+        item.barcode === barcode
+          ? { ...item, stock: nextStock, status: stockStatus(nextStock) }
+          : item,
       ),
     );
     if (batchId) {
@@ -716,7 +727,11 @@ function StockWriteOffForm({
       id: `${isReturn ? 'RET' : 'ADJ'}-${Date.now().toString().slice(-6)}`,
       date: new Date().toISOString(),
       product: product.product,
-      kind: isReturn ? 'Return' : reason.toLowerCase().includes('expire') ? 'Damaged' : 'Adjustment',
+      kind: isReturn
+        ? 'Return'
+        : reason.toLowerCase().includes('expire')
+          ? 'Damaged'
+          : 'Adjustment',
       change,
       reference: reference.trim() || (isReturn ? 'Supplier return' : 'Manual adjustment'),
       staff,
