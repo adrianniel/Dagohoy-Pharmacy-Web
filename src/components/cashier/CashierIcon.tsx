@@ -15,7 +15,9 @@ interface CashierIconProps {
     | 'map'
     | 'store'
     | 'pin'
-    | 'chevron';
+    | 'chevron'
+    | 'return'
+    | 'adjustments';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -183,6 +185,20 @@ export function CashierIcon({ name }: CashierIconProps) {
     register: (
       <>
         <path d="M5 10h22v17H5zM8 10V5h16v5M10 15h12v4H10zM12 23h2m4 0h2" />
+      </>
+    ),
+    return: (
+      <>
+        <path d="M4 22h18M4 22l4-5h9l3 5" />
+        <path d="m12 9 4 4-4 4" />
+        <path d="M22 16h6M22 16l3-3M22 16l3 3" />
+      </>
+    ),
+    adjustments: (
+      <>
+        <path d="M6 26 26 6" />
+        <path d="M11 6H6v5M21 26h5v-5" />
+        <path d="M12 20h8M16 16v8" />
       </>
     ),
     pin: (

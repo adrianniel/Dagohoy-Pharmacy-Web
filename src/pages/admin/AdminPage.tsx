@@ -151,97 +151,99 @@ export function AdminPage({ section }: { section: AdminSection }) {
             threshold={restockThreshold}
             restockCount={restockProducts.length}
             onOrderRestock={downloadRestockCsv}
-          />
-          <section className="cashier-panel cashier-list-panel">
-            <div className="cashier-list-toolbar">
-              <label className="cashier-search-field cashier-search-field--wide">
-                <CashierIcon name="search" />
-                <input
-                  ref={searchRef}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search product, generic, brand, or barcode"
-                />
-              </label>
-              <button
-                className="cashier-primary-action"
-                type="button"
-                onClick={() => {
-                  setEditing(null);
-                  setFormOpen(true);
-                }}
-              >
-                Add product <span>＋</span>
-              </button>
-              {products.length > 0 && (
+            onStockChanged={() => setProducts(getInventory())}
+          >
+            <section className="cashier-panel cashier-list-panel">
+              <div className="cashier-list-toolbar">
+                <label className="cashier-search-field cashier-search-field--wide">
+                  <CashierIcon name="search" />
+                  <input
+                    ref={searchRef}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search product, generic, brand, or barcode"
+                  />
+                </label>
                 <button
-                  className="cashier-view-button"
+                  className="cashier-primary-action"
                   type="button"
-                  disabled={isCategorizing}
-                  onClick={() => void categorizeProducts()}
+                  onClick={() => {
+                    setEditing(null);
+                    setFormOpen(true);
+                  }}
                 >
-                  {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
+                  Add product <span>＋</span>
                 </button>
-              )}
-            </div>
-            <div
-              className="cashier-table-wrap"
-              role="region"
-              aria-label="Products table"
-              tabIndex={0}
-            >
-              <table className="cashier-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Barcode</th>
-                    <th>Category / brand</th>
-                    <th>Unit price</th>
-                    <th>On hand</th>
-                    <th>Status</th>
-                    <th>Manage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((product) => (
-                    <tr key={product.barcode}>
-                      <td>
-                        <strong>{product.product}</strong>
-                      </td>
-                      <td className="cashier-mono">{product.barcode}</td>
-                      <td className="product-category-cell">
-                        <strong>{product.category ?? 'Uncategorized'}</strong>
-                        <small>{product.detail}</small>
-                      </td>
-                      <td>
-                        <strong>{product.price}</strong>
-                      </td>
-                      <td>{product.stock}</td>
-                      <td>
-                        <StatusBadge value={product.status} />
-                      </td>
-                      <td>
-                        <button
-                          className="cashier-view-button"
-                          type="button"
-                          onClick={() => {
-                            setEditing(product);
-                            setFormOpen(true);
-                          }}
-                        >
-                          Edit / stock
-                        </button>
-                      </td>
+                {products.length > 0 && (
+                  <button
+                    className="cashier-view-button"
+                    type="button"
+                    disabled={isCategorizing}
+                    onClick={() => void categorizeProducts()}
+                  >
+                    {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
+                  </button>
+                )}
+              </div>
+              <div
+                className="cashier-table-wrap"
+                role="region"
+                aria-label="Products table"
+                tabIndex={0}
+              >
+                <table className="cashier-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Barcode</th>
+                      <th>Category / brand</th>
+                      <th>Unit price</th>
+                      <th>On hand</th>
+                      <th>Status</th>
+                      <th>Manage</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="cashier-table-footer">
-              <span>Showing {filteredProducts.length} sample products</span>
-              <span>Inventory is demo data until connected to the pharmacy API.</span>
-            </div>
-          </section>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product) => (
+                      <tr key={product.barcode}>
+                        <td>
+                          <strong>{product.product}</strong>
+                        </td>
+                        <td className="cashier-mono">{product.barcode}</td>
+                        <td className="product-category-cell">
+                          <strong>{product.category ?? 'Uncategorized'}</strong>
+                          <small>{product.detail}</small>
+                        </td>
+                        <td>
+                          <strong>{product.price}</strong>
+                        </td>
+                        <td>{product.stock}</td>
+                        <td>
+                          <StatusBadge value={product.status} />
+                        </td>
+                        <td>
+                          <button
+                            className="cashier-view-button"
+                            type="button"
+                            onClick={() => {
+                              setEditing(product);
+                              setFormOpen(true);
+                            }}
+                          >
+                            Edit / stock
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="cashier-table-footer">
+                <span>Showing {filteredProducts.length} sample products</span>
+                <span>Inventory is demo data until connected to the pharmacy API.</span>
+              </div>
+            </section>
+          </StockControlCenter>
           {formOpen && (
             <InventoryForm
               product={editing}
