@@ -1,4 +1,4 @@
-import { getPreviousShift, recordShift } from './shiftHistory';
+import { getPreviousShift, recordShift, type ShiftDetails, type ShiftRecord } from './shiftHistory';
 
 /*
  * The register shift: who is on duty, the opening cash float and cash movements.
@@ -143,7 +143,82 @@ export function startShift(input: {
   return session;
 }
 
-/** Counts the drawer and closes the shift. The note explains a short or over count. */
+type StoredSale = {
+  receipt: string;
+  date: string;
+  payment: string;
+  total?: number;
+  subtotal?: number;
+  discount?: number;
+  items?: number;
+  status?: string;
+  creditBalance?: number;
+  paymentStatus?: string;
+  lines?: Array<{ product: string; quantity: number; unitPrice: number }>;
+};
+
+/** Collects every sale, item and cash movement of a shift for its duty report. */
+function collectShiftDetails(opened: Date, closedAt: Date): ShiftDetails {
+  const sales = readJson<StoredSale[]>(SALES_KEY, []).filter((sale) => {
+    const date = new Date(sale.date);
+    return date >= opened && date <= closedAt;
+  });
+  const kept = sales.filter((sale) => sale.status !== 'Voided');
+  const charged = kept.filter((sale) => sale.payment !== 'No charge');
+  const voided = sales.filter((sale) => sale.status === 'Voided');
+  const noCharge = kept.filter((sale) => sale.payment === 'No charge');
+
+  const items = new Map<string, { product: string; quantity: number; amount: number }>();
+  for (const sale of charged) {
+    for (const line of sale.lines ?? []) {
+      const row = items.get(line.product) ?? { product: line.product, quantity: 0, amount: 0 };
+      row.quantity += line.quantity;
+      row.amount += line.quantity * line.unitPrice;
+      items.set(line.product, row);
+    }
+  }
+  const paymentTotals = charged.reduce<Record<string, number>>((totals, sale) => {
+    totals[sale.payment] = (totals[sale.payment] ?? 0) + Number(sale.total ?? 0);
+    return totals;
+  }, {});
+
+  return {
+    sales: sales.map((sale) => ({
+      receipt: sale.receipt,
+      date: sale.date,
+      payment: sale.payment,
+      items: Number(sale.items ?? 0),
+      total: Number(sale.total ?? 0),
+      discount: Number(sale.discount ?? 0),
+      status: sale.status ?? 'Completed',
+    })),
+    cashEvents: getCashEvents().map(({ type, amount, reason, date }) => ({
+      type,
+      amount,
+      reason,
+      date,
+    })),
+    items: [...items.values()].sort((a, b) => b.amount - a.amount),
+    paymentTotals,
+    grossSales: charged.reduce((sum, sale) => sum + Number(sale.total ?? 0), 0),
+    discounts: charged.reduce((sum, sale) => sum + Number(sale.discount ?? 0), 0),
+    newUtang: charged
+      .filter((sale) => sale.payment === 'Credit')
+      .reduce((sum, sale) => sum + Number(sale.creditBalance ?? 0), 0),
+    pendingGcash: charged.filter(
+      (sale) => sale.payment === 'GCash' && sale.paymentStatus !== 'Paid',
+    ).length,
+    voidedCount: voided.length,
+    voidedTotal: voided.reduce((sum, sale) => sum + Number(sale.total ?? 0), 0),
+    noChargeCount: noCharge.length,
+    noChargeValue: noCharge.reduce((sum, sale) => sum + Number(sale.subtotal ?? 0), 0),
+  };
+}
+
+/**
+ * Counts the drawer and closes the shift. The note explains a short or over count.
+ * Returns the saved shift record, so the duty report can be shown right away.
+ */
 export function endShift(countedCash: number, varianceNote?: string) {
   const session = getSession();
   if (!session) return;
@@ -157,7 +232,7 @@ export function endShift(countedCash: number, varianceNote?: string) {
     counts[sale.payment] = (counts[sale.payment] ?? 0) + 1;
     return counts;
   }, {});
-  recordShift({
+  const record: ShiftRecord = {
     id: crypto.randomUUID(),
     cashierName: session.cashierName,
     onDutyNames: session.onDutyNames ?? [session.cashierName],
@@ -174,9 +249,11 @@ export function endShift(countedCash: number, varianceNote?: string) {
     expectedCash: totals.expected,
     countedCash,
     varianceNote: varianceNote?.trim() || undefined,
-  });
+    details: collectShiftDetails(new Date(session.openedAt), closedAt),
+  };
+  recordShift(record);
   localStorage.removeItem(REGISTER_SESSION_KEY);
   localStorage.removeItem(CASH_EVENTS_KEY);
   notifyStoreStatusChange();
-  return { ...totals, countedCash, variance: countedCash - totals.expected };
+  return { ...totals, countedCash, variance: countedCash - totals.expected, record };
 }

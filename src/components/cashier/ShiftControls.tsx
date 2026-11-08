@@ -9,6 +9,8 @@ import {
   STORE_STATUS_CHANGE_EVENT,
 } from '../../data/registerSession';
 import { getActiveRoster, loadRoster } from '../../data/staffRoster';
+import type { ShiftRecord } from '../../data/shiftHistory';
+import { ShiftReportModal } from './ShiftReport';
 import { useToast } from '../toast';
 
 const money = (amount: number) =>
@@ -264,6 +266,13 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
 }
 
 export function EndShiftModal({ onClose }: { onClose: () => void }) {
+  const [report, setReport] = useState<ShiftRecord | null>(null);
+
+  // After closing, the same popup turns into the duty report preview.
+  if (report) {
+    return <ShiftReportModal shift={report} heading="Shift closed" onClose={onClose} />;
+  }
+
   return createPortal(
     <div className="pos-modal-backdrop">
       <div className="pos-payment-modal cashier-shift-modal close-shift-modal">
@@ -272,13 +281,15 @@ export function EndShiftModal({ onClose }: { onClose: () => void }) {
         </button>
         <p className="eyebrow">Cash control</p>
         <h2>Close shift</h2>
-        <CloseShiftForm onDone={onClose} onCancel={onClose} />
+        <CloseShiftForm
+          onDone={(shift) => (shift ? setReport(shift) : onClose())}
+          onCancel={onClose}
+        />
       </div>
     </div>,
     getModalHost(),
   );
 }
-
 const shiftLength = (openedAt: string) => {
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(openedAt).getTime()) / 60000));
   const hours = Math.floor(minutes / 60);
@@ -293,8 +304,8 @@ export function CloseShiftForm({
   onDone,
   onCancel,
 }: {
-  /** Called after the shift is closed. */
-  onDone: () => void;
+  /** Called after the shift is closed, with the saved shift for its duty report. */
+  onDone: (shift?: ShiftRecord) => void;
   /** Optional "Keep shift open" button. */
   onCancel?: () => void;
 }) {
@@ -342,7 +353,7 @@ export function CloseShiftForm({
           : 'The shift was already closed.',
         'success',
       );
-      onDone();
+      onDone(result?.record);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not close the shift.');
     }

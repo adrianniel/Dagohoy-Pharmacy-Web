@@ -59,7 +59,7 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
       { label: 'Expenses', path: '/admin/expenses', icon: 'expenses' },
       { label: 'Credit accounts', path: '/admin/credits', icon: 'credit' },
       { label: 'Reports', path: '/admin/reports', icon: 'reports' },
-      { label: 'Shift report', path: '/cashier/shift-report', icon: 'reports' },
+      { label: 'Duty reports', path: '/cashier/shift-report', icon: 'transactions' },
       { label: 'Staff', path: '/admin/staff', icon: 'staff' },
     ],
   },

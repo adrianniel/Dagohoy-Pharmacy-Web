@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { CloseShiftForm } from '../../components/cashier/ShiftControls';
+import { ShiftReportModal } from '../../components/cashier/ShiftReport';
+import type { ShiftRecord } from '../../data/shiftHistory';
 import { useToast } from '../../components/toast';
 import {
   addCashEvent,
@@ -27,6 +29,8 @@ export function RegisterPage() {
   const session = getSession();
   const [, refresh] = useReducer((count: number) => count + 1, 0);
   const [active, setActive] = useState<DrawerTask>('status');
+  /** The shift just closed here, shown as its duty report. */
+  const [report, setReport] = useState<ShiftRecord | null>(null);
   const { showToast } = useToast();
   const previousShift = getPreviousShift();
   const events = getCashEvents();
@@ -195,8 +199,18 @@ export function RegisterPage() {
             </p>
           ))}
 
-        {active === 'close' && <CloseShiftForm onDone={() => setActive('status')} />}
+        {active === 'close' && (
+          <CloseShiftForm
+            onDone={(shift) => {
+              setActive('status');
+              if (shift) setReport(shift);
+            }}
+          />
+        )}
       </ControlPanel>
+      {report && (
+        <ShiftReportModal shift={report} heading="Shift closed" onClose={() => setReport(null)} />
+      )}
     </div>
   );
 }

@@ -2295,3 +2295,431 @@
 .control-panel .close-shift {
   max-width: 34rem;
 }
+
+/* ------------------------------------------------------------------
+   Shift duty report: the popup, the A4-style page, and its PDF print.
+   ------------------------------------------------------------------ */
+.cashier-shell .pos-payment-modal.shift-report-modal {
+  width: min(56rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background: #e9ecdf;
+}
+
+.shift-report-modal__bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-right: 2.6rem;
+}
+
+.shift-report-modal__bar h2 {
+  margin: 0;
+}
+
+.shift-report-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.shift-report-modal__pdf,
+.shift-report-modal__close {
+  min-height: 2.8rem;
+  padding: 0 1.2rem;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.shift-report-modal__pdf {
+  border: 0;
+  background: #176246;
+  color: #fffdf1;
+}
+
+.shift-report-modal__pdf:hover {
+  background: #11513a;
+}
+
+.shift-report-modal__close {
+  border: 1px solid #c9cfbe;
+  background: #fff;
+  color: #13322a;
+}
+
+.shift-report-modal__pdf:focus-visible,
+.shift-report-modal__close:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.shift-report-modal__hint {
+  margin: 0.4rem 0 0.9rem;
+  font-size: 0.8rem;
+  color: #5d7268;
+}
+
+.shift-report-modal__paper {
+  display: flex;
+  justify-content: center;
+}
+
+/* The report page */
+.shift-doc {
+  width: 100%;
+  max-width: 48rem;
+  padding: 2rem 2.2rem 1.6rem;
+  background: #fff;
+  color: #1b2a24;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 10px 26px rgba(19, 50, 42, 0.12);
+}
+
+.shift-doc__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 2px solid #176246;
+}
+
+.shift-doc__head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: #4f6258;
+}
+
+.shift-doc__head > div:first-child strong {
+  font-size: 1.15rem;
+  color: #13322a;
+}
+
+.shift-doc__title {
+  text-align: right;
+}
+
+.shift-doc__title h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #176246;
+}
+
+.shift-doc__title span {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #4f6258;
+}
+
+.shift-doc__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.shift-doc__facts dt {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a7b71;
+}
+
+.shift-doc__facts dd {
+  margin: 0.1rem 0 0;
+  font-weight: 700;
+  color: #13322a;
+}
+
+.shift-doc__badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.shift-doc__badge.is-balanced {
+  background: #e5f0e8;
+  color: #176246;
+}
+
+.shift-doc__badge.is-short {
+  background: #fbebe8;
+  color: #a2372c;
+}
+
+.shift-doc__badge.is-over {
+  background: #fbf2db;
+  color: #7f5609;
+}
+
+.shift-doc__section {
+  margin-top: 1.2rem;
+  break-inside: avoid;
+}
+
+.shift-doc__section h3 {
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #dfe4d6;
+  font-size: 0.95rem;
+  color: #13322a;
+}
+
+.shift-doc__sum {
+  width: 100%;
+  max-width: 28rem;
+  border-collapse: collapse;
+}
+
+.shift-doc__sum td {
+  padding: 0.2rem 0;
+}
+
+.shift-doc__sum td:last-child {
+  text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shift-doc__sum .is-total td {
+  padding-top: 0.4rem;
+  border-top: 1px solid #c9cfbe;
+  font-weight: 800;
+}
+
+.shift-doc__sum .is-short td:last-child {
+  color: #a2372c;
+}
+
+.shift-doc__sum .is-over td:last-child {
+  color: #7f5609;
+}
+
+.shift-doc__sum .is-note td {
+  padding: 0.3rem 0.5rem;
+  background: #f6f7f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  color: #4f6258;
+}
+
+.shift-doc__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
+.shift-doc__stats div {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #e1e5d8;
+  border-radius: 8px;
+}
+
+.shift-doc__stats span {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6a7b71;
+}
+
+.shift-doc__stats strong {
+  font-size: 1.05rem;
+  color: #13322a;
+}
+
+.shift-doc__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shift-doc__table th {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid #c9cfbe;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  color: #4f6258;
+}
+
+.shift-doc__table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid #eef0e6;
+}
+
+.shift-doc__table th:last-child,
+.shift-doc__table td:last-child {
+  text-align: right;
+}
+
+.shift-doc__table tr.is-void td {
+  color: #a2372c;
+  text-decoration: line-through;
+}
+
+.shift-doc__table tr.is-void td:last-child {
+  text-decoration: none;
+}
+
+.shift-doc__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: #4f6258;
+}
+
+.shift-doc__flags .is-warn b {
+  color: #a2372c;
+}
+
+.shift-doc__missing {
+  margin: 1.2rem 0 0;
+  padding: 0.8rem 1rem;
+  border: 1px dashed #cfd6c4;
+  border-radius: 8px;
+  color: #5d7268;
+}
+
+.shift-doc__sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2.4rem;
+  break-inside: avoid;
+}
+
+.shift-doc__sign div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: #4f6258;
+}
+
+.shift-doc__sign span {
+  height: 2rem;
+  border-bottom: 1px solid #1b2a24;
+}
+
+.shift-doc__printed {
+  margin: 1.2rem 0 0;
+  font-size: 0.7rem;
+  text-align: center;
+  color: #8a978f;
+}
+
+@media (max-width: 700px) {
+  .shift-doc {
+    padding: 1.2rem 1rem;
+  }
+
+  .shift-doc__head {
+    flex-direction: column;
+  }
+
+  .shift-doc__title {
+    text-align: left;
+  }
+
+  .shift-doc__facts,
+  .shift-doc__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The print copy only exists while printing; keep it off screen. */
+@media screen {
+  #shift-print-root {
+    display: none;
+  }
+}
+
+/* Print only the report, on A4 pages, when Save as PDF is used. */
+@page shift-report {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body.print-shift-report > *:not(#shift-print-root) {
+    display: none !important;
+  }
+
+  body.print-shift-report #shift-print-root,
+  body.print-shift-report #shift-print-root * {
+    visibility: visible !important;
+  }
+
+  body.print-shift-report #shift-print-root {
+    page: shift-report;
+  }
+
+  body.print-shift-report .shift-doc {
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Duty reports list (owner view of every closed shift). */
+.duty-reports__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.duty-reports__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 12rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5d7268;
+}
+
+.duty-reports__filters select {
+  min-height: 2.6rem;
+  padding: 0 0.7rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #13322a;
+}
+
+.duty-reports__note {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.76rem;
+  color: #6a7b71;
+}
