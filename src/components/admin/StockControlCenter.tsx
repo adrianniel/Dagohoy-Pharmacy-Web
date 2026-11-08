@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import type { InventoryProduct } from '../../data/inventoryStore';
@@ -16,7 +16,7 @@ import { useToast } from '../toast';
 import { initialBatches } from '../../pages/admin/OperationsPage';
 
 type PanelKey =
-  'receive' | 'health' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments' | 'find';
+  'products' | 'receive' | 'health' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments';
 
 type StockControlCenterProps = {
   products: InventoryProduct[];
@@ -26,7 +26,7 @@ type StockControlCenterProps = {
   onOrderRestock: () => void;
   /** Called after a return or adjustment changes stock, so the product list reloads. */
   onStockChanged?: () => void;
-  /** The product list, always shown below the shortcut bar; results render at the bottom. */
+  /** The product list: shown inside the card when the Product list tab is open. */
   children?: ReactNode;
 };
 
@@ -48,22 +48,14 @@ export function StockControlCenter({
   onStockChanged,
   children,
 }: StockControlCenterProps) {
-  const [active, setActive] = useState<PanelKey | null>(null);
-  const [findQuery, setFindQuery] = useState('');
-  /** Bumped after a return or adjustment so the preview lists reload. */
+  const [active, setActive] = useState<PanelKey>('products');
+  /** Bumped after a return or adjustment so the counts and lists reload. */
   const [revision, setRevision] = useState(0);
-  const panelRef = useRef<HTMLElement>(null);
 
   const handleStockSaved = () => {
     setRevision((count) => count + 1);
     onStockChanged?.();
   };
-
-  // Results live at the bottom of the page, so bring them into view when a shortcut opens.
-  useEffect(() => {
-    if (active) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [active]);
-
   const healthy = products.filter((product) => product.stock >= threshold).length;
   const low = products.filter((product) => product.stock > 0 && product.stock < threshold).length;
   const out = products.filter((product) => product.stock <= 0).length;
@@ -71,8 +63,8 @@ export function StockControlCenter({
   const share = (count: number) => `${Math.round((count / total) * 100)}%`;
   const restockProducts = products.filter((product) => product.stock < threshold);
 
+  // Read on every change so each tab can show its live count, not only the open one.
   const data = useMemo(() => {
-    if (!active) return null;
     const batches: InventoryBatch[] = loadBatches(initialBatches);
     const orders = loadPurchaseOrders();
     const movements = loadMovements();
@@ -110,541 +102,481 @@ export function StockControlCenter({
       returnsThisShift,
       adjustmentsToday,
     };
-  }, [active, revision]);
-
-  const findResults = useMemo(() => {
-    const needle = findQuery.trim().toLowerCase();
-    const matches = products.filter((product) =>
-      `${product.product} ${product.detail} ${product.barcode} ${product.category ?? ''}`
-        .toLowerCase()
-        .includes(needle),
-    );
-    return matches.slice(0, 8);
-  }, [findQuery, products]);
-
-  const toggle = (key: PanelKey) => setActive((current) => (current === key ? null : key));
+  }, [revision, products]);
 
   const tiles: Array<{
     key: PanelKey;
     icon: Parameters<typeof CashierIcon>[0]['name'];
     title: string;
+    count: number;
     hint: string;
-    disabled?: boolean;
+    /** Highlight the count when it is above zero: something needs doing. */
+    alert?: boolean;
+    about: string;
   }> = [
     {
-      key: 'receive',
-      icon: 'purchases',
-      title: 'Receive stock',
-      hint:
-        data?.openOrders.length && active === 'receive'
-          ? `${data.openOrders.length} open order(s)`
-          : 'Deliveries waiting to be received',
+      key: 'products',
+      icon: 'products',
+      title: 'Product list',
+      count: products.length,
+      hint: 'Search, add and edit',
+      about: 'Every product on the shelf. Search, add a product, or edit its price and stock.',
     },
     {
       key: 'health',
       icon: 'reports',
       title: 'Stock health',
-      hint: low + out > 0 ? `${low + out} need attention` : 'All above the reorder point',
+      count: low + out,
+      hint: low + out > 0 ? 'Need attention' : 'All healthy',
+      alert: low + out > 0,
+      about: 'How many products are healthy, low, or already out.',
+    },
+    {
+      key: 'receive',
+      icon: 'purchases',
+      title: 'Receive stock',
+      count: data.openOrders.length,
+      hint: 'Open deliveries',
+      about: 'Supplier orders that are still waiting to be received.',
     },
     {
       key: 'expiry',
       icon: 'batches',
       title: 'Expiry check',
-      hint: active === 'expiry' ? `${data?.soonExpiring.length ?? 0} in 30 days` : 'Next 30 days',
+      count: data.soonExpiring.length,
+      hint: 'Expire in 30 days',
+      alert: data.soonExpiring.length + data.expired.length > 0,
+      about: 'Batches that expire within 30 days, so they can be sold first or returned.',
     },
     {
       key: 'batches',
       icon: 'inventory',
       title: 'Stock batches',
-      hint:
-        active === 'batches'
-          ? `${data?.batches.length ?? 0} lots tracked`
-          : 'Lot numbers per batch',
+      count: data.batches.length,
+      hint: 'Lots tracked',
+      about: 'Every lot with its number, expiry date and units left.',
     },
     {
       key: 'order',
       icon: 'suppliers',
       title: 'Order for restock',
-      hint: restockCount > 0 ? `${restockCount} to reorder` : 'Nothing to reorder yet',
+      count: restockCount,
+      hint: 'Below reorder point',
+      alert: restockCount > 0,
+      about: 'Products under the reorder point, with a suggested order quantity.',
     },
     {
       key: 'return',
       icon: 'return',
       title: 'Return stocks',
-      hint: data?.returnsThisShift.length
-        ? `${data.returnsThisShift.length} to supplier this shift`
-        : 'Expired or rejected items',
+      count: data.returnsThisShift.length,
+      hint: 'Returned this shift',
+      about: 'Send expired, damaged or wrong items back to the supplier.',
     },
     {
       key: 'adjustments',
       icon: 'adjustments',
       title: 'Adjustments',
-      hint: data?.adjustmentsToday.length
-        ? `${data.adjustmentsToday.length} corrected today`
-        : 'Damaged or count errors',
-    },
-    {
-      key: 'find',
-      icon: 'products',
-      title: 'Find a product',
-      hint: 'Search right here',
+      count: data.adjustmentsToday.length,
+      hint: 'Corrected today',
+      about: 'Write off broken packs, or fix the count after a stock take.',
     },
   ];
-
   const activeTile = tiles.find((tile) => tile.key === active);
 
   return (
-    <>
-      <section className="stock-index" aria-label="Stock control center">
-        <div className="stock-index__head">
-          <span className="stock-index__pin">
-            <CashierIcon name="pin" />
-            Pinned
-          </span>
-          <h3>Stock control center</h3>
-          <p>The everyday stock shortcuts, in one place.</p>
-          {restockCount > 0 && (
-            <span className="stock-index__count">{restockCount} to restock</span>
-          )}
+    <section className="stock-index" aria-labelledby="stock-index-title">
+      <div className="stock-index__head">
+        <div>
+          <h3 id="stock-index-title">Stock control center</h3>
+          <p>Pick a task. Its tools open in the space below.</p>
         </div>
+        {restockCount > 0 && (
+          <button className="stock-index__count" type="button" onClick={() => setActive('order')}>
+            {restockCount} to restock
+          </button>
+        )}
+      </div>
 
-        <div className="stock-index__grid">
-          {tiles.map((tile) => (
-            <button
-              key={tile.key}
-              className={`stock-index__tile${active === tile.key ? ' is-active' : ''}`}
-              type="button"
-              aria-pressed={active === tile.key}
-              onClick={() => toggle(tile.key)}
-            >
-              <span className="stock-index__tile-top">
-                <span className="stock-index__icon">
-                  <CashierIcon name={tile.icon} />
-                </span>
-                <span className="stock-index__chevron">
-                  <CashierIcon name="chevron" />
-                </span>
+      <div className="stock-index__grid" role="tablist" aria-label="Stock tasks">
+        {tiles.map((tile) => (
+          <button
+            key={tile.key}
+            id={`stock-tab-${tile.key}`}
+            className={`stock-index__tile${active === tile.key ? ' is-active' : ''}${
+              tile.alert ? ' has-alert' : ''
+            }`}
+            type="button"
+            role="tab"
+            aria-selected={active === tile.key}
+            aria-controls="stock-index-panel"
+            onClick={() => setActive(tile.key)}
+          >
+            <span className="stock-index__tile-top">
+              <span className="stock-index__icon">
+                <CashierIcon name={tile.icon} />
               </span>
-              <strong>{tile.title}</strong>
-              <small>{tile.hint}</small>
-            </button>
-          ))}
+              <b className="stock-index__figure">{tile.count}</b>
+            </span>
+            <strong>{tile.title}</strong>
+            <small>{tile.hint}</small>
+          </button>
+        ))}
+      </div>
+
+      <div
+        id="stock-index-panel"
+        className="stock-index__panel"
+        role="tabpanel"
+        aria-labelledby={`stock-tab-${active}`}
+        key={active}
+      >
+        <div className="stock-index__panel-head">
+          <h4>{activeTile?.title}</h4>
+          <p>{activeTile?.about}</p>
         </div>
-      </section>
 
-      {children}
-
-      {active && data && (
-        <section
-          ref={panelRef}
-          className="cashier-panel stock-index__panel stock-index__panel--below"
-          role="region"
-          aria-label="Stock preview"
-        >
-          <div className="stock-index__panel-head">
-            <h3>{activeTile?.title}</h3>
-            <button className="stock-index__back" type="button" onClick={() => setActive(null)}>
-              Back to product list
-            </button>
-          </div>
-          {active === 'health' && (
-            <>
-              <div className="stock-index__health">
-                <div className="stock-index__stat stock-index__stat--ok">
-                  <span>Healthy</span>
-                  <strong>{healthy}</strong>
-                  <div className="stock-index__bar">
-                    <i style={{ width: share(healthy) }} />
-                  </div>
-                </div>
-                <div className="stock-index__stat stock-index__stat--low">
-                  <span>Low stock</span>
-                  <strong>{low}</strong>
-                  <div className="stock-index__bar">
-                    <i style={{ width: share(low) }} />
-                  </div>
-                </div>
-                <div className="stock-index__stat stock-index__stat--out">
-                  <span>Out of stock</span>
-                  <strong>{out}</strong>
-                  <div className="stock-index__bar">
-                    <i style={{ width: share(out) }} />
-                  </div>
+        {active === 'products' && <div className="stock-index__products">{children}</div>}
+        {active === 'health' && (
+          <>
+            <div className="stock-index__health">
+              <div className="stock-index__stat stock-index__stat--ok">
+                <span>Healthy</span>
+                <strong>{healthy}</strong>
+                <div className="stock-index__bar">
+                  <i style={{ width: share(healthy) }} />
                 </div>
               </div>
-              <p className="stock-index__note">
-                The reorder point is {threshold} units. Change it in the pharmacy threshold setting.
+              <div className="stock-index__stat stock-index__stat--low">
+                <span>Low stock</span>
+                <strong>{low}</strong>
+                <div className="stock-index__bar">
+                  <i style={{ width: share(low) }} />
+                </div>
+              </div>
+              <div className="stock-index__stat stock-index__stat--out">
+                <span>Out of stock</span>
+                <strong>{out}</strong>
+                <div className="stock-index__bar">
+                  <i style={{ width: share(out) }} />
+                </div>
+              </div>
+            </div>
+            <p className="stock-index__note">
+              The reorder point is {threshold} units. Change it in the pharmacy threshold setting.
+            </p>
+          </>
+        )}
+
+        {active === 'receive' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Open orders <b>{data.openOrders.length}</b>
+              </span>
+              <span>
+                Received today <b>{data.receivedToday.length}</b>
+              </span>
+              <span>
+                Received lots <b>{data.batches.filter((batch) => batch.stock > 0).length}</b>
+              </span>
+            </div>
+            {data.openOrders.length === 0 ? (
+              <p className="stock-index__empty">
+                No open purchase orders. Create one from Purchasing &amp; Receiving when a supplier
+                delivery is confirmed.
               </p>
-            </>
-          )}
-
-          {active === 'receive' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Open orders <b>{data.openOrders.length}</b>
-                </span>
-                <span>
-                  Received today <b>{data.receivedToday.length}</b>
-                </span>
-                <span>
-                  Received lots <b>{data.batches.filter((batch) => batch.stock > 0).length}</b>
-                </span>
-              </div>
-              {data.openOrders.length === 0 ? (
-                <p className="stock-index__empty">
-                  No open purchase orders. Create one from Purchasing &amp; Receiving when a
-                  supplier delivery is confirmed.
-                </p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Order</th>
-                      <th>Supplier</th>
-                      <th>Product</th>
-                      <th>Qty</th>
-                      <th>Status</th>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Supplier</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.openOrders.slice(0, 6).map((order) => (
+                    <tr key={order.id}>
+                      <td className="stock-index__mono">{order.id}</td>
+                      <td>{order.supplier}</td>
+                      <td>{order.product}</td>
+                      <td>{order.quantity}</td>
+                      <td>{order.status}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.openOrders.slice(0, 6).map((order) => (
-                      <tr key={order.id}>
-                        <td className="stock-index__mono">{order.id}</td>
-                        <td>{order.supplier}</td>
-                        <td>{order.product}</td>
-                        <td>{order.quantity}</td>
-                        <td>{order.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
 
-          {active === 'expiry' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Next 30 days <b>{data.soonExpiring.length}</b>
-                </span>
-                <span>
-                  Next 90 days{' '}
-                  <b>
-                    {
-                      data.batches.filter((batch) => {
-                        const days = daysUntil(batch.expiry);
-                        return days >= 0 && days <= 90;
-                      }).length
-                    }
-                  </b>
-                </span>
-                <span>
-                  Expired <b>{data.expired.length}</b>
-                </span>
-              </div>
-              {data.soonExpiring.length === 0 ? (
-                <p className="stock-index__empty">No batches expiring in the next 30 days.</p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Lot</th>
-                      <th>Expiry</th>
-                      <th>Days left</th>
-                      <th>Stock</th>
+        {active === 'expiry' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Next 30 days <b>{data.soonExpiring.length}</b>
+              </span>
+              <span>
+                Next 90 days{' '}
+                <b>
+                  {
+                    data.batches.filter((batch) => {
+                      const days = daysUntil(batch.expiry);
+                      return days >= 0 && days <= 90;
+                    }).length
+                  }
+                </b>
+              </span>
+              <span>
+                Expired <b>{data.expired.length}</b>
+              </span>
+            </div>
+            {data.soonExpiring.length === 0 ? (
+              <p className="stock-index__empty">No batches expiring in the next 30 days.</p>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Lot</th>
+                    <th>Expiry</th>
+                    <th>Days left</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.soonExpiring.map((batch) => (
+                    <tr key={batch.id}>
+                      <td>
+                        <strong>{batch.product}</strong>
+                      </td>
+                      <td className="stock-index__mono">{batch.lot}</td>
+                      <td>{shortDate(batch.expiry)}</td>
+                      <td>{daysUntil(batch.expiry)}</td>
+                      <td>{batch.stock}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.soonExpiring.map((batch) => (
-                      <tr key={batch.id}>
-                        <td>
-                          <strong>{batch.product}</strong>
-                        </td>
-                        <td className="stock-index__mono">{batch.lot}</td>
-                        <td>{shortDate(batch.expiry)}</td>
-                        <td>{daysUntil(batch.expiry)}</td>
-                        <td>{batch.stock}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
 
-          {active === 'batches' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Lots tracked <b>{data.batches.length}</b>
-                </span>
-                <span>
-                  Units in lots <b>{data.batches.reduce((sum, batch) => sum + batch.stock, 0)}</b>
-                </span>
-              </div>
-              {data.batches.length === 0 ? (
-                <p className="stock-index__empty">No batches recorded yet.</p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Batch</th>
-                      <th>Product</th>
-                      <th>Lot</th>
-                      <th>Expiry</th>
-                      <th>Stock</th>
+        {active === 'batches' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Lots tracked <b>{data.batches.length}</b>
+              </span>
+              <span>
+                Units in lots <b>{data.batches.reduce((sum, batch) => sum + batch.stock, 0)}</b>
+              </span>
+            </div>
+            {data.batches.length === 0 ? (
+              <p className="stock-index__empty">No batches recorded yet.</p>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Batch</th>
+                    <th>Product</th>
+                    <th>Lot</th>
+                    <th>Expiry</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.batches.slice(0, 8).map((batch) => (
+                    <tr key={batch.id}>
+                      <td className="stock-index__mono">{batch.id}</td>
+                      <td>
+                        <strong>{batch.product}</strong>
+                      </td>
+                      <td className="stock-index__mono">{batch.lot}</td>
+                      <td>{shortDate(batch.expiry)}</td>
+                      <td>{batch.stock}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.batches.slice(0, 8).map((batch) => (
-                      <tr key={batch.id}>
-                        <td className="stock-index__mono">{batch.id}</td>
-                        <td>
-                          <strong>{batch.product}</strong>
-                        </td>
-                        <td className="stock-index__mono">{batch.lot}</td>
-                        <td>{shortDate(batch.expiry)}</td>
-                        <td>{batch.stock}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
 
-          {active === 'order' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Below reorder point <b>{restockProducts.length}</b>
-                </span>
-                <span>
-                  Reorder point <b>{threshold}</b>
-                </span>
-              </div>
-              {restockProducts.length === 0 ? (
-                <p className="stock-index__empty">
-                  Every product is above the {threshold}-unit reorder point.
-                </p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Barcode</th>
-                      <th>On hand</th>
-                      <th>Suggested order</th>
+        {active === 'order' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Below reorder point <b>{restockProducts.length}</b>
+              </span>
+              <span>
+                Reorder point <b>{threshold}</b>
+              </span>
+            </div>
+            {restockProducts.length === 0 ? (
+              <p className="stock-index__empty">
+                Every product is above the {threshold}-unit reorder point.
+              </p>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Barcode</th>
+                    <th>On hand</th>
+                    <th>Suggested order</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {restockProducts.slice(0, 8).map((product) => (
+                    <tr key={product.barcode}>
+                      <td>
+                        <strong>{product.product}</strong>
+                      </td>
+                      <td className="stock-index__mono">{product.barcode}</td>
+                      <td>{product.stock}</td>
+                      <td>{Math.max(threshold * 2 - product.stock, threshold)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {restockProducts.slice(0, 8).map((product) => (
-                      <tr key={product.barcode}>
-                        <td>
-                          <strong>{product.product}</strong>
-                        </td>
-                        <td className="stock-index__mono">{product.barcode}</td>
-                        <td>{product.stock}</td>
-                        <td>{Math.max(threshold * 2 - product.stock, threshold)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <div className="stock-index__actions">
-                <button
-                  className="stock-index__action"
-                  type="button"
-                  onClick={onOrderRestock}
-                  disabled={restockCount === 0}
-                >
-                  Download restock order
-                </button>
-              </div>
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <div className="stock-index__actions">
+              <button
+                className="stock-index__action"
+                type="button"
+                onClick={onOrderRestock}
+                disabled={restockCount === 0}
+              >
+                Download restock order
+              </button>
+            </div>
+          </>
+        )}
 
-          {active === 'return' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Returned this shift <b>{data.returnsThisShift.length}</b>
-                </span>
-                <span>
-                  Expired lots in stock <b>{data.expired.length}</b>
-                </span>
-                <span>
-                  All supplier returns <b>{data.returns.length}</b>
-                </span>
-              </div>
-              <StockWriteOffForm mode="return" batches={data.batches} onSaved={handleStockSaved} />
-              {data.returns.length === 0 ? (
-                <p className="stock-index__empty">
-                  No supplier returns recorded yet. Use the form above when a delivery goes back
-                  because it expired, arrived damaged, or was the wrong item.
-                </p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Product</th>
-                      <th>Qty returned</th>
-                      <th>Reason</th>
-                      <th>Reference</th>
-                      <th>Staff</th>
+        {active === 'return' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Returned this shift <b>{data.returnsThisShift.length}</b>
+              </span>
+              <span>
+                Expired lots in stock <b>{data.expired.length}</b>
+              </span>
+              <span>
+                All supplier returns <b>{data.returns.length}</b>
+              </span>
+            </div>
+            <StockWriteOffForm mode="return" batches={data.batches} onSaved={handleStockSaved} />
+            {data.returns.length === 0 ? (
+              <p className="stock-index__empty">
+                No supplier returns recorded yet. Use the form above when a delivery goes back
+                because it expired, arrived damaged, or was the wrong item.
+              </p>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Qty returned</th>
+                    <th>Reason</th>
+                    <th>Reference</th>
+                    <th>Staff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.returns.slice(0, 8).map((movement) => (
+                    <tr key={movement.id}>
+                      <td className="stock-index__mono">
+                        {new Date(movement.date).toLocaleDateString('en-PH')}
+                      </td>
+                      <td>
+                        <strong>{movement.product}</strong>
+                      </td>
+                      <td>{Math.abs(movement.change)}</td>
+                      <td>{movement.reason}</td>
+                      <td className="stock-index__mono">{movement.reference}</td>
+                      <td>{movement.staff}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.returns.slice(0, 8).map((movement) => (
-                      <tr key={movement.id}>
-                        <td className="stock-index__mono">
-                          {new Date(movement.date).toLocaleDateString('en-PH')}
-                        </td>
-                        <td>
-                          <strong>{movement.product}</strong>
-                        </td>
-                        <td>{Math.abs(movement.change)}</td>
-                        <td>{movement.reason}</td>
-                        <td className="stock-index__mono">{movement.reference}</td>
-                        <td>{movement.staff}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
 
-          {active === 'adjustments' && (
-            <>
-              <div className="stock-index__chips">
-                <span>
-                  Adjusted today <b>{data.adjustmentsToday.length}</b>
-                </span>
-                <span>
-                  Units written off{' '}
-                  <b>
-                    {data.adjustmentsToday.reduce(
-                      (sum, movement) => sum + Math.max(-movement.change, 0),
-                      0,
-                    )}
-                  </b>
-                </span>
-                <span>
-                  All adjustments <b>{data.adjustments.length}</b>
-                </span>
-              </div>
-              <StockWriteOffForm
-                mode="adjustment"
-                batches={data.batches}
-                onSaved={handleStockSaved}
-              />
-              {data.adjustments.length === 0 ? (
-                <p className="stock-index__empty">
-                  No adjustments yet. Record broken packs, expired stock, or a count correction so
-                  the shelf and the records always agree.
-                </p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Product</th>
-                      <th>Change</th>
-                      <th>Reason</th>
-                      <th>Reference</th>
-                      <th>Staff</th>
+        {active === 'adjustments' && (
+          <>
+            <div className="stock-index__chips">
+              <span>
+                Adjusted today <b>{data.adjustmentsToday.length}</b>
+              </span>
+              <span>
+                Units written off{' '}
+                <b>
+                  {data.adjustmentsToday.reduce(
+                    (sum, movement) => sum + Math.max(-movement.change, 0),
+                    0,
+                  )}
+                </b>
+              </span>
+              <span>
+                All adjustments <b>{data.adjustments.length}</b>
+              </span>
+            </div>
+            <StockWriteOffForm
+              mode="adjustment"
+              batches={data.batches}
+              onSaved={handleStockSaved}
+            />
+            {data.adjustments.length === 0 ? (
+              <p className="stock-index__empty">
+                No adjustments yet. Record broken packs, expired stock, or a count correction so the
+                shelf and the records always agree.
+              </p>
+            ) : (
+              <table className="stock-index__table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Change</th>
+                    <th>Reason</th>
+                    <th>Reference</th>
+                    <th>Staff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.adjustments.slice(0, 8).map((movement) => (
+                    <tr key={movement.id}>
+                      <td className="stock-index__mono">
+                        {new Date(movement.date).toLocaleDateString('en-PH')}
+                      </td>
+                      <td>
+                        <strong>{movement.product}</strong>
+                      </td>
+                      <td
+                        className={movement.change > 0 ? 'movement-positive' : 'movement-negative'}
+                      >
+                        {movement.change > 0 ? '+' : ''}
+                        {movement.change}
+                      </td>
+                      <td>{movement.reason}</td>
+                      <td className="stock-index__mono">{movement.reference}</td>
+                      <td>{movement.staff}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.adjustments.slice(0, 8).map((movement) => (
-                      <tr key={movement.id}>
-                        <td className="stock-index__mono">
-                          {new Date(movement.date).toLocaleDateString('en-PH')}
-                        </td>
-                        <td>
-                          <strong>{movement.product}</strong>
-                        </td>
-                        <td
-                          className={
-                            movement.change > 0 ? 'movement-positive' : 'movement-negative'
-                          }
-                        >
-                          {movement.change > 0 ? '+' : ''}
-                          {movement.change}
-                        </td>
-                        <td>{movement.reason}</td>
-                        <td className="stock-index__mono">{movement.reference}</td>
-                        <td>{movement.staff}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
-
-          {active === 'find' && (
-            <>
-              <label className="stock-index__search">
-                <CashierIcon name="search" />
-                <input
-                  value={findQuery}
-                  onChange={(event) => setFindQuery(event.target.value)}
-                  placeholder="Product name, generic, brand, or barcode"
-                  autoFocus
-                />
-              </label>
-              {findResults.length === 0 ? (
-                <p className="stock-index__empty">No product matches “{findQuery}”.</p>
-              ) : (
-                <table className="stock-index__table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Barcode</th>
-                      <th>Price</th>
-                      <th>On hand</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {findResults.map((product) => (
-                      <tr key={product.barcode}>
-                        <td>
-                          <strong>{product.product}</strong>
-                          <small className="stock-index__sub">{product.detail}</small>
-                        </td>
-                        <td className="stock-index__mono">{product.barcode}</td>
-                        <td>{product.price}</td>
-                        <td>{product.stock}</td>
-                        <td>
-                          <span
-                            className={`stock-index__status stock-index__status--${
-                              product.stock <= 0 ? 'out' : product.stock < threshold ? 'low' : 'ok'
-                            }`}
-                          >
-                            {product.stock <= 0
-                              ? 'Out of stock'
-                              : product.stock < threshold
-                                ? 'Low'
-                                : 'In stock'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
-          )}
-        </section>
-      )}
-    </>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 

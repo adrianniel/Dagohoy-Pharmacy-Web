@@ -1,120 +1,103 @@
-/* Stock control center on Products & Stock: one compact pinned bar of shortcuts. */
+/* Stock control center on Products & Stock.
+   A row of task tabs, each with its live count. The open tab turns green and
+   points down at the panel under it, inside the same card. */
 
 .stock-index {
-  position: sticky;
-  z-index: 9;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px 18px 16px;
+  gap: 16px;
+  padding: 20px 22px 22px;
   margin-bottom: 18px;
-  border-radius: 16px;
-  border: 1px solid #cfe1d6;
-  background: linear-gradient(180deg, #f4faf6 0%, #ffffff 78%);
-  box-shadow: 0 10px 24px -18px rgba(23, 98, 70, 0.55);
-  max-height: calc(100dvh - 130px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  border-radius: 18px;
+  border: 1px solid #d8e2d6;
+  background: #fffef9;
+  box-shadow:
+    0 1px 0 #e9ecdd,
+    0 12px 28px rgba(19, 50, 42, 0.06);
 }
 
 .stock-index__head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.stock-index__pin {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px 6px 10px;
-  border-radius: 999px;
-  border: 1px solid #bfd8c6;
-  background: #e8f2ea;
-  color: #176246;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.stock-index__pin .cashier-icon {
-  width: 15px;
-  height: 15px;
+  gap: 12px;
 }
 
 .stock-index__head h3 {
   margin: 0;
-  font-size: 1.18rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  color: #176246;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  letter-spacing: -0.015em;
+  color: #13322a;
 }
 
 .stock-index__head p {
-  margin: 0;
-  flex: 1 1 160px;
-  min-width: 0;
-  font-size: 0.86rem;
-  line-height: 1.4;
-  color: #5d7367;
+  margin: 3px 0 0;
+  font-size: 0.88rem;
+  color: #6a7b71;
 }
 
 .stock-index__count {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 13px;
-  border-radius: 999px;
-  border: 1px solid #bfd8c6;
-  background: #e8f2ea;
-  color: #176246;
-  font-size: 0.8rem;
+  appearance: none;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #ecd49c;
+  background: #fbf2db;
+  color: #7f5609;
+  font: inherit;
+  font-size: 0.82rem;
   font-weight: 800;
   white-space: nowrap;
+  cursor: pointer;
 }
 
+.stock-index__count:hover {
+  background: #f7e8c2;
+}
+
+/* Task tabs */
 .stock-index__grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
+@media (min-width: 1760px) {
+  .stock-index__grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
 .stock-index__tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
-  padding: 10px 12px 11px;
-  min-height: 0;
+  gap: 2px;
+  min-width: 0;
+  padding: 11px 12px 12px;
   appearance: none;
   text-align: left;
   font: inherit;
-  border: 1px solid #cfe1d6;
+  border: 1px solid #e1e3d4;
   border-radius: 12px;
-  background: #f4f0e6;
-  color: inherit;
+  background: #f5f4ec;
+  color: #13322a;
   cursor: pointer;
   transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    border-color 140ms ease,
+    background-color 140ms ease;
 }
 
-.stock-index__tile:hover,
+.stock-index__tile:hover {
+  border-color: #b7cbb8;
+  background: #eff2e7;
+}
+
 .stock-index__tile:focus-visible {
-  border-color: #176246;
-  background: #eaf3ed;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(23, 98, 70, 0.14);
-  outline: none;
-}
-
-.stock-index__tile:active {
-  transform: translateY(0);
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
 }
 
 .stock-index__tile-top {
@@ -123,6 +106,7 @@
   justify-content: space-between;
   gap: 8px;
   width: 100%;
+  margin-bottom: 8px;
 }
 
 .stock-index__icon {
@@ -131,9 +115,9 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: #176246;
-  color: #ffffff;
+  border-radius: 8px;
+  background: #e3ece3;
+  color: #176246;
   flex: none;
 }
 
@@ -142,72 +126,91 @@
   height: 17px;
 }
 
-.stock-index__chevron {
-  display: inline-flex;
-  align-items: center;
-  color: #176246;
-  opacity: 0.75;
+.stock-index__figure {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #13322a;
 }
 
-.stock-index__chevron .cashier-icon {
-  width: 14px;
-  height: 14px;
+.stock-index__tile.has-alert .stock-index__figure {
+  color: #b0561c;
 }
 
 .stock-index__tile strong {
   display: block;
-  margin-top: 2px;
-  font-size: 0.95rem;
-  font-weight: 800;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
   line-height: 1.25;
-  color: #176246;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stock-index__tile small {
   display: block;
-  font-size: 0.78rem;
-  line-height: 1.35;
-  color: #5d7367;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: #6a7b71;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* The preview panel under the tiles: the selected shortcut shows its content right here. */
-
+/* Open tab: solid green with a pointer down into the panel. */
 .stock-index__tile.is-active {
   border-color: #176246;
   background: #176246;
-  box-shadow: 0 10px 22px rgba(23, 98, 70, 0.24);
+  color: #fffdf1;
+}
+
+.stock-index__tile.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  background: #176246;
+  border-radius: 0 0 3px 0;
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .stock-index__tile.is-active .stock-index__icon {
-  background: #ffffff;
-  color: #176246;
+  background: rgba(255, 253, 241, 0.16);
+  color: #fffdf1;
 }
 
-.stock-index__tile.is-active strong,
+.stock-index__tile.is-active .stock-index__figure {
+  color: #fffdf1;
+}
+
+.stock-index__tile.is-active.has-alert .stock-index__figure {
+  color: #ffd98a;
+}
+
 .stock-index__tile.is-active small {
-  color: #ffffff;
+  color: rgba(255, 253, 241, 0.78);
 }
 
-.stock-index__tile.is-active small {
-  opacity: 0.82;
-}
-
+/* Panel: the open task's tools, inside the same card. */
 .stock-index__panel {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-top: 18px;
-  padding: 18px 20px 20px;
-  border: 1px solid #cfe1d6;
-  border-radius: 16px;
-  background: #ffffff;
-  animation: stock-panel-in 180ms ease-out both;
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px solid #e3e6d6;
+  animation: stock-panel-in 160ms ease-out both;
 }
 
 @keyframes stock-panel-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
@@ -215,6 +218,28 @@
   }
 }
 
+.stock-index__panel-head h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.stock-index__panel-head p {
+  margin: 3px 0 0;
+  font-size: 0.86rem;
+  color: #6a7b71;
+}
+
+/* The product list keeps its own toolbar and table but drops its separate card. */
+.stock-index__products > .cashier-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
 .stock-index__panel .stock-index__health {
   padding: 0;
   border: 0;
@@ -526,35 +551,19 @@
   }
 }
 
-@media (max-width: 1280px) {
-  .stock-index__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1024px) {
-  .stock-index {
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .stock-index__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 640px) {
   .stock-index {
     padding: 12px 12px 14px;
   }
 
   .stock-index__panel {
-    padding: 14px 14px 16px;
     overflow-x: auto;
   }
 
-  .stock-index__grid,
+  .stock-index__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .stock-index__health {
     grid-template-columns: 1fr;
   }
