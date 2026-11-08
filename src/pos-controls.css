@@ -19,7 +19,10 @@
 
 /* Heading: green accent bar beside the title, one plain line under it, then a rule. */
 .cashier-pos-page .pos-control-center .cashier-panel__heading {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin: 0 0.1rem;
   padding: 0 0 1.3rem;
   background: none;
@@ -59,6 +62,53 @@
   color: #5f746a;
 }
 
+/* Sound on/off switch, pinned to the top-right corner of the Sale controls heading. */
+.cashier-pos-page .pos-control-center .cashier-panel__heading {
+  position: relative;
+}
+
+.cashier-pos-page .pos-control-center .cashier-panel__heading h3 {
+  padding-right: 7.2rem;
+}
+
+.pos-sound-switch {
+  position: absolute;
+  top: 0.2rem;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.55rem;
+  border: 1px solid #d5dccb;
+  border-radius: 999px;
+  background: #fff;
+  color: #6a7b71;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pos-sound-switch .cashier-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.pos-sound-switch:hover {
+  border-color: #a9bca9;
+}
+
+.pos-sound-switch.is-on {
+  border-color: #b7d3c0;
+  background: #e8f2ea;
+  color: #176246;
+}
+
+.pos-sound-switch:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
 /* Two columns, three rows, every tile the same size. */
 .pos-control-grid {
   display: grid;

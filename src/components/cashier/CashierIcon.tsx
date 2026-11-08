@@ -23,7 +23,9 @@ interface CashierIconProps {
     | 'close'
     | 'minus'
     | 'plus'
-    | 'nocharge';
+    | 'nocharge'
+    | 'sound'
+    | 'mute';
 }
 
 export function CashierIcon({ name }: CashierIconProps) {
@@ -245,6 +247,18 @@ export function CashierIcon({ name }: CashierIconProps) {
     plus: (
       <>
         <path d="M8 16h16M16 8v16" />
+      </>
+    ),
+    sound: (
+      <>
+        <path d="M5 12h5l7-6v20l-7-6H5z" />
+        <path d="M21.5 11.5a6 6 0 0 1 0 9M25 8a11 11 0 0 1 0 16" />
+      </>
+    ),
+    mute: (
+      <>
+        <path d="M5 12h5l7-6v20l-7-6H5z" />
+        <path d="M21 12l7 8M28 12l-7 8" />
       </>
     ),
     nocharge: (

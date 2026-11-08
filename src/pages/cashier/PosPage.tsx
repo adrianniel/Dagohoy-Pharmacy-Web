@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
-import { playSound } from '../../lib/sound';
+import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
@@ -218,6 +218,7 @@ export function CashierPosPage() {
   const [voidReason, setVoidReason] = useState('');
   const [recentSales, setRecentSales] = useState<StoredSale[]>([]);
   const [noChargeReason, setNoChargeReason] = useState('');
+  const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const { showToast } = useToast();
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
@@ -841,6 +842,23 @@ export function CashierPosPage() {
                   : 'Start a transaction to unlock these controls.'}
               </p>
             </div>
+            <button
+              className={`pos-sound-switch${soundOn ? ' is-on' : ''}`}
+              type="button"
+              role="switch"
+              aria-checked={soundOn}
+              title={soundOn ? 'Turn POS sounds off' : 'Turn POS sounds on'}
+              onClick={() => {
+                const next = !soundOn;
+                setSoundEnabled(next);
+                setSoundOn(next);
+                // Play a sample when turning sound on, so the cashier hears it works.
+                if (next) playSound('tap');
+              }}
+            >
+              <CashierIcon name={soundOn ? 'sound' : 'mute'} />
+              <span>Sound {soundOn ? 'on' : 'off'}</span>
+            </button>
           </div>
           <div className="pos-control-grid">
             <button
