@@ -739,16 +739,7 @@ export function CashierPosPage() {
               onClick={removeSelectedItem}
             >
               <span>✕ Delete item</span>
-              <small>{selectedLine ? 'Selected item' : 'Select an item first'}</small>
-            </button>
-            <button
-              className="pos-control-button"
-              type="button"
-              disabled={!transactionActive || !selectedLine}
-              onClick={() => stepSelectedQuantity(1)}
-            >
-              <span>+ Quantity up</span>
-              <small>Add one more</small>
+              <small>{selectedLine ? 'Drop this item' : 'Select an item first'}</small>
             </button>
             <button
               className="pos-control-button"
@@ -756,8 +747,17 @@ export function CashierPosPage() {
               disabled={!transactionActive || !selectedLine}
               onClick={() => stepSelectedQuantity(-1)}
             >
-              <span>− Quantity down</span>
-              <small>Take one away</small>
+              <span>− Quantity</span>
+              <small>One less</small>
+            </button>
+            <button
+              className="pos-control-button"
+              type="button"
+              disabled={!transactionActive || !selectedLine}
+              onClick={() => stepSelectedQuantity(1)}
+            >
+              <span>+ Quantity</span>
+              <small>One more</small>
             </button>
             <button
               className="pos-control-button"
@@ -766,16 +766,16 @@ export function CashierPosPage() {
               onClick={openVoidDialog}
             >
               <span>Void sale</span>
-              <small>Cancel a recent receipt</small>
+              <small>Correct a receipt</small>
             </button>
             <button
-              className="pos-control-button"
+              className="pos-control-button pos-control-button--no-charge"
               type="button"
-              disabled={!transactionActive}
+              disabled={!transactionActive || !cart.length}
               onClick={openNoChargeDialog}
             >
-              <span>No charge</span>
-              <small>Own use, free of charge</small>
+              <span>Don't charge</span>
+              <small>Own use, no payment</small>
             </button>
           </div>
         </aside>
