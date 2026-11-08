@@ -268,46 +268,52 @@ export function StockControlCenter({
   const productByBarcode = new Map(products.map((product) => [product.barcode, product]));
 
   return (
-    <section className="stock-index" aria-labelledby="stock-index-title">
-      <div className="stock-index__head">
-        <div>
-          <h3 id="stock-index-title">Stock control center</h3>
-          <p>Pick a task. Its tools open in the space below.</p>
+    <>
+      <section className="stock-index" aria-labelledby="stock-index-title">
+        <div className="stock-index__head">
+          <div>
+            <h3 id="stock-index-title">Stock control center</h3>
+            <p>Pick a task. Its tools open in the card below.</p>
+          </div>
+          {restockCount > 0 && (
+            <button className="stock-index__count" type="button" onClick={() => setActive('order')}>
+              {restockCount} to restock
+            </button>
+          )}
         </div>
-        {restockCount > 0 && (
-          <button className="stock-index__count" type="button" onClick={() => setActive('order')}>
-            {restockCount} to restock
-          </button>
-        )}
-      </div>
 
-      <div className="stock-index__grid" role="tablist" aria-label="Stock tasks">
-        {tiles.map((tile) => (
-          <button
-            key={tile.key}
-            id={`stock-tab-${tile.key}`}
-            className={`stock-index__tile${active === tile.key ? ' is-active' : ''}${
-              tile.alert ? ' has-alert' : ''
-            }`}
-            type="button"
-            role="tab"
-            aria-selected={active === tile.key}
-            aria-controls="stock-index-panel"
-            onClick={() => setActive(tile.key)}
-          >
-            <span className="stock-index__tile-top">
-              <span className="stock-index__icon">
+        <div className="stock-index__grid" role="tablist" aria-label="Stock tasks">
+          {tiles.map((tile) => (
+            <button
+              key={tile.key}
+              id={`stock-tab-${tile.key}`}
+              className={`stock-index__tile${active === tile.key ? ' is-active' : ''}${
+                tile.alert ? ' has-alert' : ''
+              }`}
+              data-task={tile.key}
+              type="button"
+              role="tab"
+              aria-selected={active === tile.key}
+              aria-controls="stock-index-panel"
+              onClick={() => setActive(tile.key)}
+            >
+              <b
+                className="stock-index__figure"
+                aria-label={`${tile.count} ${tile.hint.toLowerCase()}`}
+              >
+                {tile.count}
+              </b>
+              <span className="stock-index__icon" aria-hidden="true">
                 <CashierIcon name={tile.icon} />
               </span>
-              <b className="stock-index__figure">{tile.count}</b>
-            </span>
-            <strong>{tile.title}</strong>
-            <small>{tile.hint}</small>
-          </button>
-        ))}
-      </div>
+              <strong>{tile.title}</strong>
+              <small>{tile.hint}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
-      <div
+      <section
         id="stock-index-panel"
         className="stock-index__panel"
         role="tabpanel"
@@ -743,8 +749,8 @@ export function StockControlCenter({
             )}
           </>
         )}
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
