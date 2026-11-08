@@ -1185,3 +1185,426 @@
     padding-left: 1.5rem;
   }
 }
+
+/* ------------------------------------------------------------------
+   Collect payment: the order on the left as a receipt, payment on the right.
+   ------------------------------------------------------------------ */
+.cashier-shell .pos-payment-modal.pos-payment-modal--collect {
+  width: min(60rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+.pos-pay {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.1fr);
+  gap: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-pay__order {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pos-pay__order h2 {
+  margin-bottom: 0.9rem;
+}
+
+.pos-pay__lines {
+  flex: 1 1 auto;
+  max-height: 17rem;
+  margin: 0;
+  padding: 0.4rem 0;
+  overflow-y: auto;
+  list-style: none;
+  border-top: 1px dashed #d3d8c6;
+  border-bottom: 1px dashed #d3d8c6;
+}
+
+.pos-pay__lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  font-size: 0.92rem;
+  color: #2b4238;
+}
+
+.pos-pay__lines li b {
+  color: #176246;
+}
+
+.pos-pay__lines li span:last-child {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pos-pay__sums {
+  padding: 0.6rem 0 0.2rem;
+}
+
+.pos-pay__sums div {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  font-size: 0.88rem;
+  color: #5d7268;
+}
+
+.pos-pay__due {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 3px double #c9cfbe;
+}
+
+.pos-pay__due span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #13322a;
+}
+
+.pos-pay__due strong {
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #13322a;
+}
+
+.pos-pay__collect {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.1rem;
+  border-radius: 14px;
+  background: #f4f5ec;
+}
+
+/* Method switch */
+.pos-pay__methods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.3rem;
+  border-radius: 11px;
+  background: #e6e9dc;
+}
+
+.pos-pay__method {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: #4f6258;
+  cursor: pointer;
+}
+
+.pos-pay__method .cashier-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  flex: none;
+}
+
+.pos-pay__method span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pos-pay__method strong {
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+/* The method names say enough; the longer hints only fit on wide screens. */
+.pos-pay__method small {
+  display: none;
+}
+
+.pos-pay__method {
+  justify-content: center;
+}
+
+.pos-pay__method:hover {
+  background: #eef0e6;
+}
+
+.pos-pay__method.is-selected {
+  background: #fff;
+  color: #176246;
+  box-shadow: 0 1px 3px rgba(19, 50, 42, 0.12);
+}
+
+.pos-pay__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pos-pay__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pos-pay__field > span:first-child {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5d7268;
+}
+
+/* Big money box with the peso sign inside. */
+.pos-pay__money {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 1rem;
+  border: 1px solid #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.pos-pay__money:focus-within {
+  border-color: #176246;
+  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.14);
+}
+
+.pos-pay__money i {
+  font-style: normal;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #8a978f;
+}
+
+.cashier-shell .pos-payment-modal .pos-pay__money input,
+.cashier-shell.is-themed .pos-payment-modal .pos-pay__money input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.cashier-shell .pos-payment-modal .pos-pay__money input:focus {
+  outline: none;
+}
+
+.pos-pay__quick {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.pos-pay__quick button {
+  min-height: 2.6rem;
+  padding: 0 0.3rem;
+  border: 1px solid #d5dccb;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2b4238;
+  cursor: pointer;
+}
+
+.pos-pay__quick button:hover {
+  border-color: #9fb6a0;
+}
+
+.pos-pay__quick button.is-picked {
+  border-color: #176246;
+  background: #e8f1e9;
+  color: #176246;
+}
+
+.pos-pay__result {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: #e5f0e8;
+  color: #176246;
+}
+
+.pos-pay__result span {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pos-pay__result strong {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.pos-pay__result.is-credit {
+  background: #fbf2db;
+  color: #7f5609;
+}
+
+.pos-pay__result.is-short {
+  background: #fbebe8;
+  color: #a2372c;
+}
+
+/* GCash */
+.pos-pay__gcash {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #c9d8e8;
+  border-radius: 10px;
+  background: #f1f6fc;
+}
+
+.pos-pay__gcash div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.86rem;
+  color: #2c4a66;
+}
+
+.pos-pay__gcash strong {
+  font-size: 1.6rem;
+  color: #12385e;
+}
+
+.pos-pay__gcash img {
+  width: 6.5rem;
+  height: 6.5rem;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.pos-pay__verify {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed #c9cfbe;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  color: #4f6258;
+  cursor: pointer;
+}
+
+.pos-pay__verify span {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border: 2px solid #b9c4b5;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.pos-pay__verify.is-on {
+  border-style: solid;
+  border-color: #176246;
+  background: #e8f1e9;
+  color: #176246;
+}
+
+.pos-pay__verify.is-on span {
+  border-color: #176246;
+  background: #176246
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7.5'/%3E%3C/svg%3E")
+    center / 0.9rem no-repeat;
+}
+
+.pos-pay__hint {
+  margin: -0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #7a6a3a;
+}
+
+/* Save */
+.pos-pay__submit {
+  min-height: 3.6rem;
+  margin-top: auto;
+  border: 0;
+  border-radius: 10px;
+  background: #176246;
+  color: #fffdf1;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pos-pay__submit:hover:not(:disabled) {
+  background: #11513a;
+}
+
+.cashier-shell .pos-pay__submit:disabled {
+  opacity: 1;
+  background: #d9dfd3;
+  color: #8a978f;
+  cursor: not-allowed;
+}
+
+.pos-pay__status {
+  margin: -0.4rem 0 0;
+  min-height: 1.2em;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #6a7b71;
+}
+
+.pos-pay__method:focus-visible,
+.pos-pay__quick button:focus-visible,
+.pos-pay__verify:focus-visible,
+.pos-pay__submit:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .pos-pay {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pos-pay__lines {
+    max-height: 8rem;
+  }
+
+  .pos-pay__quick {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pos-pay__method small {
+    display: none;
+  }
+}
