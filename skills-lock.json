@@ -49,6 +49,13 @@
       "computedHash": "061f887d9e3e735f85db3be3655a8936a00f24d5fb65ac4ab74a968a770fe342",
       "installMode": "copy"
     },
+    "readme-gen": {
+      "source": "normieg/Readme-gen",
+      "sourceType": "github",
+      "skillPath": "readme-gen/SKILL.md",
+      "computedHash": "1af94a5b8c11a7124692b21a4393fa75501abbe6ecd674d20a72ef12ab46a8f3",
+      "installMode": "copy"
+    },
     "universal-web-dev": {
       "source": "generosomm/universal-web-dev",
       "sourceType": "github",
