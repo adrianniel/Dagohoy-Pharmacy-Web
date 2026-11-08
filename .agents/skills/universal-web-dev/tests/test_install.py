@@ -1,0 +1,497 @@
+import contextlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import tempfile
+import stat
+import unittest
+from unittest.mock import patch
+import zipfile
+
+SCRIPT = Path(__file__).resolve().parents[1] / 'scripts' / 'install.py'
+
+
+def archive(files, symlink=None):
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, 'w') as out:
+        for name, content in files.items():
+            out.writestr('repo-sha/' + name, content)
+        if symlink:
+            info = zipfile.ZipInfo('repo-sha/' + symlink)
+            info.create_system = 3
+            info.external_attr = 0o120777 << 16
+            out.writestr(info, 'elsewhere')
+    return stream.getvalue()
+
+
+class InstallerTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(SCRIPT.exists(), 'installer implementation is missing')
+        spec = importlib.util.spec_from_file_location('skill_install', SCRIPT)
+        self.mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.mod)
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.source = self.root / 'source'
+        self.source.mkdir()
+        (self.source / 'SKILL.md').write_text('---\nname: universal-web-dev\n---\nwrapper')
+        (self.source / 'references').mkdir()
+        (self.source / 'references' / 'guide.md').write_text('guide')
+        self.dest = self.root / 'skills'
+        self.manifest = self.root / 'dependencies.json'
+        self.data = {'schema_version': 1, 'packages': [{
+            'id': 'example', 'profiles': ['core'], 'repo': 'owner/repo',
+            'ref': 'a' * 40, 'license': 'MIT', 'license_files': ['LICENSE'],
+            'skills': [{'name': 'example', 'path': 'nested/skill',
+                        'support': [{'source': 'shared', 'target': 'shared'}]}]}]}
+        self.write_manifest()
+        self.payload = archive({'nested/skill/SKILL.md': '---\nname: example\n---\nbody',
+                                'nested/skill/references/a.md': 'ref',
+                                'shared/helper.py': 'unexecuted', 'LICENSE': 'MIT text',
+                                'unselected/private.txt': 'omit'})
+
+    def write_manifest(self):
+        self.manifest.write_text(json.dumps(self.data))
+
+    def run_install(self, *args, payload=None):
+        with patch.object(self.mod, 'SOURCE_ROOT', self.source), \
+                patch.object(self.mod, 'download', return_value=payload or self.payload), \
+                contextlib.redirect_stdout(io.StringIO()):
+            return self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest), *args])
+
+    def test_plan_creates_nothing_and_never_downloads(self):
+        with patch.object(self.mod, 'download', side_effect=AssertionError('network')):
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest)])
+        self.assertFalse(self.dest.exists())
+        self.assertIn('example', out.getvalue())
+
+    def test_default_dest_obeys_codex_home(self):
+        with patch.dict(os.environ, {'CODEX_HOME': str(self.root)}):
+            self.assertEqual(self.mod.default_dest(), self.root / 'skills')
+        environment = dict(os.environ)
+        environment.pop('CODEX_HOME', None)
+        with patch.dict(os.environ, environment, clear=True):
+            self.assertEqual(self.mod.default_dest(), Path.home() / '.codex' / 'skills')
+
+    def test_missing_wrapper_reference_never_commits_partial_install(self):
+        (self.source / 'SKILL.md').write_text(
+            '---\nname: universal-web-dev\n---\n[required](references/missing.md)')
+        with patch.object(self.mod, 'SOURCE_ROOT', self.source), \
+                patch.object(self.mod, 'download', side_effect=AssertionError('network')) as download, \
+                contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError, 'local link'):
+                self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest), '--apply'])
+        download.assert_not_called()
+        self.assertFalse(self.dest.exists())
+
+    def test_wrapper_link_cannot_escape_staged_package(self):
+        (self.source / 'private.txt').write_text('not packaged')
+        (self.source / 'SKILL.md').write_text(
+            '---\nname: universal-web-dev\n---\n[outside](../source/private.txt)')
+        with self.assertRaisesRegex(ValueError, 'local link'):
+            self.run_install('--apply')
+        self.assertFalse(self.dest.exists())
+
+    def test_claude_host_dest(self):
+        with patch.dict(os.environ, {'CLAUDE_CONFIG_DIR': str(self.root)}):
+            self.assertEqual(self.mod.default_dest('claude'), self.root / 'skills')
+        environment = dict(os.environ)
+        environment.pop('CLAUDE_CONFIG_DIR', None)
+        with patch.dict(os.environ, environment, clear=True):
+            self.assertEqual(self.mod.default_dest('claude'), Path.home() / '.claude' / 'skills')
+
+    def test_release_lock_keeps_caveman_out_of_core(self):
+        lock = self.mod.load_manifest(SCRIPT.parents[1] / 'dependencies.lock.json')
+        profiles = {p['id']: p['profiles'] for p in lock['packages']}
+        self.assertEqual(profiles['caveman'], ['lean'])
+        self.assertIn('core', profiles['superpowers'])
+        impeccable = next(p for p in lock['packages'] if p['id'] == 'impeccable')['skills'][0]
+        self.assertNotIn('scripts', impeccable.get('exclude', []))
+        self.assertIn('scripts/engine-checksums.txt', impeccable['required_files'])
+        emil = [p for p in lock['packages'] if p['id'] == 'emil-design-eng'][0]
+        self.assertLessEqual({'break-ui', 'mobile-native', 'prototype', 'pick-ui-library'}, {s['name'] for s in emil['skills']})
+
+    def test_manifest_rejects_unpinned_repo_and_unsafe_paths(self):
+        for field, value in [('ref', 'main'), ('repo', 'https://evil/repo'),
+                             ('license_files', ['../LICENSE'])]:
+            with self.subTest(field=field):
+                original = self.data['packages'][0][field]
+                self.data['packages'][0][field] = value
+                self.write_manifest()
+                with self.assertRaises(ValueError):
+                    self.mod.load_manifest(self.manifest)
+                self.data['packages'][0][field] = original
+
+    def test_default_install_selects_backend_too(self):
+        self.data['packages'][0]['profiles'] = ['backend']
+        self.write_manifest()
+        self.run_install('--apply')
+        self.assertTrue((self.dest / 'example/SKILL.md').is_file())
+
+    def test_required_launcher_files_must_exist_before_commit(self):
+        self.data['packages'][0]['skills'][0]['required_files'] = ['scripts/launcher']
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, 'Missing required file'):
+            self.run_install('--apply')
+        self.assertFalse(self.dest.exists())
+        with zipfile.ZipFile(io.BytesIO(self.payload)) as source:
+            files = {name.split('/', 1)[1]: source.read(name) for name in source.namelist()}
+        files['nested/skill/scripts/launcher'] = 'never executed'
+        self.run_install('--apply', payload=archive(files))
+        self.assertEqual((self.dest / 'example/scripts/launcher').read_text(), 'never executed')
+
+    def test_required_files_reject_escape_and_exclusion(self):
+        skill = self.data['packages'][0]['skills'][0]
+        for required, excluded in [(['../outside'], []), (['scripts/launcher'], ['scripts'])]:
+            skill.update(required_files=required, exclude=excluded)
+            self.write_manifest()
+            with self.assertRaises(ValueError):
+                self.mod.load_manifest(self.manifest)
+
+    def test_apply_copies_selected_skill_support_license_and_wrapper(self):
+        self.run_install('--apply')
+        target = self.dest / 'example'
+        self.assertEqual((target / 'shared/helper.py').read_text(), 'unexecuted')
+        self.assertEqual((target / 'references/a.md').read_text(), 'ref')
+        self.assertEqual((target / 'upstream-licenses/LICENSE').read_text(), 'MIT text')
+        self.assertIn('owner/repo', (target / 'UPSTREAM-NOTICE.txt').read_text())
+        self.assertFalse((target / 'unselected').exists())
+        self.assertTrue((self.dest / 'universal-web-dev/references/guide.md').exists())
+
+    def test_excluded_paths_are_never_extracted(self):
+        self.data['packages'][0]['skills'][0]['exclude'] = ['scripts']
+        self.write_manifest()
+        payload = archive({'nested/skill/SKILL.md': '---\nname: example\n---', 'nested/skill/scripts/run': 'launcher',
+                           'shared/helper.py': 'x', 'LICENSE': 'MIT'}, symlink='nested/skill/scripts/link')
+        self.run_install('--apply', payload=payload)
+        target = self.dest / 'example'
+        self.assertFalse((target / 'scripts').exists())
+        self.assertIn('Not installed: scripts', (target / 'UPSTREAM-NOTICE.txt').read_text())
+        with patch.object(self.mod, 'SOURCE_ROOT', self.source), contextlib.redirect_stdout(io.StringIO()) as out:
+            self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest), '--sync'])
+        self.assertIn('skip (unchanged) example', out.getvalue())
+
+    def test_exclude_cannot_remove_entrypoint(self):
+        self.data['packages'][0]['skills'][0]['exclude'] = ['SKILL.md']
+        self.write_manifest()
+        with self.assertRaises(ValueError):
+            self.mod.load_manifest(self.manifest)
+
+    def test_identity_without_exclude_keeps_existing_receipt_shape(self):
+        skill = self.data['packages'][0]['skills'][0]
+        self.assertNotIn('exclude', self.mod.desired_identity('example', self.data['packages'][0], skill))
+
+    def test_root_skill_is_supported(self):
+        self.data['packages'][0]['skills'] = [{'name': 'example', 'path': '.'}]
+        self.write_manifest()
+        self.run_install('--apply', payload=archive({'SKILL.md': '---\nname: example\n---', 'LICENSE': 'MIT'}))
+        self.assertTrue((self.dest / 'example/SKILL.md').exists())
+
+    def test_invalid_archives_leave_destination_untouched(self):
+        cases = [archive({'nested/skill/other': 'missing', 'LICENSE': 'MIT'}),
+                 archive({'nested/skill/SKILL.md': '---\nname: wrong\n---', 'LICENSE': 'MIT'}),
+                 archive({'../escape': 'bad'}), archive({}, symlink='link')]
+        for payload in cases:
+            with self.subTest(payload=len(payload)), self.assertRaises(ValueError):
+                self.run_install('--apply', payload=payload)
+            self.assertFalse(self.dest.exists())
+
+    def test_existing_declared_name_is_reused_and_skipped(self):
+        alternate = self.dest / 'old-folder'
+        alternate.mkdir(parents=True)
+        (alternate / 'SKILL.md').write_text('---\nname: example\n---\nold')
+        self.run_install('--apply')
+        self.assertIn('old', (alternate / 'SKILL.md').read_text())
+        self.assertFalse((self.dest / 'example').exists())
+
+    def test_canonical_package_rejects_existing_alternate_folder_without_mutation(self):
+        self.data['packages'][0]['canonical_folders'] = True
+        self.write_manifest()
+        alternate = self.dest / 'alternate-example'
+        alternate.mkdir(parents=True)
+        entry = alternate / 'SKILL.md'
+        entry.write_text('---\nname: example\n---\nkeep')
+        for args in ((), ('--apply',), ('--apply', '--update'), ('--apply', '--sync')):
+            with self.subTest(args=args), self.assertRaisesRegex(ValueError, 'canonical folder required'):
+                self.run_install(*args)
+        self.assertEqual(entry.read_text(), '---\nname: example\n---\nkeep')
+        self.assertFalse((self.dest / 'example').exists())
+        self.assertFalse((self.dest / 'universal-web-dev').exists())
+
+    def test_canonical_package_accepts_existing_canonical_folder(self):
+        self.data['packages'][0]['canonical_folders'] = True
+        self.write_manifest()
+        target = self.dest / 'example'
+        target.mkdir(parents=True)
+        entry = target / 'SKILL.md'
+        entry.write_text('---\nname: example\n---\nkeep')
+        self.run_install('--apply')
+        self.assertEqual(entry.read_text(), '---\nname: example\n---\nkeep')
+
+    def test_mismatching_destination_is_never_overwritten(self):
+        target = self.dest / 'example'
+        target.mkdir(parents=True)
+        (target / 'SKILL.md').write_text('---\nname: different\n---')
+        with self.assertRaises(ValueError):
+            self.run_install('--apply', '--update')
+        self.assertIn('different', (target / 'SKILL.md').read_text())
+
+    def test_update_preserves_backup_outside_active_skills(self):
+        self.run_install('--apply')
+        (self.dest / 'example/old.txt').write_text('preserve me')
+        self.run_install('--apply', '--update')
+        self.assertFalse((self.dest / 'example/old.txt').exists())
+        backups = list((self.root / 'skills-backups').glob('*/example/old.txt'))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), 'preserve me')
+
+    def test_windows_alias_paths_are_rejected(self):
+        for filename in ('nested/../escape', 'nested/.. /escape', 'nested/NUL', 'nested/file:stream', '/absolute'):
+            with self.subTest(filename=filename), self.assertRaises(ValueError):
+                self.mod.safe_path(filename)
+
+    def test_archive_expansion_is_bounded_before_destination_mutation(self):
+        with patch.object(self.mod, 'MAX_EXPANDED', 10):
+            with self.assertRaises(ValueError):
+                self.run_install('--apply')
+        self.assertFalse(self.dest.exists())
+
+    def test_profiles_can_be_repeated(self):
+        self.data['packages'][0]['profiles'] = ['backend']
+        self.write_manifest()
+        self.run_install('--apply', '--profile', 'core')
+        self.assertFalse((self.dest / 'example').exists())
+        self.run_install('--apply', '--profile', 'core', '--profile', 'backend')
+        self.assertTrue((self.dest / 'example').exists())
+
+    def test_sync_upgrades_guidance_only_without_overwriting_customizations(self):
+        skill = self.data['packages'][0]['skills'][0]
+        skill['exclude'] = ['scripts']
+        self.write_manifest()
+        files = {'nested/skill/SKILL.md': '---\nname: example\n---\nbody',
+                 'nested/skill/scripts/launcher': 'unexecuted', 'shared/helper.py': 'x', 'LICENSE': 'MIT'}
+        payload = archive(files)
+        self.run_install('--apply', payload=payload)
+        del skill['exclude']
+        skill['required_files'] = ['scripts/launcher']
+        self.write_manifest()
+        self.run_install('--sync', '--apply', payload=payload)
+        launcher = self.dest / 'example/scripts/launcher'
+        self.assertEqual(launcher.read_text(), 'unexecuted')
+        launcher.write_text('custom launcher')
+        self.data['packages'][0]['ref'] = 'b' * 40
+        self.write_manifest()
+        self.run_install('--sync', '--apply', payload=payload)
+        self.assertEqual(launcher.read_text(), 'custom launcher')
+
+    def test_manual_only_packages_are_reported_without_network(self):
+        self.data['packages'][0]['skills'] = []
+        self.data['packages'][0]['manual_reason'] = 'Upstream requires manual setup'
+        self.write_manifest()
+        with patch.object(self.mod, 'SOURCE_ROOT', self.source), \
+                patch.object(self.mod, 'download', side_effect=AssertionError('network')), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest), '--apply'])
+        self.assertTrue((self.dest / 'universal-web-dev/SKILL.md').exists())
+        self.assertFalse((self.dest / 'example').exists())
+
+    def test_missing_license_stops_before_any_install(self):
+        self.payload = archive({'nested/skill/SKILL.md': '---\nname: example\n---',
+                                'shared/helper.py': 'test'})
+        with self.assertRaises(ValueError):
+            self.run_install('--apply')
+        self.assertFalse(self.dest.exists())
+
+    def test_wrapper_excludes_python_cache(self):
+        cache = self.source / 'scripts/__pycache__'
+        cache.mkdir(parents=True)
+        (cache / 'test.pyc').write_bytes(b'cache')
+        self.run_install('--apply')
+        self.assertFalse((self.dest / 'universal-web-dev/scripts/__pycache__').exists())
+
+    def test_simple_quoted_yaml_names_install_and_existing_aliases_skip(self):
+        for quote in ('"', "'"):
+            with self.subTest(quote=quote):
+                alternate = self.dest / 'alternate'
+                alternate.mkdir(parents=True, exist_ok=True)
+                entry = alternate / 'SKILL.md'
+                entry.write_text('---\nname: ' + quote + 'example' + quote + '\n---\nkeep')
+                self.run_install('--apply')
+                self.assertIn('keep', entry.read_text())
+                self.assertFalse((self.dest / 'example').exists())
+        self.assertEqual(self.mod.skill_name(entry), 'example')
+
+    def test_upstream_quoted_name_is_accepted(self):
+        self.payload = archive({'nested/skill/SKILL.md': '---\nname: "example"\n---',
+                                'shared/helper.py': 'test', 'LICENSE': 'MIT'})
+        self.run_install('--apply')
+        self.assertTrue((self.dest / 'example/SKILL.md').exists())
+        (self.dest / 'example/keep.txt').write_text('existing canonical folder')
+        self.run_install('--apply')
+        self.assertEqual((self.dest / 'example/keep.txt').read_text(), 'existing canonical folder')
+
+    def test_unrelated_symlinks_are_ignored_during_selected_install(self):
+        stream = io.BytesIO(self.payload)
+        with zipfile.ZipFile(stream, 'a') as out:
+            info = zipfile.ZipInfo('repo-sha/unrelated/link')
+            info.create_system = 3
+            info.external_attr = 0o120777 << 16
+            out.writestr(info, '../elsewhere')
+        self.run_install('--apply', payload=stream.getvalue())
+        self.assertTrue((self.dest / 'example/shared/helper.py').exists())
+        self.assertFalse((self.dest / 'example/unrelated').exists())
+
+    def test_selected_symlink_and_symlink_ancestor_are_rejected(self):
+        for link in ('nested/skill/link', 'nested'):
+            with self.subTest(link=link), self.assertRaises(ValueError):
+                self.mod.unpack(archive({'LICENSE': 'MIT'}, symlink=link), self.root / 'unpack',
+                                selected_paths=['nested/skill', 'LICENSE'])
+        self.assertFalse((self.root / 'unpack').exists())
+
+    def test_unselected_traversal_and_global_size_are_still_rejected(self):
+        with self.assertRaises(ValueError):
+            self.mod.unpack(archive({'../escape': 'bad'}), self.root / 'unpack', selected_paths=['nested'])
+        with patch.object(self.mod, 'MAX_EXPANDED', 2), self.assertRaises(ValueError):
+            self.mod.unpack(archive({'unrelated/large': '123'}), self.root / 'unpack', selected_paths=['nested'])
+
+    def executable_payload(self):
+        stream = io.BytesIO(self.payload)
+        with zipfile.ZipFile(stream, 'a') as out:
+            info = zipfile.ZipInfo('repo-sha/nested/skill/scripts/run.sh')
+            info.create_system = 3
+            info.external_attr = 0o104755 << 16
+            out.writestr(info, '#!/bin/sh\nexit 0\n')
+        return stream.getvalue()
+
+    def test_archive_regular_permissions_are_applied_without_special_bits(self):
+        with patch.object(self.mod.os, 'chmod') as chmod:
+            self.mod.unpack(self.executable_payload(), self.root / 'unpack')
+        modes = [call.args[1] for call in chmod.call_args_list]
+        self.assertIn(0o755, modes)
+        self.assertTrue(all(mode & 0o7000 == 0 for mode in modes))
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX executable permission semantics')
+    def test_executable_mode_survives_install_without_setuid(self):
+        self.run_install('--apply', payload=self.executable_payload())
+        script = self.dest / 'example/scripts/run.sh'
+        self.assertEqual(stat.S_IMODE(script.stat().st_mode), 0o755)
+
+    def test_failed_commit_restores_all_existing_folders(self):
+        self.run_install('--apply')
+        (self.dest / 'example/old.txt').write_text('preserve me')
+        real = self.mod.os.replace
+        def fail_example(source, target):
+            if Path(source).name == 'example' and 'staged' in str(source):
+                raise OSError('simulated install failure')
+            return real(source, target)
+        with patch.object(self.mod.os, 'replace', side_effect=fail_example):
+            with self.assertRaises(OSError):
+                self.run_install('--apply', '--update')
+        self.assertEqual((self.dest / 'example/old.txt').read_text(), 'preserve me')
+
+    def test_first_install_records_identity_and_content_digest(self):
+        (self.source / 'INSTALL.md').write_text('install guide')
+        self.run_install('--apply', '--sync')
+        receipt = json.loads((self.dest / 'example/.universal-web-dev-install.json').read_text())
+        self.assertEqual(receipt['version'], 1)
+        self.assertEqual(receipt['identity']['repo'], 'owner/repo')
+        self.assertEqual(receipt['identity']['ref'], 'a' * 40)
+        self.assertEqual(receipt['identity']['name'], 'example')
+        self.assertEqual(len(receipt['digest']), 64)
+        self.assertTrue((self.dest / 'universal-web-dev/INSTALL.md').exists())
+
+    def sync_without_network(self):
+        with patch.object(self.mod, 'SOURCE_ROOT', self.source), \
+                patch.object(self.mod, 'download', side_effect=AssertionError('network')), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            self.mod.main(['--manifest', str(self.manifest), '--dest', str(self.dest), '--apply', '--sync'])
+        return out.getvalue()
+
+    def test_sync_same_pin_is_noop_without_network_and_ignores_cache(self):
+        self.run_install('--apply')
+        cache = self.dest / 'example/__pycache__'
+        cache.mkdir()
+        (cache / 'runtime.pyc').write_bytes(b'cache')
+        before = (self.dest / 'example/SKILL.md').stat().st_mtime_ns
+        self.assertIn('unchanged', self.sync_without_network())
+        self.assertEqual((self.dest / 'example/SKILL.md').stat().st_mtime_ns, before)
+        self.assertFalse((self.root / 'skills-backups').exists())
+
+    def test_sync_changed_pin_updates_with_backup(self):
+        self.run_install('--apply')
+        self.data['packages'][0]['ref'] = 'b' * 40
+        self.write_manifest()
+        self.run_install('--apply', '--sync')
+        self.assertIn('b' * 40, (self.dest / 'example/UPSTREAM-NOTICE.txt').read_text())
+        old = list((self.root / 'skills-backups').glob('*/example/UPSTREAM-NOTICE.txt'))
+        self.assertEqual(len(old), 1)
+        self.assertIn('a' * 40, old[0].read_text())
+
+    def test_sync_preserves_modified_and_unmanaged_folders(self):
+        self.run_install('--apply')
+        self.data['packages'][0]['ref'] = 'b' * 40
+        self.write_manifest()
+        entry = self.dest / 'example/SKILL.md'
+        entry.write_text(entry.read_text() + '\nlocal edit')
+        self.assertIn('modified', self.sync_without_network())
+        self.assertIn('local edit', entry.read_text())
+        (self.dest / 'example/.universal-web-dev-install.json').unlink()
+        self.assertIn('unmanaged', self.sync_without_network())
+        self.assertIn('local edit', entry.read_text())
+
+    def test_sync_malformed_and_foreign_receipts_are_not_authorization(self):
+        self.run_install('--apply')
+        path = self.dest / 'example/.universal-web-dev-install.json'
+        valid = json.loads(path.read_text())
+        foreign = json.loads(json.dumps(valid))
+        foreign['identity']['repo'] = 'other/repo'
+        wrong_name = json.loads(json.dumps(valid))
+        wrong_name['identity']['name'] = 'other'
+        malformed_support = json.loads(json.dumps(valid))
+        malformed_support['identity']['support'] = None
+        wrong_pin = json.loads(json.dumps(valid))
+        wrong_pin['identity']['ref'] = 'c' * 40
+        for content in ('bad json', '[]', json.dumps({'version': 1}),
+                        json.dumps(foreign), json.dumps(wrong_name),
+                        json.dumps(malformed_support), json.dumps(wrong_pin)):
+            with self.subTest(content=content):
+                path.write_text(content)
+                self.assertIn('unmanaged', self.sync_without_network())
+
+    def test_sync_inconsistent_wrapper_receipt_is_unmanaged(self):
+        self.run_install('--apply')
+        path = self.dest / 'universal-web-dev/.universal-web-dev-install.json'
+        receipt = json.loads(path.read_text())
+        receipt['identity']['content'] = '0' * 64
+        path.write_text(json.dumps(receipt))
+        self.assertIn('skip (unmanaged) universal-web-dev', self.sync_without_network())
+        self.assertEqual(json.loads(path.read_text())['identity']['content'], '0' * 64)
+
+    def test_sync_wrapper_receipt_without_digest_is_unmanaged(self):
+        self.run_install('--apply')
+        path = self.dest / 'universal-web-dev/.universal-web-dev-install.json'
+        receipt = json.loads(path.read_text())
+        del receipt['digest']
+        path.write_text(json.dumps(receipt))
+        self.assertIn('skip (unmanaged) universal-web-dev', self.sync_without_network())
+        self.assertNotIn('digest', json.loads(path.read_text()))
+
+    def test_sync_wrapper_source_change_updates_with_backup_without_network(self):
+        self.run_install('--apply')
+        (self.source / 'references/guide.md').write_text('updated guide')
+        self.sync_without_network()
+        self.assertEqual((self.dest / 'universal-web-dev/references/guide.md').read_text(), 'updated guide')
+        self.assertEqual(len(list((self.root / 'skills-backups').glob('*/universal-web-dev/references/guide.md'))), 1)
+
+    def test_sync_update_are_mutually_exclusive(self):
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as error:
+            self.run_install('--sync', '--update')
+        self.assertEqual(error.exception.code, 2)
+
+
+if __name__ == '__main__':
+    unittest.main()

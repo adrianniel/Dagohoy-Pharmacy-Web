@@ -1,0 +1,4 @@
+interface:
+  display_name: "Universal Web Dev"
+  short_description: "Turn a website idea into a plan and verified features"
+  default_prompt: "Use $universal-web-dev to refine my website idea into a clear plan, recommend sensible defaults, and build distinctive pages with evidence that the promised features work."

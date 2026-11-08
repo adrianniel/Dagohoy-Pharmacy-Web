@@ -10,6 +10,9 @@ coverage/
 /AGENTS.md
 # Local design skill installation and its generated sweep reports
 /.agents/skills/hallmark/
+# Large skill (35 MB of assets); restore with: npx skills experimental_install
+/.agents/skills/design-taste-frontend/
+/.taste-skill/
 /.hallmark/
 # Chat attachments and reference screenshots kept out of git
 /.hormachuelos/
