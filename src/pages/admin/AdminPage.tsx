@@ -694,8 +694,38 @@ function StartFresh() {
     window.setTimeout(() => window.location.assign('/admin/products'), 600);
   }
 
+  async function loadSample() {
+    if (
+      !window.confirm(
+        'Replace everything on this computer with sample data? Products, sales, shifts, utang, expenses and suppliers are replaced. Use this only while testing.',
+      )
+    ) {
+      return;
+    }
+    FRESH_START_KEYS.forEach((key) => localStorage.removeItem(key));
+    // Loaded only when asked, so the sample data is never part of the live build.
+    const { loadSampleData } = await import('../../data/sampleData');
+    const result = loadSampleData();
+    showToast(
+      `Sample data loaded: ${result.products} products, ${result.sales} sales, ${result.shifts} closed shifts.`,
+      'success',
+    );
+    window.setTimeout(() => window.location.assign('/admin/dashboard'), 800);
+  }
+
   return (
     <div className="start-fresh">
+      {import.meta.env.DEV && (
+        <div className="start-fresh__sample">
+          <p>
+            <b>Testing only (not shown on the live site):</b> fill the system with 45 days of sample
+            products, sales, shifts, utang and expenses so every page has data to show.
+          </p>
+          <button className="start-shift__secondary" type="button" onClick={loadSample}>
+            Load sample data
+          </button>
+        </div>
+      )}
       <p>
         Right now there {counts.products === 1 ? 'is' : 'are'} <b>{counts.products}</b> product
         {counts.products === 1 ? '' : 's'} and <b>{counts.sales}</b> sale

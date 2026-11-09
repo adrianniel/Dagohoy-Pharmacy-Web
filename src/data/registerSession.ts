@@ -158,7 +158,11 @@ type StoredSale = {
 };
 
 /** Collects every sale, item and cash movement of a shift for its duty report. */
-function collectShiftDetails(opened: Date, closedAt: Date): ShiftDetails {
+export function collectShiftDetails(
+  opened: Date,
+  closedAt: Date,
+  cashEvents: CashEvent[] = getCashEvents(),
+): ShiftDetails {
   const sales = readJson<StoredSale[]>(SALES_KEY, []).filter((sale) => {
     const date = new Date(sale.date);
     return date >= opened && date <= closedAt;
@@ -192,7 +196,7 @@ function collectShiftDetails(opened: Date, closedAt: Date): ShiftDetails {
       discount: Number(sale.discount ?? 0),
       status: sale.status ?? 'Completed',
     })),
-    cashEvents: getCashEvents().map(({ type, amount, reason, date }) => ({
+    cashEvents: cashEvents.map(({ type, amount, reason, date }) => ({
       type,
       amount,
       reason,

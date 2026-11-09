@@ -370,6 +370,17 @@
   font-weight: 700;
 }
 
+.start-fresh__sample {
+  display: grid;
+  gap: 0.6rem;
+  margin: -1rem -1.1rem 0.2rem;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px dashed #efc7c1;
+  border-radius: 12px 12px 0 0;
+  background: #eef5ef;
+  color: #13322a;
+}
+
 .start-fresh__button {
   align-self: flex-start;
   min-height: 2.9rem;
