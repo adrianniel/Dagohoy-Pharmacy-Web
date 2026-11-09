@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
+import { ScanInput } from '../../components/ScanInput';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
@@ -265,6 +266,27 @@ export function CashierPosPage() {
     window.requestAnimationFrame(() =>
       document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
     );
+  }
+
+  /** Enter in the search (a scanner always sends it): add the scanned or only match. */
+  function scanOrPick(code: string) {
+    if (!code || !transactionActive) return;
+    const exact = products.find((product) => product.barcode === code);
+    const pick = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : undefined);
+    if (!pick) {
+      showToast(
+        filteredProducts.length
+          ? 'Several products match. Pick one from the list.'
+          : `No product has barcode ${code}.`,
+        'info',
+      );
+      return;
+    }
+    if (pick.stock < 1) {
+      showToast(`${pick.product} is out of stock.`, 'error');
+      return;
+    }
+    addProduct(pick);
   }
 
   function addProduct(product: PosProduct) {
@@ -657,23 +679,26 @@ export function CashierPosPage() {
             </dl>
           </header>
           <div className="pos-scan-dock pos-ticket__scan">
-            <label className="pos-scan-field">
+            <div className="pos-scan-field">
               <CashierIcon name="search" />
-              <input
-                name="product-search"
-                type="search"
+              <ScanInput
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                autoComplete="off"
-                autoFocus
-                disabled={!transactionActive}
+                onChange={setQuery}
+                onEnter={scanOrPick}
                 placeholder={
                   transactionActive
                     ? 'Scan a barcode or type a product name'
                     : 'Open a ticket to scan'
                 }
+                inputProps={{
+                  name: 'product-search',
+                  type: 'search',
+                  autoFocus: true,
+                  disabled: !transactionActive,
+                  'aria-label': 'Scan a barcode or search a product',
+                }}
               />
-            </label>
+            </div>
             {query.trim() && transactionActive && (
               <div className="pos-scan-results" aria-live="polite">
                 {filteredProducts.slice(0, 6).map((product) => (

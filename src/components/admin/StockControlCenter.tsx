@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
+import { ProductPicker } from '../ScanInput';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import type { InventoryProduct } from '../../data/inventoryStore';
 import {
@@ -827,14 +828,12 @@ function ReceiveForm({
 }) {
   const { showToast } = useToast();
   const suppliers = useMemo(loadSupplierNames, []);
-  const [barcode, setBarcode] = useState(products[0]?.barcode ?? '');
+  const [barcode, setBarcode] = useState('');
   const [supplier, setSupplier] = useState(suppliers[0] ?? '');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
-  const [selling, setSelling] = useState(() => {
-    const value = priceValue(products[0]?.price);
-    return value ? value.toFixed(2) : '';
-  });
+  const [selling, setSelling] = useState('');
+
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [reference, setReference] = useState('');
@@ -976,13 +975,7 @@ function ReceiveForm({
       <div className="stock-index__form-grid">
         <label>
           Product
-          <select value={barcode} onChange={(event) => pickProduct(event.target.value)}>
-            {products.map((item) => (
-              <option value={item.barcode} key={item.barcode}>
-                {item.product} · {item.stock} on hand
-              </option>
-            ))}
-          </select>
+          <ProductPicker products={products} value={barcode} onPick={pickProduct} />
         </label>
         <label>
           Supplier
@@ -1150,7 +1143,7 @@ export function StockWriteOffForm({
   const live = getInventory();
   const preset = batches.find((batch) => batch.id === initialBatchId);
   const isReturn = mode === 'return';
-  const [barcode, setBarcode] = useState(preset?.barcode ?? live[0]?.barcode ?? '');
+  const [barcode, setBarcode] = useState(preset?.barcode ?? '');
   const [quantity, setQuantity] = useState(preset ? String(preset.stock) : '');
   const [type, setType] = useState<AdjustmentType>('damaged');
   const [reason, setReason] = useState(preset && daysUntil(preset.expiry) < 0 ? 'Lot expired' : '');
@@ -1242,19 +1235,14 @@ export function StockWriteOffForm({
       <div className="stock-index__form-grid">
         <label>
           Product
-          <select
+          <ProductPicker
+            products={live}
             value={barcode}
-            onChange={(event) => {
-              setBarcode(event.target.value);
+            onPick={(next) => {
+              setBarcode(next);
               setBatchId('');
             }}
-          >
-            {live.map((item) => (
-              <option value={item.barcode} key={item.barcode}>
-                {item.product} · {item.stock} on hand
-              </option>
-            ))}
-          </select>
+          />
         </label>
         {!isReturn && (
           <label>

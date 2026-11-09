@@ -389,3 +389,144 @@
   color: #b58a84;
   cursor: not-allowed;
 }
+
+/* ------------------------------------------------------------------
+   Type-or-scan field (components/ScanInput.tsx), used wherever a
+   product is searched or picked.
+   ------------------------------------------------------------------ */
+.scan-input {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-input > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-input__button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.4rem;
+  padding: 0 0.75rem;
+  border: 1px solid #b7cbb8;
+  border-radius: 8px;
+  background: #fff;
+  color: #176246;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scan-input__button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.scan-input__button:hover:not(:disabled) {
+  background: #eef4ea;
+}
+
+.scan-input__button:focus-visible {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.cashier-shell .scan-input__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Waiting for the scanner: the button turns green and pulses. */
+.scan-input.is-ready .scan-input__button {
+  border-color: #176246;
+  background: #176246;
+  color: #fffdf1;
+  animation: scan-ready 1.2s ease-in-out infinite;
+}
+
+@keyframes scan-ready {
+  50% {
+    box-shadow: 0 0 0 4px rgba(35, 162, 107, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-input.is-ready .scan-input__button {
+    animation: none;
+  }
+}
+
+/* Product picker: matches drop down under the field. */
+.product-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.product-picker__list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 16rem;
+  margin: 0.3rem 0 0;
+  padding: 0.35rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(19, 50, 42, 0.16);
+}
+
+.product-picker__list button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-picker__list button:hover,
+.product-picker__list [aria-selected='true'] button {
+  background: #eef4ea;
+}
+
+.product-picker__list strong {
+  font-size: 0.92rem;
+  color: #13322a;
+}
+
+.product-picker__list small,
+.product-picker__picked {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #6a7b71;
+}
+
+.product-picker__missing {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a2372c;
+}

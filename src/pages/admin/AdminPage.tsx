@@ -1,10 +1,11 @@
-import { FormEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { ScanInput } from '../../components/ScanInput';
 import { useToast } from '../../components/toast';
 import {
   getInventory,
@@ -110,7 +111,8 @@ function loadLocalValue<T>(key: string, fallback: T): T {
 
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
-  const searchRef = useRef<HTMLInputElement>(null);
+  /** Barcode scanned in the list search that matched no product: prefilled in New product. */
+  const [newBarcode, setNewBarcode] = useState('');
   const [products, setProducts] = useState(getInventory);
   const [editing, setEditing] = useState<InventoryProduct | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -266,20 +268,34 @@ export function AdminPage({ section }: { section: AdminSection }) {
           >
             <section className="cashier-panel cashier-list-panel">
               <div className="cashier-list-toolbar">
-                <label className="cashier-search-field cashier-search-field--wide">
+                <div className="cashier-search-field cashier-search-field--wide">
                   <CashierIcon name="search" />
-                  <input
-                    ref={searchRef}
+                  <ScanInput
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search product, generic, brand, or barcode"
+                    onChange={setQuery}
+                    placeholder="Search a name, generic, brand, or scan the barcode"
+                    inputProps={{ 'aria-label': 'Search or scan a product' }}
+                    onEnter={(code) => {
+                      // A scanned barcode opens that product, or New product when it is new.
+                      const found = products.find((item) => item.barcode === code);
+                      if (found) {
+                        setEditing(found);
+                        setFormOpen(true);
+                      } else if (/^\d{6,}$/.test(code)) {
+                        setEditing(null);
+                        setNewBarcode(code);
+                        setFormOpen(true);
+                        showToast('New barcode. Fill in the product details.', 'info');
+                      }
+                    }}
                   />
-                </label>
+                </div>
                 <button
                   className="cashier-primary-action"
                   type="button"
                   onClick={() => {
                     setEditing(null);
+                    setNewBarcode('');
                     setFormOpen(true);
                   }}
                 >
@@ -361,6 +377,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
             <InventoryForm
               product={editing}
               products={products}
+              initialBarcode={newBarcode}
               onClose={() => setFormOpen(false)}
               onSave={(product, opening) => {
                 if (
@@ -797,17 +814,19 @@ const peso = (amount: number) =>
 function InventoryForm({
   product,
   products,
+  initialBarcode = '',
   onClose,
   onSave,
 }: {
   product: InventoryProduct | null;
   products: InventoryProduct[];
+  initialBarcode?: string;
   onClose: () => void;
   onSave: (product: InventoryProduct, opening?: { lot: string; expiry: string }) => boolean;
 }) {
   const isNew = !product;
   const [name, setName] = useState(product?.product ?? '');
-  const [barcode, setBarcode] = useState(product?.barcode ?? '');
+  const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode);
   const [detail, setDetail] = useState(product?.detail ?? '');
   const [category, setCategory] = useState(product?.category ?? '');
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
@@ -914,11 +933,20 @@ function InventoryForm({
             </label>
             <label>
               Barcode / SKU
-              <input
+              <ScanInput
                 value={barcode}
-                onChange={(event) => setBarcode(event.target.value)}
+                onChange={(next) => {
+                  setBarcode(next);
+                  setError('');
+                }}
+                onEnter={(code) => {
+                  const owner = products.find(
+                    (item) => item.barcode === code && item.barcode !== product?.barcode,
+                  );
+                  if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
+                }}
                 placeholder="Scan or type it"
-                inputMode="numeric"
+                inputProps={{ inputMode: 'numeric' }}
               />
             </label>
             <label>
