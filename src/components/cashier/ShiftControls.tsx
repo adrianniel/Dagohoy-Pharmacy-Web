@@ -117,11 +117,11 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cashier) {
-      setError('Pick who is the cashier for this shift.');
+      setError('Step 1: tap the name of the cashier.');
       return;
     }
     if (adjusted && !reason.trim()) {
-      setError('Type the reason for adjusting the cash float.');
+      setError('Step 3: type why the cash in the drawer is different.');
       return;
     }
     try {
@@ -137,29 +137,51 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
     }
   }
 
+  const initials = (name: string) =>
+    name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  const hasRoster = roster.length > 0 && active.length > 0;
+  const cashStep = active.length > 1 ? 3 : 2;
+  const startingCash = Number(floatInput || 0);
+  const cashDone = !adjusted || reason.trim().length > 0;
+
   return createPortal(
     <div className="pos-modal-backdrop">
       <form
         className="pos-payment-modal cashier-shift-modal start-shift"
         onSubmit={submit}
         noValidate
+        aria-labelledby="start-shift-title"
       >
         <button className="pos-modal-close" type="button" onClick={onClose} aria-label="Close">
           ×
         </button>
-        <p className="eyebrow">Cash control</p>
-        <h2>Start shift</h2>
+        <header className="start-shift__head">
+          <h2 id="start-shift-title">Start shift</h2>
+          <p>
+            Answer the steps below, then press <strong>Start shift</strong> at the bottom.
+          </p>
+        </header>
 
-        {roster.length === 0 || active.length === 0 ? (
+        {!hasRoster ? (
           <p className="cashier-shift-empty">
-            No staff on the roster yet. Ask the owner to add names in Staff → Staff roster.
+            No staff names yet. Ask the owner to add names in Staff → Staff roster.
           </p>
         ) : (
           <>
-            <fieldset className="start-shift__step">
-              <legend>1. Who is the cashier?</legend>
+            <section className={`start-shift__step${cashier ? ' is-done' : ''}`}>
+              <h3>
+                <span className="start-shift__num" aria-hidden="true">
+                  {cashier ? '✓' : '1'}
+                </span>
+                Who is the cashier?
+              </h3>
               <p className="start-shift__hint">
-                This name shows in the top bar, on the website and on every receipt.
+                Tap one name. It shows on the screen and on every receipt.
               </p>
               <div className="start-shift__people" role="radiogroup" aria-label="Cashier">
                 {active.map((staff) => (
@@ -172,24 +194,24 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                     onClick={() => pickCashier(staff.name)}
                   >
                     <span className="start-shift__initials" aria-hidden="true">
-                      {staff.name
-                        .split(' ')
-                        .map((part) => part[0])
-                        .join('')
-                        .slice(0, 2)
-                        .toUpperCase()}
+                      {cashier === staff.name ? '✓' : initials(staff.name)}
                     </span>
                     {staff.name}
                   </button>
                 ))}
               </div>
-            </fieldset>
+            </section>
 
             {active.length > 1 && (
-              <fieldset className="start-shift__step">
-                <legend>2. Other staff on duty (optional)</legend>
+              <section className={`start-shift__step${others.length ? ' is-done' : ''}`}>
+                <h3>
+                  <span className="start-shift__num" aria-hidden="true">
+                    {others.length ? '✓' : '2'}
+                  </span>
+                  Who else is working? <em>(optional)</em>
+                </h3>
                 <p className="start-shift__hint">
-                  Others working this shift. Only kept in the duty report.
+                  Tap to add. Tap again to remove. Skip this if the cashier is alone.
                 </p>
                 <div className="start-shift__others">
                   {active
@@ -204,80 +226,107 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                         }`}
                         onClick={() => toggleOther(staff.name)}
                       >
-                        {others.includes(staff.name) ? '✓ ' : '+ '}
+                        <span aria-hidden="true">{others.includes(staff.name) ? '✓' : '+'}</span>
                         {staff.name}
                       </button>
                     ))}
                 </div>
-              </fieldset>
+              </section>
             )}
+
+            <section className={`start-shift__step${cashDone && cashier ? ' is-done' : ''}`}>
+              <h3>
+                <span className="start-shift__num" aria-hidden="true">
+                  {cashDone && cashier ? '✓' : cashStep}
+                </span>
+                Check the cash in the drawer
+              </h3>
+              {!adjusting ? (
+                <div className="start-shift__cash">
+                  <div>
+                    <strong>{money(carriedOver)}</strong>
+                    <span>Left in the drawer from the last shift. Count it: it should match.</span>
+                  </div>
+                  <button
+                    className="start-shift__secondary"
+                    type="button"
+                    onClick={() => setAdjusting(true)}
+                  >
+                    Count is different
+                  </button>
+                </div>
+              ) : (
+                <div className="start-shift__adjust">
+                  <label>
+                    How much cash is in the drawer now?
+                    <span className="start-shift__peso">
+                      <span aria-hidden="true">₱</span>
+                      <input
+                        inputMode="decimal"
+                        autoFocus
+                        value={floatInput}
+                        onChange={(event) =>
+                          setFloatInput(event.target.value.replace(/[^\d.]/g, ''))
+                        }
+                      />
+                    </span>
+                  </label>
+                  {adjusted && (
+                    <label>
+                      Why is it different? (required)
+                      <input
+                        value={reason}
+                        onChange={(event) => {
+                          setReason(event.target.value);
+                          setError('');
+                        }}
+                        placeholder="e.g. Owner took cash for a supplier payment"
+                      />
+                    </label>
+                  )}
+                  <button
+                    className="start-shift__secondary"
+                    type="button"
+                    onClick={() => {
+                      setAdjusting(false);
+                      setFloatInput(String(carriedOver));
+                      setReason('');
+                    }}
+                  >
+                    Undo, use {money(carriedOver)}
+                  </button>
+                </div>
+              )}
+            </section>
           </>
         )}
-        <div className="cashier-shift-float">
-          <div>
-            <span className="cashier-shift-float__label">Cash float</span>
-            {adjusting ? (
-              <input
-                className="cashier-shift-float__input"
-                inputMode="decimal"
-                value={floatInput}
-                onChange={(event) => setFloatInput(event.target.value.replace(/[^\d.]/g, ''))}
-                aria-label="Cash float amount"
-              />
+
+        <footer className="start-shift__footer">
+          {error && (
+            <p className="pos-notice" role="alert">
+              {error}
+            </p>
+          )}
+          <p className="start-shift__summary" aria-live="polite">
+            {cashier ? (
+              <>
+                Cashier: <strong>{cashier}</strong>
+                {others.length > 0 && <> · +{others.length} staff</>} · Drawer:{' '}
+                <strong>{money(startingCash)}</strong>
+              </>
             ) : (
-              <strong className="cashier-shift-float__value">{money(carriedOver)}</strong>
+              'Pick the cashier in step 1 to continue.'
             )}
-            <span className="cashier-shift-float__note">
-              Carried over from the last shift. Locked unless adjusted.
-            </span>
-          </div>
-          {!adjusting ? (
-            <button
-              className="cashier-view-button"
-              type="button"
-              onClick={() => setAdjusting(true)}
-            >
-              Adjust
-            </button>
-          ) : (
-            <button
-              className="cashier-view-button"
-              type="button"
-              onClick={() => {
-                setAdjusting(false);
-                setFloatInput(String(carriedOver));
-                setReason('');
-              }}
-            >
+          </p>
+          <div className="start-shift__actions">
+            <button className="start-shift__cancel" type="button" onClick={onClose}>
               Cancel
             </button>
-          )}
-        </div>
-
-        {adjusted && (
-          <label>
-            Reason for the float adjustment (required)
-            <input
-              required
-              value={reason}
-              onChange={(event) => {
-                setReason(event.target.value);
-                setError('');
-              }}
-              placeholder="e.g. Cash removed for a supplier payment"
-            />
-          </label>
-        )}
-
-        {error && (
-          <p className="pos-notice" role="alert">
-            {error}
-          </p>
-        )}
-
-        <button className="pos-checkout-button" type="submit" disabled={!cashier}>
-          {cashier ? `Start shift as ${cashier}` : 'Pick the cashier first'}
-        </button>
+            <button className="start-shift__go" type="submit" disabled={!cashier}>
+              Start shift
+            </button>
+          </div>
+        </footer>
       </form>
     </div>,
     getModalHost(),

@@ -3030,67 +3030,121 @@
 }
 
 /* ------------------------------------------------------------------
-   Start shift: 1) the cashier in charge, 2) other staff on duty.
+   Start shift popup: numbered steps (a step turns into a green check
+   when done) and a bottom bar with Cancel / Start shift that stays in
+   view while the popup scrolls.
    ------------------------------------------------------------------ */
-.start-shift__step {
-  margin: 0 0 1rem;
-  padding: 0.9rem 1rem 1rem;
-  border: 1px solid #e1e5d8;
-  border-radius: 12px;
-  background: #fffef9;
+.cashier-shell .pos-payment-modal.start-shift {
+  width: min(600px, calc(100vw - 2rem));
+  padding-bottom: 0;
+  overflow-y: auto;
+  gap: 1rem;
 }
 
-.start-shift__step legend {
-  padding: 0 0.35rem;
-  font-size: 0.8rem;
+.start-shift__head h2 {
+  margin: 0;
+  font-size: 1.9rem;
+  line-height: 1.1;
+  color: #13322a;
+}
+
+.start-shift__head p {
+  margin: 0.4rem 0 0;
+  font-size: 1rem;
+  color: #3f5249;
+}
+
+.start-shift__step {
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid #dfe5d6;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.start-shift__step.is-done {
+  border-color: #b9d6c2;
+  background: #f7fbf6;
+}
+
+.start-shift__step h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.12rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: #13322a;
+}
+
+.start-shift__step h3 em {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #5d7268;
+}
+
+.start-shift__num {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 50%;
+  background: #e3ece3;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: #176246;
 }
 
+.start-shift__step.is-done .start-shift__num {
+  background: #176246;
+  color: #fff;
+}
+
 .start-shift__hint {
-  margin: 0 0 0.7rem;
-  font-size: 0.82rem;
-  color: #5d7268;
+  margin: 0.35rem 0 0.85rem 2.5rem;
+  font-size: 0.95rem;
+  color: #4f6258;
 }
 
 .start-shift__people {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.6rem;
 }
 
 .start-shift__person {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  min-height: 3.2rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d5dccb;
-  border-radius: 10px;
+  gap: 0.7rem;
+  min-height: 3.6rem;
+  padding: 0.55rem 0.85rem;
+  border: 2px solid #d5dccb;
+  border-radius: 12px;
   background: #fff;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.25;
   text-align: left;
   color: #13322a;
   cursor: pointer;
 }
 
 .start-shift__person:hover {
-  border-color: #9fb6a0;
+  border-color: #6f9a80;
+  background: #f4f8f2;
 }
 
 .start-shift__initials {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.3rem;
+  height: 2.3rem;
   flex: none;
   border-radius: 50%;
   background: #e3ece3;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: #176246;
 }
@@ -3098,50 +3152,229 @@
 .start-shift__person.is-picked {
   border-color: #176246;
   background: #176246;
-  color: #fffdf1;
-  box-shadow: 0 0 0 3px rgba(23, 98, 70, 0.18);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(23, 98, 70, 0.2);
 }
 
 .start-shift__person.is-picked .start-shift__initials {
-  background: #fffdf1;
+  background: #fff;
+  font-size: 1.1rem;
   color: #176246;
 }
 
 .start-shift__others {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .start-shift__chip {
-  padding: 0.45rem 0.8rem;
-  border: 1px dashed #c9cfbe;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border: 2px solid #cfd6c4;
   border-radius: 999px;
   background: #fff;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: #4f6258;
+  color: #2f4239;
   cursor: pointer;
 }
 
-.start-shift__chip.is-picked {
-  border-style: solid;
-  border-color: #176246;
-  background: #e8f1e9;
+.start-shift__chip:hover {
+  border-color: #6f9a80;
+}
+
+.start-shift__chip > span {
+  font-size: 1.1rem;
+  font-weight: 800;
   color: #176246;
 }
 
+.start-shift__chip.is-picked {
+  border-color: #176246;
+  background: #e5f1e8;
+  color: #13322a;
+}
+
+.start-shift__cash {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem 1rem;
+  margin: 0.8rem 0 0 2.5rem;
+}
+
+.start-shift__cash > div {
+  display: grid;
+  gap: 0.2rem;
+  flex: 1 1 14rem;
+}
+
+.start-shift__cash strong {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: #176246;
+}
+
+.start-shift__cash span {
+  font-size: 0.95rem;
+  color: #4f6258;
+}
+
+.start-shift__adjust {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0.8rem 0 0 2.5rem;
+}
+
+.cashier-shell .start-shift__adjust label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #13322a;
+}
+
+.cashier-shell .start-shift__adjust input {
+  min-height: 3rem;
+  font-size: 1.05rem;
+}
+
+.start-shift__peso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 14rem;
+}
+
+.start-shift__peso > span {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #176246;
+}
+
+.cashier-shell .start-shift__peso input {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #176246;
+}
+
+.start-shift__secondary {
+  justify-self: start;
+  min-height: 2.8rem;
+  padding: 0 1.1rem;
+  border: 2px solid #176246;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #176246;
+  cursor: pointer;
+}
+
+.start-shift__secondary:hover {
+  background: #eef5ef;
+}
+
+/* Bottom bar: always visible, even when the popup scrolls. */
+.start-shift__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 0.7rem;
+  margin: 0 -1.9rem;
+  padding: 0.9rem 1.9rem 1.3rem;
+  border-top: 1px solid #dfe5d6;
+  background: #fffdf3;
+  box-shadow: 0 -10px 20px rgba(19, 50, 42, 0.06);
+}
+
+.start-shift__summary {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #3f5249;
+}
+
+.start-shift__summary strong {
+  color: #13322a;
+}
+
+.start-shift__actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.7rem;
+}
+
+.start-shift__cancel,
+.start-shift__go {
+  min-height: 3.5rem;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.start-shift__cancel {
+  border: 2px solid #c9d1c1;
+  background: #fff;
+  color: #2f4239;
+}
+
+.start-shift__cancel:hover {
+  background: #f2f4ee;
+}
+
+.start-shift__go {
+  border: 0;
+  background: #176246;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(23, 98, 70, 0.25);
+}
+
+.start-shift__go:hover:not(:disabled) {
+  background: #12513a;
+}
+
+.cashier-shell .start-shift__go:disabled {
+  opacity: 1;
+  background: #d9dfd3;
+  color: #6f7d75;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .start-shift__person:focus-visible,
-.start-shift__chip:focus-visible {
+.start-shift__chip:focus-visible,
+.start-shift__secondary:focus-visible,
+.start-shift__cancel:focus-visible,
+.start-shift__go:focus-visible {
   outline: 3px solid #23a26b;
   outline-offset: 2px;
 }
 
-.start-shift .pos-checkout-button:disabled {
-  opacity: 1;
-  background: #d9dfd3;
-  color: #8a978f;
+@media (max-width: 640px) {
+  .start-shift__footer {
+    margin: 0 -1.15rem;
+    padding: 0.8rem 1.15rem 1.1rem;
+  }
+
+  .start-shift__hint,
+  .start-shift__cash,
+  .start-shift__adjust {
+    margin-left: 0;
+  }
 }
 
 /* Top bar: other staff count next to the cashier's name. */
