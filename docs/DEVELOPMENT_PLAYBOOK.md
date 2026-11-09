@@ -1,213 +1,386 @@
-# Development playbook: from client request to live system
+# Agentic development playbook
 
-How I (Niel Adrian, freelance developer) build a business web system with an AI coding
-agent (Claude Code), from the first client talk to a live Hostinger deployment. Written
-while building **Dagohoy Pharmacy** (POS + inventory), my first client, so the next project
-can follow the same path and skip the mistakes.
+My method (Niel Adrian, freelance developer) for building a client's business web system
+together with an AI coding agent (Claude Code), from the first meeting to a live, supported
+system. It is written for **any** client and any business system (POS, inventory, booking,
+clinic, school, ordering…). Dagohoy Pharmacy, my first client, is only the worked example
+at the end.
 
-**How to use this file in a new project:** copy it into the new repo's `docs/`, give it to the
-agent at the start of the session ("Read docs/DEVELOPMENT_PLAYBOOK.md and follow it"), and
-replace the Dagohoy examples with the new client's details as you go.
+**How to start a new project with it:** copy this file into the new repo's `docs/` folder,
+then tell the agent in the first session:
 
-**Status of this file:** Stages 0–6 are written from what actually happened. Stages marked
-*(to fill)* are updated after each phase is done, and the Hostinger stage only after the real
-deploy, from what actually worked.
+> Read `docs/DEVELOPMENT_PLAYBOOK.md`. We are starting Phase 0 for a new client. Follow the
+> playbook, ask me the Phase 0 questions, and keep `CLAUDE.md` updated with the answers.
+
+**Keep it alive:** after every phase of every project, add what you learned to
+"Lessons learned". Fill a section only from what really happened, never from a guess.
 
 ---
 
-## The whole path at a glance
+## 1. The idea in one page
 
-| Stage | What happens | Output |
+- **I decide, the agent builds.** I own the client relationship, the business decisions,
+  passwords, payments and anything live. The agent does the hands-on work: code, database
+  migrations, checks, tests and commits, and explains every step in plain language.
+- **Small phases, one at a time.** Each phase has a clear goal and a "done when" test. The
+  system must still run after every phase.
+- **Everything written down.** The agent forgets between sessions; the repo does not. The
+  decisions, the plan and the status live in files the agent reads at the start
+  (see section 4).
+- **Rules live in the strongest place.** Business rules go into the database (constraints)
+  and the server (validation), not only into the screen.
+- **Prove it, don't assume it.** A phase is done when the checks pass and the feature was
+  tried for real (API calls, browser), not when the code "looks right".
+
+## 2. The phases
+
+| # | Phase | Goal | Main output |
+|---|---|---|---|
+| 0 | Discovery and proposal | Understand the business; agree on scope, price, hosting | Notes, scope, quote |
+| 1 | Project setup | Repos and a local environment that matches production | Two running repos, `CLAUDE.md` |
+| 2 | Clickable prototype | The client sees and approves the screens and the flow | UI with sample data |
+| 3 | Technical plan | Turn the prototype into a phased build plan | `docs/IMPLEMENTATION_PLAN.md` |
+| 4 | Foundation | Login, roles, security, error handling, health check | Server-enforced auth |
+| 5 | Data model | Database for every feature, with the rules inside | Migrations + rule checks |
+| 6 | Feature slices (repeat) | One business area at a time, server + screens | Working features on real data |
+| 7 | Ready locally | Seed data, tests, backups, a full test day | Runbook, checklist passed |
+| 8 | Staging and client testing | Client buys hosting; deploy a test copy; client tries it | `DEPLOYMENT.md`, sign-off |
+| 9 | Go-live | Real data, real accounts, backups on | Live system |
+| 10 | Handover and support | Owner guide, maintenance, change requests | Support routine |
+
+Each phase below has the same parts: **Goal**, **I do**, **The agent does**,
+**Done when**, and a **Prompt** to start it.
+
+---
+
+### Phase 0: Discovery and proposal
+
+**Goal:** know exactly who uses the system, what they do every day, and what they must report.
+
+**I do:**
+- Interview the owner and, if possible, watch the staff work for an hour.
+- Ask the question list below and write the answers down.
+- Choose hosting and quote the first-year and renewal costs (with VAT).
+- Agree on scope (what is in version 1, what is later), the price and the payment schedule.
+
+**Questions for every client:**
+1. Who uses it? Owner, managers, staff. One shared login or one each? Who may see money?
+2. What happens on a normal day, step by step? What happens on a bad day (mistakes,
+   returns, refunds, cancellations)?
+3. What must they report, and to whom? Taxes and government rules (PH: BIR, VAT-registered
+   or not, official receipts, Senior/PWD discount and the ID they must record).
+4. What do they use now (paper, Excel, another app)? What data must come over?
+5. Hardware: barcode scanner, receipt printer (58/80 mm), tablets, phones?
+6. Internet: is it reliable? Backup (pocket WiFi, mobile data)?
+7. Who pays for and owns the hosting and the domain? (Client owns, I manage with shared
+   access.)
+
+**The agent does:** turns my notes into a short scope list and a list of open questions;
+drafts the cost table; suggests the stack based on section 5.
+
+**Done when:** the scope, the price and the hosting are agreed, and the answers are in the
+repo's `CLAUDE.md`.
+
+**Prompt:**
+> Here are my notes from the client meeting: … Turn them into (1) a scope list for version 1,
+> (2) open questions for the client, (3) risks. Write the agreed parts into `CLAUDE.md`.
+
+---
+
+### Phase 1: Project setup
+
+**Goal:** the computer is ready and the local setup behaves like production.
+
+**I do:** create the GitHub repos; install the database server (the same kind the host uses);
+create the database admin password myself.
+
+**The agent does:**
+- Creates the web and server projects, a `dev` branch, `.env.example` files (never real
+  secrets in git), lint, format and type-check scripts.
+- Creates a **limited database user** (rights on its own database only) for the app.
+- Picks **ports that don't clash** with my other projects and writes them down.
+- Writes `CLAUDE.md` (both repos) and `AGENTS.md` (server): who I am, the stack, the rules,
+  the status and the plan. Installs the agent skills.
+
+**Done when:** both projects start, the health endpoint says "database connected", and a new
+agent session can read `CLAUDE.md` and explain the project back to me.
+
+**Prompt:**
+> Set up Phase 1 for this project: web + server repos, local database matching the host,
+> limited database user, free ports, `.env.example`, checks, `CLAUDE.md` and `AGENTS.md`.
+> Tell me every step I must do myself (passwords, installers).
+
+---
+
+### Phase 2: Clickable prototype
+
+**Goal:** the client clicks through the real screens with sample data and says "yes, that is
+how we work" before the expensive backend work starts.
+
+**I do:** show the prototype to the client, collect feedback, decide what changes.
+
+**The agent does:**
+- Builds every screen with sample data stored in the browser.
+- Keeps **all data access in a few small "store" files** (not spread across pages), so they
+  can later be swapped for API calls without touching every page.
+- Uses one shared component per thing (receipt, form popup, table, scan field) so the whole
+  app looks the same.
+- Uses plain words on screen, big obvious buttons, and clear error messages.
+- Adds a **dev-only "Load sample data"** button that simulates weeks of real activity
+  (never in the live build).
+
+**Done when:** the client approves the flow; every screen in scope exists.
+
+**Keep it short.** The prototype is for agreement, not for real use. The longer it lives
+on browser storage, the bigger the later move to the server.
+
+**Prompt:**
+> Phase 2: build the screen for <feature> with sample data in the browser. Keep its data in
+> one store file. Use the shared components. Show me in the browser when done.
+
+---
+
+### Phase 3: Technical plan
+
+**Goal:** a written plan that turns the prototype into a real system, phase by phase.
+
+**The agent does:** writes `docs/IMPLEMENTATION_PLAN.md` with:
+- **"Ready locally" checklist** (what must be true before deploying);
+- **Where we are** (each area: screen done? database? API?);
+- **Decisions with defaults** (login type, money format, roles…) and **questions for the
+  client**;
+- **Phases in order**, each with "done when" and size; usually: foundation → data model →
+  master data (products, customers, staff, settings) → stock or bookings → transactions
+  (sales, payments) → money handling (shifts, cash, credit) → reports → hardening.
+
+**I do:** read it, change the decisions I disagree with, ask the client the open questions.
+
+**Done when:** I approve the plan.
+
+**Prompt:**
+> Phase 3: write `docs/IMPLEMENTATION_PLAN.md` to make this system ready locally. Include the
+> ready checklist, the current state, decisions with defaults, client questions, and phases
+> with "done when". Don't write code yet.
+
+---
+
+### Phase 4: Foundation (login and security)
+
+**Goal:** real accounts and a server that protects every route.
+
+**The agent does (standard recipe):**
+- Passwords hashed with **bcrypt** (pure-JavaScript `bcryptjs` installs anywhere).
+- Sessions: random token in an **httpOnly cookie** (`SameSite=Lax`, `Secure` live); only a
+  hash of the token stored in the database; expiry after inactivity; logout ends it.
+- **Every API route private by default**; a few marked public (health, login); roles limit
+  owner-only routes.
+- Login rate limit, the same message for wrong user or wrong password, refuse write requests
+  from other sites (Origin check).
+- One readable error format the screens can show.
+- The first owner account is created by a **script I run myself**; the password is typed
+  hidden. The agent never sees or types real passwords.
+- Screens: show workspace pages only after the server confirms the login.
+
+**Done when:** a wrong password is refused by the server; a lower role cannot open owner
+pages even by typing the address; logout ends the session; tests for these pass.
+
+**Prompt:**
+> Phase 4: real login and roles following the playbook recipe. Give me the owner-setup
+> command to run myself. Test it with the API and tell me what I must check in the browser.
+
+---
+
+### Phase 5: Data model
+
+**Goal:** a database that can hold every feature in scope and refuses bad data by itself.
+
+**The agent does:**
+- Schema only through **numbered migration files**; never edits an applied one.
+- **Rules as database constraints:** required fields, unique keys, amounts not negative,
+  "only one open X at a time", "a discount needs an ID", "a void needs a reason".
+- **History is never edited:** stock, payments and other money records are append-only;
+  corrections are new rows (adjustment, reversal).
+- Money as `DECIMAL`, rounded on the server. Dates and times stored consistently.
+- Shared hosting safe: no triggers or stored procedures that need admin rights; a character
+  set and collation the host supports.
+- Two scripts: **verify** (the expected tables, keys and rules exist) and **check-rules**
+  (tries good and bad rows in a transaction, then rolls back).
+
+**Done when:** migrations apply on a fresh database and re-run safely; verify and check-rules
+pass.
+
+**Prompt:**
+> Phase 5: design the migrations for every feature in the plan. Put the business rules into
+> the database. Add verify and check-rules scripts. Explain each table to me simply.
+
+---
+
+### Phase 6: Feature slices (repeat for each business area)
+
+**Goal:** one area at a time works end to end on real data.
+
+**The loop for each slice:**
+1. **API:** endpoints for the area, with server-side validation (never trust the screen),
+   role checks, and transactions for anything that changes several tables.
+2. **Prove the API:** unit tests for the rules + real calls against the dev database
+   (good and bad cases).
+3. **Screens:** replace that area's browser store with API calls; show loading and the
+   server's error messages.
+4. **Bridge if needed:** pages not moved yet can read a synced browser copy; delete the bridge
+   when the last page is moved.
+5. **Try it:** in the browser, with two browsers when it matters (same data on both).
+6. **Commit, update the plan and this playbook.**
+
+**Typical order:** master data (products, customers, suppliers, staff, settings) → stock or
+schedule → the main transaction (sale, booking, order) → money handling (shifts, cash,
+credit, refunds) → reports and dashboards.
+
+**For the main transaction:** one database transaction for the whole thing (check prices
+on the server, lock and allocate stock, write the ledger, write payments, give a number).
+Test two people doing it at the same time on the last item.
+
+**Done when (per slice):** the "done when" line in the implementation plan is true.
+
+**Prompt:**
+> Phase 6, slice "<area>": build the API with validation and tests, prove it with real calls,
+> then move the screens to it. Tell me what to check in the browser.
+
+---
+
+### Phase 7: Ready locally
+
+**Goal:** the whole system works locally like it will live.
+
+**The agent does:**
+- Server-side **seed script** (realistic sample data through the same rules as the API) and a
+  safe **reset** for the dev database only.
+- Removes the browser stores and the prototype-only buttons.
+- **Automated tests** for the risky parts (login, the main transaction, money totals, voids,
+  concurrency).
+- **Backup and restore** commands, tried once.
+- `docs/RUNNING_LOCALLY.md`: how to start everything from zero.
+
+**I do:** a **full test day** with two browsers, acting as the staff and the owner, every
+payment type and every mistake case; then clear the browsers and check nothing is lost.
+
+**Done when:** every item on the "ready locally" checklist is checked.
+
+---
+
+### Phase 8: Staging and client testing
+
+**Goal:** a real online copy the client tests before going live.
+
+**I do:** ask the client to buy the hosting plan (they own it) and share access with me;
+set the server environment variables myself in the host panel; invite the client to test.
+
+**The agent does:** writes the step list for the host, then `docs/DEPLOYMENT.md` **from what
+actually worked**: create `staging.` subdomain and its own database, check the database and
+Node versions, deploy the API from GitHub, run migrations, check health and verify, upload
+only the web build, run the owner script.
+
+**Done when:** the client tested a full day on staging and signed off.
+
+**Rules:** ask before every action on a live account; back up before every migration; remote
+database access only from my own address and removed after.
+
+---
+
+### Phase 9: Go-live
+
+**Goal:** the real system with real data.
+
+- Same deploy steps on the main domain with a **fresh** database (never copy the dev or
+  staging database with test data).
+- Import or type only real data (products, prices, real accounts).
+- Daily backups confirmed; a restore tried once.
+- Stay available for the first days of real use.
+
+---
+
+### Phase 10: Handover and support
+
+- A short **owner guide** (how to do the daily tasks, who to call).
+- Maintenance routine: backups, updates, renewal dates of hosting and domain.
+- Change requests: each one becomes a small new phase-6 slice with a quote.
+- Update this playbook with the lessons from the project.
+
+---
+
+## 3. The working loop for every agent request
+
+1. **Context:** the agent reads `CLAUDE.md`, the implementation plan and this playbook.
+2. **One clear request:** "Phase N" or "slice X", with what done looks like.
+3. **Plan out loud:** the agent lists the steps before changing files.
+4. **Smallest complete change:** no extra features nobody asked for.
+5. **Checks:** type-check, lint, tests, database verify.
+6. **Real proof:** API calls and/or the browser, good and bad cases.
+7. **Commit** (and push if that is the project rule) with a clear message.
+8. **Report:** what changed, how it was checked, what was not checked, what I must do.
+9. **Update the docs:** plan status, `CLAUDE.md` status, playbook lessons.
+
+## 4. Documents every project has
+
+| File | Where | Purpose |
 |---|---|---|
-| 0 | Talk to the client, decide the stack and hosting, quote the cost | Notes, decisions, quote |
-| 1 | Set up the PC: database, repos, agent context, skills | Two repos that run |
-| 2 | Build the UI first with fake data in the browser (design phase) | Clickable app the client can see |
-| 3 | Plan the move to a real backend, in phases | `docs/IMPLEMENTATION_PLAN.md` |
-| 4 | Real login and accounts | Auth that the server enforces |
-| 5 | Database for every feature the UI already has | Migrations + rule checks |
-| 6 | Move each page to the API, one area at a time | Pages that save to the database |
-| 7 | Seed data, tests, backup, runbook *(to fill)* | Local system "ready" |
-| 8 | Buy hosting, deploy to staging, then live *(to fill)* | `DEPLOYMENT.md`, live site |
-| 9 | Handover and support *(to fill)* | Owner guide, backups running |
+| `CLAUDE.md` | each repo | Who I am, the client, the stack, rules, status, plan (the agent reads it first) |
+| `AGENTS.md` | server repo | Rules for any agent: commit after each task, run checks, no secrets |
+| `docs/IMPLEMENTATION_PLAN.md` | web repo | Phases, decisions, "ready" checklist, progress |
+| `docs/DEVELOPMENT_PLAYBOOK.md` | web repo | This method (copied into every project) |
+| `database/README.md` | server repo | Migrations and database scripts |
+| `docs/RUNNING_LOCALLY.md` | web repo | Start everything on a new computer |
+| `docs/DEPLOYMENT.md` | web repo | The real deploy steps that worked |
+| Owner guide | for the client | Daily tasks in plain words |
 
----
+## 5. My default technical choices (change per client if needed)
 
-## Stage 0: Before writing code
+- Web app, not desktop: owner can check remotely, central backups, one update for everyone.
+- Front end: React + Vite + TypeScript. Back end: NestJS + TypeScript, raw SQL (`mysql2`),
+  SQL migration files. Database: MariaDB (same as the host).
+- Hosting: Hostinger web hosting with Node.js apps; web build on the main domain, API on
+  `api.`, test copy on `staging.`; the client owns the account, I manage it with shared access.
+- Security: bcrypt, httpOnly cookie sessions, private-by-default API, roles, rate limit.
+- Money: `DECIMAL`, server rounding; history append-only.
 
-1. **Find out how the business really works.** Who uses it (owner, cashier, staff), one
-   shared login or one each, what they do every day, and what reports they need. For Dagohoy:
-   one owner, one shared cashier login, and the staff on duty are picked at the start of each
-   shift.
-2. **Ask about government and tax rules early.** In the Philippines: BIR, VAT-registered or not,
-   Senior/PWD 20% discount (record the ID number and name), and official receipts vs
-   "not an official receipt". For Dagohoy, the owner said BIR only checks the monthly
-   **sales**, so the monthly report is a sales report.
-3. **Hardware questions.** Barcode scanner (USB scanners type like a keyboard and press
-   Enter), thermal printer width (58 mm or 80 mm), internet backup (pocket WiFi).
-4. **Choose web app vs desktop app.** I choose **web app**: the owner can check remotely,
-   backups are central, and one deploy updates everyone. The weak point is that it needs
-   internet.
-5. **Hosting and cost.** My standard: Hostinger (client owns and pays, I get access through
-   Account sharing). Quote first-year and renewal prices with VAT. Dagohoy's numbers are in
-   the web repo's `CLAUDE.md`.
-6. **Write the decisions down** in the repo's `CLAUDE.md` (the agent reads it every session).
+## 6. Safety rules (always)
 
-## Stage 1: Set up the computer and the repos
+- The agent never types my or the client's passwords, never handles payment details, and
+  asks before anything on a live database or hosting account.
+- Secrets only in `.env` files that are never committed.
+- Schema only through migrations; back up before every live migration.
+- Never copy a development database (test data) to live.
+- Remote database access only from my own address, removed when not needed.
 
-- **Two repos side by side:** `<Client>-Web` (React + Vite + TypeScript) and
-  `<Client>-Server` (NestJS + TypeScript + raw `mysql2`, no ORM). Work on branch `dev`.
-- **Local database must match production.** Hostinger runs **MariaDB**, so install MariaDB
-  locally (not MySQL 8). Use its own port if another database is installed (Dagohoy: MariaDB
-  on **3307**, old MySQL on 3306).
-- **Limited database user** for the app (all rights on its own database only, no SUPER). The
-  root password stays with me; the app user's password lives only in the server `.env`.
-- **Pick ports that don't clash** with my other projects. Dagohoy's API runs on **3001**
-  because other React projects use 3000, 3002 and up. Check first: `netstat -ano | findstr LISTEN`.
-- **Agent context files:** `CLAUDE.md` in each repo (who I am, the stack, rules, status, plan),
-  and `AGENTS.md` in the server repo (commit after each task, run checks, never commit secrets).
-- **Agent skills:** keep them in `.agents/skills/` and copy them to `.claude/skills/` (the
-  folder Claude Code reads), then start a new session.
-- **Git on Windows:** `core.autocrlf=true`; read the status with
-  `git -c core.autocrlf=true status`.
-
-## Stage 2: UI first, with fake data (design phase)
-
-Build every screen with data saved in the browser (`localStorage`) and sample data. The client
-can click through the real flow early, and the business rules get discovered before any
-database exists.
-
-What we built this way for Dagohoy: landing page, login, POS (scan-or-type search, cart,
-payment popup: Cash with change, GCash with reference, utang/credit, no-charge; thermal receipt),
-shifts (start with the cashier and staff on duty, opening float, cash in/out, close with a count,
-duty report), transactions (receipt reprint, void with a reason, Excel export), products and
-stock control (receive, lots and expiry, adjustments, write-offs), suppliers, expenses, credit
-accounts, staff, settings, owner overview with charts, and a monthly sales report for BIR.
-
-Rules that worked:
-- **One shared component per thing** (one receipt, one control deck, one scan field) so
-  every page looks and behaves the same.
-- **Plain words on screen** ("Count is different", not "Float variance").
-- **A dev-only "Load sample data" button** that simulates weeks of real activity, so every
-  report has something to show. It must never be in the live build (`import.meta.env.DEV` and a
-  lazy `import()`), and the live build is checked for it.
-- **Start fresh** clears all test records before real use.
-
-Weakness to plan for: everything has to be moved to the server later, page by page.
-Next time, consider building the login and the database earlier and the UI on top of them.
-
-## Stage 3: Plan the backend move in phases
-
-Write `docs/IMPLEMENTATION_PLAN.md`: what "ready locally" means (a checklist), what exists
-today, the decisions with defaults, and phases in order with a "done when" test for each.
-One phase at a time, and the app must still run after each one.
-
-Dagohoy's phases: 1 login, 2 database for all features, 3 products/suppliers/staff/settings,
-4 stock, 5 shifts and cash drawer, 6 sales, 7 utang and expenses, 8 reports and dashboards,
-9 seed data, tests, backup and runbook, 10 a full test day with two browsers.
-
-## Stage 4: Real login first
-
-- **Passwords:** bcrypt (`bcryptjs`, pure JavaScript, so it installs on shared hosting).
-- **Sessions:** a random token in an **httpOnly cookie** (`SameSite=Lax`, `Secure` in
-  production). Store only a **SHA-256 hash** of the token in a `user_sessions` table. Sessions
-  expire after inactivity and can be ended (logout, password change, disabled account).
-- **Every API route is private by default** (a global guard). Mark the few public ones
-  (`/health`, `/auth/login`) and limit owner-only routes with a roles decorator.
-- **Login rate limit** (5 wrong tries per minute per username and address) and the same error
-  message for "wrong username" and "wrong password".
-- **Refuse changes sent from other sites** (check the `Origin` header on POST/PATCH/DELETE).
-- **The owner account is created by a script the client or I run in a terminal**
-  (`npm run db:create-owner`). The password is typed hidden; the agent never sees or types it.
-- **Web:** pages show only after `GET /auth/me` confirms the session; any 401 goes back to
-  login. No passwords or roles are kept in `localStorage`.
-
-## Stage 5: Database for every feature
-
-- **Schema changes only through numbered migration files.** Never edit an applied migration;
-  add a new one. The runner stores a checksum and refuses edited files.
-- **Put the business rules in the database** as `CHECK` constraints and unique keys, so a bug in
-  the API cannot save bad data. Dagohoy examples: only one open shift (a stored column plus a
-  unique key), Senior/PWD discount needs an ID number, credit needs a customer, cash must cover
-  the total, voids need a reason, total = subtotal − discount.
-- **Never edit money or stock history.** Stock is an append-only ledger (`stock_movements`);
-  corrections are new adjustment rows. Payments are append-only too; a void adds a negative
-  row pointing to the original.
-- **Money is DECIMAL** in the database and is rounded to centavos on the server.
-- **Scripts that prove it:** `db:verify` (tables, keys, rules exist) and `db:check-rules`
-  (tries good and bad rows inside a transaction, then rolls back).
-- MariaDB on shared hosting: no triggers or stored procedures (they need SUPER), and use
-  `utf8mb4_unicode_ci`.
-
-## Stage 6: Move the pages to the API, one area at a time
-
-- Build the API for one area, test it with real requests (curl) against the dev database, then
-  change the web pages for that area.
-- **Bridge for pages not moved yet:** after login, copy the server data (products, suppliers,
-  staff, settings) into the browser storage the old pages still read. Delete the bridge when
-  the last page is moved.
-- **The server checks everything again** (barcode already used, price above 0, unit exists,
-  role allowed). The form shows the server's message.
-- **Price changes keep history** (close the old price, start a new one). Units cannot change
-  once a product has stock records.
-- Phases 4–10 for Dagohoy: *(to fill as each one is done)*.
-
-## Stage 7: Ready locally *(to fill)*
-
-Checklist from the implementation plan: every page uses the API, two browsers see the same
-data, clearing the browser loses nothing, a sale is one transaction, tests pass, backup and
-restore tried, `docs/RUNNING_LOCALLY.md` written.
-
-## Stage 8: Hostinger deploy *(to fill after the real deploy)*
-
-Planned order, to be replaced with the steps that actually worked:
-1. Client buys Hostinger (12-month term; untick upsells) and shares access with me.
-2. Create `staging.` subdomain + its own MariaDB database; check `SELECT VERSION();`, the Node
-   versions available, SSH, and how many Node apps the plan allows.
-3. Deploy the API as a Node.js app on `api.` (from GitHub), set its `.env` in hPanel, run the
-   migrations, check `/api/health` and `db:verify`.
-4. Build the web (`npm run build`) and upload only `dist/` to the main domain.
-5. Create the owner with the owner script, enter real products (never copy the dev database).
-6. Back up before every live migration. Remote database access only from my own IP, removed
-   when done.
-
-## Stage 9: Handover *(to fill)*
-
----
-
-## Working with the AI agent
-
-- **Start of every session:** the agent reads `CLAUDE.md`, the plan and this playbook. Ask it to
-  continue "Phase N" so it does not guess.
-- **One phase per request,** with a "done when" test. The agent runs the checks (typecheck,
-  lint, tests, `db:verify`) and commits when the phase is done.
-- **Ask for plain-language, step-by-step explanations** (Bisaya/English is fine).
-- **Never let the agent handle real passwords.** Scripts that need a password are run by me in
-  my own terminal. The agent can create random test accounts on the local dev database only.
-- **Decisions are mine and the client's;** the agent proposes defaults and lists the questions
-  to ask the client.
-- **Keep this playbook updated after every phase** (lessons, what changed).
-
-## Lessons learned (pitfalls to avoid)
+## 7. Lessons learned (all projects)
 
 | Problem | What happened | Do this instead |
 |---|---|---|
-| Port already in use | API would not start: another project used 3000 (and 3002–3005) | Check `netstat` first; give each project its own port |
-| Old API still running | New routes returned 404 because a plain `node dist/main` was running, not watch mode | Run the API with `npm run dev` (watch) while developing; restart after big changes |
-| Formatter touched everything | Running Prettier on the whole `src` reformatted 45 untouched files | Format only the files you changed |
-| Password showed in output | A setup script echoed piped input, so a test password appeared in a log | Scripts must never echo passwords; read piped input silently; regenerate any leaked test password |
-| Agent cannot test logged-in pages | The agent may not type passwords (correct) | Test the API with curl and test accounts; I do the final browser login check |
-| MariaDB refused a query | `INSERT ... VALUES` with a subquery on the same table | Do a separate `SELECT` first |
-| `LIKE '__x%'` matched too much | `_` is a wildcard in SQL `LIKE` | Escape it or use unique test prefixes without `_` |
-| Error message hidden | The API sent "Internal server error" with the real message inside `details` | The error filter returns the readable message for 4xx errors |
-| Duplicate commit | `git add` stopped on one bad path and the commit took only part of the change | Check `git status` after adding; add files in one correct command |
-| Test data in the dev database | Ledger rows cannot be deleted (rule), so test products stay | Use clearly named test rows, hide them, and reset the dev database in the seed phase |
+| Long prototype on browser storage | Every page later had to be moved to the API, with a temporary bridge | Keep the prototype short; keep data access in a few store files; build login and the database early |
+| Port already in use | The API would not start because another project used the port | Check free ports at setup; give each project its own and write it in `CLAUDE.md` |
+| Old server still running | New routes returned 404: a plain (non-watch) server kept running old code | Develop with the watch mode server; restart after big changes |
+| Formatter touched everything | Formatting the whole folder changed dozens of unrelated files | Format only the files that changed |
+| Password in a log | A setup script echoed piped input | Scripts never echo passwords; regenerate any test password that leaked |
+| Agent cannot test logged-in screens | It must not type passwords (correct) | The agent proves the API with test accounts; I do the final browser login check |
+| Database refused a query | MariaDB refuses an insert that reads the same table in a subquery | Select first, then insert |
+| SQL `LIKE` matched too much | `_` is a wildcard | Escape it, or use test prefixes without `_` |
+| Hidden error messages | The API returned "Internal server error" with the real reason buried | One error format with a readable message for user mistakes |
+| Half a commit | `git add` stopped on one bad path, the commit took only part | Check `git status` after adding |
+| Test rows that cannot be deleted | Ledger rows are never deleted (by design) | Name test rows clearly, hide them, and reset the dev database in Phase 7 |
 
-## Project log: Dagohoy Pharmacy
+---
 
-| Date | Phase | Notes |
+## Appendix: Dagohoy Pharmacy (first client) as the example
+
+Internal POS and inventory system: one owner, one shared cashier login (the staff on duty are
+picked at Start shift), barcode scanner, thermal receipts, GCash, utang (credit), shifts and
+cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
+
+| Date | Playbook phase | What happened |
 |---|---|---|
-| 2026-11-06 → 11-09 | UI design phase | Full UI on localStorage; sample data button; owner overview and dashboards |
-| 2026-11-09 | Local setup | MariaDB 11.4.3 on 3307, `dagohoy_app` user, migrations 000–003 |
-| 2026-11-09 | Phase 1 login | Migration 004, bcrypt, cookie sessions, guards, users API, owner script, API port 3001 |
-| 2026-11-09 | Phase 2 database | Migration 005 (shifts, payments, utang, expenses, settings…), `db:check-rules` |
-| 2026-11-09 | Phase 3 catalog | Migration 006, products/suppliers/staff/settings API, web bridge for POS/stock |
+| 2026-11-06 → 11-09 | 0–2 | Scope, Hostinger quote, full clickable prototype on browser storage with sample data |
+| 2026-11-09 | 1 | MariaDB locally (port 3307), limited app user, API on port 3001 |
+| 2026-11-09 | 3 | `docs/IMPLEMENTATION_PLAN.md` (10 phases) |
+| 2026-11-09 | 4 | Real login: bcrypt, cookie sessions, guards, users API, owner script (migration 004) |
+| 2026-11-09 | 5 | Tables and rules for shifts, payments, utang, expenses, settings (migration 005, check-rules) |
+| 2026-11-09 | 6, slice 1 | Products, suppliers, staff roster, settings on the server (migration 006) |
+| next | 6 | Stock, shifts, sales, utang and expenses, reports |
