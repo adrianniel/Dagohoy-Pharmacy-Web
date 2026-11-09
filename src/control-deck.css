@@ -530,3 +530,212 @@
   font-weight: 700;
   color: #a2372c;
 }
+
+/* ------------------------------------------------------------------
+   Owner overview (Admin → Overview): read-only numbers and charts.
+   ------------------------------------------------------------------ */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.overview__head p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #6a7b71;
+}
+
+.overview .cashier-summary-grid {
+  margin: 0;
+}
+
+.overview__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.overview__card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 18px 20px 20px;
+}
+
+.overview__card--wide {
+  grid-column: 1 / -1;
+}
+
+.overview__card h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #13322a;
+}
+
+.overview__card .report-chart {
+  height: 220px;
+  padding: 1rem 0.5rem 0;
+}
+
+/* A day with no sales shows no bar. */
+.overview__card .report-chart__column span {
+  min-height: 0;
+}
+
+.overview__card .report-chart__column small {
+  text-align: center;
+}
+
+.overview__empty {
+  margin: 0;
+  padding: 1.2rem 0;
+  font-size: 0.9rem;
+  color: #6a7b71;
+}
+
+.overview-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.overview-bars__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.overview-bars__label strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  color: #13322a;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-bars__label small {
+  font-size: 0.74rem;
+  color: #6a7b71;
+}
+
+.overview-bars__track {
+  height: 12px;
+  border-radius: 999px;
+  background: #edf1ee;
+  overflow: hidden;
+}
+
+.overview-bars__track span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4caa7a, #176246);
+}
+
+.overview-bars__value {
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #13322a;
+}
+
+.overview__alerts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overview__alert {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid #d8e2d6;
+  border-radius: 12px;
+  background: #f6f9f3;
+}
+
+.overview__alert strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #176246;
+}
+
+.overview__alert span {
+  font-size: 0.8rem;
+  color: #6a7b71;
+}
+
+.overview__alert.is-warn {
+  border-color: #ecd29b;
+  background: #fdf6e6;
+}
+
+.overview__alert.is-warn strong {
+  color: #8a5a00;
+}
+
+.overview__alert.is-bad {
+  border-color: #efc7c1;
+  background: #fdf3f1;
+}
+
+.overview__alert.is-bad strong {
+  color: #a2372c;
+}
+
+.overview__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 5rem;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e3e6d6;
+  font-size: 0.9rem;
+}
+
+.overview__list li strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview__more {
+  align-self: flex-start;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #176246;
+}
+
+@media (max-width: 900px) {
+  .overview__grid,
+  .overview__alerts {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-bars li {
+    grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) auto;
+  }
+}

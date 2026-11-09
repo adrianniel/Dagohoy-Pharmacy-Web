@@ -58,6 +58,7 @@ type SavedSale = {
   total?: number;
   payment?: string;
   status?: string;
+  creditBalance?: number;
   lines?: Array<{ product: string; barcode?: string; quantity: number; unitPrice: number }>;
 };
 
@@ -1119,163 +1120,229 @@ function InventoryForm({
     </div>
   );
 }
-type OverviewTab = 'today' | 'alerts' | 'actions';
+/** Days from today to a lot's expiry date (negative = already expired). */
+function daysUntil(date: string) {
+  return Math.ceil(
+    (new Date(`${date}T00:00:00`).getTime() - new Date(new Date().toDateString()).getTime()) /
+      86400000,
+  );
+}
 
+/** Horizontal bars: one row per item, bar length relative to the biggest value. */
+function BarList({
+  rows,
+  empty,
+}: {
+  rows: Array<{ label: string; value: number; detail?: string }>;
+  empty: string;
+}) {
+  const max = Math.max(...rows.map((row) => row.value), 0);
+  if (!rows.length || max === 0) return <p className="overview__empty">{empty}</p>;
+  return (
+    <ul className="overview-bars">
+      {rows.map((row) => (
+        <li key={row.label}>
+          <span className="overview-bars__label">
+            <strong>{row.label}</strong>
+            {row.detail && <small>{row.detail}</small>}
+          </span>
+          <span className="overview-bars__track" aria-hidden="true">
+            <span style={{ width: `${Math.max(2, (row.value / max) * 100)}%` }} />
+          </span>
+          <span className="overview-bars__value">{money(row.value)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Owner overview: the important numbers and charts at a glance. Read only, no controls. */
 function AdminDashboard() {
-  const [tab, setTab] = useState<OverviewTab>('today');
   const threshold = getLowStockThreshold();
   const inventory = getInventory();
-  const lowStock = inventory.filter((product) => product.stock < threshold);
-  const todayKey = new Date().toDateString();
-  const todaySales = readCountedSales().filter(
-    (sale) => new Date(sale.date).toDateString() === todayKey,
-  );
-  const salesToday = todaySales.reduce((sum, sale) => sum + Number(sale.total ?? 0), 0);
+  const sales = readCountedSales();
+  const sum = (list: SavedSale[]) =>
+    list.reduce((total, sale) => total + Number(sale.total ?? 0), 0);
+  const onDay = (offset: number) => {
+    const day = new Date();
+    day.setDate(day.getDate() - offset);
+    return sales.filter((sale) => new Date(sale.date).toDateString() === day.toDateString());
+  };
+
+  const today = onDay(0);
+  const salesToday = sum(today);
+  const salesYesterday = sum(onDay(1));
+  const now = new Date();
+  const monthSales = sales.filter((sale) => {
+    const date = new Date(sale.date);
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  });
+  const unpaidCredit = sales
+    .filter((sale) => sale.payment === 'Credit')
+    .reduce((total, sale) => total + Math.max(0, Number(sale.creditBalance ?? 0)), 0);
   const stockAtPrice = inventory.reduce(
-    (sum, product) => sum + product.stock * (Number(product.price.replace(/[₱,]/g, '')) || 0),
+    (total, product) => total + product.stock * (Number(product.price.replace(/[₱,]/g, '')) || 0),
     0,
   );
-  const withCost = inventory.filter((product) => product.cost !== undefined);
-  const stockAtCost = withCost.reduce(
-    (sum, product) => sum + product.stock * (product.cost ?? 0),
-    0,
-  );
-  const items: Array<ControlItem<OverviewTab>> = [
-    {
-      key: 'today',
-      icon: 'dashboard',
-      title: 'Today',
-      hint: 'Sales and stock value',
-      tone: 'forest',
-      about: 'Sales so far today and the value of the stock on the shelf.',
-    },
-    {
-      key: 'alerts',
-      icon: 'inventory',
-      title: 'Inventory alerts',
-      hint: lowStock.length ? 'Need restocking' : 'All above reorder point',
-      tone: 'amber',
-      count: lowStock.length,
-      alert: lowStock.length > 0,
-      about: `Products below the reorder point of ${threshold} units. Restock them to avoid missed sales.`,
-    },
-    {
-      key: 'actions',
-      icon: 'arrow',
-      title: 'Quick actions',
-      hint: 'Jump to a task',
-      tone: 'blue',
-      about: 'Shortcuts to the pages you use most.',
-    },
-  ];
-  const current = items.find((item) => item.key === tab);
+
+  // Last 7 days, today included.
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setDate(day.getDate() - (6 - index));
+    const list = onDay(6 - index);
+    return {
+      label: day.toLocaleDateString('en-PH', { weekday: 'short' }),
+      date: day.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }),
+      total: sum(list),
+      list,
+    };
+  });
+  const maxDay = Math.max(...days.map((day) => day.total), 0);
+  const weekSales = days.flatMap((day) => day.list);
+
+  const byPayment = new Map<string, { amount: number; count: number }>();
+  const byProduct = new Map<string, { amount: number; quantity: number }>();
+  for (const sale of weekSales) {
+    const method = sale.payment ?? 'Cash';
+    const paid = byPayment.get(method) ?? { amount: 0, count: 0 };
+    byPayment.set(method, { amount: paid.amount + Number(sale.total ?? 0), count: paid.count + 1 });
+    for (const line of sale.lines ?? []) {
+      const sold = byProduct.get(line.product) ?? { amount: 0, quantity: 0 };
+      byProduct.set(line.product, {
+        amount: sold.amount + line.quantity * line.unitPrice,
+        quantity: sold.quantity + line.quantity,
+      });
+    }
+  }
+  const paymentRows = [...byPayment.entries()]
+    .sort((a, b) => b[1].amount - a[1].amount)
+    .map(([label, value]) => ({
+      label,
+      value: value.amount,
+      detail: `${value.count} sale${value.count === 1 ? '' : 's'}`,
+    }));
+  const topProducts = [...byProduct.entries()]
+    .sort((a, b) => b[1].amount - a[1].amount)
+    .slice(0, 5)
+    .map(([label, value]) => ({ label, value: value.amount, detail: `${value.quantity} sold` }));
+
+  const lowStock = inventory
+    .filter((product) => product.stock < threshold)
+    .sort((a, b) => a.stock - b.stock);
+  const lots = loadBatches(initialBatches)
+    .filter((batch) => batch.stock > 0 && batch.expiry)
+    .map((batch) => ({ ...batch, days: daysUntil(batch.expiry) }));
+  const expired = lots.filter((lot) => lot.days < 0);
+  const expiringSoon = lots.filter((lot) => lot.days >= 0 && lot.days <= 30);
+
+  const change = salesYesterday
+    ? `${salesToday >= salesYesterday ? '▲' : '▼'} ${Math.abs(
+        Math.round(((salesToday - salesYesterday) / salesYesterday) * 100),
+      )}% vs yesterday (${money(salesYesterday)})`
+    : `${today.length} sale${today.length === 1 ? '' : 's'} so far`;
 
   return (
-    <div className="cashier-page">
-      <ControlDeck
-        id="overview"
-        title="Overview"
-        subtitle="Pick what to look at. It opens in the card below."
-        active={tab}
-        onSelect={setTab}
-        items={items}
-      />
-      <ControlPanel
-        id="overview"
-        activeKey={tab}
-        title={current?.title ?? 'Overview'}
-        about={current?.about}
-      >
-        {tab === 'today' && (
-          <div className="cashier-summary-grid">
-            <Summary
-              label="Sales today"
-              value={money(salesToday)}
-              detail={`${todaySales.length} sale${todaySales.length === 1 ? '' : 's'}, voids left out`}
-            />
-            <Summary
-              label="Transactions"
-              value={String(todaySales.length)}
-              detail={
-                todaySales.length
-                  ? `Average ${money(salesToday / todaySales.length)} per sale`
-                  : 'No sales yet today'
-              }
-            />
-            <Summary
-              label="Stock value"
-              value={money(stockAtPrice)}
-              detail={
-                withCost.length
-                  ? `At selling price · ${money(stockAtCost)} at cost`
-                  : 'At selling price'
-              }
-            />
-            <Summary
-              label="Needs attention"
-              value={`${lowStock.length} items`}
-              detail={`Below ${threshold} units`}
-            />
-          </div>
-        )}
-        {tab === 'alerts' &&
-          (lowStock.length === 0 ? (
-            <p className="stock-index__empty">
-              Every product is at or above the reorder point of {threshold} units.
-            </p>
+    <div className="cashier-page overview">
+      <header className="overview__head">
+        <p>
+          {now.toLocaleDateString('en-PH', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}{' '}
+          · Voided and no-charge sales are left out.
+        </p>
+      </header>
+
+      <div className="cashier-summary-grid">
+        <Summary label="Sales today" value={money(salesToday)} detail={change} />
+        <Summary
+          label="Sales this month"
+          value={money(sum(monthSales))}
+          detail={`${monthSales.length} sale${monthSales.length === 1 ? '' : 's'}`}
+        />
+        <Summary
+          label="Unpaid credit (utang)"
+          value={money(unpaidCredit)}
+          detail="Still owed by customers"
+        />
+        <Summary
+          label="Stock value"
+          value={money(stockAtPrice)}
+          detail={`${inventory.length} product${inventory.length === 1 ? '' : 's'}, at selling price`}
+        />
+      </div>
+
+      <div className="overview__grid">
+        <section className="cashier-panel overview__card overview__card--wide">
+          <h4>Sales · last 7 days</h4>
+          {maxDay === 0 ? (
+            <p className="overview__empty">No sales in the last 7 days yet.</p>
           ) : (
-            <section className="cashier-panel">
-              <div
-                className="cashier-table-wrap"
-                role="region"
-                aria-label="Inventory alerts table"
-                tabIndex={0}
-              >
-                <table className="cashier-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>On hand</th>
-                      <th>Reorder point</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lowStock.map((product) => (
-                      <tr key={product.barcode}>
-                        <td>
-                          <strong>{product.product}</strong>
-                        </td>
-                        <td>{product.stock}</td>
-                        <td>{threshold}</td>
-                        <td>
-                          <StatusBadge value={product.status} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="cashier-table-footer">
-                <span>{lowStock.length} product(s) to restock</span>
-                <Link to="/admin/products">View inventory</Link>
-              </div>
-            </section>
-          ))}
-        {tab === 'actions' && (
-          <aside className="cashier-panel admin-quick-actions">
-            <Link to="/cashier/pos">
-              <CashierIcon name="pos" /> New sale <span>→</span>
+            <div className="report-chart" role="img" aria-label="Sales for each of the last 7 days">
+              {days.map((day) => (
+                <div
+                  className="report-chart__column"
+                  key={day.date}
+                  title={`${day.date}: ${money(day.total)}`}
+                >
+                  <span style={{ height: `${(day.total / maxDay) * 100}%` }} />
+                  <small>
+                    <strong>{day.label}</strong>
+                    <br />
+                    {money(day.total)}
+                  </small>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="cashier-panel overview__card">
+          <h4>How customers paid · last 7 days</h4>
+          <BarList rows={paymentRows} empty="No sales in the last 7 days yet." />
+        </section>
+
+        <section className="cashier-panel overview__card">
+          <h4>Best sellers · last 7 days</h4>
+          <BarList rows={topProducts} empty="No items sold in the last 7 days yet." />
+        </section>
+
+        <section className="cashier-panel overview__card overview__card--wide">
+          <h4>Needs attention</h4>
+          <div className="overview__alerts">
+            <div className={`overview__alert${lowStock.length ? ' is-warn' : ''}`}>
+              <strong>{lowStock.length}</strong>
+              <span>Low stock (below {threshold})</span>
+            </div>
+            <div className={`overview__alert${expiringSoon.length ? ' is-warn' : ''}`}>
+              <strong>{expiringSoon.length}</strong>
+              <span>Lots expiring in 30 days</span>
+            </div>
+            <div className={`overview__alert${expired.length ? ' is-bad' : ''}`}>
+              <strong>{expired.length}</strong>
+              <span>Expired lots still on hand</span>
+            </div>
+          </div>
+          {lowStock.length > 0 && (
+            <ul className="overview__list">
+              {lowStock.slice(0, 5).map((product) => (
+                <li key={product.barcode}>
+                  <span>{product.product}</span>
+                  <StatusBadge value={product.status} />
+                  <strong>{product.stock} left</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+          {(lowStock.length > 0 || expiringSoon.length > 0 || expired.length > 0) && (
+            <Link className="overview__more" to="/admin/products">
+              Open Products &amp; Stock →
             </Link>
-            <Link to="/admin/products">
-              <CashierIcon name="inventory" /> Review stock <span>→</span>
-            </Link>
-            <Link to="/admin/reports">
-              <CashierIcon name="reports" /> Sales report <span>→</span>
-            </Link>
-          </aside>
-        )}
-      </ControlPanel>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
