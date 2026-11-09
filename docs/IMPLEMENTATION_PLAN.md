@@ -1,10 +1,14 @@
 # Implementation plan: system ready locally
 
 Goal: Dagohoy Pharmacy runs fully on this PC. The web app (React, port 5173) talks to the
-API (NestJS, port 3000), and every record lives in MariaDB (`dagohoy_pharmacy_dev`, port 3307).
-Nothing important stays in the browser's localStorage anymore.
+API (NestJS, port 3001 locally; 3000 is used by other projects on this PC), and every record
+lives in MariaDB (`dagohoy_pharmacy_dev`, port 3307). Nothing important stays in the browser's
+localStorage anymore.
 
 Written 2026-11-09. Both repos: `Dagohoy-Pharmacy-Web` and `Dagohoy-Pharmacy-Server`, branch `dev`.
+
+**Progress:** Phase 1 done (2026-11-09, migration 004). Phase 2 done (2026-11-09,
+migration `005_operations.sql`, with `npm run db:check-rules`). Next: Phase 3.
 
 ## "Ready locally" means
 
