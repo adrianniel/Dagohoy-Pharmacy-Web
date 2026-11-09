@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
+import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
 import { loadMovements, saveMovements } from '../../data/operationsStore';
@@ -43,6 +44,8 @@ type StoredSale = {
   payment?: string;
   status?: string;
   creditBalance?: number;
+  cashier?: string;
+  noChargeReason?: string;
   lines?: Array<{ product: string; barcode: string; quantity: number; unitPrice: number }>;
 };
 
@@ -118,23 +121,6 @@ function formatGcashNumber(value: string): string {
   return value.trim();
 }
 
-/** Store details printed on the receipt header, from Owner → Pharmacy settings. */
-function readStoreDetails() {
-  try {
-    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as {
-      name?: string;
-      address?: string;
-      phone?: string;
-    };
-    return {
-      name: settings.name?.trim() || 'Dagohoy Pharmacy',
-      address: settings.address?.trim() || '',
-      phone: settings.phone?.trim() || '',
-    };
-  } catch {
-    return { name: 'Dagohoy Pharmacy', address: '', phone: '' };
-  }
-}
 const PAYMENT_METHOD_OPTIONS: Array<{
   id: PaymentMethod;
   name: string;
@@ -476,6 +462,8 @@ export function CashierPosPage() {
       discount: 0,
       payment: 'No charge',
       status: 'No charge',
+      cashier: cashierName,
+      noChargeReason: reason,
       lines: saleLines.map((line) => ({
         product: line.product.product,
         barcode: line.product.barcode,
@@ -1375,19 +1363,6 @@ export function CashierPosPage() {
   );
 }
 
-const receiptAmount = (amount: number) =>
-  new Intl.NumberFormat('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    amount,
-  );
-
-function receiptDateTime(value: string) {
-  const date = new Date(value);
-  return {
-    date: date.toLocaleDateString('en-PH', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-    time: date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }),
-  };
-}
-
 /**
  * After a sale: a quick check mark, then the receipt slides out like it is being printed.
  * The receipt is laid out like a store thermal printer slip (monospace, dashed rules,
@@ -1395,16 +1370,6 @@ function receiptDateTime(value: string) {
  */
 function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => void }) {
   const [stage, setStage] = useState<'check' | 'receipt'>('check');
-  const store = useMemo(readStoreDetails, []);
-  const { date, time } = receiptDateTime(sale.date);
-  const itemCount = sale.lines.reduce((sum, line) => sum + line.quantity, 0);
-  const discountPercent =
-    sale.subtotal > 0 ? Math.round((sale.discount / sale.subtotal) * 1000) / 10 : 0;
-  const reference = sale.reference
-    ? sale.reference.length < 13
-      ? `…${sale.reference}`
-      : sale.reference
-    : '';
 
   useEffect(() => {
     const timer = window.setTimeout(() => setStage('receipt'), 520);
@@ -1438,128 +1403,29 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
       </div>
 
       <div className="pos-done__paper">
-        <article className="thermal" aria-label={`Receipt ${sale.receipt}`}>
-          <header className="thermal__head">
-            <strong>{store.name.toUpperCase()}</strong>
-            {store.address && <span>{store.address}</span>}
-            {store.phone && <span>Tel: {store.phone}</span>}
-          </header>
-          <p className="thermal__title">
-            {sale.payment === 'No charge' ? 'NO-CHARGE SLIP' : 'SALES RECEIPT'}
-          </p>
-          <div className="thermal__rule" />
-          <dl className="thermal__meta">
-            <div>
-              <dt>Receipt #</dt>
-              <dd>{sale.receipt}</dd>
-            </div>
-            <div>
-              <dt>Date</dt>
-              <dd>
-                {date} {time}
-              </dd>
-            </div>
-            <div>
-              <dt>Cashier</dt>
-              <dd>{sale.cashier}</dd>
-            </div>
-            {sale.customer && (
-              <div>
-                <dt>Customer</dt>
-                <dd>{sale.customer}</dd>
-              </div>
-            )}
-          </dl>
-          <div className="thermal__rule" />
-          <div className="thermal__cols" aria-hidden="true">
-            <span>ITEM</span>
-            <span>AMOUNT</span>
-          </div>
-          <ul className="thermal__items">
-            {sale.lines.map((line) => {
-              const price = toAmount(line.product.price);
-              return (
-                <li key={`${line.product.barcode}-${line.product.product}`}>
-                  <span className="thermal__name">{line.product.product}</span>
-                  <span className="thermal__row">
-                    <span>
-                      {line.quantity} x {receiptAmount(price)}
-                    </span>
-                    <span>{receiptAmount(price * line.quantity)}</span>
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="thermal__rule" />
-          <div className="thermal__row">
-            <span>
-              SUBTOTAL ({itemCount} item{itemCount === 1 ? '' : 's'})
-            </span>
-            <span>{receiptAmount(sale.subtotal)}</span>
-          </div>
-          {sale.discount > 0 && (
-            <div className="thermal__row">
-              <span>DISCOUNT {discountPercent}%</span>
-              <span>-{receiptAmount(sale.discount)}</span>
-            </div>
-          )}
-          <div className="thermal__rule thermal__rule--double" />
-          <div className="thermal__row thermal__total">
-            <span>TOTAL</span>
-            <span>PHP {receiptAmount(sale.total)}</span>
-          </div>
-          <div className="thermal__rule thermal__rule--double" />
-          {sale.payment === 'Cash' && (
-            <>
-              <div className="thermal__row">
-                <span>CASH</span>
-                <span>{receiptAmount(sale.amountPaid)}</span>
-              </div>
-              <div className="thermal__row">
-                <span>CHANGE</span>
-                <span>{receiptAmount(sale.change)}</span>
-              </div>
-            </>
-          )}
-          {sale.payment === 'GCash' && (
-            <>
-              <div className="thermal__row">
-                <span>GCASH</span>
-                <span>{receiptAmount(sale.total)}</span>
-              </div>
-              <div className="thermal__row">
-                <span>REF NO.</span>
-                <span>{reference}</span>
-              </div>
-              <div className="thermal__row">
-                <span>STATUS</span>
-                <span>{sale.paymentStatus === 'Paid' ? 'CONFIRMED' : 'PENDING'}</span>
-              </div>
-            </>
-          )}
-          {sale.payment === 'Credit' && (
-            <>
-              <div className="thermal__row">
-                <span>CASH PAID</span>
-                <span>{receiptAmount(sale.amountPaid)}</span>
-              </div>
-              <div className="thermal__row thermal__strong">
-                <span>BALANCE (UTANG)</span>
-                <span>{receiptAmount(sale.creditBalance ?? 0)}</span>
-              </div>
-            </>
-          )}
-          {sale.payment === 'No charge' && sale.noChargeReason && (
-            <p className="thermal__note">Reason: {sale.noChargeReason}</p>
-          )}
-          <div className="thermal__rule" />
-          <footer className="thermal__foot">
-            <strong>THANK YOU! PLEASE COME AGAIN.</strong>
-            <span>Keep this receipt for returns.</span>
-            <span>This is not an official receipt.</span>
-          </footer>
-        </article>
+        <ThermalReceipt
+          data={{
+            receipt: sale.receipt,
+            date: sale.date,
+            cashier: sale.cashier,
+            customer: sale.customer,
+            payment: sale.payment,
+            lines: sale.lines.map((line) => ({
+              product: line.product.product,
+              quantity: line.quantity,
+              unitPrice: toAmount(line.product.price),
+            })),
+            subtotal: sale.subtotal,
+            discount: sale.discount,
+            total: sale.total,
+            amountPaid: sale.amountPaid,
+            change: sale.change,
+            gcashReference: sale.reference,
+            paymentStatus: sale.paymentStatus,
+            creditBalance: sale.creditBalance,
+            noChargeReason: sale.noChargeReason,
+          }}
+        />
       </div>
 
       <div className="pos-done__actions">

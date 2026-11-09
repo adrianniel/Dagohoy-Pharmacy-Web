@@ -429,15 +429,6 @@ body:has(.cashier-shell) {
   background: var(--hm-surface);
 }
 
-.pos-payment-total {
-  border-color: var(--hm-line);
-  background: var(--hm-surface-muted);
-}
-
-.pos-payment-total strong {
-  color: var(--hm-accent-strong);
-}
-
 @media (max-width: 820px) {
   .cashier-sidebar {
     width: 260px;

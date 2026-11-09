@@ -3,6 +3,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { downloadXlsx } from '../../lib/xlsx';
+import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
 
 const SALES_KEY = 'dagohoy_demo_sales';
 type Sale = {
@@ -17,6 +18,13 @@ type Sale = {
   customer?: string;
   gcashReference?: string;
   paymentStatus?: string;
+  cashier?: string;
+  amountPaid?: number;
+  change?: number;
+  creditBalance?: number;
+  noChargeReason?: string;
+  voidReason?: string;
+  voidedAt?: string;
   lines?: Array<{ product: string; quantity: number; unitPrice: number }>;
 };
 
@@ -369,12 +377,10 @@ export function CashierTransactionsPage() {
                           className="cashier-view-button"
                           type="button"
                           onClick={() =>
-                            setSelected({
-                              ...transaction,
-                              date: transaction.date,
-                              total: Number(transaction.total.replace(/[₱,]/g, '')),
-                              lines: transaction.lines,
-                            })
+                            setSelected(
+                              savedSales.find((sale) => sale.receipt === transaction.receipt) ??
+                                null,
+                            )
                           }
                         >
                           Details
@@ -401,77 +407,83 @@ export function CashierTransactionsPage() {
             if (event.target === event.currentTarget) setSelected(null);
           }}
         >
-          <section
-            className="pos-payment-modal transaction-detail"
-            aria-labelledby="transaction-detail-title"
-          >
+          <section className="pos-payment-modal receipt-view" aria-labelledby="receipt-view-title">
             <button
               className="pos-modal-close"
               type="button"
               onClick={() => setSelected(null)}
-              aria-label="Close transaction details"
+              aria-label="Close receipt"
             >
               ×
             </button>
-            <p className="eyebrow">Transaction detail</p>
-            <h2 id="transaction-detail-title">{selected.receipt}</h2>
-            <dl>
-              <div>
-                <dt>Date</dt>
-                <dd>{selected.date}</dd>
+            <div className="receipt-view__bar">
+              <p className="eyebrow">Transaction</p>
+              <h2 id="receipt-view-title">{selected.receipt}</h2>
+              <div className="receipt-view__tags">
+                <StatusBadge value={selected.status} />
+                <span>{selected.payment}</span>
+                <span>{new Date(selected.date).toLocaleString('en-PH')}</span>
               </div>
-              <div>
-                <dt>Items</dt>
-                <dd>{selected.items}</dd>
-              </div>
-              <div>
-                <dt>Payment</dt>
-                <dd>{selected.payment}</dd>
-              </div>
-              {selected.payment === 'GCash' && (
-                <>
-                  <div>
-                    <dt>GCash reference</dt>
-                    <dd>{selected.gcashReference || '—'}</dd>
-                  </div>
-                  <div>
-                    <dt>Manual payment status</dt>
-                    <dd>{selected.paymentStatus || 'Unpaid'}</dd>
-                  </div>
-                </>
+            </div>
+
+            {selected.status === 'Voided' && (
+              <p className="receipt-view__note is-void">
+                Voided
+                {selected.voidedAt
+                  ? ` on ${new Date(selected.voidedAt).toLocaleString('en-PH')}`
+                  : ''}
+                {selected.voidReason ? `: ${selected.voidReason}` : ''}. It does not count as a
+                sale.
+              </p>
+            )}
+            {isPendingGcash(selected) && (
+              <p className="receipt-view__note is-pending">
+                GCash not confirmed yet. Check the pharmacy GCash app for reference{' '}
+                {selected.gcashReference ? `…${selected.gcashReference}` : '(none saved)'}.
+              </p>
+            )}
+            {selected.payment === 'Credit' &&
+              selected.status !== 'Voided' &&
+              Number(selected.creditBalance ?? 0) > 0 && (
+                <p className="receipt-view__note is-pending">
+                  {selected.customer || 'The customer'} still owes ₱
+                  {Number(selected.creditBalance).toFixed(2)}. Collect it in Credit accounts.
+                </p>
               )}
-              <div>
-                <dt>Status</dt>
-                <dd>{selected.status}</dd>
-              </div>
-              <div>
-                <dt>Total</dt>
-                <dd>₱{selected.total.toFixed(2)}</dd>
-              </div>
-            </dl>
-            {selected.lines?.length ? (
-              <div className="receipt-lines">
-                <h3>Items sold</h3>
-                {selected.lines.map((line, index) => (
-                  <div key={`${line.product}-${index}`}>
-                    <span>
-                      {line.product} × {line.quantity}
-                    </span>
-                    <strong>₱{(line.quantity * line.unitPrice).toFixed(2)}</strong>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <button
-              className="cashier-view-button receipt-print-button"
-              type="button"
-              onClick={() => window.print()}
-            >
-              Print receipt
-            </button>
-            <p className="pos-demo-disclaimer">
-              Printing this does not create an official receipt.
-            </p>
+
+            <div className="receipt-view__paper">
+              <ThermalReceipt
+                data={{
+                  receipt: selected.receipt,
+                  date: selected.date,
+                  cashier: selected.cashier,
+                  customer: selected.customer,
+                  payment: selected.payment,
+                  lines: selected.lines ?? [],
+                  subtotal: Number(selected.subtotal ?? selected.total ?? 0),
+                  discount: Number(selected.discount ?? 0),
+                  total: Number(selected.total ?? 0),
+                  amountPaid: selected.amountPaid,
+                  change: selected.change,
+                  gcashReference: selected.gcashReference,
+                  paymentStatus: selected.paymentStatus,
+                  creditBalance: selected.creditBalance,
+                  noChargeReason: selected.noChargeReason,
+                  status: selected.status,
+                  voidReason: selected.voidReason,
+                  voidedAt: selected.voidedAt,
+                }}
+              />
+            </div>
+
+            <div className="pos-done__actions">
+              <button className="pos-done__print" type="button" onClick={() => window.print()}>
+                {selected.status === 'Voided' ? 'Print copy' : 'Reprint receipt'}
+              </button>
+              <button className="pos-done__close" type="button" onClick={() => setSelected(null)}>
+                Close
+              </button>
+            </div>
           </section>
         </div>
       )}
