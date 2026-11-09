@@ -8,7 +8,9 @@ localStorage anymore.
 Written 2026-11-09. Both repos: `Dagohoy-Pharmacy-Web` and `Dagohoy-Pharmacy-Server`, branch `dev`.
 
 **Progress:** Phase 1 done (2026-11-09, migration 004). Phase 2 done (2026-11-09,
-migration `005_operations.sql`, with `npm run db:check-rules`). Next: Phase 3.
+migration `005_operations.sql`, with `npm run db:check-rules`). Phase 3 done (2026-11-09,
+migration 006; products, suppliers, staff roster and settings on the server; the web keeps a
+synced browser copy for POS/stock until Phases 4 and 6). Next: Phase 4.
 
 ## "Ready locally" means
 
