@@ -5,6 +5,8 @@ import { ControlDeck, ControlPanel, type ControlItem } from '../../components/Co
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
+import { HourlyBars } from '../../components/HourlyBars';
+import { formatHour, hourRange } from '../../components/hours';
 import { ScanInput } from '../../components/ScanInput';
 import { useToast } from '../../components/toast';
 import {
@@ -1229,6 +1231,12 @@ function AdminDashboard() {
   });
   const maxDay = Math.max(...days.map((day) => day.total), 0);
   const weekSales = days.flatMap((day) => day.list);
+  // Average sales per hour over the last 7 days: when the store is busiest.
+  const hourSlots = hourRange(weekSales.map((sale) => new Date(sale.date))).map((hour) => ({
+    hour,
+    amount: sum(weekSales.filter((sale) => new Date(sale.date).getHours() === hour)) / 7,
+  }));
+  const busiest = [...hourSlots].sort((a, b) => b.amount - a.amount).slice(0, 3);
 
   const byPayment = new Map<string, { amount: number; count: number }>();
   const byProduct = new Map<string, { amount: number; quantity: number }>();
@@ -1326,6 +1334,33 @@ function AdminDashboard() {
                 </div>
               ))}
             </div>
+          )}
+        </section>
+
+        <section className="cashier-panel overview__card overview__card--wide">
+          <div className="dash-card__head">
+            <div>
+              <h4>Busiest hours · last 7 days</h4>
+              <p className="overview__note">
+                Average sales per hour. Plan staff for the tall bars.
+              </p>
+            </div>
+            {busiest[0]?.amount > 0 && (
+              <div className="dash-chips">
+                {busiest
+                  .filter((slot) => slot.amount > 0)
+                  .map((slot, index) => (
+                    <span className={`dash-chip${index === 0 ? ' is-strong' : ''}`} key={slot.hour}>
+                      {index + 1}. {formatHour(slot.hour)} · {money(slot.amount)}
+                    </span>
+                  ))}
+              </div>
+            )}
+          </div>
+          {maxDay === 0 ? (
+            <p className="overview__empty">No sales in the last 7 days yet.</p>
+          ) : (
+            <HourlyBars slots={hourSlots} label="Average sales per hour, last 7 days" />
           )}
         </section>
 
