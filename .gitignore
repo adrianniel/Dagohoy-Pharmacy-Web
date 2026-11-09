@@ -17,3 +17,6 @@ coverage/
 /.hallmark/
 # Chat attachments and reference screenshots kept out of git
 /.hormachuelos/
+
+# Claude Code copies of the agent skills in .agents/skills (restore by copying; see skills-lock.json)
+.claude/skills/
