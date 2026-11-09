@@ -893,3 +893,22 @@
   border-color: transparent;
   background: transparent;
 }
+
+/* Shown while the app asks the server who is logged in, or if the server is unreachable. */
+.session-check {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem;
+  background: #fbfaf0;
+  color: #13322a;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.session-check span {
+  max-width: 28rem;
+  color: #4f6258;
+}

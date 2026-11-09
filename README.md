@@ -16,7 +16,7 @@ The development server runs on the Vite-provided local URL, usually `http://loca
 
 ## Environment
 
-`VITE_API_BASE_URL` is the backend API base URL. It defaults to `http://localhost:3000/api` when omitted. Do not put database credentials or other server secrets in this repository.
+`VITE_API_BASE_URL` is the backend API base URL. It defaults to `http://localhost:3001/api` when omitted. Do not put database credentials or other server secrets in this repository.
 
 ## Commands
 

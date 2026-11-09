@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { PasswordInput } from '../../components/PasswordInput';
@@ -9,9 +9,8 @@ import {
   canEditAccount,
   createAccount,
   deleteAccount,
-  getCashierAccount,
   getCurrentAccount,
-  loadAccounts,
+  listAccounts,
   MIN_PASSWORD_LENGTH,
   setAccountStatus,
   updateAccount,
@@ -35,12 +34,13 @@ type FormState =
   | null;
 
 export function StaffAccounts() {
-  const [accounts, setAccounts] = useState<Account[]>(loadAccounts);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountsError, setAccountsError] = useState('');
   const [roster, setRoster] = useState<RosterStaff[]>(loadRoster);
   const [form, setForm] = useState<FormState>(null);
   const { showToast } = useToast();
   const me = getCurrentAccount();
-  const cashier = getCashierAccount(accounts);
+  const cashier = accounts.find((account) => account.role === 'CASHIER');
   const admins = accounts.filter((account) => account.role === 'ADMIN');
   const [tab, setTab] = useState<StaffTab>('roster');
   const activeStaff = roster.filter((staff) => staff.status === 'Active').length;
@@ -79,20 +79,40 @@ export function StaffAccounts() {
   ];
   const current = items.find((item) => item.key === tab);
 
+  const loadAccountList = useCallback(async () => {
+    try {
+      setAccounts(await listAccounts());
+      setAccountsError('');
+    } catch (caught) {
+      setAccountsError(caught instanceof Error ? caught.message : 'Could not load the accounts.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAccountList();
+  }, [loadAccountList]);
+
   function refresh() {
-    setAccounts(loadAccounts());
+    void loadAccountList();
     setRoster(loadRoster());
   }
 
-  function toggleStatus(account: Account) {
+  async function toggleStatus(account: Account) {
     const next = account.status === 'Active' ? 'Disabled' : 'Active';
-    setAccountStatus(account.id, next);
-    refresh();
-    showToast(
-      next === 'Disabled'
-        ? `${labelOf(account)} can no longer log in.`
-        : `${labelOf(account)} can log in again.`,
-    );
+    try {
+      await setAccountStatus(account.id, next);
+      refresh();
+      showToast(
+        next === 'Disabled'
+          ? `${labelOf(account)} can no longer log in.`
+          : `${labelOf(account)} can log in again.`,
+      );
+    } catch (caught) {
+      showToast(
+        caught instanceof Error ? caught.message : 'Could not change the account.',
+        'error',
+      );
+    }
   }
 
   return (
@@ -157,6 +177,12 @@ export function StaffAccounts() {
               showToast(`${staff.name} was removed from the roster.`);
             }}
           />
+        )}
+
+        {accountsError && tab !== 'roster' && (
+          <p className="pos-notice" role="alert">
+            {accountsError}
+          </p>
         )}
 
         {tab === 'cashier' && (
@@ -330,11 +356,18 @@ export function StaffAccounts() {
         <ConfirmRemoveModal
           account={form.account}
           onClose={() => setForm(null)}
-          onConfirm={() => {
-            deleteAccount(form.account.id);
-            refresh();
-            setForm(null);
-            showToast(`${form.account.displayName} was removed.`);
+          onConfirm={async () => {
+            try {
+              await deleteAccount(form.account.id);
+              refresh();
+              setForm(null);
+              showToast(`${form.account.displayName} was removed.`);
+            } catch (caught) {
+              showToast(
+                caught instanceof Error ? caught.message : 'Could not remove the account.',
+                'error',
+              );
+            }
           }}
         />
       )}
@@ -580,7 +613,7 @@ function ConfirmRemoveModal({
 }: {
   account: Account;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
 }) {
   return (
     <div className="pos-modal-backdrop">
