@@ -327,7 +327,7 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
         </div>
       </footer>
       <p className="shift-doc__printed">
-        Printed {dateTime(new Date().toISOString())} · {store.name} · Saved in this browser only.
+        Printed {dateTime(new Date().toISOString())} · {store.name}
       </p>
     </article>
   );

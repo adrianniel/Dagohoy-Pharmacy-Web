@@ -1,6 +1,6 @@
 import developerPhoto from '../../assets/developer.jpg';
 import { getSession } from '../../data/registerSession';
-import { developerProfile, weeklyHours } from './mockData';
+import { developerProfile, weeklyHours } from './content';
 import { BusinessStarfield } from './BusinessStarfield';
 import { DeveloperQuickInfo } from './DeveloperQuickInfo';
 

@@ -186,7 +186,7 @@ export function CreditPage() {
       tone: 'rose',
       count: owing.length,
       alert: owing.length > 0,
-      about: 'Everyone with utang. Open a name to see their purchases. Saved in this browser only.',
+      about: 'Everyone with utang. Open a name to see their purchases.',
     },
     {
       key: 'collect',

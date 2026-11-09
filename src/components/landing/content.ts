@@ -1,13 +1,13 @@
-import type { StaffMember, WeeklyHoursEntry } from './types';
+import type { WeeklyHoursEntry } from './types';
 
-// Static sample content for the public landing page. Replace with API data in a later milestone.
+// Public landing page content. Pharmacy contact details come from Owner → Settings.
 export const pharmacyProfile = {
   name: 'Dagohoy Pharmacy',
   locationLabel: 'POS & Inventory Management System',
   timezone: 'Asia/Manila',
-  phone: '[Contact number]',
-  email: '[Pharmacy email]',
-  address: '[Pharmacy address]',
+  phone: '',
+  email: '',
+  address: '',
   businessHours: 'Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM',
 };
 
@@ -19,11 +19,6 @@ export const weeklyHours: WeeklyHoursEntry[] = [
   { day: 5, label: 'Friday', opensAt: '08:00', closesAt: '20:00' },
   { day: 6, label: 'Saturday', opensAt: '08:00', closesAt: '20:00' },
   { day: 0, label: 'Sunday', opensAt: '09:00', closesAt: '18:00' },
-];
-
-export const staffOnDuty: StaffMember[] = [
-  { initials: 'MD', role: 'Pharmacist', displayName: 'Maria D.' },
-  { initials: 'A', role: 'Cashier', displayName: 'Ana' },
 ];
 
 export const pharmacyFeatures = [

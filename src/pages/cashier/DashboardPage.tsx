@@ -234,7 +234,7 @@ export function CashierDashboardPage() {
                 </div>
                 <strong>{lowStock.length}</strong>
                 <div className="dash-kpi__foot">
-                  <span>{mockStockLine(lowStock.length, inventory.length)}</span>
+                  <span>{stockHealthLine(lowStock.length, inventory.length)}</span>
                 </div>
               </article>
             </section>
@@ -355,7 +355,7 @@ function formatHour(hour: number) {
   return `${display}${suffix}`;
 }
 
-function mockStockLine(low: number, total: number) {
+function stockHealthLine(low: number, total: number) {
   if (!low) return `All ${total} products in stock`;
   return `${total - low} of ${total} products are healthy`;
 }

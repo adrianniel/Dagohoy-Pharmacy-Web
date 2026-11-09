@@ -49,7 +49,7 @@ export function ExpensesPage() {
     setExpenses(next);
     localStorage.setItem(EXPENSES_KEY, JSON.stringify(next));
     setView('month');
-    showToast(`${expense.category} expense recorded in this browser.`);
+    showToast(`${expense.category} expense recorded.`);
   }
 
   const items: Array<ControlItem<ExpenseView>> = [
@@ -60,7 +60,7 @@ export function ExpensesPage() {
       hint: money(monthTotal),
       tone: 'forest',
       count: monthExpenses.length,
-      about: `Expenses dated in ${monthLabel}. Saved in this browser only; they do not post to accounting.`,
+      about: `Expenses dated in ${monthLabel}.`,
     },
     {
       key: 'all',

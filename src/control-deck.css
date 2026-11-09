@@ -338,3 +338,54 @@
   accent-color: #176246;
   color-scheme: light;
 }
+
+/* Settings → Start fresh: clears all records after typing START FRESH. */
+.start-fresh {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-width: 36rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #efc7c1;
+  border-radius: 12px;
+  background: #fdf3f1;
+  color: #4a2a25;
+}
+
+.start-fresh p,
+.start-fresh ul {
+  margin: 0;
+}
+
+.start-fresh ul {
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.start-fresh label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.start-fresh__button {
+  align-self: flex-start;
+  min-height: 2.9rem;
+  padding: 0 1.3rem;
+  border: 0;
+  border-radius: 10px;
+  background: #a2372c;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cashier-shell .start-fresh__button:disabled {
+  opacity: 1;
+  background: #ecd3cf;
+  color: #b58a84;
+  cursor: not-allowed;
+}

@@ -26,16 +26,49 @@ import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 type SupplierTab = 'list' | 'add';
-type SettingsTab = 'details' | 'alerts' | 'gcash';
+type SettingsTab = 'details' | 'alerts' | 'gcash' | 'fresh';
+
+/**
+ * Data that "Start fresh" clears: everything recorded while trying the system.
+ * Login accounts, the staff roster and the pharmacy settings are kept.
+ */
+const FRESH_START_KEYS = [
+  'dagohoy_demo_inventory',
+  'dagohoy_demo_inventory_batches',
+  'dagohoy_demo_stock_movements',
+  'dagohoy_demo_purchase_orders',
+  'dagohoy_demo_sales',
+  'dagohoy_demo_void_log',
+  'dagohoy_demo_register_session',
+  'dagohoy_demo_cash_events',
+  'dagohoy_demo_shift_history',
+  'dagohoy_demo_expenses',
+  'dagohoy_demo_suppliers',
+];
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
-const suppliers = [
-  { name: 'Unilab, Inc.', contact: 'Metro Manila', products: 28, status: 'Active' },
-  { name: 'Mercury Drug Wholesale', contact: 'Taguig City', products: 16, status: 'Active' },
-  { name: 'Natrapharm, Inc.', contact: 'Makati City', products: 12, status: 'Active' },
-];
-type Supplier = (typeof suppliers)[number];
+type Supplier = { name: string; contact: string; products?: number; status: string };
+const suppliers: Supplier[] = [];
+
+type SavedSale = {
+  receipt: string;
+  date: string;
+  total?: number;
+  payment?: string;
+  status?: string;
+  lines?: Array<{ product: string; barcode?: string; quantity: number; unitPrice: number }>;
+};
+
+/** Sales that count as sales: not voided and not a no-charge slip. */
+function readCountedSales(): SavedSale[] {
+  try {
+    const sales = JSON.parse(localStorage.getItem('dagohoy_demo_sales') ?? '[]') as SavedSale[];
+    return sales.filter((sale) => sale.status !== 'Voided' && sale.payment !== 'No charge');
+  } catch {
+    return [];
+  }
+}
 const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 type PharmacySettings = {
@@ -50,12 +83,16 @@ type PharmacySettings = {
 };
 const defaultSettings: PharmacySettings = {
   name: 'Dagohoy Pharmacy',
-  phone: '+63 2 8123 4567',
-  address: 'Bohol, Philippines',
-  email: '[Pharmacy email]',
+  phone: '',
+  address: '',
+  email: '',
   businessHours: 'Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM',
   threshold: '15',
 };
+/** How many lots were received from a supplier (Receive stock saves the supplier on the lot). */
+function supplierLots(name: string) {
+  return loadBatches(initialBatches).filter((batch) => batch.supplier === name).length;
+}
 function loadLocalList<T>(key: string, initial: T[]): T[] {
   try {
     return JSON.parse(localStorage.getItem(key) ?? 'null') ?? initial;
@@ -197,12 +234,21 @@ export function AdminPage({ section }: { section: AdminSection }) {
       alert: !pharmacySettings.gcashNumber,
       about: 'The GCash number and QR the cashier shows the customer at checkout.',
     },
+    {
+      key: 'fresh',
+      icon: 'trash',
+      title: 'Start fresh',
+      hint: 'Clear all test records',
+      tone: 'red',
+      about:
+        'Removes every product, sale, shift and record entered so far, to begin real use with a clean system.',
+    },
   ];
 
   function saveSettings() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
     window.dispatchEvent(new Event('pharmacy-settings-changed'));
-    showToast('Settings saved in this browser.');
+    showToast('Settings saved.');
   }
 
   if (section === 'dashboard') return <AdminDashboard />;
@@ -304,8 +350,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 </table>
               </div>
               <div className="cashier-table-footer">
-                <span>Showing {filteredProducts.length} sample products</span>
-                <span>Inventory is demo data until connected to the pharmacy API.</span>
+                <span>
+                  Showing {filteredProducts.length} of {products.length} product
+                  {products.length === 1 ? '' : 's'}
+                </span>
               </div>
             </section>
           </StockControlCenter>
@@ -364,7 +412,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   ]);
                 }
                 setFormOpen(false);
-                showToast(`${product.product} saved in this browser.`);
+                showToast(`${product.product} saved.`);
                 return true;
               }}
             />
@@ -386,7 +434,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
               id="suppliers"
               activeKey="list"
               title="Supplier list"
-              about="Everyone the pharmacy buys stock from. These records are saved in this browser only."
+              about="Everyone the pharmacy buys stock from."
             >
               <section className="cashier-panel cashier-list-panel">
                 <div
@@ -412,7 +460,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                             <strong>{supplier.name}</strong>
                           </td>
                           <td>{supplier.contact}</td>
-                          <td>{supplier.products} products</td>
+                          <td>{supplierLots(supplier.name)} lots received</td>
                           <td>
                             <StatusBadge value={supplier.status} />
                           </td>
@@ -422,7 +470,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               type="button"
                               onClick={() =>
                                 showToast(
-                                  `${supplier.name} · ${supplier.contact} · ${supplier.products} sample products`,
+                                  `${supplier.name} · ${supplier.contact || 'No location'} · ${supplierLots(supplier.name)} lots received`,
                                   'info',
                                 )
                               }
@@ -437,7 +485,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 </div>
                 <div className="cashier-table-footer">
                   <span>{supplierList.length} supplier records</span>
-                  <span>Supplier records are local demo data.</span>
                 </div>
               </section>
             </ControlPanel>
@@ -456,7 +503,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   setSupplierList(next);
                   localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
                   setSupplierTab('list');
-                  showToast('Supplier saved in this browser.');
+                  showToast('Supplier saved.');
                 }}
               />
             </ControlPanel>
@@ -481,15 +528,14 @@ export function AdminPage({ section }: { section: AdminSection }) {
             title={settingsItems.find((item) => item.key === settingsTab)?.title ?? 'Settings'}
             about={settingsItems.find((item) => item.key === settingsTab)?.about}
             actions={
-              <button className="cashier-primary-action" type="button" onClick={saveSettings}>
-                Save changes
-              </button>
+              settingsTab !== 'fresh' && (
+                <button className="cashier-primary-action" type="button" onClick={saveSettings}>
+                  Save changes
+                </button>
+              )
             }
           >
             <section className="cashier-panel settings-form">
-              <p className="demo-note">
-                Settings are saved locally in this browser for preview only.
-              </p>
               {settingsTab === 'details' && (
                 <>
                   <label>
@@ -527,7 +573,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                       onChange={(event) =>
                         setPharmacySettings({ ...pharmacySettings, email: event.target.value })
                       }
-                      placeholder="[Pharmacy email]"
+                      placeholder="Pharmacy email address"
                     />
                   </label>
                   <label>
@@ -591,10 +637,78 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   </label>
                 </>
               )}
+              {settingsTab === 'fresh' && <StartFresh />}
             </section>
           </ControlPanel>
         </>
       )}{' '}
+    </div>
+  );
+}
+
+/** Owner-only reset: clears all records entered so far, after two confirmations. */
+function StartFresh() {
+  const [typed, setTyped] = useState('');
+  const { showToast } = useToast();
+  const counts = {
+    products: getInventory().length,
+    sales: (() => {
+      try {
+        return (JSON.parse(localStorage.getItem('dagohoy_demo_sales') ?? '[]') as unknown[]).length;
+      } catch {
+        return 0;
+      }
+    })(),
+  };
+
+  function clearAll() {
+    if (typed.trim().toUpperCase() !== 'START FRESH') return;
+    if (
+      !window.confirm(
+        'This removes every product, sale, shift, utang, expense and stock record on this computer. It cannot be undone. Continue?',
+      )
+    ) {
+      return;
+    }
+    FRESH_START_KEYS.forEach((key) => localStorage.removeItem(key));
+    window.dispatchEvent(new Event('dagohoy-store-status-change'));
+    showToast('All records cleared. The system is ready for real use.', 'success');
+    window.setTimeout(() => window.location.assign('/admin/products'), 600);
+  }
+
+  return (
+    <div className="start-fresh">
+      <p>
+        Right now there {counts.products === 1 ? 'is' : 'are'} <b>{counts.products}</b> product
+        {counts.products === 1 ? '' : 's'} and <b>{counts.sales}</b> sale
+        {counts.sales === 1 ? '' : 's'} saved.
+      </p>
+      <ul>
+        <li>
+          <b>Removed:</b> products, stock lots and movements, sales and receipts, voids, shifts and
+          duty reports, cash in/out, utang, expenses and suppliers.
+        </li>
+        <li>
+          <b>Kept:</b> login accounts, the staff roster and these pharmacy settings.
+        </li>
+      </ul>
+      <label>
+        Type START FRESH to confirm
+        <input
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+          placeholder="START FRESH"
+          autoComplete="off"
+        />
+      </label>
+      <button
+        className="start-fresh__button"
+        type="button"
+        disabled={typed.trim().toUpperCase() !== 'START FRESH'}
+        onClick={clearAll}
+      >
+        Clear all records
+      </button>
     </div>
   );
 }
@@ -627,7 +741,6 @@ function SupplierForm({
         onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
       }}
     >
-      <p className="demo-note">This creates a local preview record only.</p>
       <label>
         Supplier name
         <input
@@ -783,8 +896,8 @@ function InventoryForm({
         <h2>{isNew ? 'New product' : `Edit ${product.product}`}</h2>
         <p className="inventory-form-note">
           {isNew
-            ? 'For a medicine or item that is not in the list yet. Saved in this browser only.'
-            : 'Change the details and prices. Saved in this browser only.'}
+            ? 'For a medicine or item that is not in the list yet.'
+            : 'Change the details and prices.'}
         </p>
 
         <fieldset className="product-form__section">
@@ -983,7 +1096,22 @@ type OverviewTab = 'today' | 'alerts' | 'actions';
 function AdminDashboard() {
   const [tab, setTab] = useState<OverviewTab>('today');
   const threshold = getLowStockThreshold();
-  const lowStock = getInventory().filter((product) => product.stock < threshold);
+  const inventory = getInventory();
+  const lowStock = inventory.filter((product) => product.stock < threshold);
+  const todayKey = new Date().toDateString();
+  const todaySales = readCountedSales().filter(
+    (sale) => new Date(sale.date).toDateString() === todayKey,
+  );
+  const salesToday = todaySales.reduce((sum, sale) => sum + Number(sale.total ?? 0), 0);
+  const stockAtPrice = inventory.reduce(
+    (sum, product) => sum + product.stock * (Number(product.price.replace(/[₱,]/g, '')) || 0),
+    0,
+  );
+  const withCost = inventory.filter((product) => product.cost !== undefined);
+  const stockAtCost = withCost.reduce(
+    (sum, product) => sum + product.stock * (product.cost ?? 0),
+    0,
+  );
   const items: Array<ControlItem<OverviewTab>> = [
     {
       key: 'today',
@@ -991,7 +1119,7 @@ function AdminDashboard() {
       title: 'Today',
       hint: 'Sales and stock value',
       tone: 'forest',
-      about: 'A quick look at the day. These figures are sample data, not live pharmacy records.',
+      about: 'Sales so far today and the value of the stock on the shelf.',
     },
     {
       key: 'alerts',
@@ -1034,14 +1162,26 @@ function AdminDashboard() {
           <div className="cashier-summary-grid">
             <Summary
               label="Sales today"
-              value={money(18460.5)}
-              detail="Demo data · 24 transactions"
+              value={money(salesToday)}
+              detail={`${todaySales.length} sale${todaySales.length === 1 ? '' : 's'}, voids left out`}
             />
-            <Summary label="Transactions" value="24" detail="Sample register activity" />
             <Summary
-              label="Inventory value"
-              value={money(283450)}
-              detail="Illustrative retail value"
+              label="Transactions"
+              value={String(todaySales.length)}
+              detail={
+                todaySales.length
+                  ? `Average ${money(salesToday / todaySales.length)} per sale`
+                  : 'No sales yet today'
+              }
+            />
+            <Summary
+              label="Stock value"
+              value={money(stockAtPrice)}
+              detail={
+                withCost.length
+                  ? `At selling price · ${money(stockAtCost)} at cost`
+                  : 'At selling price'
+              }
             />
             <Summary
               label="Needs attention"
@@ -1116,7 +1256,37 @@ type ReportsTab = 'monthly' | 'summary' | 'weekly';
 
 function Reports() {
   const [tab, setTab] = useState<ReportsTab>('monthly');
-  const values = [42, 56, 48, 72, 64, 88, 73];
+  // Last 7 days, today included, from the saved sales.
+  const sales = readCountedSales();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (6 - index));
+    const key = day.toDateString();
+    const onDay = sales.filter((sale) => new Date(sale.date).toDateString() === key);
+    return {
+      label: day.toLocaleDateString('en-PH', { weekday: 'short' }),
+      date: day.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }),
+      total: onDay.reduce((sum, sale) => sum + Number(sale.total ?? 0), 0),
+      count: onDay.length,
+    };
+  });
+  const weekTotal = days.reduce((sum, day) => sum + day.total, 0);
+  const weekCount = days.reduce((sum, day) => sum + day.count, 0);
+  const maxDay = Math.max(...days.map((day) => day.total), 0);
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - 6);
+  const categoryOf = new Map(getInventory().map((product) => [product.barcode, product.category]));
+  const byCategory = new Map<string, number>();
+  for (const sale of sales.filter((item) => new Date(item.date) >= weekStart)) {
+    for (const line of sale.lines ?? []) {
+      const category = (line.barcode && categoryOf.get(line.barcode)) || 'Uncategorized';
+      byCategory.set(category, (byCategory.get(category) ?? 0) + line.quantity * line.unitPrice);
+    }
+  }
+  const topCategory = [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
+  const categoryTotal = [...byCategory.values()].reduce((sum, value) => sum + value, 0);
   const items: Array<ControlItem<ReportsTab>> = [
     {
       key: 'monthly',
@@ -1131,9 +1301,9 @@ function Reports() {
       key: 'summary',
       icon: 'reports',
       title: 'Sales summary',
-      hint: 'This week at a glance',
+      hint: 'Last 7 days at a glance',
       tone: 'forest',
-      about: 'Totals for the week. These are sample numbers until sales are connected.',
+      about: 'Totals for the last 7 days, today included. Voided sales are left out.',
     },
     {
       key: 'weekly',
@@ -1141,7 +1311,7 @@ function Reports() {
       title: 'Weekly sales',
       hint: 'Day by day',
       tone: 'teal',
-      about: 'Sales for each day of the last 7 days. Sample numbers until sales are connected.',
+      about: 'Sales for each of the last 7 days.',
     },
   ];
   const current = items.find((item) => item.key === tab);
@@ -1166,25 +1336,57 @@ function Reports() {
         {tab === 'summary' && (
           <div className="cashier-summary-grid">
             <Summary
-              label="Gross sales · this week"
-              value={money(94620)}
-              detail="Sample reporting period"
+              label="Sales · last 7 days"
+              value={money(weekTotal)}
+              detail={`${days[0].date} to ${days[6].date}`}
             />
-            <Summary label="Transactions" value="138" detail="Average 20 per day" />
-            <Summary label="Average basket" value={money(685.65)} detail="Per completed sale" />
-            <Summary label="Top category" value="OTC medicine" detail="32% of sales" />
+            <Summary
+              label="Transactions"
+              value={String(weekCount)}
+              detail={`Average ${(weekCount / 7).toFixed(1)} per day`}
+            />
+            <Summary
+              label="Average sale"
+              value={money(weekCount ? weekTotal / weekCount : 0)}
+              detail="Per completed sale"
+            />
+            <Summary
+              label="Top category"
+              value={topCategory ? topCategory[0] : '—'}
+              detail={
+                topCategory && categoryTotal
+                  ? `${Math.round((topCategory[1] / categoryTotal) * 100)}% of sales`
+                  : 'No sales yet'
+              }
+            />
           </div>
         )}
         {tab === 'weekly' && (
           <section className="cashier-panel report-panel">
-            <div className="report-chart" role="img" aria-label="Illustrative weekly sales chart">
-              {values.map((value, index) => (
-                <div className="report-chart__column" key={index}>
-                  <span style={{ height: `${value}%` }} />
-                  <small>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index]}</small>
-                </div>
-              ))}
-            </div>
+            {weekCount === 0 ? (
+              <p className="register-empty">No sales in the last 7 days yet.</p>
+            ) : (
+              <div
+                className="report-chart"
+                role="img"
+                aria-label="Sales for each of the last 7 days"
+              >
+                {days.map((day) => (
+                  <div
+                    className="report-chart__column"
+                    key={day.date}
+                    title={`${day.date}: ${money(day.total)}`}
+                  >
+                    <span
+                      style={{ height: `${maxDay ? Math.max(2, (day.total / maxDay) * 100) : 0}%` }}
+                    />
+                    <small>
+                      {day.label} · {money(day.total)}
+                    </small>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </ControlPanel>

@@ -1,22 +1,34 @@
-import { mockProducts } from './cashierMockData';
+/*
+ * The product list and its stock. Starts empty: products are added with New product,
+ * and stock arrives through Receive stock.
+ */
 
-export type InventoryProduct = (typeof mockProducts)[number] & {
+export type InventoryProduct = {
+  barcode: string;
+  product: string;
+  /** Generic / brand, e.g. "Paracetamol / Unilab". */
+  detail: string;
+  /** What one piece is sold as: Tablet, Capsule, Bottle… */
+  unit: string;
+  /** Selling price as shown, e.g. "₱5.50". */
+  price: string;
+  stock: number;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   category?: string;
   /** Latest cost per unit paid to the supplier (from Receive stock or the product form). */
   cost?: number;
 };
+
 const INVENTORY_KEY = 'dagohoy_demo_inventory';
 
 export function getInventory(): InventoryProduct[] {
   try {
-    const stored = localStorage.getItem(INVENTORY_KEY);
-    const products = stored ? (JSON.parse(stored) as InventoryProduct[]) : [...mockProducts];
-    return products.map((product) => ({ ...product, status: stockStatus(product.stock) }));
+    const stored = JSON.parse(localStorage.getItem(INVENTORY_KEY) ?? '[]') as InventoryProduct[];
+    return stored.map((product) => ({ ...product, status: stockStatus(product.stock) }));
   } catch {
-    return mockProducts.map((product) => ({ ...product, status: stockStatus(product.stock) }));
+    return [];
   }
 }
-
 export function saveInventory(products: InventoryProduct[]) {
   localStorage.setItem(INVENTORY_KEY, JSON.stringify(products));
 }

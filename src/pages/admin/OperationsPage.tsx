@@ -42,7 +42,7 @@ export function OperationsPage() {
       hint: 'Every stock change',
       tone: 'forest',
       count: movements.length,
-      about: 'Every time stock went in or out, newest first. Saved in this browser only.',
+      about: 'Every time stock went in or out, newest first.',
     },
     {
       key: 'in',

@@ -35,7 +35,7 @@ const EXPIRY_SOON_DAYS = 30;
 const EXPIRY_WATCH_DAYS = 90;
 
 const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
-const DEFAULT_SUPPLIERS = ['Unilab, Inc.', 'Mercury Drug Wholesale', 'Natrapharm, Inc.'];
+const DEFAULT_SUPPLIERS: string[] = [];
 
 function daysUntil(date: string) {
   return Math.ceil(
@@ -986,13 +986,17 @@ function ReceiveForm({
         </label>
         <label>
           Supplier
-          <select value={supplier} onChange={(event) => setSupplier(event.target.value)}>
+          <input
+            list="receive-suppliers"
+            value={supplier}
+            onChange={(event) => setSupplier(event.target.value)}
+            placeholder={suppliers.length ? 'Pick or type the supplier' : 'Type the supplier name'}
+          />
+          <datalist id="receive-suppliers">
             {suppliers.map((name) => (
-              <option value={name} key={name}>
-                {name}
-              </option>
+              <option value={name} key={name} />
             ))}
-          </select>
+          </datalist>
         </label>
         <label>
           Units received

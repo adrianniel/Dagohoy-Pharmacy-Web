@@ -827,7 +827,6 @@ export function CashierPosPage() {
               <span>Continue to payment</span>
               <CashierIcon name="arrow" />
             </button>
-            <p className="pos-ticket__note">Records the sale in this browser and updates stock.</p>
           </div>
         </section>
         <aside className="cashier-panel pos-control-center" aria-labelledby="pos-control-heading">
@@ -1363,7 +1362,7 @@ export function CashierPosPage() {
                     </button>
                     <p className="pos-pay__status" aria-live="polite">
                       {paymentBlocker ||
-                        'Saving records this sale in this browser and updates stock.'}
+                        'Saving records the sale and takes the items out of stock.'}
                     </p>
                   </section>
                 </div>

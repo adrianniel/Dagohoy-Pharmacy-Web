@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
-import { transactionHistory } from '../../data/cashierMockData';
 import { downloadXlsx } from '../../lib/xlsx';
 
 const SALES_KEY = 'dagohoy_demo_sales';
@@ -61,30 +60,23 @@ export function CashierTransactionsPage() {
     return localDay(new Date(now.getFullYear(), now.getMonth(), 1));
   });
   const [rangeTo, setRangeTo] = useState(() => localDay(Date.now()));
-  const [demoSales] = useState(() => JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Sale[]);
+  const [savedSales] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Sale[];
+    } catch {
+      return [];
+    }
+  });
   const allRecords = useMemo(
-    () => [
-      ...demoSales.map((sale) => ({
+    () =>
+      savedSales.map((sale) => ({
         ...sale,
         dateValue: sale.date,
         amount: Number(sale.total ?? 0),
         date: new Date(sale.date).toLocaleString('en-PH'),
         total: `₱${Number(sale.total ?? 0).toFixed(2)}`,
       })),
-      ...transactionHistory.map((sale) => ({
-        ...sale,
-        lines: undefined,
-        subtotal: undefined,
-        discount: undefined,
-        customer: undefined,
-        gcashReference: undefined,
-        paymentStatus: undefined,
-        dateValue: new Date(sale.date.replace(' · ', ' ')).toISOString(),
-        amount: Number(sale.total.replace(/[₱,]/g, '')),
-        total: sale.total,
-      })),
-    ],
-    [demoSales],
+    [savedSales],
   );
   const groups = useMemo(() => {
     const startOfToday = new Date(new Date().toDateString()).getTime();
@@ -398,7 +390,6 @@ export function CashierTransactionsPage() {
             <span>
               Showing {records.length} transaction{records.length === 1 ? '' : 's'}
             </span>
-            <span>Live transactions are not connected to the pharmacy server.</span>
           </div>
         </section>
       </ControlPanel>{' '}
@@ -479,7 +470,7 @@ export function CashierTransactionsPage() {
               Print receipt
             </button>
             <p className="pos-demo-disclaimer">
-              Sample/demo record only. Printing does not create a tax invoice or official receipt.
+              Printing this does not create an official receipt.
             </p>
           </section>
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
-import { developerProfile, pharmacyProfile } from './mockData';
+import { developerProfile, pharmacyProfile } from './content';
 
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 
@@ -50,11 +50,12 @@ export function ContactSection() {
     };
   }, []);
 
+  // Only details the owner has filled in under Settings are shown.
   const pharmacyRows = [
     { label: 'Address', value: profile.address, icon: 'map' as const },
     { label: 'Phone', value: profile.phone, icon: 'phone' as const },
     { label: 'Email', value: profile.email, icon: 'mail' as const },
-  ];
+  ].filter((row) => row.value?.trim());
 
   return (
     <section className="contact-section section-wrap" id="contact" aria-labelledby="contact-title">

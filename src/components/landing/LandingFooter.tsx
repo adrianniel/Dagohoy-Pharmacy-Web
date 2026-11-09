@@ -1,5 +1,5 @@
 import { BrandMark } from './BrandMark';
-import { pharmacyProfile } from './mockData';
+import { pharmacyProfile } from './content';
 
 export function LandingFooter() {
   return (
