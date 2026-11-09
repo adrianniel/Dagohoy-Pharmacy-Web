@@ -7,11 +7,20 @@
  * lots, movements, shifts and reports all add up. A fixed random seed gives the same
  * data every time. Loaded from Settings → Start fresh (only shown in `npm run dev`).
  */
-import type { InventoryProduct } from './inventoryStore';
+import {
+  addStaff,
+  createProduct,
+  createSupplier,
+  listProducts,
+  listStaff,
+  listSuppliers,
+} from '../services/storeApi';
+import { getInventory, type InventoryProduct } from './inventoryStore';
 import type { InventoryBatch, StockMovement } from './operationsStore';
 import { collectShiftDetails, type CashEvent, type RegisterSession } from './registerSession';
 import type { ShiftRecord } from './shiftHistory';
 import type { RosterStaff } from './staffRoster';
+import { syncFromServer } from './serverSync';
 
 const DAYS = 45;
 const FLOAT = 1000;
@@ -938,4 +947,46 @@ export function loadSampleData() {
 
   window.dispatchEvent(new Event('dagohoy-store-status-change'));
   return { products: inventory.size, sales: sales.length, shifts: shifts.length };
+}
+
+/**
+ * Copies the sample products (with their current stock as opening stock), suppliers and
+ * staff names to the server, skipping any that already exist, then refreshes the browser
+ * copies from the server.
+ */
+export async function pushSampleToServer() {
+  const local = getInventory();
+  const [serverProducts, serverSuppliers, serverStaff] = await Promise.all([
+    listProducts(),
+    listSuppliers(),
+    listStaff(),
+  ]);
+  const barcodes = new Set(serverProducts.map((product) => product.barcode));
+  const expiry = isoDay(day(365));
+  for (const product of local.filter((item) => !barcodes.has(item.barcode))) {
+    await createProduct({
+      name: product.product,
+      barcode: product.barcode,
+      detail: product.detail,
+      category: product.category ?? 'Other',
+      unit: product.unit,
+      price: Number(product.price.replace(/[₱,]/g, '')),
+      cost: product.cost ?? null,
+      opening:
+        product.stock > 0
+          ? { quantity: product.stock, lot: `SAMPLE-${product.barcode.slice(-4)}`, expiry }
+          : undefined,
+    });
+  }
+  const supplierNames = new Set(serverSuppliers.map((item) => item.name.toLowerCase()));
+  for (const supplier of SUPPLIERS.filter((item) => !supplierNames.has(item.name.toLowerCase()))) {
+    await createSupplier(supplier);
+  }
+  const staffNames = new Set(serverStaff.map((item) => item.name.toLowerCase()));
+  for (const name of ['Jeanette Boncales', ...STAFF].filter(
+    (item) => !staffNames.has(item.toLowerCase()),
+  )) {
+    await addStaff(name);
+  }
+  await syncFromServer();
 }

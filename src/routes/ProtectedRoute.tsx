@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { getCurrentAccount, refreshSession } from '../data/accountStore';
+import { syncFromServer } from '../data/serverSync';
 import { SESSION_EXPIRED_EVENT } from '../services/apiClient';
 
 type Check = 'checking' | 'ok' | 'out' | 'offline';
@@ -16,9 +17,17 @@ export function ProtectedRoute() {
 
   useEffect(() => {
     let alive = true;
+    let synced = false;
     const verify = () =>
       refreshSession()
-        .then(() => alive && setCheck('ok'))
+        .then(async () => {
+          // First time: bring products, suppliers, staff and settings from the server.
+          if (!synced) {
+            synced = true;
+            await syncFromServer();
+          }
+          if (alive) setCheck('ok');
+        })
         .catch((error: { statusCode?: number }) => {
           if (!alive) return;
           // Server unreachable: keep working with the last confirmed login, say so.

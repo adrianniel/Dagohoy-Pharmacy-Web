@@ -4,6 +4,8 @@
  */
 
 export type InventoryProduct = {
+  /** Server id. Missing only on products made before the server held the catalog. */
+  id?: number;
   barcode: string;
   product: string;
   /** Generic / brand, e.g. "Paracetamol / Unilab". */

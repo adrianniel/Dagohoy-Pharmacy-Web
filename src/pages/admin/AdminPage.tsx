@@ -13,7 +13,6 @@ import {
   getInventory,
   getLowStockThreshold,
   InventoryProduct,
-  saveInventory,
   stockStatus,
 } from '../../data/inventoryStore';
 import {
@@ -25,6 +24,14 @@ import {
 } from '../../data/operationsStore';
 import { getSession } from '../../data/registerSession';
 import { suggestProductCategories } from '../../services/productsApi';
+import {
+  assignCategories,
+  createProduct,
+  createSupplier,
+  saveSettings as saveStoreSettings,
+  updateProduct,
+} from '../../services/storeApi';
+import { cacheSettings, syncCatalog, syncSuppliers } from '../../data/serverSync';
 import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
@@ -157,13 +164,14 @@ export function AdminPage({ section }: { section: AdminSection }) {
         })),
       );
       const categoryById = new Map(suggestions.map(({ id, category }) => [id, category]));
-      const next = products.map((product) => ({
-        ...product,
-        category: categoryById.get(product.barcode) ?? product.category,
-      }));
-      setProducts(next);
-      saveInventory(next);
-      showToast(`${suggestions.length} category suggestions applied. Please review them.`, 'info');
+      const items = products.flatMap((product) => {
+        const category = categoryById.get(product.barcode);
+        return product.id && category ? [{ id: product.id, category }] : [];
+      });
+      if (items.length) await assignCategories(items);
+      await syncCatalog();
+      setProducts(getInventory());
+      showToast(`${items.length} category suggestions applied. Please review them.`, 'info');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not suggest categories.', 'error');
     } finally {
@@ -250,10 +258,24 @@ export function AdminPage({ section }: { section: AdminSection }) {
     },
   ];
 
-  function saveSettings() {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(pharmacySettings));
-    window.dispatchEvent(new Event('pharmacy-settings-changed'));
-    showToast('Settings saved.');
+  async function saveSettings() {
+    try {
+      const saved = await saveStoreSettings({
+        name: pharmacySettings.name,
+        address: pharmacySettings.address,
+        phone: pharmacySettings.phone,
+        email: pharmacySettings.email ?? '',
+        businessHours: pharmacySettings.businessHours ?? '',
+        lowStockThreshold: Number(pharmacySettings.threshold),
+        gcashNumber: pharmacySettings.gcashNumber ?? '',
+        gcashQrUrl: pharmacySettings.gcashQrUrl ?? '',
+      });
+      cacheSettings(saved);
+      setPharmacySettings(loadLocalValue(SETTINGS_KEY, defaultSettings));
+      showToast('Settings saved.');
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'Could not save the settings.', 'error');
+    }
   }
 
   if (section === 'dashboard') return <AdminDashboard />;
@@ -382,21 +404,34 @@ export function AdminPage({ section }: { section: AdminSection }) {
               products={products}
               initialBarcode={newBarcode}
               onClose={() => setFormOpen(false)}
-              onSave={(product, opening) => {
-                if (
-                  products.some(
-                    (item) => item.barcode === product.barcode && item.barcode !== editing?.barcode,
-                  )
-                ) {
-                  return false;
+              onSave={async (product, opening) => {
+                // The server checks everything (barcode taken, price, unit) and saves it.
+                const fields = {
+                  name: product.product,
+                  barcode: product.barcode,
+                  detail: product.detail,
+                  category: product.category ?? 'Other',
+                  unit: product.unit,
+                  price: Number(product.price.replace(/[₱,]/g, '')),
+                  cost: product.cost ?? null,
+                };
+                try {
+                  if (editing?.id) {
+                    await updateProduct(editing.id, fields);
+                  } else {
+                    await createProduct(
+                      opening && product.stock > 0
+                        ? { ...fields, opening: { quantity: product.stock, ...opening } }
+                        : fields,
+                    );
+                  }
+                  await syncCatalog();
+                } catch (caught) {
+                  return caught instanceof Error ? caught.message : 'Could not save the product.';
                 }
-                const next = editing
-                  ? products.map((item) => (item.barcode === editing.barcode ? product : item))
-                  : [...products, product];
-                setProducts(next);
-                saveInventory(next);
-                // A new product with opening stock gets its first lot and a stock-in record,
-                // so the stock history and lots start right.
+                setProducts(getInventory());
+                // shortcut: the browser keeps its own copy of lots until Phase 4 moves stock
+                // to the server; a new product's opening lot is added there too.
                 if (!editing && opening && product.stock > 0) {
                   const now = new Date().toISOString();
                   const id = Date.now().toString().slice(-6);
@@ -433,7 +468,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 }
                 setFormOpen(false);
                 showToast(`${product.product} saved.`);
-                return true;
+                return null;
               }}
             />
           )}
@@ -518,12 +553,19 @@ export function AdminPage({ section }: { section: AdminSection }) {
             >
               <SupplierForm
                 onCancel={() => setSupplierTab('list')}
-                onSave={(value) => {
-                  const next = [...supplierList, value];
-                  setSupplierList(next);
-                  localStorage.setItem(SUPPLIER_KEY, JSON.stringify(next));
+                onSave={async (value) => {
+                  try {
+                    await createSupplier({ name: value.name, contact: value.contact });
+                    await syncSuppliers();
+                  } catch (caught) {
+                    return caught instanceof Error
+                      ? caught.message
+                      : 'Could not save the supplier.';
+                  }
+                  setSupplierList(loadLocalList(SUPPLIER_KEY, suppliers));
                   setSupplierTab('list');
                   showToast('Supplier saved.');
+                  return null;
                 }}
               />
             </ControlPanel>
@@ -549,7 +591,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
             about={settingsItems.find((item) => item.key === settingsTab)?.about}
             actions={
               settingsTab !== 'fresh' && (
-                <button className="cashier-primary-action" type="button" onClick={saveSettings}>
+                <button
+                  className="cashier-primary-action"
+                  type="button"
+                  onClick={() => void saveSettings()}
+                >
                   Save changes
                 </button>
               )
@@ -706,8 +752,19 @@ function StartFresh() {
     }
     FRESH_START_KEYS.forEach((key) => localStorage.removeItem(key));
     // Loaded only when asked, so the sample data is never part of the live build.
-    const { loadSampleData } = await import('../../data/sampleData');
+    const { loadSampleData, pushSampleToServer } = await import('../../data/sampleData');
     const result = loadSampleData();
+    try {
+      await pushSampleToServer();
+    } catch (caught) {
+      showToast(
+        `Sample data is in this browser, but the server copy failed: ${
+          caught instanceof Error ? caught.message : 'unknown error'
+        }`,
+        'error',
+      );
+      return;
+    }
     showToast(
       `Sample data loaded: ${result.products} products, ${result.sales} sales, ${result.shifts} closed shifts.`,
       'success',
@@ -779,16 +836,27 @@ function SupplierForm({
   onSave,
 }: {
   onCancel: () => void;
-  onSave: (value: Supplier) => void;
+  /** Resolves to an error message, or null when saved. */
+  onSave: (value: Supplier) => Promise<string | null>;
 }) {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   return (
     <form
       className="cashier-panel settings-form"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        onSave({ name: name.trim(), contact: contact.trim(), products: 0, status: 'Active' });
+        setSaving(true);
+        const problem = await onSave({
+          name: name.trim(),
+          contact: contact.trim(),
+          products: 0,
+          status: 'Active',
+        });
+        setSaving(false);
+        setError(problem ?? '');
       }}
     >
       <label>
@@ -810,9 +878,14 @@ function SupplierForm({
           placeholder="e.g. 0917 123 4567 · Tagbilaran City"
         />
       </label>
+      {error && (
+        <p className="pos-notice" role="alert">
+          {error}
+        </p>
+      )}
       <div className="stock-index__actions">
-        <button className="cashier-primary-action" type="submit">
-          Save supplier
+        <button className="cashier-primary-action" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save supplier'}
         </button>
         <button className="cashier-view-button" type="button" onClick={onCancel}>
           Cancel
@@ -855,7 +928,11 @@ function InventoryForm({
   products: InventoryProduct[];
   initialBarcode?: string;
   onClose: () => void;
-  onSave: (product: InventoryProduct, opening?: { lot: string; expiry: string }) => boolean;
+  /** Saves on the server. Resolves to an error message, or null when saved. */
+  onSave: (
+    product: InventoryProduct,
+    opening?: { lot: string; expiry: string },
+  ) => Promise<string | null>;
 }) {
   const isNew = !product;
   const [name, setName] = useState(product?.product ?? '');
@@ -869,6 +946,7 @@ function InventoryForm({
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const costValue = Number(cost);
   const priceValue = Number(price);
@@ -884,8 +962,9 @@ function InventoryForm({
     ]),
   ];
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     if (!name.trim() || !barcode.trim() || !detail.trim()) {
       setError('Fill in the product name, barcode and generic / brand.');
       return;
@@ -909,7 +988,8 @@ function InventoryForm({
       }
     }
     const quantity = isNew ? openingQty : product.stock;
-    const saved = onSave(
+    setSaving(true);
+    const problem = await onSave(
       {
         ...(product ?? {}),
         barcode: barcode.trim(),
@@ -924,7 +1004,8 @@ function InventoryForm({
       },
       isNew && openingQty > 0 ? { lot: lot.trim().toUpperCase(), expiry } : undefined,
     );
-    if (!saved) setError('That barcode is already used by another product.');
+    setSaving(false);
+    if (problem) setError(problem);
   }
 
   return (
@@ -1144,8 +1225,8 @@ function InventoryForm({
           <button className="product-form__cancel" type="button" onClick={onClose}>
             Cancel
           </button>
-          <button className="product-form__save" type="submit">
-            {isNew ? 'Add product' : 'Save changes'}
+          <button className="product-form__save" type="submit" disabled={saving}>
+            {saving ? 'Saving…' : isNew ? 'Add product' : 'Save changes'}
           </button>
         </div>
       </form>

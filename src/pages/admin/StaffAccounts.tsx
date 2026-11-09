@@ -16,14 +16,9 @@ import {
   updateAccount,
 } from '../../data/accountStore';
 
-import {
-  addStaff,
-  loadRoster,
-  removeStaff,
-  renameStaff,
-  setStaffStatus,
-  type RosterStaff,
-} from '../../data/staffRoster';
+import { syncRoster } from '../../data/serverSync';
+import { loadRoster, type RosterStaff } from '../../data/staffRoster';
+import { addStaff, removeStaff, updateStaff } from '../../services/storeApi';
 
 type StaffTab = 'roster' | 'cashier' | 'admins';
 
@@ -97,6 +92,18 @@ export function StaffAccounts() {
     setRoster(loadRoster());
   }
 
+  /** Saves a roster change on the server, then refreshes the list everyone picks from. */
+  async function rosterChange(save: () => Promise<unknown>, done: string) {
+    try {
+      await save();
+      await syncRoster();
+      setRoster(loadRoster());
+      showToast(done, 'success');
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'Could not update the roster.', 'error');
+    }
+  }
+
   async function toggleStatus(account: Account) {
     const next = account.status === 'Active' ? 'Disabled' : 'Active';
     try {
@@ -145,37 +152,26 @@ export function StaffAccounts() {
         {tab === 'roster' && (
           <StaffRoster
             roster={roster}
-            onAdd={(name) => {
-              try {
-                addStaff(name);
-                refresh();
-                showToast(`${name.trim()} added to the roster.`, 'success');
-              } catch (caught) {
-                showToast(
-                  caught instanceof Error ? caught.message : 'Could not add the staff member.',
-                );
-              }
-            }}
-            onToggle={(staff) => {
-              setStaffStatus(staff.id, staff.status === 'Active' ? 'Inactive' : 'Active');
-              refresh();
-            }}
-            onRename={(staff, name) => {
-              try {
-                renameStaff(staff.id, name);
-                refresh();
-                showToast('Name updated.', 'success');
-              } catch (caught) {
-                showToast(
-                  caught instanceof Error ? caught.message : 'Could not rename the staff member.',
-                );
-              }
-            }}
-            onRemove={(staff) => {
-              removeStaff(staff.id);
-              refresh();
-              showToast(`${staff.name} was removed from the roster.`);
-            }}
+            onAdd={(name) =>
+              rosterChange(() => addStaff(name), `${name.trim()} added to the roster.`)
+            }
+            onToggle={(staff) =>
+              rosterChange(
+                () => updateStaff(staff.id, { active: staff.status !== 'Active' }),
+                staff.status === 'Active'
+                  ? `${staff.name} is now inactive.`
+                  : `${staff.name} is active again.`,
+              )
+            }
+            onRename={(staff, name) =>
+              rosterChange(() => updateStaff(staff.id, { name }), 'Name updated.')
+            }
+            onRemove={(staff) =>
+              rosterChange(
+                () => removeStaff(staff.id),
+                `${staff.name} was removed from the roster.`,
+              )
+            }
           />
         )}
 
