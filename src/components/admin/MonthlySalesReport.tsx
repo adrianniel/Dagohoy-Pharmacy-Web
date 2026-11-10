@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { downloadPdf } from '../../lib/pdf';
 import { downloadXlsx } from '../../lib/xlsx';
 import { listSalesBetween } from '../../services/storeApi';
 import { ErrorState } from '../ErrorState';
@@ -8,7 +9,7 @@ import { LoadingState } from '../LoadingState';
 /*
  * Monthly sales report (draft) for the owner to show when BIR checks the store's sales.
  * One line per day of the month, every day listed even with no sales, plus month totals
- * and the list of receipts. Exports to Excel and saves as PDF through the print dialog.
+ * and the list of sales records. Exports to Excel and downloads a PDF (no print dialog).
  * It is a sales summary from this system, not an official BIR form.
  */
 
@@ -245,7 +246,8 @@ function MonthlyDocument({ month, report }: { month: string; report: Report }) {
 /** The Reports panel: month picker, daily table, Excel export and Save as PDF. */
 export function MonthlySalesReport() {
   const [month, setMonth] = useState(() => new Date().toLocaleDateString('en-CA').slice(0, 7));
-  const [printing, setPrinting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const pdfCopy = useRef<HTMLDivElement>(null);
   const [sales, setSales] = useState<StoredSale[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -274,25 +276,17 @@ export function MonthlySalesReport() {
   }, [month]);
 
   useEffect(() => {
-    if (!printing) return;
-    const previousTitle = document.title;
-    document.title = `Monthly sales ${month}`;
-    document.body.classList.add('print-report-doc');
-    const done = () => {
-      document.body.classList.remove('print-report-doc');
-      document.title = previousTitle;
-      setPrinting(false);
-    };
-    window.addEventListener('afterprint', done, { once: true });
-    // A short timer (not requestAnimationFrame) so printing also starts when the tab is not drawing.
-    const timer = window.setTimeout(() => window.print(), 60);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('afterprint', done);
-      document.body.classList.remove('print-report-doc');
-      document.title = previousTitle;
-    };
-  }, [printing, month]);
+    if (!saving) return;
+    // Wait one frame so the off-screen copy is drawn before it is captured.
+    const timer = window.setTimeout(() => {
+      if (!pdfCopy.current) return setSaving(false);
+      // The monthly table is wide, so its PDF is A4 landscape.
+      downloadPdf(pdfCopy.current, `Monthly sales ${month}`, 'landscape')
+        .catch(() => window.alert('The PDF could not be made. Please try again.'))
+        .finally(() => setSaving(false));
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [saving, month]);
 
   function exportExcel() {
     const title = [
@@ -410,10 +404,10 @@ export function MonthlySalesReport() {
         <button
           className="shift-report-modal__close"
           type="button"
-          onClick={() => setPrinting(true)}
-          disabled={loading || Boolean(loadError)}
+          onClick={() => setSaving(true)}
+          disabled={loading || Boolean(loadError) || saving}
         >
-          Save as PDF
+          {saving ? 'Saving PDF…' : 'Save as PDF'}
         </button>
       </div>
       {loading && <LoadingState label="Loading the month's sales…" />}
@@ -494,9 +488,9 @@ export function MonthlySalesReport() {
           </tfoot>
         </table>
       </div>
-      {printing &&
+      {saving &&
         createPortal(
-          <div id="report-print-root">
+          <div className="pdf-render-root is-landscape" ref={pdfCopy} aria-hidden="true">
             <MonthlyDocument month={month} report={report} />
           </div>,
           document.body,

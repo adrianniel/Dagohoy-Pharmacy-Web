@@ -35,12 +35,6 @@ export const createProduct = (input: ProductInput) =>
 export const updateProduct = (id: number, changes: Partial<Omit<ProductInput, 'opening'>>) =>
   apiRequest<ApiProduct>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(changes) });
 
-export const assignCategories = (items: Array<{ id: number; category: string }>) =>
-  apiRequest<{ updated: number }>('/products/category-assignments', {
-    method: 'POST',
-    body: JSON.stringify({ items }),
-  });
-
 export type ApiSupplier = {
   id: number;
   name: string;

@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { shiftDuration, shiftVariance, type ShiftRecord } from '../../data/shiftHistory';
+import { downloadPdf } from '../../lib/pdf';
 
 /*
  * The duty report of one closed shift: a printable page with the cash count, the sales,
  * the items sold, the cash movements and every sales record. It is shown right after a shift
- * closes and from Duty reports, and it can be saved as a PDF through the print dialog.
+ * closes and from Duty reports, and Save as PDF downloads it as a file (no print dialog).
  */
 
 const money = (amount: number) =>
@@ -334,9 +335,8 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
 }
 
 /**
- * Popup with the duty report and a Save as PDF button. Saving uses the browser's print
- * dialog: a copy of the report is placed on its own page and the dialog's
- * "Save as PDF" destination writes the file.
+ * Popup with the duty report and a Save as PDF button. Saving draws a copy of the report off
+ * screen at A4 width and downloads it as a PDF file.
  */
 export function ShiftReportModal({
   shift,
@@ -347,29 +347,21 @@ export function ShiftReportModal({
   heading?: string;
   onClose: () => void;
 }) {
-  const [printing, setPrinting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const pdfCopy = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!printing) return;
-    const previousTitle = document.title;
-    // The PDF file name comes from the page title.
-    document.title = `Shift report ${shift.cashierName} ${new Date(shift.closedAt).toLocaleDateString('en-CA')}`;
-    document.body.classList.add('print-shift-report');
-    const done = () => {
-      document.body.classList.remove('print-shift-report');
-      document.title = previousTitle;
-      setPrinting(false);
-    };
-    window.addEventListener('afterprint', done, { once: true });
-    // A short timer (not requestAnimationFrame) so printing also starts when the tab is not drawing.
-    const timer = window.setTimeout(() => window.print(), 60);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('afterprint', done);
-      document.body.classList.remove('print-shift-report');
-      document.title = previousTitle;
-    };
-  }, [printing, shift]);
+    if (!saving) return;
+    const name = `Shift report ${shift.cashierName} ${new Date(shift.closedAt).toLocaleDateString('en-CA')}`;
+    // Wait one frame so the off-screen copy is drawn before it is captured.
+    const timer = window.setTimeout(() => {
+      if (!pdfCopy.current) return setSaving(false);
+      downloadPdf(pdfCopy.current, name)
+        .catch(() => window.alert('The PDF could not be made. Please try again.'))
+        .finally(() => setSaving(false));
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [saving, shift]);
 
   const host = document.querySelector<HTMLElement>('.cashier-shell') ?? document.body;
 
@@ -390,9 +382,10 @@ export function ShiftReportModal({
                 <button
                   className="shift-report-modal__pdf"
                   type="button"
-                  onClick={() => setPrinting(true)}
+                  onClick={() => setSaving(true)}
+                  disabled={saving}
                 >
-                  Save as PDF
+                  {saving ? 'Saving PDF…' : 'Save as PDF'}
                 </button>
                 <button className="shift-report-modal__close" type="button" onClick={onClose}>
                   Close
@@ -400,7 +393,7 @@ export function ShiftReportModal({
               </div>
             </div>
             <p className="shift-report-modal__hint">
-              Save as PDF opens the print window. Pick “Save as PDF” as the printer, then Save.
+              Save as PDF downloads the report as a file to your Downloads folder.
             </p>
             <div className="shift-report-modal__paper">
               <ShiftReportDocument shift={shift} />
@@ -409,9 +402,9 @@ export function ShiftReportModal({
         </div>,
         host,
       )}
-      {printing &&
+      {saving &&
         createPortal(
-          <div id="shift-print-root">
+          <div className="pdf-render-root" ref={pdfCopy} aria-hidden="true">
             <ShiftReportDocument shift={shift} />
           </div>,
           document.body,

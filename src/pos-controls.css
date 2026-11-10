@@ -2616,43 +2616,6 @@
   }
 }
 
-/* The print copy only exists while printing; keep it off screen. */
-@media screen {
-  #shift-print-root {
-    display: none;
-  }
-}
-
-/* Print only the report, on A4 pages, when Save as PDF is used. */
-@page shift-report {
-  size: A4;
-  margin: 12mm;
-}
-
-@media print {
-  body.print-shift-report > *:not(#shift-print-root) {
-    display: none !important;
-  }
-
-  body.print-shift-report #shift-print-root,
-  body.print-shift-report #shift-print-root * {
-    visibility: visible !important;
-  }
-
-  body.print-shift-report #shift-print-root {
-    page: shift-report;
-  }
-
-  body.print-shift-report .shift-doc {
-    max-width: none;
-    padding: 0;
-    box-shadow: none;
-    font-size: 10.5pt;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-}
-
 /* Duty reports list (owner view of every closed shift). */
 .duty-reports__filters {
   display: flex;
@@ -2741,42 +2704,6 @@
 
 .monthly-doc__table tr.is-empty td {
   color: #9aa49d;
-}
-
-@media screen {
-  #report-print-root {
-    display: none;
-  }
-}
-
-/* The monthly table is wide, so its PDF uses A4 landscape. */
-@page report-landscape {
-  size: A4 landscape;
-  margin: 10mm;
-}
-
-@media print {
-  body.print-report-doc > *:not(#report-print-root) {
-    display: none !important;
-  }
-
-  body.print-report-doc #report-print-root,
-  body.print-report-doc #report-print-root * {
-    visibility: visible !important;
-  }
-
-  body.print-report-doc #report-print-root {
-    page: report-landscape;
-  }
-
-  body.print-report-doc .shift-doc {
-    max-width: none;
-    padding: 0;
-    box-shadow: none;
-    font-size: 9.5pt;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
 }
 
 /* ------------------------------------------------------------------
@@ -3565,4 +3492,26 @@
   .pos-scanner-sign {
     padding: 0.3rem 0.5rem;
   }
+}
+
+/*
+ * Save as PDF: a copy of the report is drawn off screen at A4 width (96 px per inch) and
+ * captured into the PDF file. Nobody sees it; it is removed when the file is saved.
+ */
+.pdf-render-root {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 794px;
+  background: #fff;
+}
+
+.pdf-render-root.is-landscape {
+  width: 1123px;
+}
+
+.pdf-render-root .shift-doc {
+  max-width: none;
+  margin: 0;
+  box-shadow: none;
 }

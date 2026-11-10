@@ -60,6 +60,10 @@ appears on the Expenses page, which is now a report only (by month and by catego
 out cannot be removed from Expenses; a mistake is undone with a cash in. Reason: the owner
 wants to follow every peso that leaves the drawer, and a separate expense entry did nothing
 to the drawer count.
+Also changed 2026-11-10: Save as PDF downloads a file (jsPDF + html2canvas-pro, loaded only
+when used); the system has no print buttons. Business hours left the owner Settings. The AI
+category suggestions (Gemini) were removed from web and server; a product's category is still
+set by hand on the product form.
 Next: step 8, Hostinger staging (after the owner buys the plan).
 
 ## "Ready locally" means

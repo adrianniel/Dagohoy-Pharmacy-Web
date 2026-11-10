@@ -16,10 +16,8 @@ import {
   stockStatus,
 } from '../../data/inventoryStore';
 import { initialBatches, loadBatches } from '../../data/operationsStore';
-import { suggestProductCategories } from '../../services/productsApi';
 import {
   archiveProduct,
-  assignCategories,
   createProduct,
   lookupBarcode,
   createSupplier,
@@ -29,7 +27,6 @@ import {
 import {
   cacheSettings,
   syncAfterStockChange,
-  syncCatalog,
   syncSuppliers,
 } from '../../data/serverSync';
 import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
@@ -120,7 +117,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
-  const [isCategorizing, setIsCategorizing] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const isAdmin = getCurrentAccount()?.role === 'ADMIN';
@@ -147,32 +143,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       ),
     [products, query],
   );
-  async function categorizeProducts() {
-    setIsCategorizing(true);
-    try {
-      const suggestions = await suggestProductCategories(
-        products.map((product) => ({
-          id: product.barcode,
-          name: product.product,
-          detail: product.detail,
-        })),
-      );
-      const categoryById = new Map(suggestions.map(({ id, category }) => [id, category]));
-      const items = products.flatMap((product) => {
-        const category = categoryById.get(product.barcode);
-        return product.id && category ? [{ id: product.id, category }] : [];
-      });
-      if (items.length) await assignCategories(items);
-      await syncCatalog();
-      setProducts(getInventory());
-      showToast(`${items.length} category suggestions applied. Please review them.`, 'info');
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Could not suggest categories.', 'error');
-    } finally {
-      setIsCategorizing(false);
-    }
-  }
-
   function downloadRestockCsv() {
     const rows = [
       ['Product', 'Barcode', 'Category', 'Current stock', 'Reorder point', 'Suggested quantity'],
@@ -312,16 +282,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 >
                   Add product <span>＋</span>
                 </button>
-                {products.length > 0 && (
-                  <button
-                    className="cashier-view-button"
-                    type="button"
-                    disabled={isCategorizing}
-                    onClick={() => void categorizeProducts()}
-                  >
-                    {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
-                  </button>
-                )}
                 {isAdmin && (
                   <>
                     <button
@@ -630,19 +590,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
                         setPharmacySettings({ ...pharmacySettings, email: event.target.value })
                       }
                       placeholder="Pharmacy email address"
-                    />
-                  </label>
-                  <label>
-                    Business hours
-                    <input
-                      value={pharmacySettings.businessHours ?? ''}
-                      onChange={(event) =>
-                        setPharmacySettings({
-                          ...pharmacySettings,
-                          businessHours: event.target.value,
-                        })
-                      }
-                      placeholder="Mon–Sat 8:00 AM–8:00 PM · Sun 9:00 AM–6:00 PM"
                     />
                   </label>
                 </>
