@@ -160,7 +160,7 @@ function MonthlyDocument({ month }: { month: string }) {
           <strong>{money(totals.net)}</strong>
         </div>
         <div>
-          <span>Receipts</span>
+          <span>Sales</span>
           <strong>{totals.receipts}</strong>
         </div>
         <div>
@@ -176,7 +176,7 @@ function MonthlyDocument({ month }: { month: string }) {
         <thead>
           <tr>
             <th>Date</th>
-            <th>Receipts</th>
+            <th>Sales</th>
             <th>First no.</th>
             <th>Last no.</th>
             <th>Gross</th>
@@ -226,9 +226,10 @@ function MonthlyDocument({ month }: { month: string }) {
         </tfoot>
       </table>
       <p className="shift-doc__missing">
-        Net sales = gross sales minus discounts. Voided receipts and no-charge slips (
+        Net sales = gross sales minus discounts. Voided sales and no-charge records (
         {money(totals.noChargeValue)} worth) are not counted as sales. Draft from this system's
-        records, to be checked by the owner or bookkeeper. Not an official BIR form.
+        records, for the owner or bookkeeper. Internal summary, not an official book of accounts or
+        BIR form.
       </p>
       <footer className="shift-doc__sign">
         <div>
@@ -275,7 +276,7 @@ export function MonthlySalesReport() {
   function exportExcel() {
     const title = [
       store.name,
-      `Monthly sales report: ${monthLabel(month)} (draft, not an official BIR form)`,
+      `Monthly sales report: ${monthLabel(month)} (internal summary, not an official BIR form)`,
       `Generated ${new Date().toLocaleString('en-PH')}`,
     ];
     downloadXlsx(`dagohoy-monthly-sales-${month}.xlsx`, [
@@ -284,16 +285,16 @@ export function MonthlySalesReport() {
         title,
         header: [
           'Date',
-          'Receipts',
-          'First receipt no.',
-          'Last receipt no.',
+          'Sales',
+          'First record no.',
+          'Last record no.',
           'Gross sales',
           'Discounts',
           'Net sales',
           'Cash',
           'GCash',
           'Credit',
-          'Voided receipts',
+          'Voided sales',
           'Voided amount',
           'No-charge value',
         ],
@@ -332,10 +333,10 @@ export function MonthlySalesReport() {
         widths: [12, 10, 16, 16, 13, 12, 13, 12, 12, 12, 10, 13, 13],
       },
       {
-        name: 'Receipts',
+        name: 'Sales records',
         title,
         header: [
-          'Receipt',
+          'Record no.',
           'Date',
           'Time',
           'Payment',
@@ -364,8 +365,8 @@ export function MonthlySalesReport() {
   return (
     <>
       <p className="stock-index__warn">
-        Draft. It adds up the sales saved in this system for the month. Ask the owner or bookkeeper
-        to check it before showing it to BIR. It is not an official BIR form.
+        Internal summary. It adds up the sales saved in this system for the month, for the owner and
+        bookkeeper. It is not an official book of accounts or BIR form.
       </p>
       <div className="duty-reports__filters">
         <label>
@@ -393,7 +394,7 @@ export function MonthlySalesReport() {
           Net sales <b>{money(totals.net)}</b>
         </span>
         <span>
-          Receipts <b>{totals.receipts}</b>
+          Sales <b>{totals.receipts}</b>
         </span>
         <span>
           Days with sales <b>{daysWithSales}</b>
@@ -407,8 +408,8 @@ export function MonthlySalesReport() {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Receipts</th>
-              <th>Receipt nos.</th>
+              <th>Sales</th>
+              <th>Record nos.</th>
               <th>Gross</th>
               <th>Discounts</th>
               <th>Net sales</th>

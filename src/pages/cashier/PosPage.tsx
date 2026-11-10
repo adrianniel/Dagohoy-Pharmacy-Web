@@ -538,7 +538,7 @@ export function CashierPosPage() {
     setOpenedAt(null);
     setPaymentOpen(true);
     playSound('success');
-    showToast(`No-charge slip ${receipt} recorded.`, 'success');
+    showToast(`No-charge record ${receipt} saved.`, 'success');
   }
 
   function completeSale(event: FormEvent<HTMLFormElement>) {
@@ -954,7 +954,7 @@ export function CashierPosPage() {
               </span>
               <span className="pos-control-button__text">
                 <strong>Void sale</strong>
-                <small>Correct a receipt</small>
+                <small>Correct a sale</small>
               </span>
             </button>
             <button
@@ -998,8 +998,8 @@ export function CashierPosPage() {
               <p className="eyebrow">Correction</p>
               <h2>Void a sale</h2>
               <p className="pos-control-modal__note">
-                Pick the receipt to cancel. Its items go back on the shelf and it stops counting in
-                the shift totals. The sale on the counter is not touched.
+                Pick the sale to cancel. Its items go back on the shelf and it stops counting in the
+                shift totals. The sale on the counter is not touched.
               </p>
               <div className="pos-void__body">
                 <fieldset className="pos-void__list">
@@ -1039,7 +1039,7 @@ export function CashierPosPage() {
                   return (
                     <section className="pos-void__detail" aria-label={`Items on ${sale.receipt}`}>
                       <header>
-                        <span>Receipt</span>
+                        <span>Record</span>
                         <strong>{sale.receipt}</strong>
                         <small>{formatReceiptDate(sale.date)}</small>
                       </header>
@@ -1052,9 +1052,7 @@ export function CashierPosPage() {
                             <b>{formatMoney(line.quantity * line.unitPrice)}</b>
                           </li>
                         ))}
-                        {!sale.lines?.length && (
-                          <li>No item details were saved for this receipt.</li>
-                        )}
+                        {!sale.lines?.length && <li>No item details were saved for this sale.</li>}
                       </ul>
                       <div className="pos-void__total">
                         <span>Total</span>
@@ -1120,7 +1118,7 @@ export function CashierPosPage() {
               <h2>Release items without charging</h2>
               <p className="pos-control-modal__note">
                 {totalItems} item{totalItems === 1 ? '' : 's'} worth {formatMoney(subtotal)} will
-                leave stock and a slip is still recorded. A reason is required.
+                leave stock and a record is still saved. A reason is required.
               </p>
               <label>
                 Reason
@@ -1137,7 +1135,7 @@ export function CashierPosPage() {
                 type="submit"
                 disabled={!noChargeReason.trim()}
               >
-                Record no-charge slip
+                Save no-charge record
               </button>
             </form>
           )}
@@ -1389,9 +1387,8 @@ export function CashierPosPage() {
 }
 
 /**
- * After a sale: a quick check mark, then the receipt slides out like it is being printed.
- * The receipt is laid out like a store thermal printer slip (monospace, dashed rules,
- * right-aligned amounts) and prints at 80 mm wide.
+ * After a sale: a quick check mark, then the sales record of the sale on screen.
+ * It is the store's internal record; nothing is printed for the customer.
  */
 function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => void }) {
   const [stage, setStage] = useState<'check' | 'receipt'>('check');
@@ -1417,7 +1414,7 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
         </span>
         <strong>
           {sale.payment === 'No charge'
-            ? 'No-charge slip saved'
+            ? 'No-charge record saved'
             : sale.payment === 'Credit'
               ? 'Utang saved'
               : 'Payment complete'}
@@ -1454,9 +1451,6 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
       </div>
 
       <div className="pos-done__actions">
-        <button className="pos-done__print" type="button" onClick={() => window.print()}>
-          Print receipt
-        </button>
         <button className="pos-done__close" type="button" onClick={onDone} autoFocus>
           Close
         </button>

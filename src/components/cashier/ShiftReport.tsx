@@ -213,7 +213,7 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
                 Voided sales: <b>{details.voidedCount}</b> ({money(details.voidedTotal)})
               </li>
               <li>
-                No-charge slips: <b>{details.noChargeCount}</b> ({money(details.noChargeValue)}{' '}
+                No-charge records: <b>{details.noChargeCount}</b> ({money(details.noChargeValue)}{' '}
                 worth)
               </li>
             </ul>
@@ -281,11 +281,11 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
           </section>
 
           <section className="shift-doc__section">
-            <h3>5. Receipts</h3>
+            <h3>5. Sales records</h3>
             <table className="shift-doc__table">
               <thead>
                 <tr>
-                  <th>Receipt</th>
+                  <th>Record</th>
                   <th>Time</th>
                   <th>Payment</th>
                   <th>Items</th>
@@ -296,7 +296,7 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
               <tbody>
                 {details.sales.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>No receipts.</td>
+                    <td colSpan={6}>No sales.</td>
                   </tr>
                 ) : (
                   details.sales.map((sale) => (

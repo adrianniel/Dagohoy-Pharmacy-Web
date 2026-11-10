@@ -75,6 +75,23 @@ Each phase below has the same parts: **Goal**, **I do**, **The agent does**,
 7. Who pays for and owns the hosting and the domain? (Client owns, I manage with shared
    access.)
 
+**Regulatory gate (decide before building anything that touches sales or money):**
+Find out which government rules apply to the kind of system you will build, and pick the
+legal path before Phase 2. In the Philippines, a system that **issues receipts or invoices**
+counts as a POS / sales machine: the software must be BIR-accredited and every computer
+needs a Permit to Use (RMO 24-2023), with fines per unit and possible closure. Computerized
+books used for tax filing must be registered as a CAS. Software that can delete or hide
+sales is a serious offense. Options, from least to most work:
+1. **Inventory & Sales Record System** (back-office): no receipts printed for customers,
+   records cannot be deleted, not the official tax books. The store keeps its own invoices
+   and books.
+2. The same, registered as a **CAS** if the client wants it to be the official books.
+3. An **accredited POS** for the counter plus my system for inventory and reports.
+4. **Get my software accredited** (big job, but then it becomes a product I can sell).
+Ask the client's accountant or the BIR officer which applies, write down the answer, and
+put a line in the contract that tax registration and invoices are the client's
+responsibility. Name the system for what it is (never call option 1 a "POS").
+
 **The agent does:** turns my notes into a short scope list and a list of open questions;
 drafts the cost table; suggests the stack based on section 5.
 
@@ -355,6 +372,7 @@ database access only from my own address and removed after.
 
 | Problem | What happened | Do this instead |
 |---|---|---|
+| Built a "POS" before checking the law | A POS developer warned that receipt-issuing systems need BIR accreditation and a permit per computer, with fines per unit | Do the regulatory gate in Phase 0; for small clients start as an Inventory & Sales Record System with no customer receipts |
 | Long prototype on browser storage | Every page later had to be moved to the API, with a temporary bridge | Keep the prototype short; keep data access in a few store files; build login and the database early |
 | Port already in use | The API would not start because another project used the port | Check free ports at setup; give each project its own and write it in `CLAUDE.md` |
 | Old server still running | New routes returned 404: a plain (non-watch) server kept running old code | Develop with the watch mode server; restart after big changes |
@@ -383,4 +401,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-09 | 4 | Real login: bcrypt, cookie sessions, guards, users API, owner script (migration 004) |
 | 2026-11-09 | 5 | Tables and rules for shifts, payments, utang, expenses, settings (migration 005, check-rules) |
 | 2026-11-09 | 6, slice 1 | Products, suppliers, staff roster, settings on the server (migration 006) |
+| 2026-11-10 | 0 (late) | BIR check: renamed to "Inventory & Sales Record System", "POS" labels became "Sales Counter", no customer receipts (on-screen internal sales record only), monthly report marked internal. Owner to confirm with the BIR officer |
 | next | 6 | Stock, shifts, sales, utang and expenses, reports |

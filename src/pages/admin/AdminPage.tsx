@@ -228,7 +228,8 @@ export function AdminPage({ section }: { section: AdminSection }) {
       title: 'Pharmacy details',
       hint: 'Name, contact, hours',
       tone: 'forest',
-      about: 'Shown on receipts and the public page. Keep the name, number and address correct.',
+      about:
+        'Shown on sales records and the public page. Keep the name, number and address correct.',
     },
     {
       key: 'alerts',
@@ -792,8 +793,8 @@ function StartFresh() {
       </p>
       <ul>
         <li>
-          <b>Removed:</b> products, stock lots and movements, sales and receipts, voids, shifts and
-          duty reports, cash in/out, utang, expenses and suppliers.
+          <b>Removed:</b> products, stock lots and movements, sales records, voids, shifts and duty
+          reports, cash in/out, utang, expenses and suppliers.
         </li>
         <li>
           <b>Kept:</b> login accounts, the staff roster and these pharmacy settings.
@@ -1533,10 +1534,10 @@ function Reports() {
       key: 'monthly',
       icon: 'calendar',
       title: 'Monthly sales',
-      hint: 'Per day, for BIR checks',
+      hint: 'Per day, internal summary',
       tone: 'blue',
       about:
-        'Sales for each day of the month from the receipts saved here, with totals. Export to Excel or save as PDF.',
+        'Internal summary: sales for each day of the month from the sales records saved here, with totals. Export to Excel or save as PDF.',
     },
     {
       key: 'summary',

@@ -1,7 +1,8 @@
 /*
- * The sales receipt, laid out like a store thermal printer slip (monospace, dashed rules,
- * right-aligned amounts; prints at 80 mm). One component, so the receipt after a sale and
- * the receipt opened again from Transactions are always the same.
+ * The sales record of one sale, shown on screen in the style of a store slip (monospace,
+ * dashed rules, right-aligned amounts). It is an internal record for the store and is not
+ * printed or given to customers. One component, so the record after a sale and the record
+ * opened again from Transactions are always the same.
  */
 
 export type ReceiptLine = { product: string; quantity: number; unitPrice: number };
@@ -42,7 +43,7 @@ function dateTime(value: string) {
   })} ${date.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
 }
 
-/** Store details printed on the receipt header, from Owner → Settings. */
+/** Store details shown on the record header, from Owner → Settings. */
 function readStoreDetails() {
   try {
     const settings = JSON.parse(localStorage.getItem('dagohoy_demo_pharmacy_settings') ?? '{}') as {
@@ -75,7 +76,7 @@ export function ThermalReceipt({ data }: { data: ReceiptData }) {
   return (
     <article
       className={`thermal${voided ? ' is-voided' : ''}`}
-      aria-label={`Receipt ${data.receipt}`}
+      aria-label={`Sales record ${data.receipt}`}
     >
       {voided && (
         <span className="thermal__void" aria-hidden="true">
@@ -88,12 +89,12 @@ export function ThermalReceipt({ data }: { data: ReceiptData }) {
         {store.phone && <span>Tel: {store.phone}</span>}
       </header>
       <p className="thermal__title">
-        {data.payment === 'No charge' ? 'NO-CHARGE SLIP' : 'SALES RECEIPT'}
+        {data.payment === 'No charge' ? 'NO-CHARGE RECORD' : 'SALES RECORD'}
       </p>
       <div className="thermal__rule" />
       <dl className="thermal__meta">
         <div>
-          <dt>Receipt #</dt>
+          <dt>Record #</dt>
           <dd>{data.receipt}</dd>
         </div>
         <div>
@@ -205,9 +206,8 @@ export function ThermalReceipt({ data }: { data: ReceiptData }) {
       )}
       <div className="thermal__rule" />
       <footer className="thermal__foot">
-        <strong>THANK YOU! PLEASE COME AGAIN.</strong>
-        <span>Keep this receipt for returns.</span>
-        <span>This is not an official receipt.</span>
+        <strong>INTERNAL STORE RECORD</strong>
+        <span>For the store's records only. Not given to customers.</span>
       </footer>
     </article>
   );

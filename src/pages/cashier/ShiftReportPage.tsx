@@ -186,7 +186,7 @@ export function ShiftReportPage() {
           <section className="cashier-panel shift-report__duty">
             <p className="inventory-form-note">
               {onDuty.length} {onDuty.length === 1 ? 'person served' : 'people served'} this shift.
-              {onDuty.length > 1 && ' The cashier in charge is the name printed on receipts.'}
+              {onDuty.length > 1 && ' The cashier in charge is the name shown on sales records.'}
             </p>
             <ol className="shift-report__duty-list">
               {onDuty.map((name, index) => (

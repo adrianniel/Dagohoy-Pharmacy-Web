@@ -60,7 +60,7 @@ export function StaffAccounts() {
       alert: !cashier,
       count: cashier ? undefined : '!',
       about:
-        'One shared login for the whole cashier team. Each cashier picks their name when the shift starts, so receipts and reports show who was on duty.',
+        'One shared login for the whole cashier team. Each cashier picks their name when the shift starts, so sales records and reports show who was on duty.',
     },
     {
       key: 'admins',

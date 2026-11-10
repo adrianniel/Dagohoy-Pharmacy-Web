@@ -264,7 +264,7 @@ export function CreditPage() {
               <thead>
                 <tr>
                   <th>Customer</th>
-                  <th>Receipt</th>
+                  <th>Record</th>
                   <th>Date</th>
                   <th>Sale total</th>
                   <th>Paid</th>
@@ -372,7 +372,7 @@ function CustomerList({
             <thead>
               <tr>
                 <th>Customer</th>
-                <th>Open receipts</th>
+                <th>Unpaid sales</th>
                 <th>Total owed</th>
                 <th>Last purchase</th>
                 <th />
@@ -478,7 +478,7 @@ function CustomerDetail({
         <CreditStat
           label="Still owes"
           value={money(customer.owed)}
-          detail={`${customer.openReceipts} open receipt${customer.openReceipts === 1 ? '' : 's'}`}
+          detail={`${customer.openReceipts} unpaid sale${customer.openReceipts === 1 ? '' : 's'}`}
         />
         <CreditStat label="Paid so far" value={money(customer.paid)} detail="All credit sales" />
         <CreditStat
@@ -498,7 +498,7 @@ function CustomerDetail({
             <tr>
               <th>Date</th>
               <th>Time</th>
-              <th>Receipt</th>
+              <th>Record</th>
               <th>Items</th>
               <th>Sale total</th>
               <th>Paid</th>

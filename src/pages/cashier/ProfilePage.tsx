@@ -57,7 +57,7 @@ export function CashierProfilePage() {
           {isCashier && (
             <p className="cashier-shift-card__note">
               Everyone on the cashier team signs in with this one account. The name typed when
-              opening the register is who appears on receipts and reports.
+              opening the register is who appears on sales records and reports.
             </p>
           )}
         </aside>

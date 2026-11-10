@@ -429,7 +429,7 @@ export function StockControlCenter({
                     <th>Details</th>
                     <th>Cost/unit</th>
                     <th>Total cost</th>
-                    <th>Receipt no.</th>
+                    <th>Delivery receipt no.</th>
                     <th>By</th>
                   </tr>
                 </thead>
@@ -947,7 +947,7 @@ function ReceiveForm({
       product: product.product,
       kind: 'Received',
       change: qty,
-      reference: reference.trim() || 'No receipt no.',
+      reference: reference.trim() || 'No delivery receipt no.',
       staff: staffName(),
       reason: `${supplier || 'Supplier'} · lot ${lotCode} · ${peso(unitCost)}/unit · expires ${shortDate(expiry)}`,
       unitCost,
@@ -1292,7 +1292,7 @@ export function StockWriteOffForm({
               isReturn
                 ? 'e.g. Lot expired, supplier agreed to take it back'
                 : type === 'customer-return'
-                  ? 'e.g. Unopened box, bought on receipt DP-123456'
+                  ? 'e.g. Unopened box, from sale DP-123456'
                   : 'e.g. 3 blister packs crushed in storage'
             }
           />

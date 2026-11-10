@@ -126,7 +126,7 @@ export function CashierTransactionsPage() {
       hint: 'Sales this week',
       tone: 'blue',
       count: groups.week.length,
-      about: 'Sales from the last 7 days. Use the search to find one receipt.',
+      about: 'Sales from the last 7 days. Use the search to find one sale record.',
     },
     {
       key: 'month',
@@ -135,7 +135,7 @@ export function CashierTransactionsPage() {
       hint: 'Sales this month',
       tone: 'teal',
       count: groups.month.length,
-      about: 'Sales from the last 30 days. Use the search to find one receipt.',
+      about: 'Sales from the last 30 days. Use the search to find one sale record.',
     },
     {
       key: 'custom',
@@ -161,10 +161,10 @@ export function CashierTransactionsPage() {
       key: 'voided',
       icon: 'receipt',
       title: 'Voided sales',
-      hint: 'Cancelled receipts',
+      hint: 'Cancelled sales',
       tone: 'rose',
       count: groups.voided.length,
-      about: 'Receipts that were voided. Their items went back on the shelf.',
+      about: 'Sales that were voided. Their items went back on the shelf.',
     },
   ];
   const activeItem = items.find((item) => item.key === view);
@@ -191,7 +191,7 @@ export function CashierTransactionsPage() {
     const title = [
       readPharmacyName(),
       `Transactions: ${VIEW_LABELS[view]} (${rangeLabel()})`,
-      `Generated ${generated}${query.trim() ? ` · receipt search “${query.trim()}”` : ''}`,
+      `Generated ${generated}${query.trim() ? ` · record search “${query.trim()}”` : ''}`,
     ];
     const kept = records.filter((sale) => sale.status !== 'Voided');
 
@@ -218,7 +218,7 @@ export function CashierTransactionsPage() {
         name: 'Transactions',
         title,
         header: [
-          'Receipt',
+          'Record no.',
           'Date',
           'Time',
           'Payment',
@@ -322,7 +322,7 @@ export function CashierTransactionsPage() {
               <CashierIcon name="search" />
               <input
                 type="search"
-                placeholder="Search receipt number"
+                placeholder="Search record number"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -331,7 +331,7 @@ export function CashierTransactionsPage() {
           {records.length === 0 ? (
             <p className="register-empty">
               {query.trim()
-                ? `No receipt matches “${query.trim()}” here.`
+                ? `No record matches “${query.trim()}” here.`
                 : view === 'gcash'
                   ? 'No GCash payments waiting. Every GCash sale is confirmed.'
                   : view === 'voided'
@@ -348,7 +348,7 @@ export function CashierTransactionsPage() {
               <table className="cashier-table cashier-transactions-table">
                 <thead>
                   <tr>
-                    <th>Receipt #</th>
+                    <th>Record #</th>
                     <th>Date / Time</th>
                     <th>Items</th>
                     <th>Total</th>
@@ -412,7 +412,7 @@ export function CashierTransactionsPage() {
               className="pos-modal-close"
               type="button"
               onClick={() => setSelected(null)}
-              aria-label="Close receipt"
+              aria-label="Close sales record"
             >
               ×
             </button>
@@ -477,9 +477,6 @@ export function CashierTransactionsPage() {
             </div>
 
             <div className="pos-done__actions">
-              <button className="pos-done__print" type="button" onClick={() => window.print()}>
-                {selected.status === 'Voided' ? 'Print copy' : 'Reprint receipt'}
-              </button>
               <button className="pos-done__close" type="button" onClick={() => setSelected(null)}>
                 Close
               </button>

@@ -75,9 +75,9 @@ const cashierSteps = [
       'Record customer payments or approved credit transactions accurately and efficiently.',
   },
   {
-    title: 'Issue Receipt',
-    titleLines: ['Step 6', 'Issue Receipt'],
-    description: 'Generate a receipt and provide customers with their transaction details.',
+    title: 'Save the Record',
+    titleLines: ['Step 6', 'Save the Record'],
+    description: 'Save the sale so the store keeps a clear record of every transaction.',
   },
   {
     title: 'View Transactions',
