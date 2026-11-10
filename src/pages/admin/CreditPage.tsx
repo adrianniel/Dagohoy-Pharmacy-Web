@@ -1,10 +1,23 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
+import { ErrorState } from '../../components/ErrorState';
+import { LoadingState } from '../../components/LoadingState';
 import { addCashEvent, getSession } from '../../data/registerSession';
 import { syncSales } from '../../data/serverSync';
-import { payUtang, renameUtangCustomer } from '../../services/storeApi';
+import {
+  getCustomerHistory,
+  payCustomer,
+  renameUtangCustomer,
+  type ApiCustomerHistory,
+} from '../../services/storeApi';
+
+/*
+ * Credit accounts (utang). A customer owes as one person, not per sale: the detail shows one
+ * list of everything they bought on credit, every payment with its date and time, and the
+ * balance. A payment is for the customer; the server applies it to the oldest utang first.
+ */
 
 type CreditSale = {
   id?: number;
@@ -16,7 +29,6 @@ type CreditSale = {
   amountPaid?: number;
   creditBalance?: number;
   status: string;
-  lines?: Array<{ product: string; barcode?: string; quantity: number; unitPrice: number }>;
 };
 
 type CreditView = 'customers' | 'collect' | 'paid';
@@ -25,10 +37,8 @@ type CreditView = 'customers' | 'collect' | 'paid';
 type Customer = {
   key: string;
   name: string;
-  sales: CreditSale[];
   owed: number;
   paid: number;
-  openReceipts: number;
   lastDate: string;
 };
 
@@ -53,94 +63,72 @@ function readCreditSales(): CreditSale[] {
   }
 }
 
-/** Groups credit sales by customer name (trimmed, any letter case). */
+/** Groups credit sales by customer name (trimmed, any letter case), biggest balance first. */
 function groupCustomers(sales: CreditSale[]): Customer[] {
   const groups = new Map<string, Customer>();
   for (const sale of sales) {
     const key = customerKey(sale.customer);
-    const group =
-      groups.get(key) ??
-      ({
-        key,
-        name: sale.customer?.trim() || UNNAMED,
-        sales: [],
-        owed: 0,
-        paid: 0,
-        openReceipts: 0,
-        lastDate: sale.date,
-      } satisfies Customer);
-    group.sales.push(sale);
+    const group = groups.get(key) ?? {
+      key,
+      name: sale.customer?.trim() || UNNAMED,
+      owed: 0,
+      paid: 0,
+      lastDate: sale.date,
+    };
     group.owed += Number(sale.creditBalance ?? 0);
     group.paid += Number(sale.amountPaid ?? 0);
-    if (Number(sale.creditBalance ?? 0) > 0) group.openReceipts += 1;
     if (Date.parse(sale.date) > Date.parse(group.lastDate)) group.lastDate = sale.date;
     groups.set(key, group);
-  }
-  for (const group of groups.values()) {
-    group.sales.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
   }
   return [...groups.values()].sort((a, b) => b.owed - a.owed || a.name.localeCompare(b.name));
 }
 
-const itemsText = (sale: CreditSale) =>
-  sale.lines?.length
-    ? sale.lines.map((line) => `${line.product} × ${line.quantity}`).join(', ')
-    : 'No item details';
-
 export function CreditPage() {
   const [sales, setSales] = useState<CreditSale[]>(readCreditSales);
   const [view, setView] = useState<CreditView>('customers');
-  const [collectReceipt, setCollectReceipt] = useState('');
-  /** The customer opened from the list; empty shows the whole list. */
+  /** The customer opened from the list (or picked to pay); empty shows the whole list. */
   const [selectedKey, setSelectedKey] = useState('');
   const { showToast } = useToast();
-  const credits = useMemo(() => sales.filter((sale) => Number(sale.creditBalance) > 0), [sales]);
-  const paidOff = useMemo(() => sales.filter((sale) => Number(sale.creditBalance) <= 0), [sales]);
   const customers = useMemo(() => groupCustomers(sales), [sales]);
   const owing = customers.filter((customer) => customer.owed > 0);
-  const outstanding = credits.reduce((total, credit) => total + Number(credit.creditBalance), 0);
+  const outstanding = owing.reduce((total, customer) => total + customer.owed, 0);
+  const paidOff = useMemo(() => sales.filter((sale) => Number(sale.creditBalance) <= 0), [sales]);
   const selected = customers.find((customer) => customer.key === selectedKey);
 
-  function openCollect(receipt: string) {
-    setCollectReceipt(receipt);
-    setView('collect');
+  function openCustomer(key: string) {
+    setSelectedKey(key);
+    setView('customers');
   }
 
-  async function recordPayment(receipt: string, amount: number) {
-    const target = sales.find((sale) => sale.receipt === receipt);
-    if (!target?.id) {
-      showToast('That credit sale could not be found.', 'error');
-      return;
-    }
+  /** Saves a payment for the whole customer. Returns true when saved. */
+  async function recordPayment(customer: Customer, amount: number) {
     try {
-      await payUtang(target.id, amount);
+      await payCustomer(customer.name, amount);
       await syncSales();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'The payment was not saved.', 'error');
-      return;
+      return false;
     }
     // The server adds the cash to the open shift's count; this copy shows it on the register.
     const shiftOpen = Boolean(getSession());
-    const customer = target.customer;
     if (shiftOpen) {
       addCashEvent({
         id: `UTANG-${Date.now()}`,
         type: 'Utang payment',
         amount,
-        reason: `${customer || 'Customer'} paid toward ${receipt}`,
+        reason: `${customer.name} paid toward utang`,
         date: new Date().toISOString(),
       });
     }
     setSales(readCreditSales());
-    setCollectReceipt('');
-    // Go back to the customer who paid, so the new balance is right there.
-    setSelectedKey(customerKey(customer));
-    setView('customers');
+    openCustomer(customer.key);
     showToast(
       shiftOpen
-        ? `Payment of ${money(amount)} recorded for ${receipt} and added to the cash drawer.`
-        : `Payment of ${money(amount)} recorded for ${receipt}. No shift is open, so it is not in a drawer count.`,
+        ? `${customer.name} paid ${money(amount)}. Added to the cash drawer.`
+        : `${customer.name} paid ${money(amount)}. No shift is open, so it is not in a drawer count.`,
+      'success',
     );
+    return true;
   }
 
   /** Renames a customer on every one of their credit sales. Returns true when saved. */
@@ -158,7 +146,7 @@ export function CreditPage() {
     if (
       other &&
       !window.confirm(
-        `${other.name} is already a customer. Their credit sales and ${from.name}'s will be joined under one name. Continue?`,
+        `${other.name} is already a customer. Their utang and ${from.name}'s will be joined under one name. Continue?`,
       )
     ) {
       return false;
@@ -185,7 +173,7 @@ export function CreditPage() {
       tone: 'rose',
       count: owing.length,
       alert: owing.length > 0,
-      about: 'Everyone with utang. Open a name to see their purchases.',
+      about: 'Everyone with utang. Tap a name to see what they owe and what they paid.',
     },
     {
       key: 'collect',
@@ -193,7 +181,7 @@ export function CreditPage() {
       title: 'Collect payment',
       hint: 'Customer pays utang',
       tone: 'green',
-      about: 'Record money a customer pays toward their balance.',
+      about: 'Find the customer, type what they pay now, or pay the full balance.',
     },
     {
       key: 'paid',
@@ -217,7 +205,7 @@ export function CreditPage() {
         active={view}
         onSelect={(key) => {
           setView(key);
-          if (key === 'customers') setSelectedKey('');
+          setSelectedKey('');
         }}
       />
       <ControlPanel
@@ -226,17 +214,17 @@ export function CreditPage() {
         title={view === 'customers' && selected ? selected.name : activeItem.title}
         about={
           view === 'customers' && selected
-            ? 'Every credit purchase of this customer, newest first.'
+            ? 'Everything bought on credit, every payment, and the balance.'
             : activeItem.about
         }
       >
         {view === 'customers' &&
           (selected ? (
             <CustomerDetail
-              key={selected.key}
+              key={`${selected.key}-${selected.owed}`}
               customer={selected}
               onBack={() => setSelectedKey('')}
-              onCollect={openCollect}
+              onCollect={() => setView('collect')}
               onRename={(name) => renameCustomer(selected, name)}
             />
           ) : (
@@ -247,11 +235,10 @@ export function CreditPage() {
             />
           ))}
         {view === 'collect' &&
-          (credits.length ? (
-            <CreditPaymentForm
-              key={collectReceipt}
-              credits={credits}
-              initialReceipt={collectReceipt}
+          (owing.length ? (
+            <CustomerPaymentForm
+              customers={owing}
+              initialKey={selectedKey}
               onSave={recordPayment}
             />
           ) : (
@@ -291,7 +278,7 @@ export function CreditPage() {
   );
 }
 
-/** First view: one row per customer, biggest balance first. */
+/** First view: one row per customer, biggest balance first. The name opens the customer. */
 function CustomerList({
   customers,
   outstanding,
@@ -313,7 +300,7 @@ function CustomerList({
     return (
       <div className="expenses-empty-state">
         <strong>No credit customers yet</strong>
-        <span>Credit sales made at the Sales Counter appear here, grouped by customer.</span>
+        <span>Utang sales made at the Sales Counter appear here, grouped by customer.</span>
       </div>
     );
   }
@@ -371,32 +358,27 @@ function CustomerList({
             <thead>
               <tr>
                 <th>Customer</th>
-                <th>Unpaid sales</th>
-                <th>Total owed</th>
-                <th>Last purchase</th>
-                <th />
+                <th>Balance</th>
+                <th>Last utang</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((customer) => (
                 <tr key={customer.key}>
                   <td>
-                    <strong>{customer.name}</strong>
+                    <button
+                      className="credit-name-button"
+                      type="button"
+                      onClick={() => onOpen(customer)}
+                      title={`See ${customer.name}'s utang and payments`}
+                    >
+                      {customer.name}
+                    </button>
                   </td>
-                  <td>{customer.openReceipts}</td>
                   <td>
                     <strong>{customer.owed > 0 ? money(customer.owed) : 'Paid'}</strong>
                   </td>
                   <td>{formatDate(customer.lastDate)}</td>
-                  <td>
-                    <button
-                      className="cashier-view-button"
-                      type="button"
-                      onClick={() => onOpen(customer)}
-                    >
-                      View
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -407,7 +389,7 @@ function CustomerList({
   );
 }
 
-/** One customer: totals, edit name, and every credit purchase with its items. */
+/** One customer: balance, one list of every item bought on credit, and the payment history. */
 function CustomerDetail({
   customer,
   onBack,
@@ -416,11 +398,27 @@ function CustomerDetail({
 }: {
   customer: Customer;
   onBack: () => void;
-  onCollect: (receipt: string) => void;
+  onCollect: () => void;
   onRename: (name: string) => Promise<boolean>;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(customer.name);
+  const [history, setHistory] = useState<ApiCustomerHistory | null>(null);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let current = true;
+    getCustomerHistory(customer.name)
+      .then((result) => current && setHistory(result))
+      .catch(
+        (error: unknown) =>
+          current &&
+          setLoadError(error instanceof Error ? error.message : 'Could not load the utang.'),
+      );
+    return () => {
+      current = false;
+    };
+  }, [customer.name]);
 
   return (
     <>
@@ -428,6 +426,11 @@ function CustomerDetail({
         <button className="cashier-view-button" type="button" onClick={onBack}>
           ← All customers
         </button>
+        {history && history.balance > 0 && (
+          <button className="stock-index__action" type="button" onClick={onCollect}>
+            Collect payment
+          </button>
+        )}
         {!editing && (
           <button
             className="cashier-view-button"
@@ -450,7 +453,7 @@ function CustomerDetail({
           }}
         >
           <p className="stock-index__form-title">
-            The new name is used on all of this customer's credit sales.
+            The new name is used on all of this customer's utang.
           </p>
           <div className="stock-index__form-grid">
             <label className="stock-index__field-wide">
@@ -473,74 +476,127 @@ function CustomerDetail({
           </div>
         </form>
       )}
-      <section className="cashier-summary-grid" aria-label={`${customer.name} summary`}>
-        <CreditStat
-          label="Still owes"
-          value={money(customer.owed)}
-          detail={`${customer.openReceipts} unpaid sale${customer.openReceipts === 1 ? '' : 's'}`}
-        />
-        <CreditStat label="Paid so far" value={money(customer.paid)} detail="All credit sales" />
-        <CreditStat
-          label="Credit purchases"
-          value={String(customer.sales.length)}
-          detail={`Last on ${formatDate(customer.lastDate)}`}
-        />
-      </section>
-      <div
-        className="cashier-table-wrap"
-        role="region"
-        aria-label={`${customer.name} credit purchases`}
-        tabIndex={0}
-      >
-        <table className="cashier-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Record</th>
-              <th>Items</th>
-              <th>Sale total</th>
-              <th>Paid</th>
-              <th>Balance</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {customer.sales.map((sale) => {
-              const balance = Number(sale.creditBalance ?? 0);
-              return (
-                <tr key={sale.receipt}>
-                  <td>{formatDate(sale.date)}</td>
-                  <td>{formatTime(sale.date)}</td>
-                  <td className="cashier-mono">{sale.receipt}</td>
-                  <td>{itemsText(sale)}</td>
-                  <td>{money(sale.total)}</td>
-                  <td>{money(Number(sale.amountPaid ?? 0))}</td>
-                  <td>
-                    <strong>{money(balance)}</strong>
+      {loadError && <ErrorState message={loadError} />}
+      {!history && !loadError && <LoadingState label="Loading utang…" />}
+      {history && (
+        <>
+          <section className="cashier-summary-grid" aria-label={`${history.name} summary`}>
+            <CreditStat
+              label="Balance"
+              value={money(history.balance)}
+              detail={history.balance > 0 ? 'Still to pay' : 'Fully paid'}
+            />
+            <CreditStat
+              label="Total utang"
+              value={money(history.total)}
+              detail={`${history.items.filter((item) => item.quantity > 0).length} items`}
+            />
+            <CreditStat
+              label="Paid so far"
+              value={money(history.paid)}
+              detail={`${history.payments.length} payment${history.payments.length === 1 ? '' : 's'}`}
+            />
+          </section>
+
+          <h4 className="credit-section-title">Utang items · oldest first</h4>
+          <div
+            className="cashier-table-wrap"
+            role="region"
+            aria-label={`${history.name} utang items`}
+            tabIndex={0}
+          >
+            <table className="cashier-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Record</th>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.items.map((item, index) => (
+                  <tr key={`${item.receipt}-${index}`}>
+                    <td>{formatDate(item.date)}</td>
+                    <td>{formatTime(item.date)}</td>
+                    <td className="cashier-mono">{item.receipt}</td>
+                    <td>{item.product}</td>
+                    <td>{item.quantity || ''}</td>
+                    <td>{item.quantity ? money(item.unitPrice) : ''}</td>
+                    <td>{money(item.amount)}</td>
+                  </tr>
+                ))}
+                <tr className="credit-total-row">
+                  <td colSpan={6}>
+                    <strong>Total utang</strong>
                   </td>
-                  <td>{balance > 0 ? 'Open' : 'Paid'}</td>
                   <td>
-                    {balance > 0 && (
-                      <button
-                        className="cashier-view-button"
-                        type="button"
-                        onClick={() => onCollect(sale.receipt)}
-                      >
-                        Collect
-                      </button>
-                    )}
+                    <strong>{money(history.total)}</strong>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 className="credit-section-title">Payments</h4>
+          {history.payments.length ? (
+            <div
+              className="cashier-table-wrap"
+              role="region"
+              aria-label={`${history.name} payments`}
+              tabIndex={0}
+            >
+              <table className="cashier-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Applied to</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.payments.map((payment) => (
+                    <tr key={`${payment.date}-${payment.kind}`}>
+                      <td>{formatDate(payment.date)}</td>
+                      <td>{formatTime(payment.date)}</td>
+                      <td>{payment.kind}</td>
+                      <td className="cashier-mono">{payment.records}</td>
+                      <td>{money(payment.amount)}</td>
+                    </tr>
+                  ))}
+                  <tr className="credit-total-row">
+                    <td colSpan={4}>
+                      <strong>Paid so far</strong>
+                    </td>
+                    <td>
+                      <strong>{money(history.paid)}</strong>
+                    </td>
+                  </tr>
+                  <tr className="credit-total-row is-balance">
+                    <td colSpan={4}>
+                      <strong>Balance</strong>
+                    </td>
+                    <td>
+                      <strong>{money(history.balance)}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="register-empty">No payments yet. Balance: {money(history.balance)}.</p>
+          )}
+        </>
+      )}
     </>
   );
 }
+
 function CreditStat({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <article className="cashier-summary-card">
@@ -551,29 +607,36 @@ function CreditStat({ label, value, detail }: { label: string; value: string; de
   );
 }
 
-function CreditPaymentForm({
-  credits,
-  initialReceipt,
+/** Find the customer by name, type what they pay now, or pay the whole balance. */
+function CustomerPaymentForm({
+  customers,
+  initialKey,
   onSave,
 }: {
-  credits: CreditSale[];
-  initialReceipt: string;
-  onSave: (receipt: string, amount: number) => Promise<void>;
+  customers: Customer[];
+  initialKey: string;
+  onSave: (customer: Customer, amount: number) => Promise<boolean>;
 }) {
-  const [receipt, setReceipt] = useState(
-    credits.some((credit) => credit.receipt === initialReceipt)
-      ? initialReceipt
-      : (credits[0]?.receipt ?? ''),
+  const [query, setQuery] = useState('');
+  const [key, setKey] = useState(
+    customers.some((customer) => customer.key === initialKey) ? initialKey : '',
   );
   const [amount, setAmount] = useState('');
-  const credit = credits.find((item) => item.receipt === receipt);
-  const balance = Number(credit?.creditBalance ?? 0);
+  const [saving, setSaving] = useState(false);
+  const customer = customers.find((item) => item.key === key);
+  const needle = query.trim().toLowerCase();
+  const matches = customers.filter((item) => item.name.toLowerCase().includes(needle)).slice(0, 8);
+  const balance = Math.round((customer?.owed ?? 0) * 100) / 100;
   const value = Number(amount);
-  const valid = Boolean(credit) && value > 0 && value <= balance;
+  const valid = Boolean(customer) && value > 0 && value <= balance + 0.004;
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (valid) void onSave(receipt, value);
+    if (!valid || !customer || saving) return;
+    setSaving(true);
+    const saved = await onSave(customer, value);
+    setSaving(false);
+    if (saved) setAmount('');
   }
 
   return (
@@ -583,57 +646,92 @@ function CreditPaymentForm({
           ? 'Cash received here is added to the open shift, so the drawer count at closing includes it.'
           : 'No shift is open. Start a shift first if this cash goes into the drawer.'}
       </p>
-      <div className="stock-index__form-grid">
-        <label className="stock-index__field-wide">
-          Customer balance
-          <select
-            value={receipt}
-            onChange={(event) => {
-              setReceipt(event.target.value);
+      {customer ? (
+        <div className="credit-picked">
+          <div>
+            <strong>{customer.name}</strong>
+            <span>Balance {money(balance)}</span>
+          </div>
+          <button
+            className="cashier-view-button"
+            type="button"
+            onClick={() => {
+              setKey('');
               setAmount('');
             }}
           >
-            {credits.map((item) => (
-              <option value={item.receipt} key={item.receipt}>
-                {item.customer || 'Unnamed customer'} · {item.receipt} · owes{' '}
-                {money(Number(item.creditBalance))}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Amount received
-          <input
-            name="credit-payment-amount"
-            type="number"
-            min="0.01"
-            max={balance}
-            step="0.01"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            inputMode="decimal"
-            placeholder="0.00"
-            required
-            autoFocus
-          />
-        </label>
-      </div>
-      {value > balance && (
-        <p className="stock-index__warn">That is more than the balance of {money(balance)}.</p>
+            Change customer
+          </button>
+        </div>
+      ) : (
+        <>
+          <label className="cashier-search-field credit-find">
+            <CashierIcon name="search" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Type the customer's name"
+              aria-label="Find the customer who is paying"
+              autoFocus
+            />
+          </label>
+          {matches.length ? (
+            <ul className="credit-find__list">
+              {matches.map((item) => (
+                <li key={item.key}>
+                  <button
+                    className="credit-name-button"
+                    type="button"
+                    onClick={() => setKey(item.key)}
+                  >
+                    {item.name}
+                  </button>
+                  <span>owes {money(item.owed)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="register-empty">No customer with utang matches “{query}”.</p>
+          )}
+        </>
       )}
-      <div className="stock-index__actions">
-        <button
-          className="stock-index__action"
-          type="button"
-          onClick={() => setAmount(balance.toFixed(2))}
-          disabled={!credit}
-        >
-          Pays it all ({money(balance)})
-        </button>
-        <button className="stock-index__action" type="submit" disabled={!valid}>
-          Save payment
-        </button>
-      </div>
+      {customer && (
+        <>
+          <div className="stock-index__form-grid">
+            <label>
+              Amount paid now
+              <input
+                name="credit-payment-amount"
+                type="number"
+                min="0.01"
+                max={balance}
+                step="0.01"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                inputMode="decimal"
+                placeholder="0.00"
+                required
+                autoFocus
+              />
+            </label>
+          </div>
+          {value > balance + 0.004 && (
+            <p className="stock-index__warn">That is more than the balance of {money(balance)}.</p>
+          )}
+          <div className="stock-index__actions">
+            <button
+              className="stock-index__action"
+              type="button"
+              onClick={() => setAmount(balance.toFixed(2))}
+            >
+              Pays the full balance ({money(balance)})
+            </button>
+            <button className="stock-index__action" type="submit" disabled={!valid || saving}>
+              {saving ? 'Saving…' : 'Save payment'}
+            </button>
+          </div>
+        </>
+      )}
     </form>
   );
 }

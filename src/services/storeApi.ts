@@ -251,10 +251,36 @@ export const createSale = (input: NewSale) =>
 export const voidSale = (id: number, reason: string) =>
   apiRequest<ApiSale>(`/sales/${id}/void`, { method: 'POST', body: JSON.stringify({ reason }) });
 
-export const payUtang = (id: number, amount: number) =>
-  apiRequest<ApiSale>(`/sales/${id}/payments`, {
+/** One customer's utang: items bought on credit (oldest first), payments, and the balance. */
+export type ApiCustomerHistory = {
+  name: string;
+  total: number;
+  paid: number;
+  balance: number;
+  items: Array<{
+    date: string;
+    receipt: string;
+    product: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+  }>;
+  payments: Array<{
+    date: string;
+    kind: 'Down payment' | 'Payment';
+    amount: number;
+    records: string;
+  }>;
+};
+
+export const getCustomerHistory = (name: string) =>
+  apiRequest<ApiCustomerHistory>(`/sales/customers/history?name=${encodeURIComponent(name)}`);
+
+/** A payment toward the customer's whole balance; the server applies it to the oldest utang first. */
+export const payCustomer = (name: string, amount: number) =>
+  apiRequest<ApiCustomerHistory>('/sales/customers/payments', {
     method: 'POST',
-    body: JSON.stringify({ amount }),
+    body: JSON.stringify({ name, amount }),
   });
 
 export const renameUtangCustomer = (from: string, to: string) =>
