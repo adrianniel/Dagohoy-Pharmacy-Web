@@ -30,9 +30,9 @@ export function DeveloperCta() {
             For pharmacy owners
           </p>
           <p className="developer-section__message">
-            Get a custom POS and inventory system built around your pharmacy’s daily workflow—from
-            counter sales and barcode scanning to stock, batches, expiry dates, and staff
-            operations.
+            Get a custom Inventory & Sales Record System built around your pharmacy’s daily
+            workflow—from counter sales and barcode scanning to stock, batches, expiry dates, and
+            staff operations.
           </p>
           <a
             className="action-link developer-section__contact"
@@ -71,7 +71,8 @@ export function DeveloperCta() {
               <div className="developer-card__content">
                 <span className="developer-card__name">{developerProfile.name}</span>
                 <span className="developer-card__about-me">
-                  {developerProfile.role} building POS and inventory systems for pharmacies.
+                  {developerProfile.role} building Inventory &amp; Sales Record Systems for
+                  pharmacies.
                 </span>
               </div>
               <div className="developer-card__bottom-bottom">

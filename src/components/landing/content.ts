@@ -3,7 +3,7 @@ import type { WeeklyHoursEntry } from './types';
 // Public landing page content. Pharmacy contact details come from Owner → Settings.
 export const pharmacyProfile = {
   name: 'Dagohoy Pharmacy',
-  locationLabel: 'POS & Inventory Management System',
+  locationLabel: 'Inventory & Sales Record System',
   timezone: 'Asia/Manila',
   phone: '',
   email: '',

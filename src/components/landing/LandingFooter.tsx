@@ -7,7 +7,7 @@ export function LandingFooter() {
       <div className="landing-footer__inner">
         <div className="footer-brand">
           <BrandMark />
-          <span>POS &amp; Inventory Management System</span>
+          <span>Inventory &amp; Sales Record System</span>
         </div>
         <p>
           <span>
