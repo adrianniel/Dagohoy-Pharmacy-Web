@@ -33,7 +33,10 @@ export function ScanInput({ value, onChange, onEnter, placeholder, inputProps }:
       setReady(false);
       onEnter?.(event.currentTarget.value.trim());
     }
-    if (event.key === 'Escape') setReady(false);
+    if (event.key === 'Escape') {
+      setReady(false);
+      event.currentTarget.blur();
+    }
   }
 
   return (
@@ -44,7 +47,11 @@ export function ScanInput({ value, onChange, onEnter, placeholder, inputProps }:
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={keyDown}
-        onBlur={() => setReady(false)}
+        onBlur={(event) => {
+          setReady(false);
+          // Keep the caller's own blur handler (the product picker closes its list with it).
+          inputProps?.onBlur?.(event);
+        }}
         placeholder={ready ? 'Ready: scan the barcode now' : placeholder}
         autoComplete="off"
       />
