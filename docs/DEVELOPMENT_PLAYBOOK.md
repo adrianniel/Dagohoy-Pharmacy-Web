@@ -393,6 +393,11 @@ database access only from my own address and removed after.
   numbers on the server from its own tables.
 - Test the "two people at once" case for anything that takes the last item (stock, a slot,
   a seat): fire two requests in parallel and check one wins and one is refused.
+- Fix the time zone on day one, in code, not on the host: set the app's zone (e.g. `TZ`), the
+  database driver's zone and the database session zone to the business's local offset. Shared
+  hosting is often on UTC, which moves early-morning sales to "yesterday" in daily reports.
+- Do not copy all history into browser storage (about 5 MB per site). Keep a recent window in
+  the browser and fetch older periods from the server when a report asks for them.
 
 
 ## Appendix: Dagohoy Pharmacy (first client) as the example
@@ -417,4 +422,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, slice 4 | Sales on the server: one transaction per sale (server prices, FEFO, row locks, payments), void with reversal entries, utang payments and customer rename; shift close counts sales cash from the payments table. A script checked 21 cases and a race test (two counters, last piece) passed; the web Sales Counter and Credit pages were clicked through in the browser |
 | 2026-11-10 | 6, extra | Sales Counter: every scan adds the item at once (also for scanners that send no Enter) and the first scan opens the ticket |
 | 2026-11-10 | 6, slice 5 | Expenses on the server: anyone records, only administrators remove (soft remove, kept for audit); API script 12/12 and the page tested in the browser |
+| 2026-11-10 | 8 | Reports from server data: small browser copy (35 days + utang + pending GCash), any month or range fetched from `/sales?from=&to=`; server and DB sessions fixed to Manila time (+08:00). Checked with a UTC host clock, and the monthly report matched the owner overview |
 | next | 6 | Sales, utang and expenses, reports |

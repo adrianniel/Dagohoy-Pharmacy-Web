@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { downloadXlsx } from '../../lib/xlsx';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
+import { listSalesBetween } from '../../services/storeApi';
 
 const SALES_KEY = 'dagohoy_demo_sales';
 type Sale = {
@@ -75,36 +76,54 @@ export function CashierTransactionsPage() {
       return [];
     }
   });
-  const allRecords = useMemo(
-    () =>
-      savedSales.map((sale) => ({
-        ...sale,
-        dateValue: sale.date,
-        amount: Number(sale.total ?? 0),
-        date: new Date(sale.date).toLocaleString('en-PH'),
-        total: `₱${Number(sale.total ?? 0).toFixed(2)}`,
-      })),
-    [savedSales],
-  );
+  /** Sales of the custom range, from the server (the browser keeps only the recent ones). */
+  const [rangeSales, setRangeSales] = useState<Sale[]>([]);
+  const [rangeNote, setRangeNote] = useState('');
+  const toRecord = (sale: Sale) => ({
+    ...sale,
+    dateValue: sale.date,
+    amount: Number(sale.total ?? 0),
+    date: new Date(sale.date).toLocaleString('en-PH'),
+    total: `₱${Number(sale.total ?? 0).toFixed(2)}`,
+  });
+  const allRecords = useMemo(() => savedSales.map(toRecord), [savedSales]);
+  const rangeRecords = useMemo(() => rangeSales.map(toRecord), [rangeSales]);
+
+  useEffect(() => {
+    if (view !== 'custom') return;
+    const from = rangeFrom <= rangeTo ? rangeFrom : rangeTo;
+    const to = rangeFrom <= rangeTo ? rangeTo : rangeFrom;
+    let current = true;
+    setRangeNote('Loading sales…');
+    listSalesBetween(from, to)
+      .then((list) => {
+        if (!current) return;
+        setRangeSales(list as Sale[]);
+        setRangeNote('');
+      })
+      .catch((error: unknown) => {
+        if (!current) return;
+        setRangeSales([]);
+        setRangeNote(error instanceof Error ? error.message : 'Could not load the sales.');
+      });
+    return () => {
+      current = false;
+    };
+  }, [view, rangeFrom, rangeTo]);
   const groups = useMemo(() => {
     const startOfToday = new Date(new Date().toDateString()).getTime();
     const weekCutoff = Date.now() - 7 * 86400000;
     const monthCutoff = Date.now() - 30 * 86400000;
     const kept = allRecords.filter((sale) => sale.status !== 'Voided');
-    const from = rangeFrom <= rangeTo ? rangeFrom : rangeTo;
-    const to = rangeFrom <= rangeTo ? rangeTo : rangeFrom;
     return {
       today: kept.filter((sale) => new Date(sale.dateValue).getTime() >= startOfToday),
       week: kept.filter((sale) => new Date(sale.dateValue).getTime() >= weekCutoff),
       month: kept.filter((sale) => new Date(sale.dateValue).getTime() >= monthCutoff),
-      custom: kept.filter((sale) => {
-        const day = localDay(sale.dateValue);
-        return day >= from && day <= to;
-      }),
+      custom: rangeRecords.filter((sale) => sale.status !== 'Voided'),
       gcash: allRecords.filter(isPendingGcash),
       voided: allRecords.filter((sale) => sale.status === 'Voided'),
     };
-  }, [allRecords, rangeFrom, rangeTo]);
+  }, [allRecords, rangeRecords]);
   const records = groups[view].filter((transaction) =>
     transaction.receipt.toLowerCase().includes(query.trim().toLowerCase()),
   );
@@ -315,6 +334,7 @@ export function CashierTransactionsPage() {
                   onChange={(event) => setRangeTo(event.target.value)}
                 />
               </label>
+              {rangeNote && <p role="status">{rangeNote}</p>}
             </div>
           )}
           <div className="cashier-list-toolbar">

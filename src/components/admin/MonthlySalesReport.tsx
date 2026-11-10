@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { downloadXlsx } from '../../lib/xlsx';
+import { listSalesBetween } from '../../services/storeApi';
+import { ErrorState } from '../ErrorState';
+import { LoadingState } from '../LoadingState';
 
 /*
  * Monthly sales report (draft) for the owner to show when BIR checks the store's sales.
@@ -44,14 +47,6 @@ const round = (amount: number) => Math.round(amount * 100) / 100;
 
 const localDay = (iso: string) => new Date(iso).toLocaleDateString('en-CA');
 
-function readSales(): StoredSale[] {
-  try {
-    return JSON.parse(localStorage.getItem('dagohoy_demo_sales') ?? '[]') as StoredSale[];
-  } catch {
-    return [];
-  }
-}
-
 function readStore() {
   try {
     const settings = JSON.parse(localStorage.getItem('dagohoy_demo_pharmacy_settings') ?? '{}') as {
@@ -77,10 +72,12 @@ function monthLabel(month: string) {
   });
 }
 
-function buildReport(month: string) {
+type Report = ReturnType<typeof buildReport>;
+
+function buildReport(month: string, sales: StoredSale[]) {
   const [year, index] = month.split('-').map(Number);
   const daysInMonth = new Date(year, index, 0).getDate();
-  const inMonth = readSales()
+  const inMonth = sales
     .filter((sale) => localDay(sale.date).startsWith(month))
     .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -138,9 +135,9 @@ function buildReport(month: string) {
   return { days, totals, receipts: inMonth, daysWithSales };
 }
 
-function MonthlyDocument({ month }: { month: string }) {
+function MonthlyDocument({ month, report }: { month: string; report: Report }) {
   const store = readStore();
-  const { days, totals, daysWithSales } = useMemo(() => buildReport(month), [month]);
+  const { days, totals, daysWithSales } = report;
   return (
     <article className="shift-doc monthly-doc">
       <header className="shift-doc__head">
@@ -249,8 +246,32 @@ function MonthlyDocument({ month }: { month: string }) {
 export function MonthlySalesReport() {
   const [month, setMonth] = useState(() => new Date().toLocaleDateString('en-CA').slice(0, 7));
   const [printing, setPrinting] = useState(false);
-  const { days, totals, receipts, daysWithSales } = useMemo(() => buildReport(month), [month]);
+  const [sales, setSales] = useState<StoredSale[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const report = useMemo(() => buildReport(month, sales), [month, sales]);
+  const { days, totals, receipts, daysWithSales } = report;
   const store = readStore();
+
+  // The month's sales come from the server, so any month can be opened, not only recent ones.
+  useEffect(() => {
+    const [year, index] = month.split('-').map(Number);
+    const last = new Date(year, index, 0).getDate();
+    let current = true;
+    setLoading(true);
+    setLoadError('');
+    listSalesBetween(`${month}-01`, `${month}-${String(last).padStart(2, '0')}`)
+      .then((list) => current && setSales(list))
+      .catch((error: unknown) => {
+        if (!current) return;
+        setSales([]);
+        setLoadError(error instanceof Error ? error.message : 'Could not load the sales.');
+      })
+      .finally(() => current && setLoading(false));
+    return () => {
+      current = false;
+    };
+  }, [month]);
 
   useEffect(() => {
     if (!printing) return;
@@ -378,17 +399,25 @@ export function MonthlySalesReport() {
             onChange={(event) => event.target.value && setMonth(event.target.value)}
           />
         </label>
-        <button className="shift-report-modal__pdf" type="button" onClick={exportExcel}>
+        <button
+          className="shift-report-modal__pdf"
+          type="button"
+          onClick={exportExcel}
+          disabled={loading || Boolean(loadError)}
+        >
           Export Excel
         </button>
         <button
           className="shift-report-modal__close"
           type="button"
           onClick={() => setPrinting(true)}
+          disabled={loading || Boolean(loadError)}
         >
           Save as PDF
         </button>
       </div>
+      {loading && <LoadingState label="Loading the month's sales…" />}
+      {loadError && <ErrorState message={loadError} />}
       <div className="stock-index__chips">
         <span>
           Net sales <b>{money(totals.net)}</b>
@@ -468,7 +497,7 @@ export function MonthlySalesReport() {
       {printing &&
         createPortal(
           <div id="report-print-root">
-            <MonthlyDocument month={month} />
+            <MonthlyDocument month={month} report={report} />
           </div>,
           document.body,
         )}

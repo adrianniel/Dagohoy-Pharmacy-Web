@@ -244,7 +244,12 @@ export type NewSale = {
   noChargeReason?: string;
 };
 
-export const listSales = (days = 400) => apiRequest<ApiSale[]>(`/sales?days=${days}`);
+/** The last 35 days plus every utang sale and pending GCash: the browser's working copy. */
+export const listSales = () => apiRequest<ApiSale[]>('/sales');
+
+/** Every sale between two dates (YYYY-MM-DD, both included; at most 400 days), for reports. */
+export const listSalesBetween = (from: string, to: string) =>
+  apiRequest<ApiSale[]>(`/sales?from=${from}&to=${to}`);
 
 export const createSale = (input: NewSale) =>
   apiRequest<ApiSale>('/sales', { method: 'POST', body: JSON.stringify(input) });

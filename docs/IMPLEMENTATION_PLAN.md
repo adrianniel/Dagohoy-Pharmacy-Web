@@ -30,7 +30,15 @@ Phase 7 done (2026-11-10, no new migration): `GET/POST /expenses` (any login rec
 server checks the date, category, payment method and amount) and `DELETE /expenses/:id`
 (administrators only; the row stays, marked removed). The Expenses page reads and saves on the
 server; old browser-only demo expenses are no longer shown. Utang was finished in Phase 6.
-Next: Phase 8 (reports and dashboards from the server).
+Phase 8 done (2026-11-10, no new migration), simpler than planned: instead of separate
+`/reports/*` endpoints, the pages keep computing their numbers from server sales. The browser
+copy is now small (last 35 days + every utang sale + pending GCash), and older periods come
+straight from `GET /sales?from=&to=` (Monthly sales report, Transactions custom range; at most
+400 days per request). The server and every database connection now run on Manila time
+(`TZ=Asia/Manila`, mysql2 `timezone: '+08:00'`, `SET time_zone = '+08:00'`), so "today" and
+"this month" are right even if Hostinger's machine is on UTC. Dedicated report endpoints can
+come later if a page gets slow.
+Next: Phase 9 (dev seed, cleanup, tests, backup, runbook).
 
 ## "Ready locally" means
 

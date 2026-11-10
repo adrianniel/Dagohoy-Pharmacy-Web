@@ -28,7 +28,11 @@ const ROSTER_KEY = 'dagohoy_demo_staff_roster';
 const SALES_KEY = 'dagohoy_demo_sales';
 const VOID_LOG_KEY = 'dagohoy_demo_void_log';
 
-/** Sales (about the last 13 months) and the void log made from the voided ones. */
+/**
+ * Recent sales (35 days, plus every utang sale and pending GCash) and the void log made from the
+ * voided ones. Older months come straight from the server (Monthly sales, Transactions custom
+ * range), so the browser copy stays small.
+ */
 export async function syncSales() {
   const sales = await listSales();
   localStorage.setItem(SALES_KEY, JSON.stringify(sales));
