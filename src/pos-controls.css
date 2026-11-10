@@ -3655,8 +3655,22 @@
   color: #fff;
 }
 
-.credit-find {
-  max-width: 28rem;
+/* The form is a column, so the search field's usual flex-basis (240px) would become its height. */
+.stock-index__form .credit-find {
+  flex: none;
+  flex-direction: row;
+  width: min(100%, 28rem);
+  min-height: 46px;
+}
+
+.stock-index__form .credit-find input {
+  flex: 1;
+  min-height: 0;
+  padding: 0.55rem 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  text-transform: none;
 }
 
 .credit-find__list {

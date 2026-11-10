@@ -665,7 +665,7 @@ function CustomerPaymentForm({
         </div>
       ) : (
         <>
-          <label className="cashier-search-field credit-find">
+          <div className="cashier-search-field credit-find">
             <CashierIcon name="search" />
             <input
               value={query}
@@ -674,7 +674,7 @@ function CustomerPaymentForm({
               aria-label="Find the customer who is paying"
               autoFocus
             />
-          </label>
+          </div>
           {matches.length ? (
             <ul className="credit-find__list">
               {matches.map((item) => (
