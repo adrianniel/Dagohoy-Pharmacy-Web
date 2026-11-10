@@ -1030,10 +1030,6 @@
   color: var(--ticket-muted);
 }
 
-
-
-
-
 /* Totals: dotted leaders between label and amount, a double rule above the total. */
 .pos-ticket__totals {
   padding: 0.85rem 1.5rem 0.2rem;
