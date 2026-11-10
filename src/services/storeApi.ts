@@ -263,3 +263,21 @@ export const renameUtangCustomer = (from: string, to: string) =>
     method: 'PATCH',
     body: JSON.stringify({ from, to }),
   });
+
+export type ApiExpense = {
+  id: number;
+  date: string;
+  category: string;
+  description: string;
+  paymentMethod: 'Cash' | 'GCash' | 'Bank transfer' | 'Card';
+  amount: number;
+  recordedBy: string;
+};
+
+export const listExpenses = () => apiRequest<ApiExpense[]>('/expenses');
+
+export const createExpense = (input: Omit<ApiExpense, 'id' | 'recordedBy'>) =>
+  apiRequest<ApiExpense>('/expenses', { method: 'POST', body: JSON.stringify(input) });
+
+export const removeExpense = (id: number) =>
+  apiRequest<void>(`/expenses/${id}`, { method: 'DELETE' });

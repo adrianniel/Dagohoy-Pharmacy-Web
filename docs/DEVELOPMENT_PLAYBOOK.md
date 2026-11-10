@@ -415,4 +415,6 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, extra | Product archive/restore and CSV/Excel import with a dry-run preview (no PH barcode dataset found; Go-UPC / EAN-Search barcode lookup kept as an option to test) |
 | 2026-11-10 | 6, extra | Barcode lookup for new products: own catalog, then a cache, then BarCloud PH (₱0.10/scan, 100 free credits); each barcode paid once, daily limit, key only on the server |
 | 2026-11-10 | 6, slice 4 | Sales on the server: one transaction per sale (server prices, FEFO, row locks, payments), void with reversal entries, utang payments and customer rename; shift close counts sales cash from the payments table. A script checked 21 cases and a race test (two counters, last piece) passed; the web Sales Counter and Credit pages were clicked through in the browser |
+| 2026-11-10 | 6, extra | Sales Counter: every scan adds the item at once (also for scanners that send no Enter) and the first scan opens the ticket |
+| 2026-11-10 | 6, slice 5 | Expenses on the server: anyone records, only administrators remove (soft remove, kept for audit); API script 12/12 and the page tested in the browser |
 | next | 6 | Sales, utang and expenses, reports |

@@ -1,19 +1,21 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
+import { ErrorState } from '../../components/ErrorState';
+import { LoadingState } from '../../components/LoadingState';
+import { getCurrentAccount } from '../../data/accountStore';
+import {
+  createExpense,
+  listExpenses,
+  removeExpense,
+  type ApiExpense,
+} from '../../services/storeApi';
 
-type Expense = {
-  id: string;
-  date: string;
-  category: string;
-  description: string;
-  paymentMethod: string;
-  amount: number;
-};
+type Expense = ApiExpense;
+type ExpenseInput = Omit<Expense, 'id' | 'recordedBy'>;
 
 type ExpenseView = 'month' | 'all' | 'category' | 'add';
 
-const EXPENSES_KEY = 'dagohoy_demo_expenses';
 const categories = ['Utilities', 'Supplies', 'Rent', 'Payroll', 'Transport', 'Other'];
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -21,19 +23,25 @@ const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`));
 const sum = (list: Expense[]) => list.reduce((total, expense) => total + expense.amount, 0);
 
-function readExpenses(): Expense[] {
-  try {
-    return JSON.parse(localStorage.getItem(EXPENSES_KEY) ?? '[]') as Expense[];
-  } catch {
-    return [];
-  }
-}
-
 export function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Expense[]>(readExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [view, setView] = useState<ExpenseView>('month');
   const { showToast } = useToast();
-  const thisMonth = new Date().toISOString().slice(0, 7);
+  // Only the owner and administrators remove an entry; the cashier can record one.
+  const canRemove = getCurrentAccount()?.role === 'ADMIN';
+  // Local month (toISOString would still say last month on the 1st before 8 AM in the Philippines).
+  const thisMonth = new Date().toLocaleDateString('en-CA').slice(0, 7);
+
+  useEffect(() => {
+    listExpenses()
+      .then(setExpenses)
+      .catch((error: unknown) =>
+        setLoadError(error instanceof Error ? error.message : 'Could not load the expenses.'),
+      )
+      .finally(() => setLoading(false));
+  }, []);
   const monthLabel = new Intl.DateTimeFormat('en-PH', { month: 'long', year: 'numeric' }).format(
     new Date(),
   );
@@ -44,13 +52,38 @@ export function ExpensesPage() {
   const monthTotal = sum(monthExpenses);
   const allTotal = sum(expenses);
 
-  function addExpense(expense: Omit<Expense, 'id'>) {
-    const next = [{ ...expense, id: `EXP-${Date.now()}` }, ...expenses];
-    setExpenses(next);
-    localStorage.setItem(EXPENSES_KEY, JSON.stringify(next));
-    setView('month');
+  async function addExpense(expense: ExpenseInput): Promise<boolean> {
+    try {
+      const saved = await createExpense(expense);
+      setExpenses(await listExpenses().catch(() => [saved, ...expenses]));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The expense was not saved.', 'error');
+      return false;
+    }
+    setView(expense.date.startsWith(thisMonth) ? 'month' : 'all');
     showToast(`${expense.category} expense recorded.`);
+    return true;
   }
+
+  async function deleteExpense(expense: Expense) {
+    if (
+      !window.confirm(
+        `Remove "${expense.description}" (${money(expense.amount)})? Use this only for an entry made by mistake.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await removeExpense(expense.id);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The expense was not removed.', 'error');
+      return;
+    }
+    setExpenses((current) => current.filter((item) => item.id !== expense.id));
+    showToast('Expense removed.');
+  }
+
+  const onRemove = canRemove ? deleteExpense : undefined;
 
   const items: Array<ControlItem<ExpenseView>> = [
     {
@@ -106,7 +139,9 @@ export function ExpensesPage() {
         title={activeItem.title}
         about={activeItem.about}
       >
-        {view === 'month' && (
+        {loading && <LoadingState label="Loading expenses…" />}
+        {loadError && <ErrorState message={loadError} />}
+        {!loading && !loadError && view === 'month' && (
           <>
             <section className="cashier-summary-grid" aria-label="Expense summary">
               <ExpenseStat
@@ -129,11 +164,17 @@ export function ExpensesPage() {
                 detail={`${expenses.length} entr${expenses.length === 1 ? 'y' : 'ies'}`}
               />
             </section>
-            <ExpenseTable expenses={monthExpenses} onAdd={() => setView('add')} />
+            <ExpenseTable
+              expenses={monthExpenses}
+              onAdd={() => setView('add')}
+              onRemove={onRemove}
+            />
           </>
         )}
-        {view === 'all' && <ExpenseTable expenses={expenses} onAdd={() => setView('add')} />}
-        {view === 'category' && (
+        {!loading && !loadError && view === 'all' && (
+          <ExpenseTable expenses={expenses} onAdd={() => setView('add')} onRemove={onRemove} />
+        )}
+        {!loading && !loadError && view === 'category' && (
           <CategoryTotals monthExpenses={monthExpenses} expenses={expenses} />
         )}
         {view === 'add' && <ExpenseForm onSave={addExpense} />}
@@ -152,7 +193,16 @@ function ExpenseStat({ label, value, detail }: { label: string; value: string; d
   );
 }
 
-function ExpenseTable({ expenses, onAdd }: { expenses: Expense[]; onAdd: () => void }) {
+function ExpenseTable({
+  expenses,
+  onAdd,
+  onRemove,
+}: {
+  expenses: Expense[];
+  onAdd: () => void;
+  /** Present only for administrators. */
+  onRemove?: (expense: Expense) => void;
+}) {
   if (!expenses.length) {
     return (
       <div className="expenses-empty-state">
@@ -174,6 +224,7 @@ function ExpenseTable({ expenses, onAdd }: { expenses: Expense[]; onAdd: () => v
             <th>Description</th>
             <th>Payment</th>
             <th>Amount</th>
+            {onRemove && <th aria-label="Actions" />}
           </tr>
         </thead>
         <tbody>
@@ -183,11 +234,25 @@ function ExpenseTable({ expenses, onAdd }: { expenses: Expense[]; onAdd: () => v
               <td>
                 <span className="expense-category">{expense.category}</span>
               </td>
-              <td>{expense.description}</td>
+              <td>
+                {expense.description}
+                {expense.recordedBy && <small> · {expense.recordedBy}</small>}
+              </td>
               <td>{expense.paymentMethod}</td>
               <td>
                 <strong>{money(expense.amount)}</strong>
               </td>
+              {onRemove && (
+                <td>
+                  <button
+                    className="stock-index__link"
+                    type="button"
+                    onClick={() => onRemove(expense)}
+                  >
+                    Remove
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -254,23 +319,31 @@ function CategoryTotals({
   );
 }
 
-function ExpenseForm({ onSave }: { onSave: (expense: Omit<Expense, 'id'>) => void }) {
+function ExpenseForm({ onSave }: { onSave: (expense: ExpenseInput) => Promise<boolean> }) {
   // Today's date in local time (toISOString would give yesterday before 8 AM in the Philippines).
   const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'));
   const [category, setCategory] = useState(categories[0]);
   const [description, setDescription] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>('Cash');
   const [amount, setAmount] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSave({
+    if (saving) return;
+    setSaving(true);
+    const saved = await onSave({
       date,
       category,
       description: description.trim(),
       paymentMethod,
       amount: Number(amount),
     });
+    setSaving(false);
+    if (saved) {
+      setDescription('');
+      setAmount('');
+    }
   }
 
   return (
@@ -296,7 +369,10 @@ function ExpenseForm({ onSave }: { onSave: (expense: Omit<Expense, 'id'>) => voi
         </label>
         <label>
           Payment method
-          <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
+          <select
+            value={paymentMethod}
+            onChange={(event) => setPaymentMethod(event.target.value as Expense['paymentMethod'])}
+          >
             <option>Cash</option>
             <option>GCash</option>
             <option>Bank transfer</option>
@@ -330,8 +406,8 @@ function ExpenseForm({ onSave }: { onSave: (expense: Omit<Expense, 'id'>) => voi
         </label>
       </div>
       <div className="stock-index__actions">
-        <button className="stock-index__action" type="submit">
-          Save expense
+        <button className="stock-index__action" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Save expense'}
         </button>
       </div>
     </form>

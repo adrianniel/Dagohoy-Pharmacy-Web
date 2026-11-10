@@ -26,7 +26,11 @@ same lots, payments reversed), `GET /sales`; the shift close now counts sales ca
 (`PATCH /sales/customers/rename`) were pulled in from Phase 7. Race test passed (two counters,
 last piece: one sold, one refused). Not done yet: confirming a pending GCash later (no screen
 has the button), Senior/PWD discount (waits on the client), receipt-style search on `GET /sales`.
-Next: Phase 7 (expenses; utang is mostly done).
+Phase 7 done (2026-11-10, no new migration): `GET/POST /expenses` (any login records one, the
+server checks the date, category, payment method and amount) and `DELETE /expenses/:id`
+(administrators only; the row stays, marked removed). The Expenses page reads and saves on the
+server; old browser-only demo expenses are no longer shown. Utang was finished in Phase 6.
+Next: Phase 8 (reports and dashboards from the server).
 
 ## "Ready locally" means
 
