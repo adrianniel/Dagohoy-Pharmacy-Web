@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
@@ -971,6 +971,7 @@ function InventoryForm({
   const [saving, setSaving] = useState(false);
   /** What the barcode lookup found (or why not), shown under the barcode field. */
   const [lookupNote, setLookupNote] = useState('');
+  const [lookupState, setLookupState] = useState<'idle' | 'loading' | 'found' | 'missing'>('idle');
 
   /**
    * New product only: asks the server about a scanned barcode (our catalog, saved answers,
@@ -979,6 +980,7 @@ function InventoryForm({
   async function fillFromBarcode(code: string) {
     if (!isNew || !/^\d{8,14}$/.test(code)) return;
     setLookupNote('Looking up this barcode…');
+    setLookupState('loading');
     try {
       const result = await lookupBarcode(code);
       if (result.status === 'found') {
@@ -987,6 +989,7 @@ function InventoryForm({
         setDetail((current) => current || found.brand || '');
         setCategory((current) => current || found.category || '');
         if (found.unit && UNITS.includes(found.unit)) setUnit(found.unit);
+        setLookupState('found');
         setLookupNote(
           `Filled from ${result.source === 'cache' ? 'a saved lookup' : 'BarCloud'}${
             found.strength ? ` (strength ${found.strength})` : ''
@@ -996,27 +999,52 @@ function InventoryForm({
         setLookupNote('');
         setError(`Barcode ${code} is already used by ${result.name}.`);
       } else if (result.status === 'not_found') {
+        setLookupState('missing');
         setLookupNote('Not in the barcode database. Type the details.');
       } else if (result.status === 'limit_reached') {
+        setLookupState('missing');
         setLookupNote("Today's barcode lookup limit is reached. Type the details.");
       } else if (result.status === 'disabled') {
+        setLookupState('missing');
         setLookupNote(
           'Barcode lookup is off: the BarCloud key is not set on the server yet. Type the details.',
         );
       } else if (result.status === 'unavailable') {
+        setLookupState('missing');
         setLookupNote('The barcode service did not answer. Type the details, or try again later.');
       } else {
         setLookupNote('');
       }
     } catch {
+      setLookupState('missing');
       setLookupNote('Could not reach the server for the barcode lookup. Type the details.');
     }
   }
 
-  // A barcode scanned in the product list opens this form with it: look it up once.
+  /** The last barcode checked, so the same code is never looked up twice. */
+  const checkedBarcode = useRef('');
+
+  function checkBarcode(code: string) {
+    if (!isNew || code === checkedBarcode.current) return;
+    checkedBarcode.current = code;
+    const owner = products.find((item) => item.barcode === code);
+    if (owner) {
+      setLookupNote('');
+      setError(`Barcode ${code} is already used by ${owner.product}.`);
+      return;
+    }
+    void fillFromBarcode(code);
+  }
+
+  // Scanners type the whole code at once, and some never press Enter: once the field holds a
+  // full barcode and stops changing for a moment, look it up. This also covers a barcode
+  // scanned in the product list, which opens this form with it.
   useEffect(() => {
-    if (initialBarcode) void fillFromBarcode(initialBarcode);
-  }, []);
+    const code = barcode.trim();
+    if (!isNew || !/^\d{8,14}$/.test(code)) return;
+    const timer = window.setTimeout(() => checkBarcode(code), 350);
+    return () => window.clearTimeout(timer);
+  }, [barcode]);
 
   const costValue = Number(cost);
   const priceValue = Number(price);
@@ -1104,7 +1132,39 @@ function InventoryForm({
         </p>
 
         <fieldset className="product-form__section">
-          <legend>1. What it is</legend>
+          <legend>1. {isNew ? 'Scan the barcode' : 'Barcode'}</legend>
+          <div className={`product-form__scan is-${lookupState}`}>
+            <ScanInput
+              value={barcode}
+              onChange={(next) => {
+                setBarcode(next);
+                setError('');
+                if (next.trim() !== checkedBarcode.current) {
+                  setLookupNote('');
+                  setLookupState('idle');
+                }
+              }}
+              onEnter={(code) => {
+                const owner = products.find(
+                  (item) => item.barcode === code && item.barcode !== product?.barcode,
+                );
+                if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
+                else checkBarcode(code);
+              }}
+              placeholder={isNew ? 'Scan the product barcode' : 'Scan or type it'}
+              inputProps={{ inputMode: 'numeric', autoFocus: isNew, 'aria-label': 'Barcode' }}
+            />
+            <p className="product-form__lookup" aria-live="polite">
+              {lookupNote ||
+                (isNew
+                  ? 'Scan it and the name, brand and category fill in by themselves. No barcode? Type a code of your own.'
+                  : 'Change it only if the product has a new barcode.')}
+            </p>
+          </div>
+        </fieldset>
+
+        <fieldset className="product-form__section">
+          <legend>2. What it is</legend>
           <div className="product-form__grid">
             <label className="product-form__wide">
               Product name
@@ -1112,28 +1172,7 @@ function InventoryForm({
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="e.g. Biogesic 500mg"
-                autoFocus
               />
-            </label>
-            <label>
-              Barcode / SKU
-              <ScanInput
-                value={barcode}
-                onChange={(next) => {
-                  setBarcode(next);
-                  setError('');
-                }}
-                onEnter={(code) => {
-                  const owner = products.find(
-                    (item) => item.barcode === code && item.barcode !== product?.barcode,
-                  );
-                  if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
-                  else void fillFromBarcode(code);
-                }}
-                placeholder="Scan or type it"
-                inputProps={{ inputMode: 'numeric' }}
-              />
-              {lookupNote && <small className="product-form__lookup">{lookupNote}</small>}
             </label>
             <label>
               Generic / brand
@@ -1169,7 +1208,7 @@ function InventoryForm({
         </fieldset>
 
         <fieldset className="product-form__section">
-          <legend>2. Price per {unit.toLowerCase()}</legend>
+          <legend>3. Price per {unit.toLowerCase()}</legend>
           <div className="product-form__grid">
             <label>
               Cost (what you pay the supplier)
@@ -1235,7 +1274,7 @@ function InventoryForm({
         </fieldset>
 
         <fieldset className="product-form__section">
-          <legend>3. Stock</legend>
+          <legend>4. Stock</legend>
           {isNew ? (
             <>
               <div className="product-form__grid product-form__grid--three">

@@ -1031,3 +1031,47 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* New product: the barcode comes first, large, with what the lookup did under it. */
+.product-form__scan {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.cashier-shell .product-form__scan .scan-input > input {
+  min-height: 3.6rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.cashier-shell .product-form__scan .scan-input__button {
+  min-height: 3.6rem;
+  padding: 0 1.1rem;
+  font-size: 0.95rem;
+}
+
+.product-form__scan .product-form__lookup {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: #f2f5ee;
+  font-size: 0.88rem;
+  color: #3f5249;
+}
+
+.product-form__scan.is-loading .product-form__lookup {
+  background: #eef4ff;
+  color: #245891;
+}
+
+.product-form__scan.is-found .product-form__lookup {
+  background: #e5f3e8;
+  color: #13573c;
+  font-weight: 700;
+}
+
+.product-form__scan.is-missing .product-form__lookup {
+  background: #fdf6e6;
+  color: #7a4f00;
+}
