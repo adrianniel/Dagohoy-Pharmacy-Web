@@ -807,40 +807,6 @@
   color: var(--ticket-ink);
 }
 
-.pos-ticket__meta {
-  display: flex;
-  margin: 0;
-}
-
-.pos-ticket__meta > div {
-  padding: 0 0.95rem;
-  border-left: 1px solid var(--ticket-rule);
-  text-align: right;
-}
-
-.pos-ticket__meta > div:first-child {
-  border-left: 0;
-}
-
-.pos-ticket__meta > div:last-child {
-  padding-right: 0;
-}
-
-.pos-ticket__meta dt {
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ticket-muted);
-}
-
-.pos-ticket__meta dd {
-  margin: 0.15rem 0 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--ticket-ink);
-}
-
 /* Scan field sits flush in the ticket, like the input line of a register. */
 .cashier-pos-page .pos-ticket__scan {
   margin: 0;
@@ -1164,10 +1130,6 @@
     align-items: flex-start;
   }
 
-  .pos-ticket__meta > div:first-child {
-    padding-left: 0;
-  }
-
   .pos-ticket__cols {
     display: none;
   }
@@ -1194,10 +1156,6 @@
   .pos-ticket-line__amount {
     grid-column: 2;
     grid-row: 2;
-  }
-
-  .pos-ticket__meta > div {
-    text-align: left;
   }
 
   .pos-ticket__empty {
@@ -3533,8 +3491,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  margin-right: auto;
-  margin-left: 1.25rem;
   align-self: center;
   padding: 0.5rem 0.9rem;
   border: 1.5px solid var(--ticket-green);

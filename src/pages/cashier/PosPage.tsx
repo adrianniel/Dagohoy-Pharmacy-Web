@@ -165,7 +165,6 @@ export function CashierPosPage() {
   /** True while a sale, void or no-charge record is being saved on the server. */
   const [saving, setSaving] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [openedAt, setOpenedAt] = useState<Date | null>(null);
   /** Barcode of the item added last (highlighted in the list) and a counter that replays the flash. */
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [addPulse, setAddPulse] = useState(0);
@@ -293,7 +292,6 @@ export function CashierPosPage() {
 
   useEffect(() => {
     if (cart.length) return;
-    setOpenedAt(null);
     setLastAdded(null);
   }, [cart.length]);
 
@@ -398,7 +396,6 @@ export function CashierPosPage() {
           )
         : [...current, { product, quantity: 1 }],
     );
-    if (!openedAt) setOpenedAt(new Date());
     setLastAdded(product.barcode);
     setAddPulse((count) => count + 1);
     playSound('tap');
@@ -576,7 +573,6 @@ export function CashierPosPage() {
     setCart([]);
     setSelectedLine(null);
     setDiscountInput('0');
-    setOpenedAt(null);
     setPaymentOpen(true);
     playSound('success');
     showToast(`No-charge record ${sale.receipt} saved.`, 'success');
@@ -611,7 +607,6 @@ export function CashierPosPage() {
     }
     setCompletedSale(shownSale(sale, saleLines));
     setCart([]);
-    setOpenedAt(null);
     setTendered('');
     setCreditCustomer('');
     setGcashReference('');
@@ -654,24 +649,6 @@ export function CashierPosPage() {
               <CashierIcon name="search" />
               <span>{priceCheck ? 'Price check on' : 'Price check'}</span>
             </button>
-            <dl className="pos-ticket__meta">
-              <div>
-                <dt>Opened</dt>
-                <dd>
-                  {openedAt
-                    ? openedAt.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
-                    : '--:--'}
-                </dd>
-              </div>
-              <div>
-                <dt>Lines</dt>
-                <dd>{cart.length}</dd>
-              </div>
-              <div>
-                <dt>Qty</dt>
-                <dd>{totalItems}</dd>
-              </div>
-            </dl>
           </header>
           <div className="pos-scan-dock pos-ticket__scan">
             <div className="pos-scan-field">
