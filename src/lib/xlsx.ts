@@ -23,14 +23,16 @@ export type XlsxSheet = {
 const encoder = new TextEncoder();
 
 function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    // Control characters are not allowed in XML; Excel refuses the file if they slip in.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+  return (
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      // Control characters are not allowed in XML; Excel refuses the file if they slip in.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+  );
 }
 
 function columnName(index: number) {
@@ -72,7 +74,10 @@ function sheetXml(sheet: XlsxSheet) {
 
   const cols = sheet.widths?.length
     ? `<cols>${sheet.widths
-        .map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`)
+        .map(
+          (width, index) =>
+            `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`,
+        )
         .join('')}</cols>`
     : '';
   return (
@@ -83,7 +88,11 @@ function sheetXml(sheet: XlsxSheet) {
 }
 
 function safeSheetName(name: string, used: Set<string>) {
-  let base = name.replace(/[:\\/?*[\]]/g, ' ').trim().slice(0, 31) || 'Sheet';
+  let base =
+    name
+      .replace(/[:\\/?*[\]]/g, ' ')
+      .trim()
+      .slice(0, 31) || 'Sheet';
   let candidate = base;
   let n = 2;
   while (used.has(candidate.toLowerCase())) {
@@ -159,7 +168,9 @@ function workbookFiles(sheets: XlsxSheet[]): Array<[string, string]> {
         '</styleSheet>',
     ],
   ];
-  sheets.forEach((sheet, index) => files.push([`xl/worksheets/sheet${index + 1}.xml`, sheetXml(sheet)]));
+  sheets.forEach((sheet, index) =>
+    files.push([`xl/worksheets/sheet${index + 1}.xml`, sheetXml(sheet)]),
+  );
   return files;
 }
 
