@@ -42,8 +42,13 @@ Phase 9 part 1 done (2026-11-10): the browser-only "Start fresh" and "Load sampl
 removed (they no longer matched the server), `npm run db:backup` (mariadb-dump into the
 gitignored `backups/`), `npm run db:create-test` (test database, root password typed by the
 developer) and `docs/RUNNING_LOCALLY.md`.
-Next: Phase 9 part 2 (dev reset and seed, database tests, restore test), tried on the test
-database first.
+Phase 9 part 2 done (2026-11-10): `npm run db:reset:dev` (dev/test names only; keeps accounts,
+settings and barcode lookups), `npm run db:seed:dev` (45 days written through the real
+services with a simulated clock: 40 products, 45 shifts, about 860 sales), `npm run test:db`
+(13 database tests on `dagohoy_pharmacy_test`: shift rules, FEFO, short stock, expired lots,
+void, utang, expenses, shift count) and `npm run db:restore` (empty database only; restore
+test passed with identical counts and totals).
+Next: Phase 10 (local acceptance run).
 
 ## "Ready locally" means
 

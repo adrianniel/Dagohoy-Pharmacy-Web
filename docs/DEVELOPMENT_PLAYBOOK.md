@@ -398,6 +398,14 @@ database access only from my own address and removed after.
   hosting is often on UTC, which moves early-morning sales to "yesterday" in daily reports.
 - Do not copy all history into browser storage (about 5 MB per site). Keep a recent window in
   the browser and fetch older periods from the server when a report asks for them.
+- Keep a separate test database from the start. Resets, seeds and tests are then tried there,
+  and the dev database with hand-entered data is never at risk.
+- Seed sample data through the same services the API uses, not with raw INSERTs. To write the
+  past, set the connection's clock (`SET timestamp` in MariaDB/MySQL) on a one-connection pool
+  instead of editing dates afterwards.
+- Destructive scripts check their target themselves (database name ends in `_dev`/`_test`,
+  not production, type the name to confirm). A restore refuses a database that has tables.
+- Prove the backup by restoring it and comparing counts and totals, before going live.
 
 
 ## Appendix: Dagohoy Pharmacy (first client) as the example
@@ -424,4 +432,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, slice 5 | Expenses on the server: anyone records, only administrators remove (soft remove, kept for audit); API script 12/12 and the page tested in the browser |
 | 2026-11-10 | 8 | Reports from server data: small browser copy (35 days + utang + pending GCash), any month or range fetched from `/sales?from=&to=`; server and DB sessions fixed to Manila time (+08:00). Checked with a UTC host clock, and the monthly report matched the owner overview |
 | 2026-11-10 | 9, part 1 | Removed browser-only reset and sample data, added a database backup command, a test-database setup script and the local runbook (`docs/RUNNING_LOCALLY.md`) |
+| 2026-11-10 | 9, part 2 | Dev reset, 45-day seed through the real services (simulated clock, ledger untouched), 13 database tests on a separate test database, and a restore command that only fills an empty database; backup → empty → restore gave identical counts and totals |
 | next | 6 | Sales, utang and expenses, reports |

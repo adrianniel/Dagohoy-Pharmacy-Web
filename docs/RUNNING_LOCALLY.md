@@ -54,7 +54,30 @@ Then in the **web** folder: copy `.env.example` to `.env`, `npm install`, `npm r
 | `npm run db:check-rules` | Tries good and bad rows, then rolls back. Run with no shift open | Dev only |
 | `npm run db:create-owner` | Creates the owner or resets the owner's password | Yes |
 | `npm run db:backup` | Saves everything into `backups/<database>-<date>-<time>.sql` | Yes |
+| `npm run db:restore -- backups/FILE.sql` | Loads a backup into the database in `DB_NAME`. Refuses unless that database is empty | Yes (empty database only) |
 | `npm run db:create-test` | One time: creates `dagohoy_pharmacy_test` (asks for the MariaDB root password) | Dev only |
+| `npm run db:reset:dev` | Empties the dev database and rebuilds it from the migrations. Keeps login accounts, store settings and saved barcode lookups. Asks you to type the database name | **Dev only** (refuses other names) |
+| `npm run db:seed:dev` | Fills an empty dev database with 45 days of sample products, sales, shifts, utang and expenses | **Dev only** |
+| `npm test` | Unit tests (no database) | Yes |
+| `npm run test:db` | Database tests on `dagohoy_pharmacy_test` (rebuilt each run; never touches dev) | Yes |
+
+### Sample data for demos
+
+```bash
+npm run db:backup
+```
+
+```bash
+npm run db:reset:dev
+```
+
+```bash
+npm run db:seed:dev
+```
+
+Back up first if you want your own test products back later. After the reset everyone is
+logged out; log in again with the same account. The seed leaves **today** empty so you can
+start a shift and sell.
 
 ## Backup and restore
 
@@ -68,16 +91,22 @@ The file lands in the server's `backups/` folder. That folder is never committed
 backup holds real sales, names of utang customers and password hashes. Copy the file to a USB
 drive or cloud drive too: a backup on the same computer does not survive a broken disk.
 
-**Restore** only into an **empty** database, never over one that is in use. To practise, restore
-into the test database. Run this in **Command Prompt (cmd)**, not PowerShell, in the server
-folder (it asks for the `dagohoy_app` password):
+**Restore** only goes into an **empty** database (no tables), never over one in use. The
+command checks this itself and stops if the database has tables.
 
-```bat
-"C:\Program Files\MariaDB 11.4\bin\mariadb.exe" --host=127.0.0.1 --port=3307 --user=dagohoy_app -p dagohoy_pharmacy_test < backups\FILE_NAME.sql
+To practise on the test database, in PowerShell in the server folder:
+
+```powershell
+$env:DB_NAME = 'dagohoy_pharmacy_test'; npm run db:restore -- backups/FILE_NAME.sql
 ```
 
-Then point `DB_NAME` in `.env` at that database for a moment, start the API and look at
-`/api/health` and a few pages. Put `DB_NAME` back after.
+If it says the database is not empty, that is the safety check working. `npm run test:db`
+leaves tables there; ask for help emptying it rather than dropping tables by hand. Close that
+PowerShell window after, so `DB_NAME` goes back to the one in `.env`.
+
+Tested 2026-11-10: a 45-day database (861 sales, 1,833 stock movements) was backed up, the
+database emptied, and the backup restored. Every table count, the stock total and the payments
+total came back the same, and `npm run db:verify` passed.
 
 A backup you have never restored is only a hope. Practise the restore once before going live,
 and again after any big change.
