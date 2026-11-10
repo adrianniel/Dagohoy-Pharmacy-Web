@@ -65,11 +65,11 @@ export function StaffAccounts() {
     {
       key: 'admins',
       icon: 'profile',
-      title: 'Administrators',
-      hint: 'Owner and managers',
+      title: 'Owner account',
+      hint: 'The one administrator',
       tone: 'slate',
-      count: admins.length,
-      about: 'Administrators manage products, stock, reports, staff and settings.',
+      about:
+        'The owner is the only administrator: accounts, staff, reports and settings. Everyone else works from the cashier account.',
     },
   ];
   const current = items.find((item) => item.key === tab);
@@ -137,17 +137,6 @@ export function StaffAccounts() {
         activeKey={tab}
         title={current?.title ?? 'Staff'}
         about={current?.about}
-        actions={
-          tab === 'admins' ? (
-            <button
-              className="cashier-primary-action"
-              type="button"
-              onClick={() => setForm({ kind: 'create', role: 'ADMIN' })}
-            >
-              Add administrator <span>＋</span>
-            </button>
-          ) : undefined
-        }
       >
         {tab === 'roster' && (
           <StaffRoster
@@ -303,14 +292,8 @@ export function StaffAccounts() {
               </table>
             </div>
             <div className="cashier-table-footer">
-              <span>
-                {admins.length} administrator{admins.length === 1 ? '' : 's'}
-              </span>
-              <span>
-                {me?.builtIn
-                  ? 'The owner account cannot be disabled or removed.'
-                  : 'Only the owner can change other administrators.'}
-              </span>
+              <span>One administrator: the owner.</span>
+              <span>The owner account cannot be disabled or removed.</span>
             </div>
           </section>
         )}

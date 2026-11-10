@@ -24,11 +24,7 @@ import {
   saveSettings as saveStoreSettings,
   updateProduct,
 } from '../../services/storeApi';
-import {
-  cacheSettings,
-  syncAfterStockChange,
-  syncSuppliers,
-} from '../../data/serverSync';
+import { cacheSettings, syncAfterStockChange, syncSuppliers } from '../../data/serverSync';
 import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
 import { ProductImport } from '../../components/admin/ProductImport';
 import { getCurrentAccount } from '../../data/accountStore';
@@ -778,19 +774,17 @@ function InventoryForm({
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  /** What the barcode lookup found (or why not), shown under the barcode field. */
+  /** What the barcode scan found (or that nothing was found), shown under the barcode field. */
   const [lookupNote, setLookupNote] = useState('');
   const [lookupState, setLookupState] = useState<'idle' | 'loading' | 'found' | 'missing'>('idle');
 
   /**
-   * New product only: asks the server about a scanned barcode (our catalog, saved answers,
-   * then BarCloud) and fills the fields that are still empty. The user checks them.
+   * New product only: asks the server for a scanned barcode's details and fills the fields that
+   * are still empty. The user checks them. The wording never says where the details come from.
    */
   async function fillFromBarcode(code: string) {
     if (!isNew || !/^\d{8,14}$/.test(code)) return;
-    setLookupNote(
-      'Looking up this barcode… A product new to the database can take up to 20 seconds.',
-    );
+    setLookupNote('New product scanned. Getting its details, this may take a few seconds…');
     setLookupState('loading');
     try {
       const result = await lookupBarcode(code);
@@ -802,7 +796,7 @@ function InventoryForm({
         if (found.unit && UNITS.includes(found.unit)) setUnit(found.unit);
         setLookupState('found');
         setLookupNote(
-          `Filled from ${result.source === 'cache' ? 'a saved lookup' : 'BarCloud'}${
+          `Details filled in${
             found.strength ? ` (strength ${found.strength})` : ''
           }. Check the name and add the generic name before saving.`,
         );
@@ -811,24 +805,16 @@ function InventoryForm({
         setError(`Barcode ${code} is already used by ${result.name}.`);
       } else if (result.status === 'not_found') {
         setLookupState('missing');
-        setLookupNote('Not in the barcode database. Type the details.');
-      } else if (result.status === 'limit_reached') {
-        setLookupState('missing');
-        setLookupNote("Today's barcode lookup limit is reached. Type the details.");
-      } else if (result.status === 'disabled') {
-        setLookupState('missing');
-        setLookupNote(
-          'Barcode lookup is off: the BarCloud key is not set on the server yet. Type the details.',
-        );
-      } else if (result.status === 'unavailable') {
-        setLookupState('missing');
-        setLookupNote('The barcode service did not answer. Type the details, or try again later.');
-      } else {
+        setLookupNote('No details found for this barcode. Type them in.');
+      } else if (result.status === 'invalid_barcode') {
         setLookupNote('');
+      } else {
+        setLookupState('missing');
+        setLookupNote('Could not get the details right now. Type them in.');
       }
     } catch {
       setLookupState('missing');
-      setLookupNote('Could not reach the server for the barcode lookup. Type the details.');
+      setLookupNote('Could not get the details right now. Type them in.');
     }
   }
 
