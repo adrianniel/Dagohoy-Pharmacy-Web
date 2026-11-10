@@ -114,8 +114,11 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
     );
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     if (!cashier) {
       setError('Step 1: tap the name of the cashier.');
       return;
@@ -124,8 +127,9 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
       setError('Step 3: type why the cash in the drawer is different.');
       return;
     }
+    setSaving(true);
     try {
-      const started = startShift({
+      const started = await startShift({
         onDutyNames: [cashier, ...others],
         openingFloat: Number(floatInput || 0),
         adjustmentReason: adjusted ? reason : undefined,
@@ -134,6 +138,8 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not start the shift.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -322,8 +328,8 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
             <button className="start-shift__cancel" type="button" onClick={onClose}>
               Cancel
             </button>
-            <button className="start-shift__go" type="submit" disabled={!cashier}>
-              Start shift
+            <button className="start-shift__go" type="submit" disabled={!cashier || saving}>
+              {saving ? 'Starting…' : 'Start shift'}
             </button>
           </div>
         </footer>
@@ -399,8 +405,11 @@ export function CloseShiftForm({
   const state = !hasCount ? 'waiting' : balanced ? 'balanced' : variance < 0 ? 'short' : 'over';
   const names = session.onDutyNames ?? [session.cashierName];
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     if (!hasCount) {
       setError('Count the cash in the drawer and enter the total.');
       return;
@@ -409,8 +418,9 @@ export function CloseShiftForm({
       setError('The count does not match. Write a short note on why before closing.');
       return;
     }
+    setSaving(true);
     try {
-      const result = endShift(value, balanced ? undefined : note);
+      const result = await endShift(value, balanced ? undefined : note);
       showToast(
         result
           ? `Shift closed. Counted ${money(value)}${
@@ -424,6 +434,8 @@ export function CloseShiftForm({
       onDone(result?.record);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not close the shift.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -538,8 +550,8 @@ export function CloseShiftForm({
             Keep shift open
           </button>
         )}
-        <button className="close-shift__submit" type="submit">
-          Close shift
+        <button className="close-shift__submit" type="submit" disabled={saving}>
+          {saving ? 'Closing…' : 'Close shift'}
         </button>
       </div>
       <p className="close-shift__after">

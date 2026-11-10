@@ -13,7 +13,10 @@ migration 006; products, suppliers, staff roster and settings on the server; the
 synced browser copy for POS/stock until Phases 4 and 6). Phase 4 done (2026-11-10: lots,
 ledger, receive and adjustments/returns on the server with FEFO and row locks; purchase orders
 skipped because no screen uses them; until Phase 6 a Sales Counter sale does not lower the
-server stock). Next: Phase 5 (shifts and cash drawer).
+server stock). Phase 5 done (2026-11-10, migration 007: shifts, one open shift, cash in/out,
+close with server-computed expected cash and a duty report snapshot; until Phase 6 the
+browser sends the sales side of the count, and utang payments stay in the browser until
+Phase 7). Next: Phase 6 (sales).
 
 ## "Ready locally" means
 

@@ -10,6 +10,7 @@ import {
 } from '../services/storeApi';
 import { saveInventory, stockStatus, type InventoryProduct } from './inventoryStore';
 import { saveBatches, saveMovements } from './operationsStore';
+import { syncShift } from './registerSession';
 
 /*
  * The server is the source of truth for products, stock (lots and the ledger), suppliers,
@@ -139,5 +140,6 @@ export async function syncFromServer() {
     syncStock(),
     syncSuppliers(),
     syncRoster(),
+    syncShift(),
   ]);
 }

@@ -187,8 +187,16 @@ export function RegisterPage() {
         {active === 'cash' &&
           (session ? (
             <CashMovementForm
-              onSave={(event) => {
-                addCashEvent(event);
+              onSave={async (event) => {
+                try {
+                  await addCashEvent(event);
+                } catch (caught) {
+                  showToast(
+                    caught instanceof Error ? caught.message : 'Could not save the cash movement.',
+                    'error',
+                  );
+                  return;
+                }
                 showToast(`${event.type} recorded.`, 'success');
                 setActive('movements');
               }}

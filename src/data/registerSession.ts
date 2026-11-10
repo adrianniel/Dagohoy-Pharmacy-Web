@@ -1,9 +1,20 @@
-import { getPreviousShift, recordShift, type ShiftDetails, type ShiftRecord } from './shiftHistory';
+import {
+  closeShift,
+  getCurrentShift,
+  listShiftHistory,
+  openShift,
+  recordCashEvent,
+} from '../services/shiftsApi';
+import { getPreviousShift, saveShiftHistory, type ShiftDetails } from './shiftHistory';
 
 /*
  * The register shift: who is on duty, the opening cash float and cash movements.
  * Starting a shift opens the store; ending it reconciles the drawer and saves the
- * handover for the next cashier. Stored in the browser for the design phase.
+ * handover for the next cashier. The server keeps the shift, the cash in/out and the
+ * closed-shift reports; the browser keeps a copy that syncShift() refreshes.
+ *
+ * shortcut: utang payments stay in the browser until Phase 7, and the sales side of the
+ * count until Phase 6; the browser sends those totals when the shift closes.
  */
 
 export const REGISTER_SESSION_KEY = 'dagohoy_demo_register_session';
@@ -12,6 +23,8 @@ const CASH_EVENTS_KEY = 'dagohoy_demo_cash_events';
 const SALES_KEY = 'dagohoy_demo_sales';
 
 export type RegisterSession = {
+  /** Server id of the shift. */
+  id?: string;
   openedAt: string;
   openingFloat: number;
   /** The first name picked when the shift opened: what receipts show. */
@@ -29,6 +42,8 @@ export type CashEvent = {
   amount: number;
   reason: string;
   date: string;
+  /** Shift the event belongs to (kept on browser-only utang payments). */
+  shiftId?: string;
 };
 
 type Sale = {
@@ -64,8 +79,56 @@ export function getCashEvents(): CashEvent[] {
   return readJson<CashEvent[]>(CASH_EVENTS_KEY, []);
 }
 
-export function addCashEvent(event: CashEvent) {
-  localStorage.setItem(CASH_EVENTS_KEY, JSON.stringify([event, ...getCashEvents()]));
+/** Cash in/out is saved on the server; an utang payment stays in the browser for now. */
+export async function addCashEvent(event: CashEvent) {
+  if (event.type === 'Utang payment') {
+    const local = { ...event, shiftId: getSession()?.id };
+    localStorage.setItem(CASH_EVENTS_KEY, JSON.stringify([local, ...getCashEvents()]));
+    notifyStoreStatusChange();
+    return;
+  }
+  await recordCashEvent({
+    type: event.type === 'Paid in' ? 'paid_in' : 'paid_out',
+    amount: event.amount,
+    reason: event.reason,
+  });
+  await syncShift();
+}
+
+/**
+ * Copies the open shift, its cash in/out and the closed-shift reports from the server.
+ * Browser-only utang payments of the same shift are kept.
+ */
+export async function syncShift() {
+  const [current, history] = await Promise.all([getCurrentShift(), listShiftHistory()]);
+  saveShiftHistory(history);
+  const shift = current.shift;
+  if (!shift) {
+    localStorage.removeItem(REGISTER_SESSION_KEY);
+    localStorage.removeItem(CASH_EVENTS_KEY);
+  } else {
+    const id = String(shift.id);
+    const session: RegisterSession = {
+      id,
+      openedAt: shift.openedAt,
+      openingFloat: shift.openingFloat,
+      cashierName: shift.cashierName,
+      onDutyNames: shift.onDutyNames,
+      floatAdjustment: shift.floatAdjustment,
+    };
+    const utang = getCashEvents().filter(
+      (event) => event.type === 'Utang payment' && event.shiftId === id,
+    );
+    localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(
+      CASH_EVENTS_KEY,
+      JSON.stringify(
+        [...current.cashEvents.map((event) => ({ ...event, id: String(event.id) })), ...utang].sort(
+          (a, b) => b.date.localeCompare(a.date),
+        ),
+      ),
+    );
+  }
   notifyStoreStatusChange();
 }
 
@@ -116,30 +179,24 @@ export function getShiftTotals(session = getSession(), until = new Date()): Shif
   };
 }
 
-export function startShift(input: {
+/** Opens the shift on the server (it refuses a second open shift). */
+export async function startShift(input: {
   onDutyNames: string[];
   openingFloat: number;
   adjustmentReason?: string;
-}): RegisterSession {
+}): Promise<RegisterSession> {
   const onDutyNames = input.onDutyNames.map((name) => name.trim()).filter(Boolean);
   if (!onDutyNames.length) {
     throw new Error('Select at least one name who is on duty.');
   }
-  const carriedOver = getCarriedOverFloat();
-  const adjusted = Math.abs(input.openingFloat - carriedOver) >= 0.005;
-  if (adjusted && !input.adjustmentReason?.trim()) {
-    throw new Error('Enter a reason for changing the cash float.');
-  }
-  const session: RegisterSession = {
-    openedAt: new Date().toISOString(),
-    openingFloat: input.openingFloat,
-    cashierName: onDutyNames[0],
+  await openShift({
     onDutyNames,
-    floatAdjustment: adjusted ? { carriedOver, reason: input.adjustmentReason!.trim() } : undefined,
-  };
-  localStorage.setItem(REGISTER_SESSION_KEY, JSON.stringify(session));
-  localStorage.removeItem(CASH_EVENTS_KEY);
-  notifyStoreStatusChange();
+    openingFloat: input.openingFloat,
+    adjustmentReason: input.adjustmentReason?.trim() || undefined,
+  });
+  await syncShift();
+  const session = getSession();
+  if (!session) throw new Error('The shift did not open. Try again.');
   return session;
 }
 
@@ -223,7 +280,7 @@ export function collectShiftDetails(
  * Counts the drawer and closes the shift. The note explains a short or over count.
  * Returns the saved shift record, so the duty report can be shown right away.
  */
-export function endShift(countedCash: number, varianceNote?: string) {
+export async function endShift(countedCash: number, varianceNote?: string) {
   const session = getSession();
   if (!session) return;
   const closedAt = new Date();
@@ -236,28 +293,22 @@ export function endShift(countedCash: number, varianceNote?: string) {
     counts[sale.payment] = (counts[sale.payment] ?? 0) + 1;
     return counts;
   }, {});
-  const record: ShiftRecord = {
-    id: crypto.randomUUID(),
-    cashierName: session.cashierName,
-    onDutyNames: session.onDutyNames ?? [session.cashierName],
-    openedAt: session.openedAt,
-    closedAt: closedAt.toISOString(),
-    openingFloat: session.openingFloat,
-    floatAdjustment: session.floatAdjustment,
-    salesCount: shiftSales.length,
-    salesByPayment,
-    cashSales: totals.cashSales,
-    creditCash: totals.creditCash,
-    paidIn: totals.paidIn,
-    paidOut: totals.paidOut,
-    expectedCash: totals.expected,
+  // The server adds the paid in/out it recorded and checks the count against it.
+  const record = await closeShift({
     countedCash,
     varianceNote: varianceNote?.trim() || undefined,
+    cashSales: totals.cashSales,
+    creditCash: totals.creditCash,
+    salesCount: shiftSales.length,
+    salesByPayment,
     details: collectShiftDetails(new Date(session.openedAt), closedAt),
+  });
+  await syncShift();
+  return {
+    ...totals,
+    expected: record.expectedCash,
+    countedCash,
+    variance: countedCash - record.expectedCash,
+    record,
   };
-  recordShift(record);
-  localStorage.removeItem(REGISTER_SESSION_KEY);
-  localStorage.removeItem(CASH_EVENTS_KEY);
-  notifyStoreStatusChange();
-  return { ...totals, countedCash, variance: countedCash - totals.expected, record };
 }

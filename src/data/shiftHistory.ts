@@ -71,9 +71,9 @@ export function loadShiftHistory(): ShiftRecord[] {
   }
 }
 
-export function recordShift(shift: ShiftRecord) {
-  const next = [shift, ...loadShiftHistory()].slice(0, SHIFT_HISTORY_LIMIT);
-  localStorage.setItem(SHIFT_HISTORY_KEY, JSON.stringify(next));
+/** Replaces the browser copy with the closed shifts from the server. */
+export function saveShiftHistory(shifts: ShiftRecord[]) {
+  localStorage.setItem(SHIFT_HISTORY_KEY, JSON.stringify(shifts.slice(0, SHIFT_HISTORY_LIMIT)));
 }
 
 export function getPreviousShift(): ShiftRecord | undefined {
