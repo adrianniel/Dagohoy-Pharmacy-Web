@@ -3699,3 +3699,51 @@
 .credit-picked span {
   color: #5a6b62;
 }
+
+/* Done screen after a sale: the check mark and change stay, with Close (Enter also closes). */
+.pos-done.is-final .pos-done__actions {
+  grid-template-columns: 1fr;
+}
+
+.pos-done.is-final .pos-done__close {
+  border: 0;
+  background: #176246;
+  color: #fffdf1;
+}
+
+.pos-done.is-final .pos-done__close:hover {
+  background: #11513a;
+}
+
+.pos-done__record {
+  color: #6b7a72;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+}
+
+.pos-done__hint {
+  margin: 0.2rem 0 0;
+  color: #6b7a72;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.pos-done__hint kbd,
+.pos-pay__status kbd,
+.pos-ticket__hint kbd {
+  padding: 0.05rem 0.4rem;
+  border: 1px solid #c9cfbe;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pos-ticket__hint {
+  margin: 0.5rem 0 0;
+  color: #6b7a72;
+  font-size: 0.82rem;
+  text-align: center;
+}

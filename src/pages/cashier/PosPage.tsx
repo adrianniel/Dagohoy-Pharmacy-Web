@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
-import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
 import { syncAfterSale } from '../../data/serverSync';
@@ -304,6 +303,8 @@ export function CashierPosPage() {
   /** A finished scan: the product goes straight into the sale. Kept current for the listener. */
   const onScan = useRef<(code: string) => void>(() => {});
   onScan.current = (code) => {
+    // A scan on the "done" screen closes it and starts the next customer's sale.
+    if (completedSale) closePayment();
     const product = products.find((item) => item.barcode === code);
     if (!product) {
       showToast(`No product has barcode ${code}. Add it in Products first.`, 'error');
@@ -320,9 +321,47 @@ export function CashierPosPage() {
     }
     addProduct(product);
   };
+  /**
+   * Enter moves the sale along: at the counter it opens the payment, in the payment it saves the
+   * sale (when nothing is missing), and on the "done" screen it closes it for the next customer.
+   * Kept current for the key listener below.
+   */
+  const onEnterKey = useRef<(event: KeyboardEvent) => void>(() => {});
+  onEnterKey.current = (event) => {
+    if (event.key !== 'Enter' || event.defaultPrevented || controlModal) return;
+    const target = event.target as HTMLElement | null;
+    if (target && /^(TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    if (paymentOpen && completedSale) {
+      event.preventDefault();
+      closePayment();
+      window.requestAnimationFrame(() =>
+        document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
+      );
+      return;
+    }
+    if (paymentOpen) {
+      event.preventDefault();
+      if (!paymentBlocker && !saving) {
+        document.querySelector<HTMLFormElement>('form.pos-payment-modal--collect')?.requestSubmit();
+      }
+      return;
+    }
+    // At the counter a focused button (a sale control, + or −) keeps its own Enter.
+    if (target?.tagName === 'BUTTON') return;
+    if (cart.length && shiftOpen) {
+      event.preventDefault();
+      setPaymentOpen(true);
+    }
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onEnterKey.current(event);
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, []);
+
   /** While the payment panel or a dialog is open, its own fields take the keys. */
   const scanPaused = useRef(false);
-  scanPaused.current = paymentOpen || controlModal !== null;
+  scanPaused.current = (paymentOpen && !completedSale) || controlModal !== null;
 
   // A scanner types the whole barcode in a few milliseconds. Those keys are caught here before
   // they reach the search box, so the number never shows and no list pops up: the item goes
@@ -659,9 +698,10 @@ export function CashierPosPage() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
+                  const typed = event.currentTarget.value.trim();
+                  if (event.key !== 'Enter' || !typed) return;
                   event.preventDefault();
-                  scanOrPick(event.currentTarget.value.trim());
+                  scanOrPick(typed);
                 }}
                 placeholder="Scanner not working? Type the product name or barcode"
                 aria-label="Search a product by name or barcode"
@@ -859,10 +899,16 @@ export function CashierPosPage() {
               <span>Continue to payment</span>
               <CashierIcon name="arrow" />
             </button>
-            {!shiftOpen && (
+            {!shiftOpen ? (
               <p className="pos-ticket__notice" role="status">
                 No shift is open. Press <b>Start shift</b> at the top before taking payment.
               </p>
+            ) : (
+              cart.length > 0 && (
+                <p className="pos-ticket__hint">
+                  Press <kbd>Enter</kbd> to continue to payment.
+                </p>
+              )
             )}
           </div>
         </section>
@@ -1398,8 +1444,12 @@ export function CashierPosPage() {
                             : 'Save as utang'}
                     </button>
                     <p className="pos-pay__status" aria-live="polite">
-                      {paymentBlocker ||
-                        'Saving records the sale and takes the items out of stock.'}
+                      {paymentBlocker || (
+                        <>
+                          Press <kbd>Enter</kbd> to save. It records the sale and takes the items
+                          out of stock.
+                        </>
+                      )}
                     </p>
                   </section>
                 </div>
@@ -1413,19 +1463,12 @@ export function CashierPosPage() {
 }
 
 /**
- * After a sale: a quick check mark, then the sales record of the sale on screen.
- * It is the store's internal record; nothing is printed for the customer.
+ * After a sale: the check mark and the change stay on screen until Close or Enter, then the
+ * counter is ready for the next customer. The sales record is in Transactions.
  */
 function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => void }) {
-  const [stage, setStage] = useState<'check' | 'receipt'>('check');
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setStage('receipt'), 520);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
-    <div className={`pos-done is-${stage}`}>
+    <div className="pos-done is-final">
       <div className="pos-done__check" aria-live="polite">
         <span className="pos-done__badge" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
@@ -1448,32 +1491,7 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
         {sale.change > 0 && (
           <span className="pos-done__change">Change {formatMoney(sale.change)}</span>
         )}
-      </div>
-
-      <div className="pos-done__paper">
-        <ThermalReceipt
-          data={{
-            receipt: sale.receipt,
-            date: sale.date,
-            cashier: sale.cashier,
-            customer: sale.customer,
-            payment: sale.payment,
-            lines: sale.lines.map((line) => ({
-              product: line.product.product,
-              quantity: line.quantity,
-              unitPrice: toAmount(line.product.price),
-            })),
-            subtotal: sale.subtotal,
-            discount: sale.discount,
-            total: sale.total,
-            amountPaid: sale.amountPaid,
-            change: sale.change,
-            gcashReference: sale.reference,
-            paymentStatus: sale.paymentStatus,
-            creditBalance: sale.creditBalance,
-            noChargeReason: sale.noChargeReason,
-          }}
-        />
+        <span className="pos-done__record">{sale.receipt}</span>
       </div>
 
       <div className="pos-done__actions">
@@ -1481,6 +1499,9 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
           Close
         </button>
       </div>
+      <p className="pos-done__hint">
+        Press <kbd>Enter</kbd> or scan the next item for the next customer.
+      </p>
     </div>
   );
 }
