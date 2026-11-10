@@ -979,7 +979,9 @@ function InventoryForm({
    */
   async function fillFromBarcode(code: string) {
     if (!isNew || !/^\d{8,14}$/.test(code)) return;
-    setLookupNote('Looking up this barcode…');
+    setLookupNote(
+      'Looking up this barcode… A product new to the database can take up to 20 seconds.',
+    );
     setLookupState('loading');
     try {
       const result = await lookupBarcode(code);
