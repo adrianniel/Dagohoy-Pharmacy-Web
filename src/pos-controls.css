@@ -3646,15 +3646,18 @@
   font-size: 1rem;
 }
 
-.credit-total-row td {
-  background: #f4f8f1;
-}
-
-/* Table text rules color the cells and their <strong> dark, so the balance row sets both. */
-.cashier-shell .cashier-table tr.credit-total-row.is-balance td,
-.cashier-shell .cashier-table tr.credit-total-row.is-balance td strong {
+/*
+ * Total rows in a customer's utang (Total utang, Paid so far, Balance): dark green with white
+ * text, all alike. Table text rules color the cells and their <strong> dark, so both are set.
+ */
+.cashier-shell .cashier-table tr.credit-total-row td,
+.cashier-shell .cashier-table tr.credit-total-row td strong {
   background: #176246;
   color: #fff;
+}
+
+.cashier-shell .cashier-table tr.credit-total-row + tr.credit-total-row td {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* The form is a column, so the search field's usual flex-basis (240px) would become its height. */
