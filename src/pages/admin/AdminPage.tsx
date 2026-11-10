@@ -18,6 +18,7 @@ import {
 import { initialBatches, loadBatches } from '../../data/operationsStore';
 import { suggestProductCategories } from '../../services/productsApi';
 import {
+  archiveProduct,
   assignCategories,
   createProduct,
   createSupplier,
@@ -30,6 +31,9 @@ import {
   syncCatalog,
   syncSuppliers,
 } from '../../data/serverSync';
+import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
+import { ProductImport } from '../../components/admin/ProductImport';
+import { getCurrentAccount } from '../../data/accountStore';
 import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
@@ -134,6 +138,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
   const [isCategorizing, setIsCategorizing] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const isAdmin = getCurrentAccount()?.role === 'ADMIN';
+
+  /** Reloads products, lots and movements from the server after a bulk change. */
+  async function reloadCatalog() {
+    await syncAfterStockChange();
+    setProducts(getInventory());
+  }
   const restockThreshold =
     Number(pharmacySettings.threshold) > 0
       ? Number(pharmacySettings.threshold)
@@ -335,60 +348,83 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     {isCategorizing ? 'Suggesting…' : 'AI suggest categories'}
                   </button>
                 )}
+                {isAdmin && (
+                  <>
+                    <button
+                      className="cashier-view-button"
+                      type="button"
+                      onClick={() => setImportOpen(true)}
+                    >
+                      Import from Excel / CSV
+                    </button>
+                    <button
+                      className="cashier-view-button"
+                      type="button"
+                      aria-pressed={showArchived}
+                      onClick={() => setShowArchived((value) => !value)}
+                    >
+                      {showArchived ? 'Back to product list' : 'Archived products'}
+                    </button>
+                  </>
+                )}
               </div>
-              <div
-                className="cashier-table-wrap"
-                role="region"
-                aria-label="Products table"
-                tabIndex={0}
-              >
-                <table className="cashier-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Barcode</th>
-                      <th>Category / brand</th>
-                      <th>Unit price</th>
-                      <th>On hand</th>
-                      <th>Status</th>
-                      <th>Manage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((product) => (
-                      <tr key={product.barcode}>
-                        <td>
-                          <strong>{product.product}</strong>
-                        </td>
-                        <td className="cashier-mono">{product.barcode}</td>
-                        <td className="product-category-cell">
-                          <strong>{product.category ?? 'Uncategorized'}</strong>
-                          <small>{product.detail}</small>
-                        </td>
-                        <td>
-                          <strong>{product.price}</strong>
-                        </td>
-                        <td>{product.stock}</td>
-                        <td>
-                          <StatusBadge value={product.status} />
-                        </td>
-                        <td>
-                          <button
-                            className="cashier-view-button"
-                            type="button"
-                            onClick={() => {
-                              setEditing(product);
-                              setFormOpen(true);
-                            }}
-                          >
-                            Edit / stock
-                          </button>
-                        </td>
+              {showArchived ? (
+                <ArchivedProducts onRestored={reloadCatalog} />
+              ) : (
+                <div
+                  className="cashier-table-wrap"
+                  role="region"
+                  aria-label="Products table"
+                  tabIndex={0}
+                >
+                  <table className="cashier-table">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Barcode</th>
+                        <th>Category / brand</th>
+                        <th>Unit price</th>
+                        <th>On hand</th>
+                        <th>Status</th>
+                        <th>Manage</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((product) => (
+                        <tr key={product.barcode}>
+                          <td>
+                            <strong>{product.product}</strong>
+                          </td>
+                          <td className="cashier-mono">{product.barcode}</td>
+                          <td className="product-category-cell">
+                            <strong>{product.category ?? 'Uncategorized'}</strong>
+                            <small>{product.detail}</small>
+                          </td>
+                          <td>
+                            <strong>{product.price}</strong>
+                          </td>
+                          <td>{product.stock}</td>
+                          <td>
+                            <StatusBadge value={product.status} />
+                          </td>
+                          <td>
+                            <button
+                              className="cashier-view-button"
+                              type="button"
+                              onClick={() => {
+                                setEditing(product);
+                                setFormOpen(true);
+                              }}
+                            >
+                              Edit / stock
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               <div className="cashier-table-footer">
                 <span>
                   Showing {filteredProducts.length} of {products.length} product
@@ -397,12 +433,30 @@ export function AdminPage({ section }: { section: AdminSection }) {
               </div>
             </section>
           </StockControlCenter>
+          {importOpen && (
+            <ProductImport onClose={() => setImportOpen(false)} onImported={reloadCatalog} />
+          )}
           {formOpen && (
             <InventoryForm
               product={editing}
               products={products}
               initialBarcode={newBarcode}
               onClose={() => setFormOpen(false)}
+              onArchive={
+                isAdmin && editing?.id
+                  ? async () => {
+                      try {
+                        await archiveProduct(editing.id!, true);
+                        await reloadCatalog();
+                      } catch (caught) {
+                        return caught instanceof Error ? caught.message : 'Could not archive it.';
+                      }
+                      setFormOpen(false);
+                      showToast(`${editing.product} archived. Find it under Archived products.`);
+                      return null;
+                    }
+                  : undefined
+              }
               onSave={async (product, opening) => {
                 // The server checks everything (barcode taken, price, unit) and saves it.
                 const fields = {
@@ -887,11 +941,14 @@ function InventoryForm({
   initialBarcode = '',
   onClose,
   onSave,
+  onArchive,
 }: {
   product: InventoryProduct | null;
   products: InventoryProduct[];
   initialBarcode?: string;
   onClose: () => void;
+  /** Archives the product (owner/admin only). Resolves to an error message, or null. */
+  onArchive?: () => Promise<string | null>;
   /** Saves on the server. Resolves to an error message, or null when saved. */
   onSave: (
     product: InventoryProduct,
@@ -1186,6 +1243,28 @@ function InventoryForm({
           </p>
         )}
         <div className="product-form__actions">
+          {onArchive && (
+            <button
+              className="product-form__archive"
+              type="button"
+              disabled={saving}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    `Archive ${product?.product}? It leaves the product list and the Sales Counter. Its history stays, and you can restore it later.`,
+                  )
+                ) {
+                  return;
+                }
+                setSaving(true);
+                const problem = await onArchive();
+                setSaving(false);
+                if (problem) setError(problem);
+              }}
+            >
+              Archive product
+            </button>
+          )}
           <button className="product-form__cancel" type="button" onClick={onClose}>
             Cancel
           </button>

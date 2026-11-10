@@ -148,3 +148,41 @@ export const adjustStock = (input: {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+/* ---- Archive and import ---- */
+
+export const listArchivedProducts = () => apiRequest<ApiProduct[]>('/products?archived=1');
+
+export const archiveProduct = (id: number, archived: boolean) =>
+  apiRequest<ApiProduct>(`/products/${id}/archive`, {
+    method: 'PATCH',
+    body: JSON.stringify({ archived }),
+  });
+
+export type ImportRow = {
+  barcode?: string;
+  name?: string;
+  detail?: string;
+  category?: string;
+  unit?: string;
+  price?: string;
+  cost?: string;
+  stock?: string;
+  lot?: string;
+  expiry?: string;
+};
+
+export type ImportResult = {
+  row: number;
+  name: string;
+  barcode: string;
+  status: 'ready' | 'added' | 'skipped' | 'error';
+  message: string;
+};
+
+/** With dryRun the server only checks each row; without it, the good rows are added. */
+export const importProducts = (rows: ImportRow[], dryRun: boolean) =>
+  apiRequest<ImportResult[]>('/products/import', {
+    method: 'POST',
+    body: JSON.stringify({ rows, dryRun }),
+  });

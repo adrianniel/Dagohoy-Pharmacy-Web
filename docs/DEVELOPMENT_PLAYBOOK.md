@@ -405,4 +405,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 0 (late) | BIR check: renamed to "Inventory & Sales Record System", "POS" labels became "Sales Counter", no customer receipts (on-screen internal sales record only), monthly report marked internal. Owner to confirm with the BIR officer |
 | 2026-11-10 | 6, slice 2 | Stock on the server: deliveries (one purchase per supplier receipt no.), lots, adjustments and returns with FEFO and row locks; the test used a temporary admin account that was removed after |
 | 2026-11-10 | 6, slice 3 | Shifts on the server (migration 007): one open shift enforced by the database, cash in/out, close with server-computed expected cash and a frozen duty report snapshot |
+| 2026-11-10 | 6, extra | Product archive/restore and CSV/Excel import with a dry-run preview (no PH barcode dataset found; Go-UPC / EAN-Search barcode lookup kept as an option to test) |
 | next | 6 | Sales, utang and expenses, reports |

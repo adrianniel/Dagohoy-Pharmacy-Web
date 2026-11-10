@@ -16,7 +16,8 @@ skipped because no screen uses them; until Phase 6 a Sales Counter sale does not
 server stock). Phase 5 done (2026-11-10, migration 007: shifts, one open shift, cash in/out,
 close with server-computed expected cash and a duty report snapshot; until Phase 6 the
 browser sends the sales side of the count, and utang payments stay in the browser until
-Phase 7). Next: Phase 6 (sales).
+Phase 7). Extra (2026-11-10): archive/restore products (refused while stock is on hand) and
+import products from CSV/Excel with a server-checked preview. Next: Phase 6 (sales).
 
 ## "Ready locally" means
 

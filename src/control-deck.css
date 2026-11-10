@@ -912,3 +912,112 @@
   max-width: 28rem;
   color: #4f6258;
 }
+
+/* ------------------------------------------------------------------
+   Product import (CSV / Excel) dialog.
+   ------------------------------------------------------------------ */
+.cashier-shell .pos-payment-modal.product-import {
+  width: min(780px, calc(100vw - 2rem));
+  padding-bottom: 0;
+  overflow-y: auto;
+  gap: 0.9rem;
+}
+
+.product-import h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  color: #13322a;
+}
+
+.product-import__steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-left: 1.3rem;
+  font-size: 0.95rem;
+  color: #2f4239;
+}
+
+.product-import__steps li {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: start;
+}
+
+.product-import__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 100%;
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border: 2px dashed #9fb6a0;
+  border-radius: 10px;
+  background: #f7fbf6;
+  font-weight: 700;
+  color: #176246;
+  cursor: pointer;
+}
+
+.product-import__file input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.product-import__file:focus-within {
+  outline: 3px solid #23a26b;
+  outline-offset: 2px;
+}
+
+.product-import__busy,
+.product-import__summary {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #13322a;
+}
+
+.product-import__table {
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid #e1e5d8;
+  border-radius: 10px;
+}
+
+.product-import__table td small {
+  display: block;
+  color: #6a7b71;
+}
+
+.product-import__table tr.is-error td strong {
+  color: #a2372c;
+}
+
+.product-import__table tr.is-skipped td strong {
+  color: #8a5a00;
+}
+
+.product-import__table tr.is-ready td strong,
+.product-import__table tr.is-added td strong {
+  color: #176246;
+}
+
+/* Product form: Archive sits on the left, away from Save. */
+.product-form__archive {
+  margin-right: auto;
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border: 2px solid #efc7c1;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-weight: 800;
+  color: #a2372c;
+  cursor: pointer;
+}
+
+.product-form__archive:hover:not(:disabled) {
+  background: #fdf3f1;
+}
