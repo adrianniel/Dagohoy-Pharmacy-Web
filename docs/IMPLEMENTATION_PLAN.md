@@ -38,7 +38,12 @@ straight from `GET /sales?from=&to=` (Monthly sales report, Transactions custom 
 (`TZ=Asia/Manila`, mysql2 `timezone: '+08:00'`, `SET time_zone = '+08:00'`), so "today" and
 "this month" are right even if Hostinger's machine is on UTC. Dedicated report endpoints can
 come later if a page gets slow.
-Next: Phase 9 (dev seed, cleanup, tests, backup, runbook).
+Phase 9 part 1 done (2026-11-10): the browser-only "Start fresh" and "Load sample data" were
+removed (they no longer matched the server), `npm run db:backup` (mariadb-dump into the
+gitignored `backups/`), `npm run db:create-test` (test database, root password typed by the
+developer) and `docs/RUNNING_LOCALLY.md`.
+Next: Phase 9 part 2 (dev reset and seed, database tests, restore test), tried on the test
+database first.
 
 ## "Ready locally" means
 

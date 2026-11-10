@@ -39,25 +39,7 @@ import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 type SupplierTab = 'list' | 'add';
-type SettingsTab = 'details' | 'alerts' | 'gcash' | 'fresh';
-
-/**
- * Data that "Start fresh" clears: everything recorded while trying the system.
- * Login accounts, the staff roster and the pharmacy settings are kept.
- */
-const FRESH_START_KEYS = [
-  'dagohoy_demo_inventory',
-  'dagohoy_demo_inventory_batches',
-  'dagohoy_demo_stock_movements',
-  'dagohoy_demo_purchase_orders',
-  'dagohoy_demo_sales',
-  'dagohoy_demo_void_log',
-  'dagohoy_demo_register_session',
-  'dagohoy_demo_cash_events',
-  'dagohoy_demo_shift_history',
-  'dagohoy_demo_expenses',
-  'dagohoy_demo_suppliers',
-];
+type SettingsTab = 'details' | 'alerts' | 'gcash';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -259,15 +241,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       tone: 'blue',
       alert: !pharmacySettings.gcashNumber,
       about: 'The GCash number and QR the cashier shows the customer at checkout.',
-    },
-    {
-      key: 'fresh',
-      icon: 'trash',
-      title: 'Start fresh',
-      hint: 'Clear all test records',
-      tone: 'red',
-      about:
-        'Removes every product, sale, shift and record entered so far, to begin real use with a clean system.',
     },
   ];
 
@@ -609,15 +582,13 @@ export function AdminPage({ section }: { section: AdminSection }) {
             title={settingsItems.find((item) => item.key === settingsTab)?.title ?? 'Settings'}
             about={settingsItems.find((item) => item.key === settingsTab)?.about}
             actions={
-              settingsTab !== 'fresh' && (
-                <button
-                  className="cashier-primary-action"
-                  type="button"
-                  onClick={() => void saveSettings()}
-                >
-                  Save changes
-                </button>
-              )
+              <button
+                className="cashier-primary-action"
+                type="button"
+                onClick={() => void saveSettings()}
+              >
+                Save changes
+              </button>
             }
           >
             <section className="cashier-panel settings-form">
@@ -722,119 +693,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   </label>
                 </>
               )}
-              {settingsTab === 'fresh' && <StartFresh />}
             </section>
           </ControlPanel>
         </>
       )}{' '}
-    </div>
-  );
-}
-
-/** Owner-only reset: clears all records entered so far, after two confirmations. */
-function StartFresh() {
-  const [typed, setTyped] = useState('');
-  const { showToast } = useToast();
-  const counts = {
-    products: getInventory().length,
-    sales: (() => {
-      try {
-        return (JSON.parse(localStorage.getItem('dagohoy_demo_sales') ?? '[]') as unknown[]).length;
-      } catch {
-        return 0;
-      }
-    })(),
-  };
-
-  function clearAll() {
-    if (typed.trim().toUpperCase() !== 'START FRESH') return;
-    if (
-      !window.confirm(
-        'This removes every product, sale, shift, utang, expense and stock record on this computer. It cannot be undone. Continue?',
-      )
-    ) {
-      return;
-    }
-    FRESH_START_KEYS.forEach((key) => localStorage.removeItem(key));
-    window.dispatchEvent(new Event('dagohoy-store-status-change'));
-    showToast('All records cleared. The system is ready for real use.', 'success');
-    window.setTimeout(() => window.location.assign('/admin/products'), 600);
-  }
-
-  async function loadSample() {
-    if (
-      !window.confirm(
-        'Replace everything on this computer with sample data? Products, sales, shifts, utang, expenses and suppliers are replaced. Use this only while testing.',
-      )
-    ) {
-      return;
-    }
-    FRESH_START_KEYS.forEach((key) => localStorage.removeItem(key));
-    // Loaded only when asked, so the sample data is never part of the live build.
-    const { loadSampleData, pushSampleToServer } = await import('../../data/sampleData');
-    const result = loadSampleData();
-    try {
-      await pushSampleToServer();
-    } catch (caught) {
-      showToast(
-        `Sample data is in this browser, but the server copy failed: ${
-          caught instanceof Error ? caught.message : 'unknown error'
-        }`,
-        'error',
-      );
-      return;
-    }
-    showToast(
-      `Sample data loaded: ${result.products} products, ${result.sales} sales, ${result.shifts} closed shifts.`,
-      'success',
-    );
-    window.setTimeout(() => window.location.assign('/admin/dashboard'), 800);
-  }
-
-  return (
-    <div className="start-fresh">
-      {import.meta.env.DEV && (
-        <div className="start-fresh__sample">
-          <p>
-            <b>Testing only (not shown on the live site):</b> fill the system with 45 days of sample
-            products, sales, shifts, utang and expenses so every page has data to show.
-          </p>
-          <button className="start-shift__secondary" type="button" onClick={loadSample}>
-            Load sample data
-          </button>
-        </div>
-      )}
-      <p>
-        Right now there {counts.products === 1 ? 'is' : 'are'} <b>{counts.products}</b> product
-        {counts.products === 1 ? '' : 's'} and <b>{counts.sales}</b> sale
-        {counts.sales === 1 ? '' : 's'} saved.
-      </p>
-      <ul>
-        <li>
-          <b>Removed:</b> products, stock lots and movements, sales records, voids, shifts and duty
-          reports, cash in/out, utang, expenses and suppliers.
-        </li>
-        <li>
-          <b>Kept:</b> login accounts, the staff roster and these pharmacy settings.
-        </li>
-      </ul>
-      <label>
-        Type START FRESH to confirm
-        <input
-          value={typed}
-          onChange={(event) => setTyped(event.target.value)}
-          placeholder="START FRESH"
-          autoComplete="off"
-        />
-      </label>
-      <button
-        className="start-fresh__button"
-        type="button"
-        disabled={typed.trim().toUpperCase() !== 'START FRESH'}
-        onClick={clearAll}
-      >
-        Clear all records
-      </button>
     </div>
   );
 }

@@ -423,4 +423,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, extra | Sales Counter: every scan adds the item at once (also for scanners that send no Enter) and the first scan opens the ticket |
 | 2026-11-10 | 6, slice 5 | Expenses on the server: anyone records, only administrators remove (soft remove, kept for audit); API script 12/12 and the page tested in the browser |
 | 2026-11-10 | 8 | Reports from server data: small browser copy (35 days + utang + pending GCash), any month or range fetched from `/sales?from=&to=`; server and DB sessions fixed to Manila time (+08:00). Checked with a UTC host clock, and the monthly report matched the owner overview |
+| 2026-11-10 | 9, part 1 | Removed browser-only reset and sample data, added a database backup command, a test-database setup script and the local runbook (`docs/RUNNING_LOCALLY.md`) |
 | next | 6 | Sales, utang and expenses, reports |
