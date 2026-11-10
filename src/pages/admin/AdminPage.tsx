@@ -999,11 +999,17 @@ function InventoryForm({
         setLookupNote('Not in the barcode database. Type the details.');
       } else if (result.status === 'limit_reached') {
         setLookupNote("Today's barcode lookup limit is reached. Type the details.");
+      } else if (result.status === 'disabled') {
+        setLookupNote(
+          'Barcode lookup is off: the BarCloud key is not set on the server yet. Type the details.',
+        );
+      } else if (result.status === 'unavailable') {
+        setLookupNote('The barcode service did not answer. Type the details, or try again later.');
       } else {
         setLookupNote('');
       }
     } catch {
-      setLookupNote('');
+      setLookupNote('Could not reach the server for the barcode lookup. Type the details.');
     }
   }
 
