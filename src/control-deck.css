@@ -1021,3 +1021,13 @@
 .product-form__archive:hover:not(:disabled) {
   background: #fdf3f1;
 }
+
+/* New product: what the barcode lookup filled in. */
+.product-form__lookup {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #176246;
+  text-transform: none;
+  letter-spacing: 0;
+}

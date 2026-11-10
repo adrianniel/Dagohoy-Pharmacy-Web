@@ -186,3 +186,23 @@ export const importProducts = (rows: ImportRow[], dryRun: boolean) =>
     method: 'POST',
     body: JSON.stringify({ rows, dryRun }),
   });
+
+/* ---- Barcode lookup for new products (our catalog, saved answers, then BarCloud) ---- */
+
+export type BarcodeSuggestion = {
+  name: string;
+  brand: string | null;
+  category: string | null;
+  description: string | null;
+  strength: string | null;
+  unit: string | null;
+};
+
+export type BarcodeLookupResult =
+  | { status: 'in_catalog'; productId: number; name: string }
+  | { status: 'found'; source: 'barcloud' | 'cache'; suggestion: BarcodeSuggestion }
+  | { status: 'not_found'; source: 'barcloud' | 'cache' }
+  | { status: 'disabled' | 'limit_reached' | 'unavailable' | 'invalid_barcode' };
+
+export const lookupBarcode = (barcode: string) =>
+  apiRequest<BarcodeLookupResult>(`/products/barcode-lookup/${encodeURIComponent(barcode)}`);

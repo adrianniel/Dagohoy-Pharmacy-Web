@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
@@ -21,6 +21,7 @@ import {
   archiveProduct,
   assignCategories,
   createProduct,
+  lookupBarcode,
   createSupplier,
   saveSettings as saveStoreSettings,
   updateProduct,
@@ -968,6 +969,48 @@ function InventoryForm({
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  /** What the barcode lookup found (or why not), shown under the barcode field. */
+  const [lookupNote, setLookupNote] = useState('');
+
+  /**
+   * New product only: asks the server about a scanned barcode (our catalog, saved answers,
+   * then BarCloud) and fills the fields that are still empty. The user checks them.
+   */
+  async function fillFromBarcode(code: string) {
+    if (!isNew || !/^\d{8,14}$/.test(code)) return;
+    setLookupNote('Looking up this barcode…');
+    try {
+      const result = await lookupBarcode(code);
+      if (result.status === 'found') {
+        const found = result.suggestion;
+        setName((current) => current || found.name);
+        setDetail((current) => current || found.brand || '');
+        setCategory((current) => current || found.category || '');
+        if (found.unit && UNITS.includes(found.unit)) setUnit(found.unit);
+        setLookupNote(
+          `Filled from ${result.source === 'cache' ? 'a saved lookup' : 'BarCloud'}${
+            found.strength ? ` (strength ${found.strength})` : ''
+          }. Check the name and add the generic name before saving.`,
+        );
+      } else if (result.status === 'in_catalog') {
+        setLookupNote('');
+        setError(`Barcode ${code} is already used by ${result.name}.`);
+      } else if (result.status === 'not_found') {
+        setLookupNote('Not in the barcode database. Type the details.');
+      } else if (result.status === 'limit_reached') {
+        setLookupNote("Today's barcode lookup limit is reached. Type the details.");
+      } else {
+        setLookupNote('');
+      }
+    } catch {
+      setLookupNote('');
+    }
+  }
+
+  // A barcode scanned in the product list opens this form with it: look it up once.
+  useEffect(() => {
+    if (initialBarcode) void fillFromBarcode(initialBarcode);
+  }, []);
 
   const costValue = Number(cost);
   const priceValue = Number(price);
@@ -1079,10 +1122,12 @@ function InventoryForm({
                     (item) => item.barcode === code && item.barcode !== product?.barcode,
                   );
                   if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
+                  else void fillFromBarcode(code);
                 }}
                 placeholder="Scan or type it"
                 inputProps={{ inputMode: 'numeric' }}
               />
+              {lookupNote && <small className="product-form__lookup">{lookupNote}</small>}
             </label>
             <label>
               Generic / brand

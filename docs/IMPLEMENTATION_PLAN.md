@@ -17,7 +17,9 @@ server stock). Phase 5 done (2026-11-10, migration 007: shifts, one open shift, 
 close with server-computed expected cash and a duty report snapshot; until Phase 6 the
 browser sends the sales side of the count, and utang payments stay in the browser until
 Phase 7). Extra (2026-11-10): archive/restore products (refused while stock is on hand) and
-import products from CSV/Excel with a server-checked preview. Next: Phase 6 (sales).
+import products from CSV/Excel with a server-checked preview. Barcode lookup for new
+products through BarCloud PH (migration 008 cache, daily limit; key only in the server .env).
+Next: Phase 6 (sales).
 
 ## "Ready locally" means
 

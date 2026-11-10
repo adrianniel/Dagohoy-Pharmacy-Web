@@ -384,6 +384,7 @@ database access only from my own address and removed after.
 | Hidden error messages | The API returned "Internal server error" with the real reason buried | One error format with a readable message for user mistakes |
 | Half a commit | `git add` stopped on one bad path, the commit took only part | Check `git status` after adding |
 | Testing needs a login the agent may not type | The owner and cashier passwords belong to me | The agent makes a temporary test admin with a random password in the dev database, uses it, then removes it |
+| Paying for product data | Barcode APIs differ a lot in price and in how well they know local products | Prefer a local provider (BarCloud PH for the Philippines), test with free credits on 20 real barcodes, cache every answer so each barcode is paid once |
 | Test rows that cannot be deleted | Ledger rows are never deleted (by design) | Name test rows clearly, hide them, and reset the dev database in Phase 7 |
 
 ---
@@ -406,4 +407,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, slice 2 | Stock on the server: deliveries (one purchase per supplier receipt no.), lots, adjustments and returns with FEFO and row locks; the test used a temporary admin account that was removed after |
 | 2026-11-10 | 6, slice 3 | Shifts on the server (migration 007): one open shift enforced by the database, cash in/out, close with server-computed expected cash and a frozen duty report snapshot |
 | 2026-11-10 | 6, extra | Product archive/restore and CSV/Excel import with a dry-run preview (no PH barcode dataset found; Go-UPC / EAN-Search barcode lookup kept as an option to test) |
+| 2026-11-10 | 6, extra | Barcode lookup for new products: own catalog, then a cache, then BarCloud PH (₱0.10/scan, 100 free credits); each barcode paid once, daily limit, key only on the server |
 | next | 6 | Sales, utang and expenses, reports |
