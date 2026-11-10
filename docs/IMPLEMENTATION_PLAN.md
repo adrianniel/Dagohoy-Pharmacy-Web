@@ -54,6 +54,12 @@ rest (paid out, close shift, owner reports, clear browser data) run by hand). Fi
 seed hands the day's cash to the owner so the float stays about ₱1,000; "receipt" wording
 removed from the shift dialog; the stock ledger's Staff column shows the cashier on duty; the
 Stock movements page shows 200 rows at a time with "Show more".
+Change after the acceptance run (2026-11-10, migration 009): an expense is now recorded once,
+as **cash out** at the Cash drawer with a category ("What for"). It lowers the drawer and
+appears on the Expenses page, which is now a report only (by month and by category). A cash
+out cannot be removed from Expenses; a mistake is undone with a cash in. Reason: the owner
+wants to follow every peso that leaves the drawer, and a separate expense entry did nothing
+to the drawer count.
 Next: step 8, Hostinger staging (after the owner buys the plan).
 
 ## "Ready locally" means

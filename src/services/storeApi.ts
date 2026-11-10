@@ -277,12 +277,14 @@ export type ApiExpense = {
   paymentMethod: 'Cash' | 'GCash' | 'Bank transfer' | 'Card';
   amount: number;
   recordedBy: string;
+  /** Recorded as cash out of the drawer; it stays in that shift's count. */
+  fromDrawer: boolean;
 };
 
 export const listExpenses = () => apiRequest<ApiExpense[]>('/expenses');
 
-export const createExpense = (input: Omit<ApiExpense, 'id' | 'recordedBy'>) =>
-  apiRequest<ApiExpense>('/expenses', { method: 'POST', body: JSON.stringify(input) });
+/** What a cash out can be filed under. */
+export const listExpenseCategories = () => apiRequest<string[]>('/expenses/categories');
 
 export const removeExpense = (id: number) =>
   apiRequest<void>(`/expenses/${id}`, { method: 'DELETE' });

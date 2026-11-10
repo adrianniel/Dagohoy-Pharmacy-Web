@@ -1136,7 +1136,8 @@
   color: #75837b;
   font-size: 0.74rem;
 }
-.expenses-empty-state button {
+.expenses-empty-state button,
+.expenses-empty-state a {
   margin-top: 0.4rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid #b9d9c4;
@@ -1847,7 +1848,8 @@
 .expenses-empty-state span {
   font-size: 0.86rem;
 }
-.expenses-empty-state button {
+.expenses-empty-state button,
+.expenses-empty-state a {
   font-size: 0.82rem;
 }
 .report-chart__column small {

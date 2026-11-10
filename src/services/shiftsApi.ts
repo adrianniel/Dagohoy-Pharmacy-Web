@@ -19,6 +19,8 @@ export type ApiCurrentShift = {
     type: 'Paid in' | 'Paid out';
     amount: number;
     reason: string;
+    /** Cash out only: what it was for. */
+    category?: string;
     date: string;
   }>;
   carriedOverFloat: number;
@@ -38,6 +40,8 @@ export const recordCashEvent = (input: {
   type: 'paid_in' | 'paid_out';
   amount: number;
   reason: string;
+  /** Cash out only: it is also saved as an expense under this category. */
+  category?: string;
 }) =>
   apiRequest<ApiCurrentShift>('/shifts/current/cash-events', {
     method: 'POST',

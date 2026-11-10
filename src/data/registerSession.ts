@@ -41,6 +41,8 @@ export type CashEvent = {
   type: 'Paid in' | 'Paid out' | 'Utang payment';
   amount: number;
   reason: string;
+  /** Cash out only: what it was for (it is also an expense). */
+  category?: string;
   date: string;
   /** Shift the event belongs to (kept on browser-only utang payments). */
   shiftId?: string;
@@ -91,6 +93,7 @@ export async function addCashEvent(event: CashEvent) {
     type: event.type === 'Paid in' ? 'paid_in' : 'paid_out',
     amount: event.amount,
     reason: event.reason,
+    category: event.category,
   });
   await syncShift();
 }

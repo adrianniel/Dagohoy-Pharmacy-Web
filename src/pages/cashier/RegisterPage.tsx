@@ -13,6 +13,7 @@ import {
   STORE_STATUS_CHANGE_EVENT,
 } from '../../data/registerSession';
 import { getPreviousShift } from '../../data/shiftHistory';
+import { listExpenseCategories } from '../../services/storeApi';
 
 type MovementType = 'Paid in' | 'Paid out';
 type DrawerTask = 'status' | 'movements' | 'cash' | 'close';
@@ -157,6 +158,7 @@ export function RegisterPage() {
                   <tr>
                     <th>Time</th>
                     <th>Type</th>
+                    <th>What for</th>
                     <th>Reason</th>
                     <th>Amount</th>
                   </tr>
@@ -166,6 +168,7 @@ export function RegisterPage() {
                     <tr key={event.id}>
                       <td>{new Date(event.date).toLocaleString('en-PH')}</td>
                       <td>{event.type}</td>
+                      <td>{event.category ?? '—'}</td>
                       <td>{event.reason}</td>
                       <td
                         className={
@@ -250,13 +253,22 @@ function CashMovementForm({
     type: MovementType;
     amount: number;
     reason: string;
+    category?: string;
     date: string;
   }) => void;
 }) {
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<MovementType>('Paid out');
   const [reason, setReason] = useState('');
+  const [category, setCategory] = useState('Supplies');
+  const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    listExpenseCategories()
+      .then(setCategories)
+      .catch(() => setCategories(['Supplies', 'Other']));
+  }, []);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -274,6 +286,7 @@ function CashMovementForm({
       type,
       amount: value,
       reason: reason.trim(),
+      ...(type === 'Paid out' ? { category } : {}),
       date: new Date().toISOString(),
     });
     setAmount('');
@@ -283,8 +296,8 @@ function CashMovementForm({
   return (
     <form className="stock-index__form" onSubmit={submit} noValidate>
       <p className="stock-index__form-title">
-        Cash out: money taken from the drawer (e.g. petty cash). Cash in: money added (e.g. more
-        change).
+        Cash out: money taken from the drawer for a bill, supplies or the owner. It is also the
+        store's expense record, so pick what it was for. Cash in: money added (e.g. more change).
       </p>
       <div className="stock-index__form-grid">
         <label>
@@ -312,6 +325,16 @@ function CashMovementForm({
             placeholder="0.00"
           />
         </label>
+        {type === 'Paid out' && (
+          <label>
+            What for
+            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+              {(categories.length ? categories : [category]).map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label>
           Reason
           <input
@@ -320,7 +343,9 @@ function CashMovementForm({
               setReason(event.target.value);
               setError('');
             }}
-            placeholder="e.g. Petty cash for ice"
+            placeholder={
+              type === 'Paid out' ? 'e.g. Ice for the fridge' : 'e.g. More coins for change'
+            }
           />
         </label>
       </div>

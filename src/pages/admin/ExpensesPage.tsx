@@ -1,22 +1,20 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useToast } from '../../components/toast';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { ErrorState } from '../../components/ErrorState';
 import { LoadingState } from '../../components/LoadingState';
 import { getCurrentAccount } from '../../data/accountStore';
-import {
-  createExpense,
-  listExpenses,
-  removeExpense,
-  type ApiExpense,
-} from '../../services/storeApi';
+import { listExpenses, removeExpense, type ApiExpense } from '../../services/storeApi';
+
+/*
+ * Expenses are recorded at the Cash drawer as cash out (one entry: it lowers the drawer and
+ * lands here with its category). This page only shows and totals them.
+ */
 
 type Expense = ApiExpense;
-type ExpenseInput = Omit<Expense, 'id' | 'recordedBy'>;
 
-type ExpenseView = 'month' | 'all' | 'category' | 'add';
-
-const categories = ['Utilities', 'Supplies', 'Rent', 'Payroll', 'Transport', 'Other'];
+type ExpenseView = 'month' | 'all' | 'category';
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 const formatDate = (value: string) =>
@@ -51,19 +49,6 @@ export function ExpensesPage() {
   );
   const monthTotal = sum(monthExpenses);
   const allTotal = sum(expenses);
-
-  async function addExpense(expense: ExpenseInput): Promise<boolean> {
-    try {
-      const saved = await createExpense(expense);
-      setExpenses(await listExpenses().catch(() => [saved, ...expenses]));
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'The expense was not saved.', 'error');
-      return false;
-    }
-    setView(expense.date.startsWith(thisMonth) ? 'month' : 'all');
-    showToast(`${expense.category} expense recorded.`);
-    return true;
-  }
 
   async function deleteExpense(expense: Expense) {
     if (
@@ -112,14 +97,6 @@ export function ExpensesPage() {
       tone: 'teal',
       about: `Totals per category, for ${monthLabel} and for all time.`,
     },
-    {
-      key: 'add',
-      icon: 'credit',
-      title: 'Add expense',
-      hint: 'Record a new cost',
-      tone: 'amber',
-      about: 'Record a bill or purchase paid by the pharmacy.',
-    },
   ];
   const activeItem = items.find((item) => item.key === view) ?? items[0];
 
@@ -128,7 +105,7 @@ export function ExpensesPage() {
       <ControlDeck
         id="expenses"
         title="Expenses"
-        subtitle="Pick a view. Its list or form opens in the card below."
+        subtitle="Money taken out of the cash drawer, by month and by what it was for."
         items={items}
         active={view}
         onSelect={setView}
@@ -164,20 +141,15 @@ export function ExpensesPage() {
                 detail={`${expenses.length} entr${expenses.length === 1 ? 'y' : 'ies'}`}
               />
             </section>
-            <ExpenseTable
-              expenses={monthExpenses}
-              onAdd={() => setView('add')}
-              onRemove={onRemove}
-            />
+            <ExpenseTable expenses={monthExpenses} onRemove={onRemove} />
           </>
         )}
         {!loading && !loadError && view === 'all' && (
-          <ExpenseTable expenses={expenses} onAdd={() => setView('add')} onRemove={onRemove} />
+          <ExpenseTable expenses={expenses} onRemove={onRemove} />
         )}
         {!loading && !loadError && view === 'category' && (
           <CategoryTotals monthExpenses={monthExpenses} expenses={expenses} />
         )}
-        {view === 'add' && <ExpenseForm onSave={addExpense} />}
       </ControlPanel>
     </div>
   );
@@ -195,11 +167,9 @@ function ExpenseStat({ label, value, detail }: { label: string; value: string; d
 
 function ExpenseTable({
   expenses,
-  onAdd,
   onRemove,
 }: {
   expenses: Expense[];
-  onAdd: () => void;
   /** Present only for administrators. */
   onRemove?: (expense: Expense) => void;
 }) {
@@ -207,10 +177,8 @@ function ExpenseTable({
     return (
       <div className="expenses-empty-state">
         <strong>No expenses here yet</strong>
-        <span>Record the first bill or purchase to start the list.</span>
-        <button type="button" onClick={onAdd}>
-          Add expense
-        </button>
+        <span>Record one at the Cash drawer: Cash in / out → Cash out, with what it was for.</span>
+        <Link to="/cashier/register">Open Cash drawer</Link>
       </div>
     );
   }
@@ -244,13 +212,19 @@ function ExpenseTable({
               </td>
               {onRemove && (
                 <td>
-                  <button
-                    className="stock-index__link"
-                    type="button"
-                    onClick={() => onRemove(expense)}
-                  >
-                    Remove
-                  </button>
+                  {expense.fromDrawer ? (
+                    <small title="Cash out of the drawer stays in the shift count. Put the money back with a cash in.">
+                      From drawer
+                    </small>
+                  ) : (
+                    <button
+                      className="stock-index__link"
+                      type="button"
+                      onClick={() => onRemove(expense)}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </td>
               )}
             </tr>
@@ -268,6 +242,7 @@ function CategoryTotals({
   monthExpenses: Expense[];
   expenses: Expense[];
 }) {
+  const categories = [...new Set(expenses.map((expense) => expense.category))];
   const rows = categories
     .map((category) => ({
       category,
@@ -316,100 +291,5 @@ function CategoryTotals({
         </tr>
       </tbody>
     </table>
-  );
-}
-
-function ExpenseForm({ onSave }: { onSave: (expense: ExpenseInput) => Promise<boolean> }) {
-  // Today's date in local time (toISOString would give yesterday before 8 AM in the Philippines).
-  const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'));
-  const [category, setCategory] = useState(categories[0]);
-  const [description, setDescription] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<Expense['paymentMethod']>('Cash');
-  const [amount, setAmount] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (saving) return;
-    setSaving(true);
-    const saved = await onSave({
-      date,
-      category,
-      description: description.trim(),
-      paymentMethod,
-      amount: Number(amount),
-    });
-    setSaving(false);
-    if (saved) {
-      setDescription('');
-      setAmount('');
-    }
-  }
-
-  return (
-    <form className="stock-index__form" onSubmit={submit}>
-      <div className="stock-index__form-grid">
-        <label>
-          Date
-          <input
-            name="expense-date"
-            type="date"
-            value={date}
-            onChange={(event) => setDate(event.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Category
-          <select value={category} onChange={(event) => setCategory(event.target.value)}>
-            {categories.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Payment method
-          <select
-            value={paymentMethod}
-            onChange={(event) => setPaymentMethod(event.target.value as Expense['paymentMethod'])}
-          >
-            <option>Cash</option>
-            <option>GCash</option>
-            <option>Bank transfer</option>
-            <option>Card</option>
-          </select>
-        </label>
-        <label className="stock-index__field-wide">
-          Description
-          <input
-            name="expense-description"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            autoComplete="off"
-            placeholder="e.g. Electricity bill"
-            required
-          />
-        </label>
-        <label>
-          Amount
-          <input
-            name="expense-amount"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            inputMode="decimal"
-            placeholder="0.00"
-            required
-          />
-        </label>
-      </div>
-      <div className="stock-index__actions">
-        <button className="stock-index__action" type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Save expense'}
-        </button>
-      </div>
-    </form>
   );
 }
