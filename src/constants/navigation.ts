@@ -21,7 +21,6 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
     label: 'Business',
     items: [
       { label: 'Transactions', path: '/cashier/transactions', icon: 'transactions' },
-      { label: 'Expenses', path: '/admin/expenses', icon: 'expenses' },
       { label: 'Credit accounts', path: '/admin/credits', icon: 'credit' },
       { label: 'Shift report', path: '/cashier/shift-report', icon: 'reports' },
     ],

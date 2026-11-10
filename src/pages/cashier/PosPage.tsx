@@ -6,7 +6,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
 import { syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
-import { getSession } from '../../data/registerSession';
+import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -198,6 +198,17 @@ export function CashierPosPage() {
   const [noChargeReason, setNoChargeReason] = useState('');
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const { showToast } = useToast();
+  // Payment needs an open shift (the server refuses a sale without one too).
+  const [shiftOpen, setShiftOpen] = useState(() => Boolean(getSession()));
+  useEffect(() => {
+    const sync = () => setShiftOpen(Boolean(getSession()));
+    window.addEventListener(STORE_STATUS_CHANGE_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(STORE_STATUS_CHANGE_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
   // The Sales Counter is always ready for the scanner: a sale is open as soon as it has an item.
   const transactionActive = cart.length > 0;
   const subtotal = cart.reduce(
@@ -790,12 +801,17 @@ export function CashierPosPage() {
             <button
               className="pos-ticket__pay"
               type="button"
-              disabled={!cart.length}
+              disabled={!cart.length || !shiftOpen}
               onClick={() => setPaymentOpen(true)}
             >
               <span>Continue to payment</span>
               <CashierIcon name="arrow" />
             </button>
+            {!shiftOpen && (
+              <p className="pos-ticket__notice" role="status">
+                No shift is open. Press <b>Start shift</b> at the top before taking payment.
+              </p>
+            )}
           </div>
         </section>
         <aside className="cashier-panel pos-control-center" aria-labelledby="pos-control-heading">

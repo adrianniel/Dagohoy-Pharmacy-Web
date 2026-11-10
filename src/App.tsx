@@ -87,12 +87,12 @@ export function App() {
             <Route path="products" element={<AdminPage section="products" />} />
             <Route path="stock" element={<OperationsPage />} />
             <Route path="suppliers" element={<AdminPage section="suppliers" />} />
-            <Route path="expenses" element={<ExpensesPage />} />
             <Route path="credits" element={<CreditPage />} />
-            {/* Owner and administrators only: income, staff accounts and pharmacy settings. */}
+            {/* Owner and administrators only: income, expenses, staff accounts and pharmacy settings. */}
             <Route element={<AdminRoute />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminPage section="dashboard" />} />
+              <Route path="expenses" element={<ExpensesPage />} />
               <Route path="reports" element={<AdminPage section="reports" />} />
               <Route path="staff" element={<AdminPage section="staff" />} />
               <Route path="settings" element={<AdminPage section="settings" />} />

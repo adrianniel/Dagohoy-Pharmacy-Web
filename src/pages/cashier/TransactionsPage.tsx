@@ -4,6 +4,7 @@ import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { downloadXlsx } from '../../lib/xlsx';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
+import { getCurrentAccount } from '../../data/accountStore';
 import { listSalesBetween } from '../../services/storeApi';
 
 const SALES_KEY = 'dagohoy_demo_sales';
@@ -61,6 +62,7 @@ function readPharmacyName() {
 }
 
 export function CashierTransactionsPage() {
+  const isOwner = getCurrentAccount()?.role === 'ADMIN';
   const [query, setQuery] = useState('');
   const [view, setView] = useState<TransactionView>('today');
   const [selected, setSelected] = useState<Sale | null>(null);
@@ -186,7 +188,11 @@ export function CashierTransactionsPage() {
       about: 'Sales that were voided. Their items went back on the shelf.',
     },
   ];
-  const activeItem = items.find((item) => item.key === view);
+  // The month and date ranges are the owner's; the cashier sees today and the last 7 days.
+  const visibleItems = isOwner
+    ? items
+    : items.filter((item) => item.key !== 'month' && item.key !== 'custom');
+  const activeItem = visibleItems.find((item) => item.key === view);
 
   /** The date range the open view covers, in words, for the export title. */
   function rangeLabel() {
@@ -293,7 +299,7 @@ export function CashierTransactionsPage() {
         id="transactions"
         title="Transactions"
         subtitle="Pick which sales to see. The list opens in the card below."
-        items={items}
+        items={visibleItems}
         active={view}
         onSelect={setView}
       />

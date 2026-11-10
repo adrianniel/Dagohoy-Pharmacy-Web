@@ -3515,3 +3515,15 @@
   margin: 0;
   box-shadow: none;
 }
+
+/* Under Continue to payment when no shift is open. */
+.pos-ticket__notice {
+  margin: 0.6rem 0 0;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #ecd49c;
+  border-radius: 8px;
+  background: #fff8e6;
+  color: #6b4e12;
+  font-size: 0.85rem;
+  text-align: center;
+}
