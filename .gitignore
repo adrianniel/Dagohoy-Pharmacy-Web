@@ -20,3 +20,5 @@ coverage/
 
 # Claude Code copies of the agent skills in .agents/skills (restore by copying; see skills-lock.json)
 .claude/skills/
+.env.production
+.env.staging

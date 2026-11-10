@@ -64,6 +64,10 @@ Also changed 2026-11-10: Save as PDF downloads a file (jsPDF + html2canvas-pro, 
 when used); the system has no print buttons. Business hours left the owner Settings. The AI
 category suggestions (Gemini) were removed from web and server; a product's category is still
 set by hand on the product form.
+Staging prep (2026-11-10, before Hostinger is bought): `public/.htaccess` (deep links, caching,
+basic headers), `.env.production.example`, production notes in the server `.env.example`,
+reset and seed allowed on `_staging` databases (still refused on any other name), server
+production dependencies at 0 audit findings, and the draft `docs/DEPLOY_CHECKLIST.md`.
 Next: step 8, Hostinger staging (after the owner buys the plan).
 
 ## "Ready locally" means
