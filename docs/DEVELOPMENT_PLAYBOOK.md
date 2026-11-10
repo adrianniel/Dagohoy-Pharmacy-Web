@@ -406,6 +406,10 @@ database access only from my own address and removed after.
 - Destructive scripts check their target themselves (database name ends in `_dev`/`_test`,
   not production, type the name to confirm). A restore refuses a database that has tables.
 - Prove the backup by restoring it and comparing counts and totals, before going live.
+- One shared login for several staff means "who did it" must come from the shift on duty,
+  not from the login account. Record the on-duty names per shift and join on the time.
+- Walk one whole business day through the real screens in two browsers before deploying.
+  Each feature passed alone; the walk-through still found four small things.
 
 
 ## Appendix: Dagohoy Pharmacy (first client) as the example
@@ -433,4 +437,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 8 | Reports from server data: small browser copy (35 days + utang + pending GCash), any month or range fetched from `/sales?from=&to=`; server and DB sessions fixed to Manila time (+08:00). Checked with a UTC host clock, and the monthly report matched the owner overview |
 | 2026-11-10 | 9, part 1 | Removed browser-only reset and sample data, added a database backup command, a test-database setup script and the local runbook (`docs/RUNNING_LOCALLY.md`) |
 | 2026-11-10 | 9, part 2 | Dev reset, 45-day seed through the real services (simulated clock, ledger untouched), 13 database tests on a separate test database, and a restore command that only fills an empty database; backup → empty → restore gave identical counts and totals |
+| 2026-11-10 | 10 | Acceptance run in two browsers (cashier in one, owner in the other): shift, delivery, every payment type, void and utang payment all showed at once on both sides. Found and fixed: seed float carried the whole drawer, a leftover "receipt" word, ledger Staff column showed the login instead of the cashier on duty, movements list had no paging |
 | next | 6 | Sales, utang and expenses, reports |

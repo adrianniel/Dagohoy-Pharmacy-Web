@@ -1114,3 +1114,21 @@ textarea:disabled {
     flex-direction: column;
   }
 }
+
+/* "Showing 200 of 1,834 · Show more" under a long table. */
+.cashier-list-more {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  color: #5a6b62;
+}
+.cashier-list-more button {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 800;
+  color: #1f6b4a;
+  text-decoration: underline;
+  cursor: pointer;
+}

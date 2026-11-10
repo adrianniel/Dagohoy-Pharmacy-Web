@@ -48,7 +48,13 @@ services with a simulated clock: 40 products, 45 shifts, about 860 sales), `npm 
 (13 database tests on `dagohoy_pharmacy_test`: shift rules, FEFO, short stock, expired lots,
 void, utang, expenses, shift count) and `npm run db:restore` (empty database only; restore
 test passed with identical counts and totals).
-Next: Phase 10 (local acceptance run).
+Phase 10 (2026-11-10, part done by Claude in two browsers: start shift, receive stock, seven
+sales of every payment type, void, utang payment; all seen at once in the owner's browser; the
+rest (paid out, close shift, owner reports, clear browser data) run by hand). Fixes from it: the
+seed hands the day's cash to the owner so the float stays about ₱1,000; "receipt" wording
+removed from the shift dialog; the stock ledger's Staff column shows the cashier on duty; the
+Stock movements page shows 200 rows at a time with "Show more".
+Next: step 8, Hostinger staging (after the owner buys the plan).
 
 ## "Ready locally" means
 

@@ -187,7 +187,7 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                 Who is the cashier?
               </h3>
               <p className="start-shift__hint">
-                Tap one name. It shows on the screen and on every receipt.
+                Tap one name. It shows on the screen and on every sales record.
               </p>
               <div className="start-shift__people" role="radiogroup" aria-label="Cashier">
                 {active.map((staff) => (

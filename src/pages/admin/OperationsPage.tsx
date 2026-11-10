@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
@@ -14,10 +14,15 @@ type MovementView = 'all' | 'in' | 'out' | 'adjust';
 const STOCK_IN_KINDS: StockMovement['kind'][] = ['Received', 'Customer return'];
 const STOCK_OUT_KINDS: StockMovement['kind'][] = ['Sale', 'Damaged', 'Return'];
 
+/** Movements per page of the table. */
+const PAGE = 200;
+
 export function OperationsPage() {
   const [query, setQuery] = useState('');
   const [view, setView] = useState<MovementView>('all');
   const [movements, setMovements] = useState(loadMovements);
+  /** Rows shown at once; the list can hold thousands, so the rest come on "Show more". */
+  const [shown, setShown] = useState(PAGE);
 
   const stockIn = movements.filter((movement) => STOCK_IN_KINDS.includes(movement.kind));
   const stockOut = movements.filter((movement) => STOCK_OUT_KINDS.includes(movement.kind));
@@ -33,6 +38,7 @@ export function OperationsPage() {
           .includes(needle),
     );
   }, [movements, query, view]);
+  useEffect(() => setShown(PAGE), [query, view]);
 
   const items: Array<ControlItem<MovementView>> = [
     {
@@ -107,7 +113,15 @@ export function OperationsPage() {
                 placeholder="Search product, reference, reason"
               />
             </div>
-            <MovementTable movements={visibleMovements} />
+            <MovementTable movements={visibleMovements.slice(0, shown)} />
+            {visibleMovements.length > shown && (
+              <p className="cashier-list-more">
+                Showing {shown} of {visibleMovements.length}.{' '}
+                <button type="button" onClick={() => setShown((count) => count + PAGE)}>
+                  Show {Math.min(PAGE, visibleMovements.length - shown)} more
+                </button>
+              </p>
+            )}
           </>
         )}
       </ControlPanel>

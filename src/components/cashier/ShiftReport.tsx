@@ -4,7 +4,7 @@ import { shiftDuration, shiftVariance, type ShiftRecord } from '../../data/shift
 
 /*
  * The duty report of one closed shift: a printable page with the cash count, the sales,
- * the items sold, the cash movements and every receipt. It is shown right after a shift
+ * the items sold, the cash movements and every sales record. It is shown right after a shift
  * closes and from Duty reports, and it can be saved as a PDF through the print dialog.
  */
 
