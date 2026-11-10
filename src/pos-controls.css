@@ -3527,3 +3527,137 @@
   font-size: 0.85rem;
   text-align: center;
 }
+
+/* Price check: a toggle in the sale header; while on, a scan shows a price card. */
+.pos-price-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-right: auto;
+  margin-left: 1.25rem;
+  align-self: center;
+  padding: 0.5rem 0.9rem;
+  border: 1.5px solid var(--ticket-green);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ticket-green);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.pos-price-check:hover {
+  background: #eef4ea;
+}
+
+.pos-price-check.is-on {
+  background: #0f3f2c;
+  border-color: #0f3f2c;
+  color: #fff;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.pos-price-check .cashier-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pos-price-check:focus-visible {
+  outline: 3px solid rgba(46, 160, 92, 0.45);
+  outline-offset: 2px;
+}
+
+.pos-scanner-sign.is-check {
+  background: #0f3f2c;
+  color: #fff;
+}
+
+.pos-scanner-sign.is-check .pos-scanner-sign__dot {
+  background: #ffd166;
+}
+
+.pos-price-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid #0f3f2c;
+  border-radius: 10px;
+  background: #f4f8f1;
+}
+
+.pos-price-card p {
+  margin: 0;
+  color: #4d5d55;
+  font-size: 0.9rem;
+}
+
+.pos-price-card__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pos-price-card__item strong {
+  font-size: 1.05rem;
+}
+
+.pos-price-card__item small,
+.pos-price-card__price small {
+  color: #5a6b62;
+}
+
+.pos-price-card__price {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.pos-price-card__price b {
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #0f3f2c;
+}
+
+.pos-price-card__price button {
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ticket-green);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pos-price-card__price button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .pos-price-check {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  .pos-price-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pos-price-card__price {
+    align-items: flex-start;
+  }
+}

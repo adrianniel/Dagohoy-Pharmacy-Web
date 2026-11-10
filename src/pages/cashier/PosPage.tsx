@@ -169,6 +169,9 @@ export function CashierPosPage() {
   /** Barcode of the item added last (highlighted in the list) and a counter that replays the flash. */
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [addPulse, setAddPulse] = useState(0);
+  /** Price check: while on, a scan only shows the product and its price; nothing is added. */
+  const [priceCheck, setPriceCheck] = useState(false);
+  const [checked, setChecked] = useState<CatalogProduct | null>(null);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountInput, setDiscountInput] = useState('0');
@@ -275,6 +278,11 @@ export function CashierPosPage() {
       );
       return;
     }
+    if (priceCheck) {
+      setChecked(pick);
+      setQuery('');
+      return;
+    }
     if (pick.stock < 1) {
       showToast(`${pick.product} is out of stock.`, 'error');
       setQuery('');
@@ -301,6 +309,11 @@ export function CashierPosPage() {
     const product = products.find((item) => item.barcode === code);
     if (!product) {
       showToast(`No product has barcode ${code}. Add it in Products first.`, 'error');
+      return;
+    }
+    if (priceCheck) {
+      setChecked(product);
+      playSound('tap');
       return;
     }
     if (product.stock < 1) {
@@ -623,6 +636,24 @@ export function CashierPosPage() {
               </span>
               <h3 id="pos-sale-heading">Current sale</h3>
             </div>
+            <button
+              className={`pos-price-check${priceCheck ? ' is-on' : ''}`}
+              type="button"
+              aria-pressed={priceCheck}
+              title={
+                priceCheck
+                  ? 'Price check is on: scans show the price and are not added. Click to turn it off.'
+                  : 'Turn on to check a price: scans show the product and price without adding it.'
+              }
+              onClick={() => {
+                setPriceCheck((on) => !on);
+                setChecked(null);
+                document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus();
+              }}
+            >
+              <CashierIcon name="search" />
+              <span>{priceCheck ? 'Price check on' : 'Price check'}</span>
+            </button>
             <dl className="pos-ticket__meta">
               <div>
                 <dt>Opened</dt>
@@ -660,16 +691,23 @@ export function CashierPosPage() {
                 autoComplete="off"
                 autoFocus
               />
-              <span
-                className={`pos-scanner-sign${addPulse ? ' is-hit' : ''}`}
-                key={addPulse}
-                role="status"
-                aria-label={addPulse ? 'Item added' : 'Scanner ready'}
-                title="The scanner is always ready on this page"
-              >
-                <span className="pos-scanner-sign__dot" aria-hidden="true" />
-                {addPulse ? 'Added' : 'Scanner ready'}
-              </span>
+              {priceCheck ? (
+                <span className="pos-scanner-sign is-check" role="status">
+                  <span className="pos-scanner-sign__dot" aria-hidden="true" />
+                  Checking prices
+                </span>
+              ) : (
+                <span
+                  className={`pos-scanner-sign${addPulse ? ' is-hit' : ''}`}
+                  key={addPulse}
+                  role="status"
+                  aria-label={addPulse ? 'Item added' : 'Scanner ready'}
+                  title="The scanner is always ready on this page"
+                >
+                  <span className="pos-scanner-sign__dot" aria-hidden="true" />
+                  {addPulse ? 'Added' : 'Scanner ready'}
+                </span>
+              )}
             </div>
             {query.trim() && (
               <div className="pos-scan-results" aria-live="polite">
@@ -678,8 +716,12 @@ export function CashierPosPage() {
                     key={product.barcode}
                     className="pos-scan-result"
                     type="button"
-                    onClick={() => addProduct(product)}
-                    disabled={product.stock < 1}
+                    onClick={() => {
+                      if (!priceCheck) return addProduct(product);
+                      setChecked(product);
+                      setQuery('');
+                    }}
+                    disabled={!priceCheck && product.stock < 1}
                   >
                     <span>
                       <strong>{product.product}</strong>
@@ -695,6 +737,39 @@ export function CashierPosPage() {
                 ))}
                 {filteredProducts.length === 0 && (
                   <p className="pos-scan-empty">No products match this search.</p>
+                )}
+              </div>
+            )}
+            {priceCheck && !query.trim() && (
+              <div className="pos-price-card" aria-live="polite">
+                {checked ? (
+                  <>
+                    <div className="pos-price-card__item">
+                      <strong>{checked.product}</strong>
+                      <small>{checked.detail}</small>
+                      <small>
+                        {checked.barcode} ·{' '}
+                        {checked.stock > 0
+                          ? `${checked.stock} ${checked.unit.toLowerCase()}s left`
+                          : 'Out of stock'}
+                      </small>
+                    </div>
+                    <div className="pos-price-card__price">
+                      <b>{formatMoney(toAmount(checked.price))}</b>
+                      <small>per {checked.unit.toLowerCase()}</small>
+                      <button
+                        type="button"
+                        disabled={checked.stock < 1}
+                        onClick={() => addProduct(checked)}
+                      >
+                        Add to sale
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p>
+                    Scan an item to see its price. Nothing is added to the sale while this is on.
+                  </p>
                 )}
               </div>
             )}
