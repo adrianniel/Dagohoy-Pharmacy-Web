@@ -66,7 +66,7 @@ export function HeroSection() {
         <img
           className="landing-hero__pos-image"
           src={posImage}
-          alt="Pharmacy point-of-sale system with touchscreen, cash drawer, barcode scanner, and receipt printer"
+          alt="Pharmacy sales counter with touchscreen, cash drawer and barcode scanner"
           fetchPriority="high"
         />
       </div>

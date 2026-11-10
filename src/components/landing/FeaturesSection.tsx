@@ -11,8 +11,8 @@ const featureSlides = [
     description: 'Faster product lookup and checkout with less manual encoding.',
   },
   {
-    title: 'Point of Sale (POS)',
-    titleLines: ['Point of', 'Sale (POS)'],
+    title: 'Sales Counter',
+    titleLines: ['Sales', 'Counter'],
     description: 'Process sales quickly through a simple and efficient checkout system.',
   },
   {

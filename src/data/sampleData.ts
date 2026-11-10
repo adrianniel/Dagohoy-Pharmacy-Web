@@ -689,7 +689,7 @@ export function loadSampleData() {
           reason:
             sale.payment === 'No charge'
               ? `No charge: ${String(sale.noChargeReason)}`
-              : 'Completed POS sale',
+              : 'Completed sale',
         });
       }
 

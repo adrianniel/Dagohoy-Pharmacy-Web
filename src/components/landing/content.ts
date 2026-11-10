@@ -24,7 +24,7 @@ export const weeklyHours: WeeklyHoursEntry[] = [
 export const pharmacyFeatures = [
   {
     number: '01',
-    title: 'Point of Sale',
+    title: 'Sales Counter',
     description: 'Fast and organized sales processing with barcode-ready workflows.',
     className: 'feature-panel--primary',
   },

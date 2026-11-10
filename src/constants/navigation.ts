@@ -5,7 +5,7 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
     label: 'Main',
     items: [
       { label: 'Dashboard', path: '/cashier/dashboard', icon: 'dashboard' },
-      { label: 'POS', path: '/cashier/pos', icon: 'pos', emphasis: true },
+      { label: 'Sales Counter', path: '/cashier/pos', icon: 'pos', emphasis: true },
       { label: 'Cash drawer', path: '/cashier/register', icon: 'register' },
     ],
   },
@@ -40,7 +40,7 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
     label: 'Workspace',
     items: [
       { label: 'Overview', path: '/admin/dashboard', icon: 'dashboard' },
-      { label: 'Point of Sale', path: '/cashier/pos', icon: 'pos', emphasis: true },
+      { label: 'Sales Counter', path: '/cashier/pos', icon: 'pos', emphasis: true },
       { label: 'Cash drawer', path: '/cashier/register', icon: 'register' },
     ],
   },

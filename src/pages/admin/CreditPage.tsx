@@ -314,7 +314,7 @@ function CustomerList({
     return (
       <div className="expenses-empty-state">
         <strong>No credit customers yet</strong>
-        <span>Credit sales made in the POS appear here, grouped by customer.</span>
+        <span>Credit sales made at the Sales Counter appear here, grouped by customer.</span>
       </div>
     );
   }

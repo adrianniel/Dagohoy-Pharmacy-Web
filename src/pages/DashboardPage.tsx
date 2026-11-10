@@ -29,7 +29,7 @@ export function DashboardPage() {
         <article className="card">
           <p className="eyebrow">Status</p>
           <h3>Foundation ready</h3>
-          <p className="muted">POS and inventory modules will be added incrementally.</p>
+          <p className="muted">Inventory and sales record modules will be added incrementally.</p>
         </article>
         <article className="card">
           <p className="eyebrow">API connection</p>

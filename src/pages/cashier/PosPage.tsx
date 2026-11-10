@@ -613,7 +613,7 @@ export function CashierPosPage() {
         change: -line.quantity,
         reference: receipt,
         staff: 'Cashier',
-        reason: 'Completed POS sale',
+        reason: 'Completed sale',
       })),
       ...previousMovements,
     ]);
@@ -859,7 +859,7 @@ export function CashierPosPage() {
               type="button"
               role="switch"
               aria-checked={soundOn}
-              title={soundOn ? 'Turn POS sounds off' : 'Turn POS sounds on'}
+              title={soundOn ? 'Turn counter sounds off' : 'Turn counter sounds on'}
               onClick={() => {
                 const next = !soundOn;
                 setSoundEnabled(next);

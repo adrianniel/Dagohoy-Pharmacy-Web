@@ -162,7 +162,7 @@ export function CashierDashboardPage() {
         </div>
         <div className="dash-actions">
           <Link className="dash-action dash-action--primary" to="/cashier/pos">
-            <CashierIcon name="pos" /> Open POS
+            <CashierIcon name="pos" /> Open Sales Counter
           </Link>
           <Link className="dash-action" to="/cashier/transactions">
             <CashierIcon name="transactions" /> Transactions

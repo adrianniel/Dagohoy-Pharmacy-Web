@@ -5,7 +5,7 @@ import { CashierSidebar } from '../components/cashier/CashierSidebar';
 
 const routeTitles: Record<string, string> = {
   '/cashier/dashboard': 'Dashboard',
-  '/cashier/pos': 'Point of Sale',
+  '/cashier/pos': 'Sales Counter',
   '/cashier/register': 'Cash drawer',
   '/cashier/transactions': 'Transactions',
   '/cashier/profile': 'My Profile',
@@ -33,9 +33,7 @@ export function CashierLayout() {
       <a className="cashier-skip-link" href="#workspace-content">
         Skip to workspace content
       </a>
-      <div
-        className={`cashier-shell is-themed${collapsed ? ' is-sidebar-collapsed' : ''}`}
-      >
+      <div className={`cashier-shell is-themed${collapsed ? ' is-sidebar-collapsed' : ''}`}>
         <CashierSidebar
           collapsed={collapsed}
           mobileOpen={mobileOpen}
