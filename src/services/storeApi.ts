@@ -86,3 +86,65 @@ export const getSettings = () => apiRequest<ApiSettings>('/settings');
 
 export const saveSettings = (settings: ApiSettings) =>
   apiRequest<ApiSettings>('/settings', { method: 'PUT', body: JSON.stringify(settings) });
+
+/* ---- Stock: lots, the ledger, deliveries and adjustments ---- */
+
+export type ApiLot = {
+  id: number;
+  productId: number;
+  barcode: string | null;
+  product: string;
+  lot: string;
+  expiry: string | null;
+  onHand: number;
+  receivedAt: string | null;
+  unitCost: number | null;
+  supplier: string | null;
+};
+
+export type ApiMovement = {
+  id: number;
+  date: string;
+  product: string;
+  kind: 'Received' | 'Adjustment' | 'Sale' | 'Return' | 'Damaged' | 'Customer return';
+  change: number;
+  reference: string;
+  staff: string;
+  reason: string;
+  unitCost: number | null;
+};
+
+export const listLots = () => apiRequest<ApiLot[]>('/stock/lots');
+
+export const listMovements = () => apiRequest<ApiMovement[]>('/stock/movements');
+
+export const receiveStock = (input: {
+  productId: number;
+  quantity: number;
+  unitCost: number;
+  lot: string;
+  expiry: string;
+  supplier?: string;
+  reference?: string;
+  sellingPrice?: number;
+}) =>
+  apiRequest<{ batchId: number; onHand: number }>('/stock/receive', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export type AdjustmentKind =
+  'damaged' | 'missing' | 'count-less' | 'count-more' | 'customer-return' | 'supplier-return';
+
+export const adjustStock = (input: {
+  productId: number;
+  batchId?: number;
+  kind: AdjustmentKind;
+  quantity: number;
+  reason: string;
+  reference?: string;
+}) =>
+  apiRequest<{ onHand: number }>('/stock/adjustments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });

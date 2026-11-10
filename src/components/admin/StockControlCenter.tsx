@@ -1,18 +1,16 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
 import { ProductPicker } from '../ScanInput';
-import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
+import { getInventory } from '../../data/inventoryStore';
 import type { InventoryProduct } from '../../data/inventoryStore';
 import {
   InventoryBatch,
-  StockMovement,
   initialBatches,
   loadBatches,
   loadMovements,
-  saveBatches,
-  saveMovements,
 } from '../../data/operationsStore';
-import { getSession } from '../../data/registerSession';
+import { syncAfterStockChange } from '../../data/serverSync';
+import { adjustStock, receiveStock } from '../../services/storeApi';
 import { useToast } from '../toast';
 
 type PanelKey =
@@ -93,13 +91,6 @@ function loadSupplierNames(): string[] {
     return DEFAULT_SUPPLIERS;
   }
 }
-
-function staffName() {
-  const session = getSession();
-  return session?.onDutyNames?.[0] ?? session?.cashierName ?? 'Admin';
-}
-
-const movementId = (prefix: string) => `${prefix}-${Date.now().toString().slice(-6)}`;
 
 export function StockControlCenter({
   products,
@@ -860,12 +851,14 @@ function ReceiveForm({
     setSelling(value ? value.toFixed(2) : '');
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     const qty = Number(quantity);
-    const inventory = getInventory();
-    const product = inventory.find((item) => item.barcode === barcode);
-    if (!product) {
+    const product = getInventory().find((item) => item.barcode === barcode);
+    if (!product?.id) {
       showToast('Pick the product that arrived.', 'error');
       return;
     }
@@ -892,67 +885,27 @@ function ReceiveForm({
     const unitCost = Math.round(costValue * 100) / 100;
     const newPrice = Math.round(sellingValue * 100) / 100;
     const priceChanged = Math.abs(newPrice - priceValue(product.price)) >= 0.005;
-    const nextStock = product.stock + qty;
-    saveInventory(
-      inventory.map((item) =>
-        item.barcode === barcode
-          ? {
-              ...item,
-              stock: nextStock,
-              status: stockStatus(nextStock),
-              cost: unitCost,
-              ...(priceChanged ? { price: `₱${newPrice.toFixed(2)}` } : {}),
-            }
-          : item,
-      ),
-    );
     const lotCode = lot.trim().toUpperCase();
-    const existing = batches.find(
-      (batch) => batch.barcode === barcode && batch.lot === lotCode && batch.expiry === expiry,
-    );
-    saveBatches(
-      existing
-        ? batches.map((batch) => {
-            if (batch.id !== existing.id) return batch;
-            // Same lot topped up: keep the weighted average cost of what is on the shelf.
-            const averageCost =
-              batch.unitCost !== undefined && batch.stock > 0
-                ? (batch.stock * batch.unitCost + qty * unitCost) / (batch.stock + qty)
-                : unitCost;
-            return {
-              ...batch,
-              stock: batch.stock + qty,
-              unitCost: Math.round(averageCost * 100) / 100,
-              supplier: batch.supplier ?? (supplier || undefined),
-            };
-          })
-        : [
-            ...batches,
-            {
-              id: movementId('B'),
-              product: product.product,
-              barcode,
-              lot: lotCode,
-              expiry,
-              stock: qty,
-              receivedAt: new Date().toISOString(),
-              unitCost,
-              supplier: supplier || undefined,
-            },
-          ],
-    );
-    const movement: StockMovement = {
-      id: movementId('RCV'),
-      date: new Date().toISOString(),
-      product: product.product,
-      kind: 'Received',
-      change: qty,
-      reference: reference.trim() || 'No delivery receipt no.',
-      staff: staffName(),
-      reason: `${supplier || 'Supplier'} · lot ${lotCode} · ${peso(unitCost)}/unit · expires ${shortDate(expiry)}`,
-      unitCost,
-    };
-    saveMovements([movement, ...loadMovements()]);
+    setSaving(true);
+    try {
+      // The server saves the delivery, the lot and the ledger entry together.
+      await receiveStock({
+        productId: product.id,
+        quantity: qty,
+        unitCost,
+        lot: lotCode,
+        expiry,
+        supplier: supplier || undefined,
+        reference: reference.trim() || undefined,
+        sellingPrice: priceChanged ? newPrice : undefined,
+      });
+      await syncAfterStockChange();
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'Could not save the delivery.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
     setQuantity('');
     setCost('');
     setLot('');
@@ -1156,10 +1109,13 @@ export function StockWriteOffForm({
   const adjustment = ADJUSTMENT_TYPES[type];
   const adds = !isReturn && adjustment.add;
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     const qty = Number(quantity);
-    if (!product) {
+    if (!product?.id) {
       showToast('Pick a product first.', 'error');
       return;
     }
@@ -1174,45 +1130,26 @@ export function StockWriteOffForm({
       );
       return;
     }
-    const inventory = getInventory();
-    const current = inventory.find((item) => item.barcode === barcode);
-    if (!current) return;
+    setSaving(true);
+    try {
+      // The server refuses taking out more than is on hand and, with no lot picked,
+      // takes from the lots that expire first.
+      await adjustStock({
+        productId: product.id,
+        batchId: batch ? Number(batch.id) : undefined,
+        kind: isReturn ? 'supplier-return' : type,
+        quantity: qty,
+        reason: reason.trim(),
+        reference: reference.trim() || undefined,
+      });
+      await syncAfterStockChange();
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'Could not save the change.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
     const change = adds ? qty : -qty;
-    const nextStock = current.stock + change;
-    if (nextStock < 0) {
-      showToast(`The shelf only has ${current.stock} unit(s). Lower the quantity.`, 'error');
-      return;
-    }
-    if (batch && !adds && qty > batch.stock) {
-      showToast(`Lot ${batch.lot} only has ${batch.stock} unit(s). Lower the quantity.`, 'error');
-      return;
-    }
-    saveInventory(
-      inventory.map((item) =>
-        item.barcode === barcode
-          ? { ...item, stock: nextStock, status: stockStatus(nextStock) }
-          : item,
-      ),
-    );
-    if (batch) {
-      saveBatches(
-        batches.map((item) =>
-          item.id === batch.id ? { ...item, stock: Math.max(item.stock + change, 0) } : item,
-        ),
-      );
-    }
-    const lotNote = batch ? ` (lot ${batch.lot})` : '';
-    const movement: StockMovement = {
-      id: movementId(isReturn ? 'RET' : 'ADJ'),
-      date: new Date().toISOString(),
-      product: product.product,
-      kind: isReturn ? 'Return' : adjustment.kind,
-      change,
-      reference: reference.trim() || (isReturn ? 'No return slip' : 'Manual adjustment'),
-      staff: staffName(),
-      reason: `${reason.trim()}${lotNote}`,
-    };
-    saveMovements([movement, ...loadMovements()]);
     setQuantity('');
     setReason('');
     setReference('');

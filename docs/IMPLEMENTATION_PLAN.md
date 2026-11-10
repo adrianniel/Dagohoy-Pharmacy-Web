@@ -10,7 +10,10 @@ Written 2026-11-09. Both repos: `Dagohoy-Pharmacy-Web` and `Dagohoy-Pharmacy-Ser
 **Progress:** Phase 1 done (2026-11-09, migration 004). Phase 2 done (2026-11-09,
 migration `005_operations.sql`, with `npm run db:check-rules`). Phase 3 done (2026-11-09,
 migration 006; products, suppliers, staff roster and settings on the server; the web keeps a
-synced browser copy for POS/stock until Phases 4 and 6). Next: Phase 4.
+synced browser copy for POS/stock until Phases 4 and 6). Phase 4 done (2026-11-10: lots,
+ledger, receive and adjustments/returns on the server with FEFO and row locks; purchase orders
+skipped because no screen uses them; until Phase 6 a Sales Counter sale does not lower the
+server stock). Next: Phase 5 (shifts and cash drawer).
 
 ## "Ready locally" means
 

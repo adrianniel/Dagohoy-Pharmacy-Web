@@ -15,14 +15,7 @@ import {
   InventoryProduct,
   stockStatus,
 } from '../../data/inventoryStore';
-import {
-  initialBatches,
-  loadBatches,
-  loadMovements,
-  saveBatches,
-  saveMovements,
-} from '../../data/operationsStore';
-import { getSession } from '../../data/registerSession';
+import { initialBatches, loadBatches } from '../../data/operationsStore';
 import { suggestProductCategories } from '../../services/productsApi';
 import {
   assignCategories,
@@ -31,7 +24,12 @@ import {
   saveSettings as saveStoreSettings,
   updateProduct,
 } from '../../services/storeApi';
-import { cacheSettings, syncCatalog, syncSuppliers } from '../../data/serverSync';
+import {
+  cacheSettings,
+  syncAfterStockChange,
+  syncCatalog,
+  syncSuppliers,
+} from '../../data/serverSync';
 import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
@@ -426,47 +424,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
                         : fields,
                     );
                   }
-                  await syncCatalog();
+                  // The opening lot and its ledger entry are made by the server.
+                  await syncAfterStockChange();
                 } catch (caught) {
                   return caught instanceof Error ? caught.message : 'Could not save the product.';
                 }
                 setProducts(getInventory());
-                // shortcut: the browser keeps its own copy of lots until Phase 4 moves stock
-                // to the server; a new product's opening lot is added there too.
-                if (!editing && opening && product.stock > 0) {
-                  const now = new Date().toISOString();
-                  const id = Date.now().toString().slice(-6);
-                  const session = getSession();
-                  saveBatches([
-                    ...loadBatches(initialBatches),
-                    {
-                      id: `B-${id}`,
-                      product: product.product,
-                      barcode: product.barcode,
-                      lot: opening.lot,
-                      expiry: opening.expiry,
-                      stock: product.stock,
-                      receivedAt: now,
-                      unitCost: product.cost,
-                    },
-                  ]);
-                  saveMovements([
-                    {
-                      id: `RCV-${id}`,
-                      date: now,
-                      product: product.product,
-                      kind: 'Received',
-                      change: product.stock,
-                      reference: 'Opening stock',
-                      staff: session?.onDutyNames?.[0] ?? session?.cashierName ?? 'Admin',
-                      reason: `Opening stock · lot ${opening.lot}${
-                        product.cost ? ` · ₱${product.cost.toFixed(2)}/unit` : ''
-                      }`,
-                      unitCost: product.cost,
-                    },
-                    ...loadMovements(),
-                  ]);
-                }
                 setFormOpen(false);
                 showToast(`${product.product} saved.`);
                 return null;

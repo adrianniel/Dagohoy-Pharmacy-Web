@@ -383,6 +383,7 @@ database access only from my own address and removed after.
 | SQL `LIKE` matched too much | `_` is a wildcard | Escape it, or use test prefixes without `_` |
 | Hidden error messages | The API returned "Internal server error" with the real reason buried | One error format with a readable message for user mistakes |
 | Half a commit | `git add` stopped on one bad path, the commit took only part | Check `git status` after adding |
+| Testing needs a login the agent may not type | The owner and cashier passwords belong to me | The agent makes a temporary test admin with a random password in the dev database, uses it, then removes it |
 | Test rows that cannot be deleted | Ledger rows are never deleted (by design) | Name test rows clearly, hide them, and reset the dev database in Phase 7 |
 
 ---
@@ -402,4 +403,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-09 | 5 | Tables and rules for shifts, payments, utang, expenses, settings (migration 005, check-rules) |
 | 2026-11-09 | 6, slice 1 | Products, suppliers, staff roster, settings on the server (migration 006) |
 | 2026-11-10 | 0 (late) | BIR check: renamed to "Inventory & Sales Record System", "POS" labels became "Sales Counter", no customer receipts (on-screen internal sales record only), monthly report marked internal. Owner to confirm with the BIR officer |
-| next | 6 | Stock, shifts, sales, utang and expenses, reports |
+| 2026-11-10 | 6, slice 2 | Stock on the server: deliveries (one purchase per supplier receipt no.), lots, adjustments and returns with FEFO and row locks; the test used a temporary admin account that was removed after |
+| next | 6 | Shifts, sales, utang and expenses, reports |

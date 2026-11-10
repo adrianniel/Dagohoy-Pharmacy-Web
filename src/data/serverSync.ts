@@ -1,37 +1,34 @@
 import {
   getSettings,
+  listLots,
+  listMovements,
   listProducts,
   listStaff,
   listSuppliers,
   type ApiProduct,
   type ApiSettings,
 } from '../services/storeApi';
-import { getInventory, saveInventory, stockStatus, type InventoryProduct } from './inventoryStore';
+import { saveInventory, stockStatus, type InventoryProduct } from './inventoryStore';
+import { saveBatches, saveMovements } from './operationsStore';
 
 /*
- * The server is the source of truth for products, suppliers, the staff roster and the
- * store settings. Pages not moved to the API yet (POS, stock, reports) still read the
- * browser copies below, so they are refreshed from the server after login and after
- * every change.
+ * The server is the source of truth for products, stock (lots and the ledger), suppliers,
+ * the staff roster and the store settings. Pages still read browser copies of them, so
+ * the copies below are refreshed from the server after login and after every change.
  *
- * shortcut: stock counts stay in the browser copy until Phase 4 (stock) and Phase 6
- * (sales) move them to the server; then this file goes away.
+ * shortcut: sales still live in the browser until Phase 6, so a sale made at the Sales
+ * Counter does not lower the server stock yet; the next refresh shows the server count.
+ * When the last page reads the API directly, this file goes away.
  */
 
 const SUPPLIERS_KEY = 'dagohoy_demo_suppliers';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 const ROSTER_KEY = 'dagohoy_demo_staff_roster';
 
-/** Products from the server, with the stock the browser already tracks for each one. */
-export function mergeCatalog(
-  server: ApiProduct[],
-  local: InventoryProduct[] = getInventory(),
-): InventoryProduct[] {
+/** Products from the server, in the shape the pages read. Stock comes from the ledger. */
+export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
   return server.map((item) => {
-    const mine =
-      local.find((product) => product.id === item.id) ??
-      local.find((product) => !product.id && product.barcode === item.barcode);
-    const stock = mine ? mine.stock : item.onHand;
+    const stock = item.onHand;
     return {
       id: item.id,
       barcode: item.barcode ?? '',
@@ -50,6 +47,42 @@ export function mergeCatalog(
 export async function syncCatalog() {
   saveInventory(mergeCatalog(await listProducts()));
   window.dispatchEvent(new Event('dagohoy-catalog-synced'));
+}
+
+/** Lots and the stock ledger, in the shapes the stock pages read. */
+export async function syncStock() {
+  const [lots, movements] = await Promise.all([listLots(), listMovements()]);
+  saveBatches(
+    lots.map((lot) => ({
+      id: String(lot.id),
+      product: lot.product,
+      barcode: lot.barcode ?? '',
+      lot: lot.lot,
+      expiry: lot.expiry ?? '',
+      stock: lot.onHand,
+      receivedAt: lot.receivedAt ?? undefined,
+      unitCost: lot.unitCost ?? undefined,
+      supplier: lot.supplier ?? undefined,
+    })),
+  );
+  saveMovements(
+    movements.map((movement) => ({
+      id: String(movement.id),
+      date: movement.date,
+      product: movement.product,
+      kind: movement.kind,
+      change: movement.change,
+      reference: movement.reference,
+      staff: movement.staff,
+      reason: movement.reason,
+      unitCost: movement.unitCost ?? undefined,
+    })),
+  );
+}
+
+/** After a stock change: products (on hand) and lots and movements together. */
+export async function syncAfterStockChange() {
+  await Promise.all([syncCatalog(), syncStock()]);
 }
 
 export async function syncSuppliers() {
@@ -100,5 +133,11 @@ export async function syncSettings() {
 
 /** Everything at once, after the login check. A failed part keeps its old copy. */
 export async function syncFromServer() {
-  await Promise.allSettled([syncSettings(), syncCatalog(), syncSuppliers(), syncRoster()]);
+  await Promise.allSettled([
+    syncSettings(),
+    syncCatalog(),
+    syncStock(),
+    syncSuppliers(),
+    syncRoster(),
+  ]);
 }
