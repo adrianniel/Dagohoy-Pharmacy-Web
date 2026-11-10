@@ -3747,3 +3747,62 @@
   font-size: 0.82rem;
   text-align: center;
 }
+
+/* Utang customer name: type a new one or pick an existing customer while typing. */
+.pos-customer-pick {
+  position: relative;
+}
+
+.pos-customer-pick input {
+  width: 100%;
+}
+
+.pos-customer-pick__list {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.3rem 0 0;
+  padding: 0.3rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid #cfd6c4;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(19, 50, 42, 0.16);
+}
+
+.pos-customer-pick__list button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pos-customer-pick__list button.is-active {
+  background: #eef4ea;
+}
+
+.pos-customer-pick__list strong {
+  color: #13322a;
+}
+
+.pos-customer-pick__list small,
+.pos-customer-pick__note {
+  color: #5a6b62;
+  font-size: 0.8rem;
+}
+
+.pos-customer-pick__note.is-existing {
+  color: #176246;
+  font-weight: 700;
+}

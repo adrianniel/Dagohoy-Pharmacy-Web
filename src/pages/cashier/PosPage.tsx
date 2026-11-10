@@ -45,6 +45,7 @@ type StoredSale = {
   status?: string;
   creditBalance?: number;
   cashier?: string;
+  customer?: string;
   noChargeReason?: string;
   lines?: Array<{ product: string; barcode: string; quantity: number; unitPrice: number }>;
 };
@@ -1386,18 +1387,7 @@ export function CashierPosPage() {
                     )}
                     {paymentMethod === 'Credit' && (
                       <div className="pos-pay__panel">
-                        <label className="pos-pay__field">
-                          <span>Customer name</span>
-                          <input
-                            name="credit-customer"
-                            value={creditCustomer}
-                            onChange={(event) => setCreditCustomer(event.target.value)}
-                            autoComplete="off"
-                            placeholder="Full name, so the utang is easy to find"
-                            required
-                            autoFocus
-                          />
-                        </label>
+                        <CustomerNameField value={creditCustomer} onChange={setCreditCustomer} />
                         <label className="pos-pay__field">
                           <span>Cash paid now (optional)</span>
                           <span className="pos-pay__money">
@@ -1457,6 +1447,132 @@ export function CashierPosPage() {
             )}
           </form>
         </div>
+      )}
+    </div>
+  );
+}
+
+type UtangCustomer = {
+  name: string;
+  balance: number;
+  lastDate: string;
+  lastAmount: number;
+};
+
+/** Customers with utang (open or paid), from the sales copy, with their balance and last utang. */
+function readUtangCustomers(): UtangCustomer[] {
+  const byName = new Map<string, UtangCustomer>();
+  for (const sale of readSales()) {
+    const name = sale.customer?.trim();
+    if (sale.payment !== 'Credit' || sale.status === 'Voided' || !name) continue;
+    const key = name.toLowerCase();
+    const customer = byName.get(key) ?? { name, balance: 0, lastDate: '', lastAmount: 0 };
+    customer.balance += Number(sale.creditBalance ?? 0);
+    if (sale.date > customer.lastDate) {
+      customer.lastDate = sale.date;
+      customer.lastAmount = Number(sale.total ?? 0);
+    }
+    byName.set(key, customer);
+  }
+  return [...byName.values()].sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+}
+
+/**
+ * Utang customer name: type a new name, or pick an existing customer from the list that shows
+ * while typing (with their balance and last utang), so one person keeps one account.
+ */
+function CustomerNameField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (name: string) => void;
+}) {
+  const [customers] = useState(readUtangCustomers);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const needle = value.trim().toLowerCase();
+  const matches = needle
+    ? customers.filter((customer) => customer.name.toLowerCase().includes(needle)).slice(0, 6)
+    : [];
+  const picked = customers.find((customer) => customer.name.toLowerCase() === needle);
+  const showList = open && matches.length > 0 && !(picked && matches.length === 1);
+  const describe = (customer: UtangCustomer) =>
+    `Balance ${formatMoney(customer.balance)} · last utang ${new Date(
+      customer.lastDate,
+    ).toLocaleDateString('en-PH', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })} (${formatMoney(customer.lastAmount)})`;
+
+  function pick(customer: UtangCustomer) {
+    onChange(customer.name);
+    setOpen(false);
+  }
+
+  return (
+    <div className="pos-pay__field pos-customer-pick">
+      <span>Customer name</span>
+      <input
+        name="credit-customer"
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+          setOpen(true);
+          setActive(0);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+        onKeyDown={(event) => {
+          if (!showList) return;
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setActive((index) => Math.min(index + 1, matches.length - 1));
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setActive((index) => Math.max(index - 1, 0));
+          } else if (event.key === 'Enter') {
+            // Enter picks the highlighted customer; the next Enter saves the sale.
+            event.preventDefault();
+            pick(matches[active]);
+          } else if (event.key === 'Escape') {
+            setOpen(false);
+          }
+        }}
+        role="combobox"
+        aria-expanded={showList}
+        aria-controls="pos-customer-list"
+        aria-autocomplete="list"
+        aria-label="Customer name"
+        autoComplete="off"
+        placeholder="Type a name, or pick an existing customer"
+        required
+        autoFocus
+      />
+      {showList && (
+        <ul className="pos-customer-pick__list" id="pos-customer-list" role="listbox">
+          {matches.map((customer, index) => (
+            <li key={customer.name} role="option" aria-selected={index === active}>
+              <button
+                type="button"
+                className={index === active ? 'is-active' : undefined}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActive(index)}
+                onClick={() => pick(customer)}
+              >
+                <strong>{customer.name}</strong>
+                <small>{describe(customer)}</small>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!showList && picked && (
+        <small className="pos-customer-pick__note is-existing">{describe(picked)}</small>
+      )}
+      {!showList && needle && !picked && (
+        <small className="pos-customer-pick__note">New customer: a new utang account starts.</small>
       )}
     </div>
   );
