@@ -249,9 +249,16 @@ export function CashierPosPage() {
     );
   }
 
-  /** Enter in the search (a scanner always sends it): add the scanned or only match. */
+  /** Opens a ticket if none is open, so the first scan starts the sale by itself. */
+  function ensureTicket() {
+    if (transactionActive) return;
+    setTransactionActive(true);
+    setOpenedAt(new Date());
+  }
+
+  /** Enter in the search: add the scanned product, or the only match of a typed name. */
   function scanOrPick(code: string) {
-    if (!code || !transactionActive) return;
+    if (!code) return;
     const exact = products.find((product) => product.barcode === code);
     const pick = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : undefined);
     if (!pick) {
@@ -265,13 +272,24 @@ export function CashierPosPage() {
     }
     if (pick.stock < 1) {
       showToast(`${pick.product} is out of stock.`, 'error');
+      setQuery('');
       return;
     }
-    addProduct(pick);
+    ensureTicket();
+    addProduct(pick, true);
   }
 
-  function addProduct(product: PosProduct) {
-    if (!transactionActive) {
+  // Every scan adds the item at once: as soon as the field holds a full barcode of a product
+  // (some scanners never press Enter), it goes into the current sale and the field clears.
+  useEffect(() => {
+    const code = query.trim();
+    if (!code || !products.some((product) => product.barcode === code)) return;
+    const timer = window.setTimeout(() => scanOrPick(code), 120);
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  function addProduct(product: PosProduct, ticketOpened = false) {
+    if (!transactionActive && !ticketOpened) {
       showToast(
         'Start a transaction in the Current sale panel to add this item to the list.',
         'info',
@@ -564,25 +582,27 @@ export function CashierPosPage() {
                 placeholder={
                   transactionActive
                     ? 'Scan a barcode or type a product name'
-                    : 'Open a ticket to scan'
+                    : 'Scan a barcode to start a sale'
                 }
                 inputProps={{
                   name: 'product-search',
                   type: 'search',
                   autoFocus: true,
-                  disabled: !transactionActive,
                   'aria-label': 'Scan a barcode or search a product',
                 }}
               />
             </div>
-            {query.trim() && transactionActive && (
+            {query.trim() && (
               <div className="pos-scan-results" aria-live="polite">
                 {filteredProducts.slice(0, 6).map((product) => (
                   <button
                     key={product.barcode}
                     className="pos-scan-result"
                     type="button"
-                    onClick={() => addProduct(product)}
+                    onClick={() => {
+                      ensureTicket();
+                      addProduct(product, true);
+                    }}
                     disabled={product.stock < 1}
                   >
                     <span>
