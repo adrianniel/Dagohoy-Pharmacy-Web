@@ -1030,36 +1030,9 @@
   color: var(--ticket-muted);
 }
 
-.pos-ticket__start {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 0.9rem;
-  padding: 0.75rem 1.15rem;
-  border: 0;
-  border-radius: 8px;
-  background: var(--ticket-green);
-  color: #fffdf1;
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-.pos-ticket__start .cashier-icon {
-  width: 17px;
-  height: 17px;
-}
 
-.pos-ticket__start:hover {
-  background: #11513a;
-}
 
-.pos-ticket__start:focus-visible,
-.pos-ticket__pay:focus-visible {
-  outline: 3px solid #23a26b;
-  outline-offset: 3px;
-}
 
 /* Totals: dotted leaders between label and amount, a double rule above the total. */
 .pos-ticket__totals {
@@ -3477,4 +3450,123 @@
   letter-spacing: 0.25em;
   transform: translate(-50%, -50%) rotate(-18deg);
   pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The item added last: a soft highlight that stays, and a flash on every add
+ * (scan, search pick, or the same item again).
+ * ------------------------------------------------------------------------- */
+.pos-ticket-line.is-latest {
+  background: #f1f8ec;
+}
+
+.pos-ticket-line.is-latest::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ticket-green);
+}
+
+.pos-ticket-line.is-latest .pos-ticket-qty span {
+  font-weight: 800;
+  color: var(--ticket-green);
+}
+
+.pos-ticket-line__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(46, 160, 92, 0.28);
+  animation: pos-line-flash 0.9s ease-out forwards;
+}
+
+@keyframes pos-line-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The scanner sign in the search box: a calm "ready" dot, and a green pop when an item goes in. */
+.pos-scanner-sign {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #eef4ea;
+  color: #2c5e45;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pos-scanner-sign__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #2ea05c;
+  animation: pos-scanner-breathe 2.4s ease-in-out infinite;
+}
+
+.pos-scanner-sign.is-hit {
+  animation: pos-scanner-hit 0.7s ease-out;
+}
+
+.pos-scanner-sign.is-hit .pos-scanner-sign__dot {
+  animation:
+    pos-scanner-ping 0.7s ease-out,
+    pos-scanner-breathe 2.4s ease-in-out 0.7s infinite;
+}
+
+@keyframes pos-scanner-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes pos-scanner-hit {
+  0% {
+    background: #2ea05c;
+    color: #fff;
+    transform: scale(1.08);
+  }
+  100% {
+    background: #eef4ea;
+    color: #2c5e45;
+    transform: scale(1);
+  }
+}
+
+@keyframes pos-scanner-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 160, 92, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0.6rem rgba(46, 160, 92, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-ticket-line__flash,
+  .pos-scanner-sign,
+  .pos-scanner-sign__dot {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .pos-scanner-sign {
+    padding: 0.3rem 0.5rem;
+  }
 }

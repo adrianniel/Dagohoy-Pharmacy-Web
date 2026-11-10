@@ -2,7 +2,6 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
-import { ScanInput } from '../../components/ScanInput';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
 import { syncAfterSale } from '../../data/serverSync';
@@ -166,8 +165,10 @@ export function CashierPosPage() {
   /** True while a sale, void or no-charge record is being saved on the server. */
   const [saving, setSaving] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [transactionActive, setTransactionActive] = useState(false);
   const [openedAt, setOpenedAt] = useState<Date | null>(null);
+  /** Barcode of the item added last (highlighted in the list) and a counter that replays the flash. */
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
+  const [addPulse, setAddPulse] = useState(0);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [discountInput, setDiscountInput] = useState('0');
@@ -197,6 +198,8 @@ export function CashierPosPage() {
   const [noChargeReason, setNoChargeReason] = useState('');
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const { showToast } = useToast();
+  // The Sales Counter is always ready for the scanner: a sale is open as soon as it has an item.
+  const transactionActive = cart.length > 0;
   const subtotal = cart.reduce(
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
@@ -247,24 +250,6 @@ export function CashierPosPage() {
     setGcashPaid(false);
   }
 
-  function startTransaction() {
-    setTransactionActive(true);
-    setOpenedAt(new Date());
-    setQuery('');
-    setExpandedProduct(null);
-    showToast('Transaction started. Scan or search for the first item.', 'info');
-    window.requestAnimationFrame(() =>
-      document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus(),
-    );
-  }
-
-  /** Opens a ticket if none is open, so the first scan starts the sale by itself. */
-  function ensureTicket() {
-    if (transactionActive) return;
-    setTransactionActive(true);
-    setOpenedAt(new Date());
-  }
-
   /** Enter in the search: add the scanned product, or the only match of a typed name. */
   function scanOrPick(code: string) {
     if (!code) return;
@@ -284,9 +269,20 @@ export function CashierPosPage() {
       setQuery('');
       return;
     }
-    ensureTicket();
-    addProduct(pick, true);
+    addProduct(pick);
   }
+
+  useEffect(() => {
+    if (cart.length) return;
+    setOpenedAt(null);
+    setLastAdded(null);
+  }, [cart.length]);
+
+  // Keep the item just added in view, also in a long list.
+  useEffect(() => {
+    if (!addPulse) return;
+    document.querySelector('.pos-ticket-line.is-latest')?.scrollIntoView({ block: 'nearest' });
+  }, [addPulse]);
 
   /** A finished scan: the product goes straight into the sale. Kept current for the listener. */
   const onScan = useRef<(code: string) => void>(() => {});
@@ -300,8 +296,7 @@ export function CashierPosPage() {
       showToast(`${product.product} is out of stock.`, 'error');
       return;
     }
-    ensureTicket();
-    addProduct(product, true);
+    addProduct(product);
   };
   /** While the payment panel or a dialog is open, its own fields take the keys. */
   const scanPaused = useRef(false);
@@ -360,31 +355,29 @@ export function CashierPosPage() {
     };
   }, []);
 
-  function addProduct(product: PosProduct, ticketOpened = false) {
-    if (!transactionActive && !ticketOpened) {
-      showToast(
-        'Start a transaction in the Current sale panel to add this item to the list.',
-        'info',
-      );
-      return;
-    }
+  function addProduct(product: PosProduct) {
     if (product.stock !== undefined && product.stock < 1) {
       showToast(`${product.product} is out of stock.`, 'error');
       return;
     }
-    setCart((current) => {
-      const existing = current.find((line) => matchesCartLine(line.product, product));
-      if (existing) {
-        if (product.stock !== undefined && existing.quantity >= product.stock) {
-          showToast(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`, 'error');
-          return current;
-        }
-        return current.map((line) =>
-          matchesCartLine(line.product, product) ? { ...line, quantity: line.quantity + 1 } : line,
-        );
-      }
-      return [...current, { product, quantity: 1 }];
-    });
+    const existing = cart.find((line) => matchesCartLine(line.product, product));
+    if (existing && product.stock !== undefined && existing.quantity >= product.stock) {
+      showToast(`Only ${product.stock} ${product.unit.toLowerCase()}s are available.`, 'error');
+      return;
+    }
+    setCart((current) =>
+      current.some((line) => matchesCartLine(line.product, product))
+        ? current.map((line) =>
+            matchesCartLine(line.product, product)
+              ? { ...line, quantity: line.quantity + 1 }
+              : line,
+          )
+        : [...current, { product, quantity: 1 }],
+    );
+    if (!openedAt) setOpenedAt(new Date());
+    setLastAdded(product.barcode);
+    setAddPulse((count) => count + 1);
+    playSound('tap');
     setQuery('');
     setExpandedProduct(null);
     window.requestAnimationFrame(() =>
@@ -521,13 +514,9 @@ export function CashierPosPage() {
       setSaving(false);
     }
     await refreshAfterSale();
-    // The sale on the counter is left as it is; only open a ticket if none is open yet.
+    // The sale on the counter is left as it is.
     setControlModal(null);
     setVoidReason('');
-    if (!transactionActive) {
-      setTransactionActive(true);
-      setOpenedAt(new Date());
-    }
     showToast(`Sale ${voidTarget} voided. ${voidMoneyNote(target)}`, 'success');
   }
 
@@ -563,7 +552,6 @@ export function CashierPosPage() {
     setCart([]);
     setSelectedLine(null);
     setDiscountInput('0');
-    setTransactionActive(false);
     setOpenedAt(null);
     setPaymentOpen(true);
     playSound('success');
@@ -599,7 +587,6 @@ export function CashierPosPage() {
     }
     setCompletedSale(shownSale(sale, saleLines));
     setCart([]);
-    setTransactionActive(false);
     setOpenedAt(null);
     setTendered('');
     setCreditCustomer('');
@@ -621,7 +608,7 @@ export function CashierPosPage() {
           <header className="pos-ticket__head">
             <div>
               <span className={`pos-ticket__state${transactionActive ? ' is-open' : ''}`}>
-                {transactionActive ? 'Ticket open' : 'No open ticket'}
+                {transactionActive ? 'Sale in progress' : 'Ready for the next customer'}
               </span>
               <h3 id="pos-sale-heading">Current sale</h3>
             </div>
@@ -647,22 +634,31 @@ export function CashierPosPage() {
           <div className="pos-scan-dock pos-ticket__scan">
             <div className="pos-scan-field">
               <CashierIcon name="search" />
-              <ScanInput
+              <input
+                name="product-search"
+                type="search"
                 value={query}
-                onChange={setQuery}
-                onEnter={scanOrPick}
-                placeholder={
-                  transactionActive
-                    ? 'Scan a barcode or type a product name'
-                    : 'Scan a barcode to start a sale'
-                }
-                inputProps={{
-                  name: 'product-search',
-                  type: 'search',
-                  autoFocus: true,
-                  'aria-label': 'Scan a barcode or search a product',
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') return;
+                  event.preventDefault();
+                  scanOrPick(event.currentTarget.value.trim());
                 }}
+                placeholder="Scanner not working? Type the product name or barcode"
+                aria-label="Search a product by name or barcode"
+                autoComplete="off"
+                autoFocus
               />
+              <span
+                className={`pos-scanner-sign${addPulse ? ' is-hit' : ''}`}
+                key={addPulse}
+                role="status"
+                aria-label={addPulse ? 'Item added' : 'Scanner ready'}
+                title="The scanner is always ready on this page"
+              >
+                <span className="pos-scanner-sign__dot" aria-hidden="true" />
+                {addPulse ? 'Added' : 'Scanner ready'}
+              </span>
             </div>
             {query.trim() && (
               <div className="pos-scan-results" aria-live="polite">
@@ -671,10 +667,7 @@ export function CashierPosPage() {
                     key={product.barcode}
                     className="pos-scan-result"
                     type="button"
-                    onClick={() => {
-                      ensureTicket();
-                      addProduct(product, true);
-                    }}
+                    onClick={() => addProduct(product)}
                     disabled={product.stock < 1}
                   >
                     <span>
@@ -706,10 +699,16 @@ export function CashierPosPage() {
           <div className="pos-ticket__lines">
             {cart.map(({ product, quantity }, index) => (
               <div
-                className={`pos-ticket-line${selectedLine === product.barcode ? ' is-selected' : ''}`}
+                className={`pos-ticket-line${selectedLine === product.barcode ? ' is-selected' : ''}${
+                  lastAdded === product.barcode ? ' is-latest' : ''
+                }`}
                 key={product.barcode}
                 onClick={() => setSelectedLine(product.barcode)}
               >
+                {lastAdded === product.barcode && (
+                  // A new key on every add replays the flash, also for the same item again.
+                  <span className="pos-ticket-line__flash" key={addPulse} aria-hidden="true" />
+                )}
                 <span className="pos-ticket-line__no">{String(index + 1).padStart(2, '0')}</span>
                 <div className="pos-ticket-line__name">
                   <strong>{product.product}</strong>
@@ -746,23 +745,12 @@ export function CashierPosPage() {
               </div>
             ))}
             {!cart.length && (
-              <div className={`pos-ticket__empty${transactionActive ? ' is-active' : ''}`}>
-                {transactionActive ? (
-                  <>
-                    <strong>Scan the first item.</strong>
-                    <span>
-                      Use the barcode scanner, or type part of a product name in the box above.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <strong>No sale is open.</strong>
-                    <span>Open a ticket when the customer is at the counter.</span>
-                    <button className="pos-ticket__start" type="button" onClick={startTransaction}>
-                      Start transaction <CashierIcon name="arrow" />
-                    </button>
-                  </>
-                )}
+              <div className="pos-ticket__empty is-active">
+                <strong>Scan the first item.</strong>
+                <span>
+                  The scanner is always ready here. If it does not work, type the product name or
+                  barcode in the box above.
+                </span>
               </div>
             )}
           </div>
@@ -819,7 +807,7 @@ export function CashierPosPage() {
                   ? selectedLine
                     ? 'An item is selected in the current sale.'
                     : 'Click an item in the current sale to select it.'
-                  : 'Start a transaction to unlock these controls.'}
+                  : 'Scan an item to start a sale.'}
               </p>
             </div>
             <button
