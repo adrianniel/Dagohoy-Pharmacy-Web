@@ -3650,7 +3650,9 @@
   background: #f4f8f1;
 }
 
-.credit-total-row.is-balance td {
+/* Table text rules color the cells and their <strong> dark, so the balance row sets both. */
+.cashier-shell .cashier-table tr.credit-total-row.is-balance td,
+.cashier-shell .cashier-table tr.credit-total-row.is-balance td strong {
   background: #176246;
   color: #fff;
 }
