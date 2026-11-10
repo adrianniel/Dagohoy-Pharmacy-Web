@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
@@ -94,6 +94,15 @@ function quickCashAmounts(total: number): number[] {
     .filter((amount) => amount > exact);
   return [exact, ...Array.from(new Set(rounded))].slice(0, 5);
 }
+/*
+ * Scanner detection: a scanner sends each key within a few milliseconds and the whole code in
+ * well under a tenth of a second; a person types much slower. Shortcut: tuned for USB
+ * keyboard-style scanners; if a slow Bluetooth scanner is missed, raise SCAN_KEY_GAP_MS.
+ */
+const SCAN_KEY_GAP_MS = 40;
+const SCAN_IDLE_MS = 60;
+const SCAN_MIN_LENGTH = 6;
+
 const SALES_KEY = 'dagohoy_demo_sales';
 
 function readSales(): StoredSale[] {
@@ -279,14 +288,77 @@ export function CashierPosPage() {
     addProduct(pick, true);
   }
 
-  // Every scan adds the item at once: as soon as the field holds a full barcode of a product
-  // (some scanners never press Enter), it goes into the current sale and the field clears.
+  /** A finished scan: the product goes straight into the sale. Kept current for the listener. */
+  const onScan = useRef<(code: string) => void>(() => {});
+  onScan.current = (code) => {
+    const product = products.find((item) => item.barcode === code);
+    if (!product) {
+      showToast(`No product has barcode ${code}. Add it in Products first.`, 'error');
+      return;
+    }
+    if (product.stock < 1) {
+      showToast(`${product.product} is out of stock.`, 'error');
+      return;
+    }
+    ensureTicket();
+    addProduct(product, true);
+  };
+  /** While the payment panel or a dialog is open, its own fields take the keys. */
+  const scanPaused = useRef(false);
+  scanPaused.current = paymentOpen || controlModal !== null;
+
+  // A scanner types the whole barcode in a few milliseconds. Those keys are caught here before
+  // they reach the search box, so the number never shows and no list pops up: the item goes
+  // straight into the current sale. Digits typed by hand (slower) go into the search box as usual.
   useEffect(() => {
-    const code = query.trim();
-    if (!code || !products.some((product) => product.barcode === code)) return;
-    const timer = window.setTimeout(() => scanOrPick(code), 120);
-    return () => window.clearTimeout(timer);
-  }, [query]);
+    let buffer = '';
+    let last = 0;
+    let fast = true;
+    let timer = 0;
+    const flush = () => {
+      window.clearTimeout(timer);
+      const code = buffer;
+      buffer = '';
+      if (!code) return;
+      if (fast && code.length >= SCAN_MIN_LENGTH) onScan.current(code);
+      else setQuery((current) => current + code);
+    };
+    function onKeyDown(event: KeyboardEvent) {
+      if (scanPaused.current || event.ctrlKey || event.altKey || event.metaKey) return;
+      const target = event.target as HTMLElement | null;
+      const inSearch = target instanceof HTMLInputElement && target.name === 'product-search';
+      const inOtherField =
+        !inSearch &&
+        !!target &&
+        (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable);
+      if (inOtherField) return;
+      const now = performance.now();
+      if (/^\d$/.test(event.key)) {
+        if (!buffer) fast = true;
+        else if (now - last > SCAN_KEY_GAP_MS) fast = false;
+        buffer += event.key;
+        last = now;
+        event.preventDefault();
+        event.stopPropagation();
+        window.clearTimeout(timer);
+        timer = window.setTimeout(flush, SCAN_IDLE_MS);
+        return;
+      }
+      if ((event.key === 'Enter' || event.key === 'Tab') && buffer) {
+        // Most scanners end with Enter (some with Tab): the code is complete.
+        event.preventDefault();
+        event.stopPropagation();
+        flush();
+        return;
+      }
+      if (buffer) flush(); // a letter after digits: someone is typing a name
+    }
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   function addProduct(product: PosProduct, ticketOpened = false) {
     if (!transactionActive && !ticketOpened) {
@@ -1262,12 +1334,12 @@ export function CashierPosPage() {
                       {saving
                         ? 'Saving…'
                         : paymentMethod === 'Cash'
-                        ? `Complete cash sale${change > 0 && !paymentBlocker ? ` · change ${formatMoney(change)}` : ''}`
-                        : paymentMethod === 'GCash'
-                          ? gcashPaid
-                            ? 'Complete GCash sale'
-                            : 'Save as pending GCash'
-                          : 'Save as utang'}
+                          ? `Complete cash sale${change > 0 && !paymentBlocker ? ` · change ${formatMoney(change)}` : ''}`
+                          : paymentMethod === 'GCash'
+                            ? gcashPaid
+                              ? 'Complete GCash sale'
+                              : 'Save as pending GCash'
+                            : 'Save as utang'}
                     </button>
                     <p className="pos-pay__status" aria-live="polite">
                       {paymentBlocker ||
