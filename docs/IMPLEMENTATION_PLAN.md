@@ -19,7 +19,14 @@ browser sends the sales side of the count, and utang payments stay in the browse
 Phase 7). Extra (2026-11-10): archive/restore products (refused while stock is on hand) and
 import products from CSV/Excel with a server-checked preview. Barcode lookup for new
 products through BarCloud PH (migration 008 cache, daily limit; key only in the server .env).
-Next: Phase 6 (sales).
+Phase 6 done (2026-11-10, no new migration): `POST /sales` as one transaction (server prices,
+FEFO over non-expired lots, row locks, payments), `POST /sales/:id/void` (stock back to the
+same lots, payments reversed), `GET /sales`; the shift close now counts sales cash from
+`sale_payments` itself. Utang payments (`POST /sales/:id/payments`) and customer rename
+(`PATCH /sales/customers/rename`) were pulled in from Phase 7. Race test passed (two counters,
+last piece: one sold, one refused). Not done yet: confirming a pending GCash later (no screen
+has the button), Senior/PWD discount (waits on the client), receipt-style search on `GET /sales`.
+Next: Phase 7 (expenses; utang is mostly done).
 
 ## "Ready locally" means
 

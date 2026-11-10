@@ -4,10 +4,10 @@ import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { ThermalReceipt } from '../../components/cashier/ThermalReceipt';
 import { ScanInput } from '../../components/ScanInput';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
-import { getInventory, saveInventory, stockStatus } from '../../data/inventoryStore';
-import { loadMovements, saveMovements } from '../../data/operationsStore';
-import { getWorkspaceProfile } from '../../data/accountStore';
-import { REGISTER_SESSION_KEY, getSession } from '../../data/registerSession';
+import { getInventory } from '../../data/inventoryStore';
+import { syncAfterSale } from '../../data/serverSync';
+import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
+import { getSession } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
 type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
@@ -36,6 +36,7 @@ type CompletedSale = {
 type PaymentMethod = 'Cash' | 'GCash' | 'Credit';
 type SalePaymentLabel = PaymentMethod | 'No charge';
 type StoredSale = {
+  id?: number;
   receipt: string;
   date: string;
   items?: number;
@@ -94,20 +95,11 @@ function quickCashAmounts(total: number): number[] {
   return [exact, ...Array.from(new Set(rounded))].slice(0, 5);
 }
 const SALES_KEY = 'dagohoy_demo_sales';
-const VOID_LOG_KEY = 'dagohoy_demo_void_log';
-type VoidRecord = { receipt: string; date: string; reason: string; cashier: string; total: number };
 
 function readSales(): StoredSale[] {
   return JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as StoredSale[];
 }
 
-function readVoidLog(): VoidRecord[] {
-  try {
-    return JSON.parse(localStorage.getItem(VOID_LOG_KEY) ?? '[]') as VoidRecord[];
-  } catch {
-    return [];
-  }
-}
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 
 /** "09171234567" → "0917 123 4567", "+639171234567" → "+63 917 123 4567". */
@@ -132,19 +124,6 @@ const PAYMENT_METHOD_OPTIONS: Array<{
   { id: 'GCash', name: 'GCash', detail: 'Manual verification', icon: 'phone' },
   { id: 'Credit', name: 'Credit', detail: 'Utang / pay later', icon: 'credit' },
 ];
-
-function readCashierName(): string {
-  try {
-    const session = JSON.parse(localStorage.getItem(REGISTER_SESSION_KEY) ?? 'null') as {
-      cashierName?: string;
-    } | null;
-    const sessionName = session?.cashierName?.trim();
-    if (sessionName) return sessionName;
-  } catch {
-    // fall through to the account profile
-  }
-  return getWorkspaceProfile().name;
-}
 
 function sanitizeMoneyInput(value: string): string {
   const cleaned = value.replace(/[^\d.]/g, '');
@@ -174,7 +153,9 @@ function sanitizeDiscountInput(value: string): string {
 }
 
 export function CashierPosPage() {
-  const [products] = useState(getInventory);
+  const [products, setProducts] = useState(getInventory);
+  /** True while a sale, void or no-charge record is being saved on the server. */
+  const [saving, setSaving] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [transactionActive, setTransactionActive] = useState(false);
   const [openedAt, setOpenedAt] = useState<Date | null>(null);
@@ -387,67 +368,69 @@ export function CashierPosPage() {
     setControlModal('void');
   }
 
-  function submitVoid(event: FormEvent<HTMLFormElement>) {
+  /** Refreshes the stock counts and the sales copy after the server recorded a change. */
+  async function refreshAfterSale() {
+    try {
+      await syncAfterSale();
+      setProducts(getInventory());
+    } catch {
+      // The sale is saved on the server; the next refresh shows the new counts.
+    }
+  }
+
+  /** The server's answer, in the shape the sales record on screen shows. */
+  function shownSale(sale: ApiSale, lines: CartLine[]): CompletedSale {
+    return {
+      receipt: sale.receipt,
+      date: sale.date,
+      lines,
+      subtotal: sale.subtotal,
+      discount: sale.discount,
+      total: sale.total,
+      payment: sale.payment,
+      amountPaid: sale.amountPaid,
+      change: sale.change,
+      customer: sale.customer,
+      reference: sale.gcashReference,
+      cashier: sale.cashier,
+      paymentStatus: sale.paymentStatus,
+      creditBalance: sale.creditBalance,
+      noChargeReason: sale.noChargeReason,
+    };
+  }
+
+  /** Sale lines for the server; null (with a message) if an item is not on the server yet. */
+  function serverLines(): NewSale['lines'] | null {
+    const missing = cart.find((line) => !line.product.id);
+    if (missing) {
+      showToast(
+        `${missing.product.product} is not saved on the server yet. Open it in Products and save it first.`,
+        'error',
+      );
+      return null;
+    }
+    return cart.map((line) => ({ productId: line.product.id!, quantity: line.quantity }));
+  }
+
+  async function submitVoid(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const reason = voidReason.trim();
-    if (!voidTarget || !reason) return;
-    const sales = readSales();
-    const target = sales.find((sale) => sale.receipt === voidTarget);
-    if (!target) {
+    if (!voidTarget || !reason || saving) return;
+    const target = readSales().find((sale) => sale.receipt === voidTarget);
+    if (!target?.id) {
       showToast('That transaction could not be found.', 'error');
       return;
     }
-    const stock = getInventory();
-    const inventory = stock.map((product) => {
-      const returned = (target.lines ?? []).find((line) => line.barcode === product.barcode);
-      if (!returned) return product;
-      const nextStock = product.stock + returned.quantity;
-      return { ...product, stock: nextStock, status: stockStatus(nextStock) };
-    });
-    saveInventory(inventory);
-    localStorage.setItem(
-      SALES_KEY,
-      JSON.stringify(
-        sales.map((sale) =>
-          sale.receipt === voidTarget
-            ? {
-                ...sale,
-                status: 'Voided',
-                creditBalance: 0,
-                voidedAt: new Date().toISOString(),
-                voidReason: reason,
-              }
-            : sale,
-        ),
-      ),
-    );
-    localStorage.setItem(
-      VOID_LOG_KEY,
-      JSON.stringify([
-        {
-          receipt: voidTarget,
-          date: new Date().toISOString(),
-          reason,
-          cashier: readCashierName(),
-          total: Number(target.total ?? 0),
-        },
-        ...readVoidLog(),
-      ]),
-    );
-    const previousMovements = loadMovements();
-    saveMovements([
-      ...(target.lines ?? []).map((line) => ({
-        id: `VOID-${voidTarget}-${line.barcode}`,
-        date: new Date().toISOString(),
-        product: line.product,
-        kind: 'Adjustment' as const,
-        change: line.quantity,
-        reference: voidTarget,
-        staff: readCashierName(),
-        reason: `Voided sale: ${reason}`,
-      })),
-      ...previousMovements,
-    ]);
+    setSaving(true);
+    try {
+      await voidSale(target.id, reason);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The void was not saved.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
+    await refreshAfterSale();
     // The sale on the counter is left as it is; only open a ticket if none is open yet.
     setControlModal(null);
     setVoidReason('');
@@ -467,68 +450,24 @@ export function CashierPosPage() {
     setControlModal('charge');
   }
 
-  function submitNoCharge(event: FormEvent<HTMLFormElement>) {
+  async function submitNoCharge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const reason = noChargeReason.trim();
-    if (!reason || !cart.length) return;
-    const receipt = `NC-${String(Date.now()).slice(-6)}`;
+    if (!reason || !cart.length || saving) return;
+    const lines = serverLines();
+    if (!lines) return;
     const saleLines = cart.map((line) => ({ ...line }));
-    const cashierName = readCashierName();
-    const sales = readSales();
-    sales.unshift({
-      receipt,
-      date: new Date().toISOString(),
-      items: totalItems,
-      total: 0,
-      subtotal,
-      discount: 0,
-      payment: 'No charge',
-      status: 'No charge',
-      cashier: cashierName,
-      noChargeReason: reason,
-      lines: saleLines.map((line) => ({
-        product: line.product.product,
-        barcode: line.product.barcode,
-        quantity: line.quantity,
-        unitPrice: toAmount(line.product.price),
-      })),
-    });
-    localStorage.setItem(SALES_KEY, JSON.stringify(sales));
-    const stock = getInventory();
-    saveInventory(
-      stock.map((product) => {
-        const taken = cart.find((line) => line.product.barcode === product.barcode)?.quantity ?? 0;
-        if (!taken) return product;
-        const nextStock = Math.max(0, product.stock - taken);
-        return { ...product, stock: nextStock, status: stockStatus(nextStock) };
-      }),
-    );
-    saveMovements([
-      ...cart.map((line) => ({
-        id: `NOC-${receipt}-${line.product.barcode}`,
-        date: new Date().toISOString(),
-        product: line.product.product,
-        kind: 'Sale' as const,
-        change: -line.quantity,
-        reference: receipt,
-        staff: 'Cashier',
-        reason: `No charge: ${reason}`,
-      })),
-      ...loadMovements(),
-    ]);
-    setCompletedSale({
-      receipt,
-      date: new Date().toISOString(),
-      lines: saleLines,
-      subtotal,
-      discount: 0,
-      total: 0,
-      payment: 'No charge',
-      amountPaid: 0,
-      change: 0,
-      cashier: cashierName,
-      noChargeReason: reason,
-    });
+    setSaving(true);
+    let sale: ApiSale;
+    try {
+      sale = await createSale({ lines, payment: 'no_charge', noChargeReason: reason });
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The record was not saved.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
+    setCompletedSale(shownSale(sale, saleLines));
     setControlModal(null);
     setNoChargeReason('');
     setCart([]);
@@ -538,101 +477,37 @@ export function CashierPosPage() {
     setOpenedAt(null);
     setPaymentOpen(true);
     playSound('success');
-    showToast(`No-charge record ${receipt} saved.`, 'success');
+    showToast(`No-charge record ${sale.receipt} saved.`, 'success');
+    void refreshAfterSale();
   }
 
-  function completeSale(event: FormEvent<HTMLFormElement>) {
+  async function completeSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (completedSale || !cart.length || paymentBlocker) return;
-    if (paymentMethod === 'Cash' && Number(tendered) < totalDue) return;
-    if (
-      paymentMethod === 'Credit' &&
-      (!creditCustomer.trim() || Number(tendered) < 0 || Number(tendered) > totalDue)
-    ) {
-      return;
-    }
-    const sales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as Array<
-      Record<string, unknown>
-    >;
-    const receipt = `DP-${String(Date.now()).slice(-6)}`;
+    if (completedSale || !cart.length || paymentBlocker || saving) return;
+    const lines = serverLines();
+    if (!lines) return;
     const saleLines = cart.map((line) => ({ ...line }));
-    const salePayment = paymentMethod;
-    const cashierName = readCashierName();
-    const amountPaidValue =
-      salePayment === 'Cash' || salePayment === 'Credit'
-        ? Number(tendered || 0)
-        : gcashPaid
-          ? totalDue
-          : 0;
-    sales.unshift({
-      receipt,
-      date: new Date().toISOString(),
-      items: totalItems,
-      total: totalDue,
-      subtotal,
-      discount,
-      lines: cart.map((line) => ({
-        product: line.product.product,
-        barcode: line.product.barcode,
-        quantity: line.quantity,
-        unitPrice: toAmount(line.product.price),
-      })),
-      payment: salePayment,
-      cashier: cashierName,
-      customer: salePayment === 'Credit' ? creditCustomer.trim() : undefined,
-      amountPaid: amountPaidValue,
-      change: salePayment === 'Cash' ? change : 0,
-      creditBalance: salePayment === 'Credit' ? creditBalance : 0,
-      // Cash the credit customer paid now; it goes into the drawer this shift.
-      downPayment: salePayment === 'Credit' ? amountPaidValue : undefined,
-      gcashReference: salePayment === 'GCash' ? gcashReference.trim() : undefined,
-      paymentStatus: salePayment === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
-      status:
-        salePayment === 'Credit' && creditBalance > 0
-          ? 'Credit'
-          : salePayment === 'GCash' && !gcashPaid
-            ? 'Pending GCash'
-            : 'Completed',
-    });
-    localStorage.setItem(SALES_KEY, JSON.stringify(sales));
-    const inventory = getInventory();
-    saveInventory(
-      inventory.map((product) => {
-        const sold = cart.find((line) => line.product.barcode === product.barcode)?.quantity ?? 0;
-        const stock = Math.max(0, product.stock - sold);
-        return sold ? { ...product, stock, status: stockStatus(stock) } : product;
-      }),
-    );
-    const previousMovements = loadMovements();
-    saveMovements([
-      ...cart.map((line) => ({
-        id: `SALE-${receipt}-${line.product.barcode}`,
-        date: new Date().toISOString(),
-        product: line.product.product,
-        kind: 'Sale' as const,
-        change: -line.quantity,
-        reference: receipt,
-        staff: 'Cashier',
-        reason: 'Completed sale',
-      })),
-      ...previousMovements,
-    ]);
-    setCompletedSale({
-      receipt,
-      date: new Date().toISOString(),
-      lines: saleLines,
-      subtotal,
-      discount,
-      total: totalDue,
-      payment: salePayment,
-      amountPaid: amountPaidValue,
-      change: salePayment === 'Cash' ? change : 0,
-      customer: salePayment === 'Credit' ? creditCustomer.trim() : undefined,
-      reference: salePayment === 'GCash' ? gcashReference.trim() : undefined,
-      cashier: cashierName,
-      paymentStatus: salePayment === 'GCash' ? (gcashPaid ? 'Paid' : 'Unpaid') : undefined,
-      creditBalance: salePayment === 'Credit' ? creditBalance : 0,
-    });
+    const paid = Number(tendered || 0);
+    setSaving(true);
+    let sale: ApiSale;
+    try {
+      sale = await createSale({
+        lines,
+        discountPercent,
+        ...(paymentMethod === 'Cash'
+          ? { payment: 'cash', amountTendered: paid }
+          : paymentMethod === 'GCash'
+            ? { payment: 'gcash', gcashReference: gcashReference.trim(), gcashPaid }
+            : { payment: 'credit', customerName: creditCustomer.trim(), downPayment: paid }),
+      });
+    } catch (error) {
+      // Nothing was saved (the server records all of a sale or none of it): fix and try again.
+      showToast(error instanceof Error ? error.message : 'The sale was not saved.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
+    setCompletedSale(shownSale(sale, saleLines));
     setCart([]);
     setTransactionActive(false);
     setOpenedAt(null);
@@ -642,7 +517,8 @@ export function CashierPosPage() {
     setGcashPaid(false);
     setPaymentMethod('Cash');
     playSound('success');
-    showToast(`Transaction ${receipt} completed.`, 'success');
+    showToast(`Transaction ${sale.receipt} completed.`, 'success');
+    void refreshAfterSale();
   }
 
   return (
@@ -1098,9 +974,9 @@ export function CashierPosPage() {
                 <button
                   className="pos-void__submit"
                   type="submit"
-                  disabled={!voidTarget || !voidReason.trim()}
+                  disabled={!voidTarget || !voidReason.trim() || saving}
                 >
-                  Void {voidTarget || 'sale'}
+                  {saving ? 'Saving…' : `Void ${voidTarget || 'sale'}`}
                 </button>
               </div>
             </form>
@@ -1133,9 +1009,9 @@ export function CashierPosPage() {
               <button
                 className="pos-checkout-button pos-control-modal__submit"
                 type="submit"
-                disabled={!noChargeReason.trim()}
+                disabled={!noChargeReason.trim() || saving}
               >
-                Save no-charge record
+                {saving ? 'Saving…' : 'Save no-charge record'}
               </button>
             </form>
           )}
@@ -1361,9 +1237,11 @@ export function CashierPosPage() {
                     <button
                       className="pos-pay__submit"
                       type="submit"
-                      disabled={Boolean(paymentBlocker)}
+                      disabled={Boolean(paymentBlocker) || saving}
                     >
-                      {paymentMethod === 'Cash'
+                      {saving
+                        ? 'Saving…'
+                        : paymentMethod === 'Cash'
                         ? `Complete cash sale${change > 0 && !paymentBlocker ? ` · change ${formatMoney(change)}` : ''}`
                         : paymentMethod === 'GCash'
                           ? gcashPaid

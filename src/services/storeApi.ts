@@ -206,3 +206,60 @@ export type BarcodeLookupResult =
 
 export const lookupBarcode = (barcode: string) =>
   apiRequest<BarcodeLookupResult>(`/products/barcode-lookup/${encodeURIComponent(barcode)}`);
+
+/** A sale as the server records it, in the shape the sales pages read. */
+export type ApiSale = {
+  id: number;
+  receipt: string;
+  date: string;
+  items: number;
+  subtotal: number;
+  discount: number;
+  total: number;
+  payment: 'Cash' | 'GCash' | 'Credit' | 'No charge';
+  status: 'Completed' | 'Credit' | 'Pending GCash' | 'No charge' | 'Voided';
+  cashier: string;
+  customer?: string;
+  amountPaid: number;
+  change: number;
+  creditBalance: number;
+  downPayment?: number;
+  gcashReference?: string;
+  paymentStatus?: 'Paid' | 'Unpaid';
+  noChargeReason?: string;
+  voidedAt?: string;
+  voidReason?: string;
+  lines: Array<{ product: string; barcode: string; quantity: number; unitPrice: number }>;
+};
+
+export type NewSale = {
+  lines: Array<{ productId: number; quantity: number }>;
+  payment: 'cash' | 'gcash' | 'credit' | 'no_charge';
+  discountPercent?: number;
+  amountTendered?: number;
+  gcashReference?: string;
+  gcashPaid?: boolean;
+  customerName?: string;
+  downPayment?: number;
+  noChargeReason?: string;
+};
+
+export const listSales = (days = 400) => apiRequest<ApiSale[]>(`/sales?days=${days}`);
+
+export const createSale = (input: NewSale) =>
+  apiRequest<ApiSale>('/sales', { method: 'POST', body: JSON.stringify(input) });
+
+export const voidSale = (id: number, reason: string) =>
+  apiRequest<ApiSale>(`/sales/${id}/void`, { method: 'POST', body: JSON.stringify({ reason }) });
+
+export const payUtang = (id: number, amount: number) =>
+  apiRequest<ApiSale>(`/sales/${id}/payments`, {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  });
+
+export const renameUtangCustomer = (from: string, to: string) =>
+  apiRequest<{ moved: number }>('/sales/customers/rename', {
+    method: 'PATCH',
+    body: JSON.stringify({ from, to }),
+  });

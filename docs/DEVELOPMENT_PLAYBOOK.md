@@ -388,6 +388,12 @@ database access only from my own address and removed after.
 | Test rows that cannot be deleted | Ledger rows are never deleted (by design) | Name test rows clearly, hide them, and reset the dev database in Phase 7 |
 
 ---
+- Once the server records money (sales, payments), stop trusting totals the browser sends.
+  Keep the old request fields optional so an older open tab still works, but compute the
+  numbers on the server from its own tables.
+- Test the "two people at once" case for anything that takes the last item (stock, a slot,
+  a seat): fire two requests in parallel and check one wins and one is refused.
+
 
 ## Appendix: Dagohoy Pharmacy (first client) as the example
 
@@ -408,4 +414,5 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 6, slice 3 | Shifts on the server (migration 007): one open shift enforced by the database, cash in/out, close with server-computed expected cash and a frozen duty report snapshot |
 | 2026-11-10 | 6, extra | Product archive/restore and CSV/Excel import with a dry-run preview (no PH barcode dataset found; Go-UPC / EAN-Search barcode lookup kept as an option to test) |
 | 2026-11-10 | 6, extra | Barcode lookup for new products: own catalog, then a cache, then BarCloud PH (₱0.10/scan, 100 free credits); each barcode paid once, daily limit, key only on the server |
+| 2026-11-10 | 6, slice 4 | Sales on the server: one transaction per sale (server prices, FEFO, row locks, payments), void with reversal entries, utang payments and customer rename; shift close counts sales cash from the payments table. A script checked 21 cases and a race test (two counters, last piece) passed; the web Sales Counter and Credit pages were clicked through in the browser |
 | next | 6 | Sales, utang and expenses, reports |

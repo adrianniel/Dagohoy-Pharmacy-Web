@@ -3,8 +3,11 @@ import { useToast } from '../../components/toast';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { addCashEvent, getSession } from '../../data/registerSession';
+import { syncSales } from '../../data/serverSync';
+import { payUtang, renameUtangCustomer } from '../../services/storeApi';
 
 type CreditSale = {
+  id?: number;
   receipt: string;
   date: string;
   total: number;
@@ -103,22 +106,22 @@ export function CreditPage() {
     setView('collect');
   }
 
-  function recordPayment(receipt: string, amount: number) {
-    const allSales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as CreditSale[];
-    const nextSales = allSales.map((sale) => {
-      if (sale.receipt !== receipt) return sale;
-      const remaining = Math.max(0, Number(sale.creditBalance) - amount);
-      return {
-        ...sale,
-        amountPaid: Number(sale.amountPaid) + amount,
-        creditBalance: remaining,
-        status: remaining === 0 ? 'Completed' : 'Credit',
-      };
-    });
-    localStorage.setItem(SALES_KEY, JSON.stringify(nextSales));
-    // The cash goes into the drawer, so the open shift has to expect it at closing.
+  async function recordPayment(receipt: string, amount: number) {
+    const target = sales.find((sale) => sale.receipt === receipt);
+    if (!target?.id) {
+      showToast('That credit sale could not be found.', 'error');
+      return;
+    }
+    try {
+      await payUtang(target.id, amount);
+      await syncSales();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The payment was not saved.', 'error');
+      return;
+    }
+    // The server adds the cash to the open shift's count; this copy shows it on the register.
     const shiftOpen = Boolean(getSession());
-    const customer = allSales.find((sale) => sale.receipt === receipt)?.customer;
+    const customer = target.customer;
     if (shiftOpen) {
       addCashEvent({
         id: `UTANG-${Date.now()}`,
@@ -141,7 +144,7 @@ export function CreditPage() {
   }
 
   /** Renames a customer on every one of their credit sales. Returns true when saved. */
-  function renameCustomer(from: Customer, nextName: string) {
+  async function renameCustomer(from: Customer, nextName: string) {
     const name = nextName.trim();
     if (!name) {
       showToast('Enter a name for this customer.', 'error');
@@ -160,17 +163,13 @@ export function CreditPage() {
     ) {
       return false;
     }
-    const allSales = JSON.parse(localStorage.getItem(SALES_KEY) ?? '[]') as CreditSale[];
-    localStorage.setItem(
-      SALES_KEY,
-      JSON.stringify(
-        allSales.map((sale) =>
-          sale.payment === 'Credit' && customerKey(sale.customer) === from.key
-            ? { ...sale, customer: name }
-            : sale,
-        ),
-      ),
-    );
+    try {
+      await renameUtangCustomer(from.name, name);
+      await syncSales();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'The new name was not saved.', 'error');
+      return false;
+    }
     setSales(readCreditSales());
     setSelectedKey(nextKey);
     showToast(other ? `Joined under ${name}.` : `Customer renamed to ${name}.`, 'success');
@@ -418,7 +417,7 @@ function CustomerDetail({
   customer: Customer;
   onBack: () => void;
   onCollect: (receipt: string) => void;
-  onRename: (name: string) => boolean;
+  onRename: (name: string) => Promise<boolean>;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(customer.name);
@@ -445,9 +444,9 @@ function CustomerDetail({
       {editing && (
         <form
           className="stock-index__form"
-          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+          onSubmit={async (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
-            if (onRename(name)) setEditing(false);
+            if (await onRename(name)) setEditing(false);
           }}
         >
           <p className="stock-index__form-title">
@@ -559,7 +558,7 @@ function CreditPaymentForm({
 }: {
   credits: CreditSale[];
   initialReceipt: string;
-  onSave: (receipt: string, amount: number) => void;
+  onSave: (receipt: string, amount: number) => Promise<void>;
 }) {
   const [receipt, setReceipt] = useState(
     credits.some((credit) => credit.receipt === initialReceipt)
@@ -574,7 +573,7 @@ function CreditPaymentForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (valid) onSave(receipt, value);
+    if (valid) void onSave(receipt, value);
   }
 
   return (

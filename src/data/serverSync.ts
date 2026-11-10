@@ -3,6 +3,7 @@ import {
   listLots,
   listMovements,
   listProducts,
+  listSales,
   listStaff,
   listSuppliers,
   type ApiProduct,
@@ -17,14 +18,42 @@ import { syncShift } from './registerSession';
  * the staff roster and the store settings. Pages still read browser copies of them, so
  * the copies below are refreshed from the server after login and after every change.
  *
- * shortcut: sales still live in the browser until Phase 6, so a sale made at the Sales
- * Counter does not lower the server stock yet; the next refresh shows the server count.
- * When the last page reads the API directly, this file goes away.
+ * Sales are recorded on the server too; the copy below feeds the Transactions, Credit,
+ * dashboard and report pages. When the last page reads the API directly, this file goes away.
  */
 
 const SUPPLIERS_KEY = 'dagohoy_demo_suppliers';
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 const ROSTER_KEY = 'dagohoy_demo_staff_roster';
+const SALES_KEY = 'dagohoy_demo_sales';
+const VOID_LOG_KEY = 'dagohoy_demo_void_log';
+
+/** Sales (about the last 13 months) and the void log made from the voided ones. */
+export async function syncSales() {
+  const sales = await listSales();
+  localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+  localStorage.setItem(
+    VOID_LOG_KEY,
+    JSON.stringify(
+      sales
+        .filter((sale) => sale.status === 'Voided')
+        .map((sale) => ({
+          receipt: sale.receipt,
+          date: sale.voidedAt ?? sale.date,
+          reason: sale.voidReason ?? '',
+          cashier: sale.cashier,
+          total: sale.total,
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    ),
+  );
+  window.dispatchEvent(new Event('dagohoy-sales-synced'));
+}
+
+/** After a sale or void: the sales copy and the stock it moved. */
+export async function syncAfterSale() {
+  await Promise.all([syncSales(), syncCatalog(), syncStock()]);
+}
 
 /** Products from the server, in the shape the pages read. Stock comes from the ledger. */
 export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
@@ -141,5 +170,6 @@ export async function syncFromServer() {
     syncSuppliers(),
     syncRoster(),
     syncShift(),
+    syncSales(),
   ]);
 }
