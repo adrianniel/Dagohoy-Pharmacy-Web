@@ -4201,3 +4201,186 @@
 .connection-signal.is-checking {
   --signal: #7a8a80;
 }
+
+/* Settings > Subscription: the plan, paying by GCash QR, and the payment history. */
+.subscription {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.subscription__plan {
+  --tone: #1a7f55;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #e3e8dc;
+  border-left: 4px solid var(--tone);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.subscription__plan.is-wait,
+.subscription__plan.is-due {
+  --tone: #b7791f;
+}
+
+.subscription__plan.is-late {
+  --tone: #c0392b;
+}
+
+.subscription__plan.is-muted {
+  --tone: #7a8a80;
+}
+
+.subscription__plan p {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6a7b71;
+}
+
+.subscription__plan strong {
+  display: block;
+  margin: 2px 0 4px;
+  font-size: 1.5rem;
+  color: #13322a;
+}
+
+.subscription__plan strong small {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6a7b71;
+}
+
+.subscription__plan span {
+  font-size: 0.86rem;
+  color: #3d4f45;
+}
+
+.subscription__plan em,
+.subscription__chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone, #1a7f55) 12%, #fff);
+  color: var(--tone, #1a7f55);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.subscription__chip.is-pending {
+  --tone: #b7791f;
+}
+
+.subscription__chip.is-rejected {
+  --tone: #c0392b;
+}
+
+.subscription__pay {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 20px;
+  padding: 16px 18px;
+  border: 1px solid #e3e8dc;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.subscription__qr {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  border-radius: 10px;
+  background: #f3f6ef;
+  color: #6a7b71;
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.subscription__qr img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.subscription__pay form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subscription__pay ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  color: #3d4f45;
+}
+
+.subscription__pay label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #13322a;
+}
+
+.subscription__pay input {
+  padding: 10px 12px;
+  border: 1px solid #c9d2c2;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.subscription__pay .cashier-primary-action {
+  align-self: flex-start;
+}
+
+.subscription__due {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-size: 1rem;
+  color: #13322a;
+}
+
+.subscription__due small {
+  font-size: 0.8rem;
+  color: #6a7b71;
+}
+
+.subscription-notice {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #f0d9a8;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #7a5212;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.subscription-notice.is-late {
+  border-color: #f2c4bb;
+  background: #fdeeea;
+  color: #8f2c1f;
+}
+
+.subscription-notice a {
+  margin-left: 6px;
+  color: inherit;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .subscription__pay {
+    grid-template-columns: 1fr;
+  }
+
+  .subscription__qr {
+    max-width: 220px;
+  }
+}

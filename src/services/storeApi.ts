@@ -333,3 +333,33 @@ export type ApiProfitMonth = {
 /** The last `months` months, oldest first (owner only). */
 export const getProfit = (months = 6) =>
   apiRequest<ApiProfitMonth[]>(`/reports/profit?months=${months}`);
+
+/** The owner's monthly system subscription (Settings > Subscription). */
+export type ApiBilling = {
+  status: 'not_started' | 'paid' | 'pending' | 'due' | 'overdue';
+  fee: number;
+  startMonth: string | null;
+  months: Array<{ month: string; state: 'paid' | 'pending' | 'unpaid' }>;
+  unpaidMonths: string[];
+  paidThrough: string | null;
+  qrAvailable: boolean;
+  payments: Array<{
+    id: number;
+    firstMonth: string;
+    months: number;
+    amount: number;
+    reference: string;
+    status: 'pending' | 'confirmed' | 'rejected';
+    submittedAt: string;
+    submittedBy: string;
+    decidedAt: string | null;
+  }>;
+};
+
+export const getBilling = () => apiRequest<ApiBilling>('/billing');
+
+export const submitBillingPayment = (reference: string) =>
+  apiRequest<{ id: number; firstMonth: string; months: number; amount: number }>(
+    '/billing/payments',
+    { method: 'POST', body: JSON.stringify({ reference }) },
+  );

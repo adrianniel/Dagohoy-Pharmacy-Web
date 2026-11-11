@@ -321,6 +321,11 @@ database access only from my own address and removed after.
 - Maintenance routine: backups, updates, renewal dates of hosting and domain.
 - Change requests: each one becomes a small new phase-6 slice with a quote.
 - Update this playbook with the lessons from the project.
+- **Monthly fee inside the system:** Settings > Subscription. The owner scans your GCash QR,
+  types the reference, and you confirm it on a private review page
+  (`/api/billing/review` + a secret key). Without DTI/BIR a payment gateway (PayMongo) is not
+  possible; plain GCash works and costs nothing. Never lock the store's system for late payment:
+  show a reminder, and put the consequences in the service agreement.
 
 ---
 
@@ -413,6 +418,9 @@ database access only from my own address and removed after.
 - Ask the owner early how money really moves in the shop. A small shop thinks in "cash in the
   drawer"; a separate expense ledger that does not touch the drawer just confuses them. Record
   one event and show it in two places rather than asking staff to enter it twice.
+- Migration checksums must ignore line endings. Git on Windows checks files out with CRLF and
+  Linux with LF; after switching branches the runner refused an untouched migration as
+  "modified". The runner now hashes the LF form (and accepts older CRLF hashes).
 
 
 ## Appendix: Dagohoy Pharmacy (first client) as the example
