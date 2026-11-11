@@ -22,3 +22,5 @@ coverage/
 .claude/skills/
 .env.production
 .env.staging
+# Local Claude Code preview config
+.claude/launch.json
