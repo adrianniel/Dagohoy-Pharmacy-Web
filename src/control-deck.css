@@ -573,95 +573,168 @@
   margin: 0;
 }
 
-/* Today in a dark band on the left, the other numbers as a ruled ledger on the right. */
-.overview-glance {
+/* Overview widgets: small cards, one number each, like a phone banking app. */
+.overview-widgets {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  overflow: hidden;
-  border: 1px solid #dfe5d6;
-  border-radius: 16px;
-  background: #fffdf5;
+  grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.overview-glance__today {
+.overview-widget {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 22px 26px 24px;
-  background: #13322a;
-  color: #fff;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid #e3e8dc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(19, 50, 42, 0.05);
 }
 
-.overview-glance__today p {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #9fd3b6;
+.overview-widget header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.overview-glance__today strong {
-  font-size: clamp(2.2rem, 4.2vw, 3.3rem);
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
+.overview-widget__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #eef4ee;
+  color: #1b6b4c;
 }
 
-.overview-glance__today span {
+.overview-widget__icon svg,
+.overview-widget__open svg {
+  width: 16px;
+  height: 16px;
+}
+
+.overview-widget__label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
   font-size: 0.86rem;
-  color: #cfe3d7;
-}
-
-.overview-glance__ledger {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 6px 24px;
-}
-
-.overview-glance__ledger div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 0;
-}
-
-.overview-glance__ledger div + div {
-  border-top: 1px dashed #d6dccb;
-}
-
-.overview-glance__ledger dt {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.92rem;
   font-weight: 700;
   color: #13322a;
 }
 
-.overview-glance__ledger dt small {
-  font-size: 0.78rem;
+.overview-widget__label small {
+  overflow: hidden;
+  font-size: 0.74rem;
   font-weight: 500;
-  color: #6a7b71;
-}
-
-.overview-glance__ledger dd {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #13322a;
-  font-variant-numeric: tabular-nums;
+  color: #7a8a80;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.overview-glance__ledger .is-owed dd {
-  color: #b0582a;
+.overview-widget__open {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e3e8dc;
+  border-radius: 8px;
+  color: #3d4f45;
+  transform: rotate(-45deg);
 }
 
-@media (max-width: 760px) {
-  .overview-glance {
+.overview-widget__open:hover {
+  background: #f3f6ef;
+}
+
+.overview-widget__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 2px;
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #13322a;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-widget__value span {
+  color: #a3ada6;
+}
+
+.overview-widget__value em {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2f3e8;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  color: #1a7f55;
+  align-self: center;
+}
+
+.overview-widget__value em.is-down {
+  background: #fbe9e4;
+  color: #b0402c;
+}
+
+.overview-widget__note {
+  margin: -4px 0 0;
+  font-size: 0.76rem;
+  color: #7a8a80;
+}
+
+/* The lead widget is filled green, like a card in a wallet. */
+.overview-widget.is-green {
+  border-color: transparent;
+  background: linear-gradient(140deg, #1b6b4c, #13573c);
+  color: #fff;
+}
+
+.overview-widget.is-green .overview-widget__icon {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.overview-widget.is-green .overview-widget__label,
+.overview-widget.is-green .overview-widget__value {
+  color: #fff;
+}
+
+.overview-widget.is-green .overview-widget__label small,
+.overview-widget.is-green .overview-widget__note,
+.overview-widget.is-green .overview-widget__value span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.overview-widget.is-green .overview-widget__open {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.overview-widget.is-green .overview-widget__open:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.overview-widget.is-green .overview-widget__value em {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+@media (max-width: 1100px) {
+  .overview-widgets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .overview-widgets {
     grid-template-columns: 1fr;
   }
 }

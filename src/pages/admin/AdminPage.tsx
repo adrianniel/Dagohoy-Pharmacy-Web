@@ -1258,6 +1258,53 @@ function BarList({
   );
 }
 
+/** One overview widget: icon, label, the amount (cents dimmed), a small badge and a link. */
+function Widget({
+  icon,
+  label,
+  sub,
+  value,
+  badge,
+  down = false,
+  note,
+  to,
+  tone,
+}: {
+  icon: Parameters<typeof CashierIcon>[0]['name'];
+  label: string;
+  sub: string;
+  value: number;
+  badge?: string;
+  down?: boolean;
+  note?: string;
+  to: string;
+  tone?: 'green';
+}) {
+  const [pesos, cents] = money(value).split('.');
+  return (
+    <article className={`overview-widget${tone ? ` is-${tone}` : ''}`}>
+      <header>
+        <span className="overview-widget__icon" aria-hidden="true">
+          <CashierIcon name={icon} />
+        </span>
+        <span className="overview-widget__label">
+          {label}
+          <small>{sub}</small>
+        </span>
+        <Link className="overview-widget__open" to={to} aria-label={`Open ${label}`}>
+          <CashierIcon name="arrow" />
+        </Link>
+      </header>
+      <p className="overview-widget__value">
+        {pesos}
+        {cents !== undefined && <span>.{cents}</span>}
+        {badge && <em className={down ? 'is-down' : ''}>{badge}</em>}
+      </p>
+      {note && <p className="overview-widget__note">{note}</p>}
+    </article>
+  );
+}
+
 /** Owner overview: the important numbers and charts at a glance. Read only, no controls. */
 function AdminDashboard() {
   const threshold = getLowStockThreshold();
@@ -1343,14 +1390,6 @@ function AdminDashboard() {
   const expired = lots.filter((lot) => lot.days < 0);
   const expiringSoon = lots.filter((lot) => lot.days >= 0 && lot.days <= 30);
 
-  const change = !today.length
-    ? `No sales yet today · yesterday ${money(salesYesterday)}`
-    : salesYesterday
-      ? `${salesToday >= salesYesterday ? '▲' : '▼'} ${Math.abs(
-          Math.round(((salesToday - salesYesterday) / salesYesterday) * 100),
-        )}% vs yesterday (${money(salesYesterday)})`
-      : 'No sales yesterday to compare';
-
   return (
     <div className="cashier-page overview">
       <header className="overview__head">
@@ -1365,39 +1404,51 @@ function AdminDashboard() {
         </p>
       </header>
 
-      {/* Today leads; the other numbers sit beside it as a short ledger, not four equal cards. */}
-      <section className="overview-glance" aria-label="Today and this month">
-        <div className="overview-glance__today">
-          <p>Sales today</p>
-          <strong>{money(salesToday)}</strong>
-          <span>
-            {today.length > 0 && `${today.length} sale${today.length === 1 ? '' : 's'} · `}
-            {change}
-          </span>
-        </div>
-        <dl className="overview-glance__ledger">
-          <div>
-            <dt>
-              This month <small>{monthSales.length} sales</small>
-            </dt>
-            <dd>{money(sum(monthSales))}</dd>
-          </div>
-          <div className={unpaidCredit > 0 ? 'is-owed' : ''}>
-            <dt>
-              Utang not yet paid <small>still owed by customers</small>
-            </dt>
-            <dd>{money(unpaidCredit)}</dd>
-          </div>
-          <div>
-            <dt>
-              Stock on the shelf{' '}
-              <small>
-                {inventory.length} product{inventory.length === 1 ? '' : 's'}, at selling price
-              </small>
-            </dt>
-            <dd>{money(stockAtPrice)}</dd>
-          </div>
-        </dl>
+      {/* Small widgets: label, one number, a hint. The cents are dimmed so the pesos read first. */}
+      <section className="overview-widgets" aria-label="Today and this month">
+        <Widget
+          tone="green"
+          icon="cash"
+          label="Sales today"
+          sub={
+            today.length ? `${today.length} sale${today.length === 1 ? '' : 's'}` : 'No sales yet'
+          }
+          value={salesToday}
+          badge={
+            today.length && salesYesterday
+              ? `${salesToday >= salesYesterday ? '+' : '−'}${Math.abs(
+                  Math.round(((salesToday - salesYesterday) / salesYesterday) * 100),
+                )}%`
+              : undefined
+          }
+          down={salesToday < salesYesterday}
+          note={`Yesterday ${money(salesYesterday)}`}
+          to="/cashier/transactions"
+        />
+        <Widget
+          icon="reports"
+          label="This month"
+          sub={now.toLocaleDateString('en-PH', { month: 'long' })}
+          value={sum(monthSales)}
+          badge={`${monthSales.length} sales`}
+          to="/admin/reports"
+        />
+        <Widget
+          icon="credit"
+          label="Utang unpaid"
+          sub="Still owed by customers"
+          value={unpaidCredit}
+          down={unpaidCredit > 0}
+          to="/admin/credits"
+        />
+        <Widget
+          icon="inventory"
+          label="Stock value"
+          sub="At selling price"
+          value={stockAtPrice}
+          badge={`${inventory.length} products`}
+          to="/admin/products"
+        />
       </section>
 
       <div className="overview__grid">
