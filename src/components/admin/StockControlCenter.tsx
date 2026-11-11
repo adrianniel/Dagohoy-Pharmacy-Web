@@ -84,8 +84,13 @@ function loadSupplierNames(): string[] {
   try {
     const stored = JSON.parse(localStorage.getItem(SUPPLIER_KEY) ?? 'null') as Array<{
       name?: string;
+      status?: string;
     }> | null;
-    const names = (stored ?? []).map((supplier) => supplier.name?.trim()).filter(Boolean);
+    // Archived suppliers are not offered for new deliveries.
+    const names = (stored ?? [])
+      .filter((supplier) => supplier.status !== 'Inactive')
+      .map((supplier) => supplier.name?.trim())
+      .filter(Boolean);
     return names.length ? (names as string[]) : DEFAULT_SUPPLIERS;
   } catch {
     return DEFAULT_SUPPLIERS;

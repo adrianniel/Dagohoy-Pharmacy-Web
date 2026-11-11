@@ -22,6 +22,7 @@ import {
   createProduct,
   lookupBarcode,
   createSupplier,
+  setSupplierActive,
   saveSettings as saveStoreSettings,
   updateProduct,
 } from '../../services/storeApi';
@@ -32,12 +33,12 @@ import { getCurrentAccount } from '../../data/accountStore';
 import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
-type SupplierTab = 'list' | 'add';
+type SupplierTab = 'list' | 'archived' | 'add';
 type SettingsTab = 'details' | 'alerts' | 'gcash';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
-type Supplier = { name: string; contact: string; products?: number; status: string };
+type Supplier = { id?: string; name: string; contact: string; products?: number; status: string };
 const suppliers: Supplier[] = [];
 
 type SavedSale = {
@@ -164,6 +165,34 @@ export function AdminPage({ section }: { section: AdminSection }) {
     showToast('Restock order basis downloaded. Confirm quantities with your supplier.');
   }
 
+  const activeSuppliers = supplierList.filter((supplier) => supplier.status !== 'Inactive');
+  const archivedSuppliers = supplierList.filter((supplier) => supplier.status === 'Inactive');
+
+  /** Archive or restore a supplier. Archived ones leave the list and the Receive stock form. */
+  async function changeSupplier(supplier: Supplier, active: boolean) {
+    if (!supplier.id) return;
+    if (
+      !active &&
+      !window.confirm(
+        `Archive ${supplier.name}? It leaves the supplier list and Receive stock. Past deliveries keep its name, and you can restore it under Archived.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await setSupplierActive(Number(supplier.id), active);
+      await syncSuppliers();
+    } catch (caught) {
+      showToast(
+        caught instanceof Error ? caught.message : 'Could not change the supplier.',
+        'error',
+      );
+      return;
+    }
+    setSupplierList(loadLocalList(SUPPLIER_KEY, suppliers));
+    showToast(active ? `${supplier.name} restored.` : `${supplier.name} archived.`);
+  }
+
   const supplierItems: Array<ControlItem<SupplierTab>> = [
     {
       key: 'list',
@@ -171,7 +200,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
       title: 'Supplier list',
       hint: 'Who supplies the stock',
       tone: 'forest',
-      count: supplierList.length,
+      count: activeSuppliers.length,
+    },
+    {
+      key: 'archived',
+      icon: 'stock',
+      title: 'Archived',
+      hint: 'No longer used',
+      tone: 'slate',
+      count: archivedSuppliers.length,
     },
     {
       key: 'add',
@@ -433,12 +470,16 @@ export function AdminPage({ section }: { section: AdminSection }) {
             onSelect={setSupplierTab}
             items={supplierItems}
           />
-          {supplierTab === 'list' && (
+          {(supplierTab === 'list' || supplierTab === 'archived') && (
             <ControlPanel
               id="suppliers"
-              activeKey="list"
-              title="Supplier list"
-              about="Everyone the pharmacy buys stock from."
+              activeKey={supplierTab}
+              title={supplierTab === 'list' ? 'Supplier list' : 'Archived suppliers'}
+              about={
+                supplierTab === 'list'
+                  ? 'Everyone the pharmacy buys stock from.'
+                  : 'Suppliers no longer used. Restore one to pick it again when stock is delivered.'
+              }
             >
               <section className="cashier-panel cashier-list-panel">
                 <div
@@ -458,37 +499,53 @@ export function AdminPage({ section }: { section: AdminSection }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {supplierList.map((supplier) => (
-                        <tr key={supplier.name}>
-                          <td>
-                            <strong>{supplier.name}</strong>
-                          </td>
-                          <td>{supplier.contact}</td>
-                          <td>{supplierLots(supplier.name)} lots received</td>
-                          <td>
-                            <StatusBadge value={supplier.status} />
-                          </td>
-                          <td>
-                            <button
-                              className="cashier-view-button"
-                              type="button"
-                              onClick={() =>
-                                showToast(
-                                  `${supplier.name} · ${supplier.contact || 'No location'} · ${supplierLots(supplier.name)} lots received`,
-                                  'info',
-                                )
-                              }
-                            >
-                              View details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {(supplierTab === 'list' ? activeSuppliers : archivedSuppliers).map(
+                        (supplier) => (
+                          <tr key={supplier.name}>
+                            <td>
+                              <strong>{supplier.name}</strong>
+                            </td>
+                            <td>{supplier.contact}</td>
+                            <td>{supplierLots(supplier.name)} lots received</td>
+                            <td>
+                              <StatusBadge value={supplier.status} />
+                            </td>
+                            <td>
+                              <div className="staff-row-actions">
+                                <button
+                                  className="cashier-view-button"
+                                  type="button"
+                                  onClick={() =>
+                                    showToast(
+                                      `${supplier.name} · ${supplier.contact || 'No location'} · ${supplierLots(supplier.name)} lots received`,
+                                      'info',
+                                    )
+                                  }
+                                >
+                                  View details
+                                </button>
+                                <button
+                                  className="cashier-view-button"
+                                  type="button"
+                                  onClick={() =>
+                                    void changeSupplier(supplier, supplierTab !== 'list')
+                                  }
+                                >
+                                  {supplierTab === 'list' ? 'Archive' : 'Restore'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ),
+                      )}
                     </tbody>
                   </table>
                 </div>
                 <div className="cashier-table-footer">
-                  <span>{supplierList.length} supplier records</span>
+                  <span>
+                    {(supplierTab === 'list' ? activeSuppliers : archivedSuppliers).length}{' '}
+                    {supplierTab === 'list' ? 'active' : 'archived'} supplier(s)
+                  </span>
                 </div>
               </section>
             </ControlPanel>

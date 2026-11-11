@@ -47,6 +47,13 @@ export const listSuppliers = () => apiRequest<ApiSupplier[]>('/suppliers');
 export const createSupplier = (input: { name: string; contact: string }) =>
   apiRequest<ApiSupplier>('/suppliers', { method: 'POST', body: JSON.stringify(input) });
 
+/** Archive (active false) or restore (active true) a supplier. Past deliveries keep its name. */
+export const setSupplierActive = (id: number, active: boolean) =>
+  apiRequest<ApiSupplier>(`/suppliers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  });
+
 export type ApiStaff = {
   id: number;
   name: string;
