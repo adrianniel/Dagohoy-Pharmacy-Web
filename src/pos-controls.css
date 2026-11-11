@@ -4152,3 +4152,52 @@
   color: #176246;
   border-top: 2px solid #13322a;
 }
+
+/* Top bar Wi-Fi sign: how fast the server answers. */
+.connection-signal {
+  --signal: #1a7f55;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--signal) 8%, #fff);
+  color: var(--signal);
+  font-size: 0.82rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.connection-signal svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.connection-signal svg :not(.is-lit) {
+  opacity: 0.22;
+}
+
+.connection-signal circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.connection-signal.is-fair {
+  --signal: #b7791f;
+}
+
+.connection-signal.is-slow,
+.connection-signal.is-offline {
+  --signal: #c0392b;
+}
+
+.connection-signal.is-checking {
+  --signal: #7a8a80;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getSession, isStoreOpen, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
 import { CashierIcon } from './CashierIcon';
+import { ConnectionSignal } from './ConnectionSignal';
 import { ShiftControls } from './ShiftControls';
 
 interface CashierHeaderProps {
@@ -70,6 +71,7 @@ export function CashierHeader({ title, onOpenSidebar }: CashierHeaderProps) {
         <h1>{title}</h1>
       </div>
       <div className="cashier-header__meta">
+        <ConnectionSignal />
         <div className={`cashier-store-status${storeOpen ? ' is-open' : ''}`} role="status">
           <span aria-hidden="true" />
           <div>
