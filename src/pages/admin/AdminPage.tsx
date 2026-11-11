@@ -6,7 +6,7 @@ import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { ProfitReport } from '../../components/admin/ProfitReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
-import { SubscriptionNotice, SubscriptionPanel } from '../../components/admin/SubscriptionPanel';
+import { SubscriptionPanel } from '../../components/admin/SubscriptionPanel';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
 import { formatHour, hourRange } from '../../components/hours';
@@ -887,6 +887,11 @@ function InventoryForm({
         setLookupNote('No details found for this barcode. Type them in.');
       } else if (result.status === 'invalid_barcode') {
         setLookupNote('');
+      } else if (result.status === 'paused') {
+        setLookupState('missing');
+        setLookupNote(
+          'Barcode lookup service is paused: the monthly subscription is not paid. Type the details in, and ask the owner to pay it.',
+        );
       } else {
         setLookupState('missing');
         setLookupNote('Could not get the details right now. Type them in.');
@@ -1412,7 +1417,6 @@ function AdminDashboard() {
 
   return (
     <div className="cashier-page overview">
-      <SubscriptionNotice />
       <header className="overview__head">
         <p>
           {now.toLocaleDateString('en-PH', {

@@ -203,7 +203,7 @@ export type BarcodeLookupResult =
   | { status: 'in_catalog'; productId: number; name: string }
   | { status: 'found'; suggestion: BarcodeSuggestion }
   | { status: 'not_found' }
-  | { status: 'unavailable' | 'invalid_barcode' };
+  | { status: 'unavailable' | 'invalid_barcode' | 'paused' };
 
 export const lookupBarcode = (barcode: string) =>
   apiRequest<BarcodeLookupResult>(`/products/barcode-lookup/${encodeURIComponent(barcode)}`);
@@ -336,13 +336,15 @@ export const getProfit = (months = 6) =>
 
 /** The owner's monthly system subscription (Settings > Subscription). */
 export type ApiBilling = {
-  status: 'not_started' | 'paid' | 'pending' | 'due' | 'overdue';
-  items: Array<{ label: string; amount: number }>;
+  status: 'not_started' | 'paid' | 'pending' | 'upcoming' | 'due' | 'overdue';
   fee: number;
   startMonth: string | null;
   months: Array<{ month: string; state: 'paid' | 'pending' | 'unpaid' }>;
   unpaidMonths: string[];
   paidThrough: string | null;
+  dueDate: string | null;
+  pauseDate: string | null;
+  lookupActive: boolean;
   qrAvailable: boolean;
   payments: Array<{
     id: number;

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { CashierHeader } from '../components/cashier/CashierHeader';
 import { CashierSidebar } from '../components/cashier/CashierSidebar';
+import { SubscriptionNotice } from '../components/admin/SubscriptionPanel';
+import { getCurrentAccount } from '../data/accountStore';
 
 const routeTitles: Record<string, string> = {
   '/cashier/dashboard': 'Dashboard',
@@ -43,6 +45,8 @@ export function CashierLayout() {
         <div className={`cashier-workspace${isPos ? ' is-pos' : ''}`}>
           <CashierHeader title={title} onOpenSidebar={() => setMobileOpen(true)} />
           <main className="cashier-content" id="workspace-content" tabIndex={-1}>
+            {/* The subscription reminder is the owner's: the cashier account never sees it. */}
+            {getCurrentAccount()?.role === 'ADMIN' && <SubscriptionNotice />}
             <Outlet />
           </main>
         </div>
