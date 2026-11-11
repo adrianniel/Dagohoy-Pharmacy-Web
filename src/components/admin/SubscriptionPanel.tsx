@@ -91,13 +91,14 @@ export function SubscriptionPanel() {
 
       {paying && (
         <section className="subscription__pay">
-          <div className="subscription__qr">
+          <figure className="subscription__qr">
             {billing.qrAvailable ? (
               <img src={`${API_BASE_URL}/billing/qr`} alt="GCash QR code for the subscription" />
             ) : (
               <p>The payment QR is being set up.</p>
             )}
-          </div>
+            <figcaption>Scan with GCash · {money(billing.fee)}</figcaption>
+          </figure>
           <form onSubmit={(event) => void pay(event)}>
             <p className="subscription__due">
               Pay now: <b>{money(billing.fee)}</b>
@@ -135,48 +136,50 @@ export function SubscriptionPanel() {
         </section>
       )}
 
-      <h4 className="credit-section-title">Payment history</h4>
-      {billing.payments.length === 0 ? (
-        <p className="register-empty">No payments yet.</p>
-      ) : (
-        <table className="stock-index__table">
-          <thead>
-            <tr>
-              <th>Sent</th>
-              <th>For</th>
-              <th>Reference</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {billing.payments.map((payment) => (
-              <tr key={payment.id}>
-                <td>{new Date(payment.submittedAt).toLocaleDateString('en-PH')}</td>
-                <td>{monthName(payment.firstMonth)}</td>
-                <td>{payment.reference}</td>
-                <td>{money(payment.amount)}</td>
-                <td>
-                  <span className={`subscription__chip is-${payment.status}`}>
-                    {PAYMENT_STATUS[payment.status]}
-                  </span>
-                </td>
+      <section className="subscription__history">
+        <h4>Payment history</h4>
+        {billing.payments.length === 0 ? (
+          <p className="register-empty">No payments yet.</p>
+        ) : (
+          <table className="stock-index__table">
+            <thead>
+              <tr>
+                <th>Sent</th>
+                <th>For</th>
+                <th>Reference</th>
+                <th>Amount</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      <p className="register-empty">
-        This is a payment record for the system subscription, not a BIR receipt. A payment marked
-        "Not found" did not arrive with that reference: check the number and send it again.
-      </p>
+            </thead>
+            <tbody>
+              {billing.payments.map((payment) => (
+                <tr key={payment.id}>
+                  <td>{new Date(payment.submittedAt).toLocaleDateString('en-PH')}</td>
+                  <td>{monthName(payment.firstMonth)}</td>
+                  <td>{payment.reference}</td>
+                  <td>{money(payment.amount)}</td>
+                  <td>
+                    <span className={`subscription__chip is-${payment.status}`}>
+                      {PAYMENT_STATUS[payment.status]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="register-empty">
+          This is a payment record for the system subscription, not a BIR receipt. A payment marked
+          "Not found" did not arrive with that reference: check the number and send it again.
+        </p>
+      </section>
     </div>
   );
 }
 
 /**
- * The reminder at the top of every page, for the owner and the cashier: 3 days before the 1st, while due (with the last
- * day before the pause), and once the barcode lookup service is paused.
+ * The reminder at the top of every page, for the owner and the cashier: 3 days before the 1st,
+ * while due (with the last day before the pause), and once the barcode lookup service is paused.
  */
 export function SubscriptionNotice() {
   const billing = useBilling();
@@ -207,9 +210,7 @@ export function SubscriptionNotice() {
   return (
     <p className={`subscription-notice ${tone}`} role={tone === 'is-late' ? 'alert' : 'status'}>
       <span>{text}</span>
-      {pathname !== '/admin/subscription' && !pathname.startsWith('/admin/settings') && (
-        <Link to="/admin/subscription">Pay now</Link>
-      )}
+      {pathname !== '/admin/subscription' && <Link to="/admin/subscription">Pay now</Link>}
     </p>
   );
 }
@@ -217,14 +218,8 @@ export function SubscriptionNotice() {
 /** Subscription page in the sidebar, open to the owner and the cashier. */
 export function SubscriptionPage() {
   return (
-    <div className="cashier-page">
-      <section className="cashier-panel subscription-page">
-        <h3>Subscription</h3>
-        <p className="register-empty">
-          The monthly plan for the barcode lookup service and system maintenance.
-        </p>
-        <SubscriptionPanel />
-      </section>
+    <div className="cashier-page subscription-page">
+      <SubscriptionPanel />
     </div>
   );
 }

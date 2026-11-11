@@ -6,7 +6,6 @@ import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { ProfitReport } from '../../components/admin/ProfitReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
-import { SubscriptionPanel } from '../../components/admin/SubscriptionPanel';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
 import { formatHour, hourRange } from '../../components/hours';
@@ -36,7 +35,7 @@ import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 type SupplierTab = 'list' | 'archived' | 'add';
-type SettingsTab = 'details' | 'alerts' | 'gcash' | 'subscription';
+type SettingsTab = 'details' | 'alerts' | 'gcash';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -112,12 +111,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
     loadLocalList(SUPPLIER_KEY, suppliers),
   );
   const [supplierTab, setSupplierTab] = useState<SupplierTab>('list');
-  // ?tab=subscription opens the subscription card (the Overview reminder links there).
-  const [settingsTab, setSettingsTab] = useState<SettingsTab>(() =>
-    new URLSearchParams(window.location.search).get('tab') === 'subscription'
-      ? 'subscription'
-      : 'details',
-  );
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('details');
   const { showToast } = useToast();
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
@@ -252,14 +246,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       tone: 'blue',
       alert: !pharmacySettings.gcashNumber,
       about: 'The GCash number and QR the cashier shows the customer at checkout.',
-    },
-    {
-      key: 'subscription',
-      icon: 'receipt',
-      title: 'Subscription',
-      hint: 'System plan and payments',
-      tone: 'teal',
-      about: 'The monthly plan that keeps the system updated, backed up and supported.',
     },
   ];
 
@@ -611,22 +597,16 @@ export function AdminPage({ section }: { section: AdminSection }) {
             title={settingsItems.find((item) => item.key === settingsTab)?.title ?? 'Settings'}
             about={settingsItems.find((item) => item.key === settingsTab)?.about}
             actions={
-              settingsTab !== 'subscription' && (
-                <button
-                  className="cashier-primary-action"
-                  type="button"
-                  onClick={() => void saveSettings()}
-                >
-                  Save changes
-                </button>
-              )
+              <button
+                className="cashier-primary-action"
+                type="button"
+                onClick={() => void saveSettings()}
+              >
+                Save changes
+              </button>
             }
           >
-            {settingsTab === 'subscription' && <SubscriptionPanel />}
-            <section
-              className="cashier-panel settings-form"
-              hidden={settingsTab === 'subscription'}
-            >
+            <section className="cashier-panel settings-form">
               {settingsTab === 'details' && (
                 <>
                   <label>

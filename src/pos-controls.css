@@ -4202,24 +4202,31 @@
   --signal: #7a8a80;
 }
 
-/* Settings > Subscription: the plan, paying by GCash QR, and the payment history. */
+/* Subscription page: the plan, paying by GCash QR, and the payment history. */
 .subscription {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-width: 980px;
+}
+
+.subscription__plan,
+.subscription__pay,
+.subscription__history {
+  border: 1px solid #e3e8dc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(19, 50, 42, 0.05);
 }
 
 .subscription__plan {
   --tone: #1a7f55;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid #e3e8dc;
-  border-left: 4px solid var(--tone);
-  border-radius: 12px;
-  background: #fff;
+  padding: 18px 22px;
+  border-left: 5px solid var(--tone);
 }
 
 .subscription__plan.is-wait,
@@ -4244,8 +4251,8 @@
 
 .subscription__plan strong {
   display: block;
-  margin: 2px 0 4px;
-  font-size: 1.5rem;
+  margin: 2px 0 2px;
+  font-size: 1.6rem;
   color: #13322a;
 }
 
@@ -4262,7 +4269,7 @@
 
 .subscription__plan em,
 .subscription__chip {
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--tone, #1a7f55) 12%, #fff);
   color: var(--tone, #1a7f55);
@@ -4280,76 +4287,126 @@
   --tone: #c0392b;
 }
 
+/* QR on the left, large enough to scan from a phone; the steps and the form on the right. */
 .subscription__pay {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: 20px;
-  padding: 16px 18px;
-  border: 1px solid #e3e8dc;
-  border-radius: 12px;
-  background: #fff;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding: 22px;
 }
 
 .subscription__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f3f6ef;
+}
+
+.subscription__qr img {
+  display: block;
+  width: 100%;
+  max-width: 272px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.subscription__qr p {
   display: grid;
   place-items: center;
-  min-height: 200px;
-  border-radius: 10px;
-  background: #f3f6ef;
+  width: 100%;
+  min-height: 240px;
+  margin: 0;
   color: #6a7b71;
   font-size: 0.86rem;
   text-align: center;
 }
 
-.subscription__qr img {
-  width: 100%;
-  border-radius: 10px;
+.subscription__qr figcaption {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3d4f45;
 }
 
 .subscription__pay form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+}
+
+.subscription__due {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6a7b71;
+}
+
+.subscription__due b {
+  font-size: 2rem;
+  line-height: 1.1;
+  color: #13322a;
+}
+
+.subscription__due small {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1a7f55;
 }
 
 .subscription__pay ol {
+  display: grid;
+  gap: 6px;
   margin: 0;
   padding-left: 1.2rem;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: #3d4f45;
 }
 
 .subscription__pay label {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   font-size: 0.86rem;
   font-weight: 700;
   color: #13322a;
 }
 
 .subscription__pay input {
-  padding: 10px 12px;
+  max-width: 340px;
+  padding: 11px 12px;
   border: 1px solid #c9d2c2;
   border-radius: 8px;
   font: inherit;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
 }
 
 .subscription__pay .cashier-primary-action {
   align-self: flex-start;
+  min-width: 160px;
 }
 
-.subscription__due {
+.subscription__history {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px;
+}
+
+.subscription__history h4 {
   margin: 0;
   font-size: 1rem;
   color: #13322a;
 }
 
-.subscription__due small {
-  font-size: 0.8rem;
-  color: #6a7b71;
+.subscription__history .register-empty {
+  margin: 0;
 }
 
 .subscription-notice {
@@ -4399,13 +4456,20 @@
   font-size: 0.84rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .subscription__pay {
     grid-template-columns: 1fr;
   }
 
   .subscription__qr {
-    max-width: 220px;
+    justify-self: center;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .subscription__plan {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -4424,12 +4488,5 @@
 }
 
 .subscription-page {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.subscription-page h3 {
-  margin: 0;
-  color: #13322a;
+  display: block;
 }
