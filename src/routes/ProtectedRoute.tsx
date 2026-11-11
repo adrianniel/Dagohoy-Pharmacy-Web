@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { getCurrentAccount, refreshSession } from '../data/accountStore';
+import { forgetSession, getCurrentAccount, refreshSession } from '../data/accountStore';
 import { syncFromServer } from '../data/serverSync';
 import { SESSION_EXPIRED_EVENT } from '../services/apiClient';
 
@@ -33,7 +33,10 @@ export function ProtectedRoute() {
           // Server unreachable: keep working with the last confirmed login, say so.
           setCheck(error.statusCode === 401 ? 'out' : getCurrentAccount() ? 'ok' : 'offline');
         });
-    const expired = () => setCheck('out');
+    const expired = () => {
+      forgetSession();
+      setCheck('out');
+    };
     void verify();
     window.addEventListener('focus', verify);
     window.addEventListener(SESSION_EXPIRED_EVENT, expired);

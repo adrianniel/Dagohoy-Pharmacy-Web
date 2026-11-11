@@ -73,10 +73,42 @@ const toAccount = (account: ApiAccount): Account => ({
   createdAt: account.createdAt,
 });
 
+/**
+ * The browser copies of server data (sales, utang, stock, shift, suppliers, roster, settings).
+ * They are refilled from the server after every login, and wiped on logout so the next person
+ * at a shared counter computer cannot read the previous account's records.
+ */
+const SERVER_COPY_KEYS = [
+  'dagohoy_demo_inventory',
+  'dagohoy_demo_inventory_batches',
+  'dagohoy_demo_stock_movements',
+  'dagohoy_demo_purchase_orders',
+  'dagohoy_demo_sales',
+  'dagohoy_demo_void_log',
+  'dagohoy_demo_register_session',
+  'dagohoy_demo_cash_events',
+  'dagohoy_demo_shift_history',
+  'dagohoy_demo_expenses',
+  'dagohoy_demo_suppliers',
+  'dagohoy_demo_staff_roster',
+  'dagohoy_demo_pharmacy_settings',
+];
+
 function remember(account: Account | null) {
   OLD_KEYS.forEach((key) => localStorage.removeItem(key));
-  if (account) sessionStorage.setItem(CURRENT_KEY, JSON.stringify(account));
-  else sessionStorage.removeItem(CURRENT_KEY);
+  if (account) {
+    const previous = getCurrentAccount();
+    // Another account on this browser: its copies are not this account's to see.
+    if (previous && previous.id !== account.id) clearServerCopies();
+    sessionStorage.setItem(CURRENT_KEY, JSON.stringify(account));
+  } else {
+    sessionStorage.removeItem(CURRENT_KEY);
+    clearServerCopies();
+  }
+}
+
+function clearServerCopies() {
+  SERVER_COPY_KEYS.forEach((key) => localStorage.removeItem(key));
 }
 
 /** The logged-in account as last confirmed by the server, or undefined. */
@@ -125,6 +157,11 @@ export async function signIn(
       message: error instanceof Error ? error.message : 'Could not log in. Try again.',
     };
   }
+}
+
+/** The server ended the session (expired or revoked): forget it and the copies here. */
+export function forgetSession() {
+  remember(null);
 }
 
 export async function signOut() {
