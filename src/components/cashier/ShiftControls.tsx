@@ -95,6 +95,8 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
   const [others, setOthers] = useState<string[]>([]);
   const [floatInput, setFloatInput] = useState(String(carriedOver));
   const [adjusting, setAdjusting] = useState(false);
+  /** The cashier ticked that the drawer holds the amount shown (it must be counted, not skipped). */
+  const [cashConfirmed, setCashConfirmed] = useState(false);
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const { showToast } = useToast();
@@ -123,8 +125,12 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
       setError('Step 1: tap the name of the cashier.');
       return;
     }
-    if (adjusted && !reason.trim()) {
-      setError('Step 3: type why the cash in the drawer is different.');
+    if (!cashDone) {
+      setError(
+        adjusting
+          ? `Step ${cashStep}: type the cash you counted${adjusted ? ' and why it is different' : ''}.`
+          : `Step ${cashStep}: count the drawer, then tick that it has ${money(carriedOver)}.`,
+      );
       return;
     }
     setSaving(true);
@@ -153,7 +159,10 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
   const hasRoster = roster.length > 0 && active.length > 0;
   const cashStep = active.length > 1 ? 3 : 2;
   const startingCash = Number(floatInput || 0);
-  const cashDone = !adjusted || reason.trim().length > 0;
+  // The drawer must be counted: tick the box when it matches, or type the amount (and why) when not.
+  const cashDone = adjusting
+    ? floatInput.trim() !== '' && (!adjusted || reason.trim().length > 0)
+    : cashConfirmed;
 
   return createPortal(
     <div className="pos-modal-backdrop">
@@ -248,19 +257,38 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                 Check the cash in the drawer
               </h3>
               {!adjusting ? (
-                <div className="start-shift__cash">
-                  <div>
-                    <strong>{money(carriedOver)}</strong>
-                    <span>Left in the drawer from the last shift. Count it: it should match.</span>
+                <>
+                  <div className="start-shift__cash">
+                    <div>
+                      <strong>{money(carriedOver)}</strong>
+                      <span>
+                        Counted at the last closing: the change fund plus any sales left in the
+                        drawer. Count it now.
+                      </span>
+                    </div>
+                    <button
+                      className="start-shift__secondary"
+                      type="button"
+                      onClick={() => {
+                        setAdjusting(true);
+                        setCashConfirmed(false);
+                      }}
+                    >
+                      Count is different
+                    </button>
                   </div>
-                  <button
-                    className="start-shift__secondary"
-                    type="button"
-                    onClick={() => setAdjusting(true)}
-                  >
-                    Count is different
-                  </button>
-                </div>
+                  <label className="start-shift__confirm">
+                    <input
+                      type="checkbox"
+                      checked={cashConfirmed}
+                      onChange={(event) => {
+                        setCashConfirmed(event.target.checked);
+                        setError('');
+                      }}
+                    />
+                    I counted the drawer and it has <strong>{money(carriedOver)}</strong>.
+                  </label>
+                </>
               ) : (
                 <div className="start-shift__adjust">
                   <label>
@@ -314,7 +342,9 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
             </p>
           )}
           <p className="start-shift__summary" aria-live="polite">
-            {cashier ? (
+            {cashier && !cashDone ? (
+              `Step ${cashStep}: count the cash in the drawer to continue.`
+            ) : cashier ? (
               <>
                 Cashier: <strong>{cashier}</strong>
                 {others.length > 0 && <> · +{others.length} staff</>} · Drawer:{' '}
@@ -328,7 +358,11 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
             <button className="start-shift__cancel" type="button" onClick={onClose}>
               Cancel
             </button>
-            <button className="start-shift__go" type="submit" disabled={!cashier || saving}>
+            <button
+              className="start-shift__go"
+              type="submit"
+              disabled={!cashier || !cashDone || saving}
+            >
               {saving ? 'Starting…' : 'Start shift'}
             </button>
           </div>
@@ -457,7 +491,7 @@ export function CloseShiftForm({
 
       <dl className="close-shift__lines" aria-label="What should be in the drawer">
         <div>
-          <dt>Opening float</dt>
+          <dt>Opening cash</dt>
           <dd>{money(session.openingFloat)}</dd>
         </div>
         <div>

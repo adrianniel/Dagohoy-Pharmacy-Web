@@ -123,7 +123,7 @@ export function RegisterPage() {
               </div>
             </div>
             <div className="cashier-summary-grid register-summary-grid">
-              <RegisterStat label="Opening float" value={money(session?.openingFloat ?? 0)} />
+              <RegisterStat label="Opening cash" value={money(session?.openingFloat ?? 0)} />
               <RegisterStat label="Cash sales" value={money(totals.cashSales)} />
               <RegisterStat
                 label="Utang cash"

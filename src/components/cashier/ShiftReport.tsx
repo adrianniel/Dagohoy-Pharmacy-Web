@@ -103,7 +103,7 @@ export function ShiftReportDocument({ shift }: { shift: ShiftRecord }) {
         <table className="shift-doc__sum">
           <tbody>
             <tr>
-              <td>Opening float</td>
+              <td>Opening cash</td>
               <td>{money(shift.openingFloat)}</td>
             </tr>
             {shift.floatAdjustment && (

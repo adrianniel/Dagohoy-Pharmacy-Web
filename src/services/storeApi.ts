@@ -315,3 +315,21 @@ export const listExpenseCategories = () => apiRequest<string[]>('/expenses/categ
 
 export const removeExpense = (id: number) =>
   apiRequest<void>(`/expenses/${id}`, { method: 'DELETE' });
+
+/** One month of the owner's profit report (pesos). */
+export type ApiProfitMonth = {
+  month: string;
+  sales: number;
+  costOfGoods: number;
+  freeItems: number;
+  stockLosses: number;
+  expenses: number;
+  expensesByCategory: Record<string, number>;
+  profit: number;
+  cashToOwner: number;
+  unitsWithoutCost: number;
+};
+
+/** The last `months` months, oldest first (owner only). */
+export const getProfit = (months = 6) =>
+  apiRequest<ApiProfitMonth[]>(`/reports/profit?months=${months}`);

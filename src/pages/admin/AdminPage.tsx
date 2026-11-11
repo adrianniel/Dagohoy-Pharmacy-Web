@@ -4,6 +4,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
+import { ProfitReport } from '../../components/admin/ProfitReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
@@ -1481,10 +1482,10 @@ function AdminDashboard() {
   );
 }
 
-type ReportsTab = 'monthly' | 'invoice' | 'summary' | 'weekly';
+type ReportsTab = 'profit' | 'monthly' | 'invoice' | 'summary' | 'weekly';
 
 function Reports() {
-  const [tab, setTab] = useState<ReportsTab>('monthly');
+  const [tab, setTab] = useState<ReportsTab>('profit');
   // Last 7 days, today included, from the saved sales.
   const sales = readCountedSales();
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -1517,6 +1518,15 @@ function Reports() {
   const topCategory = [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0];
   const categoryTotal = [...byCategory.values()].reduce((sum, value) => sum + value, 0);
   const items: Array<ControlItem<ReportsTab>> = [
+    {
+      key: 'profit',
+      icon: 'reports',
+      title: 'Profit',
+      hint: 'Did the store earn?',
+      tone: 'forest',
+      about:
+        'Sales minus what the sold items cost, the expenses, items given free and stock lost. Month by month, with where the money went.',
+    },
     {
       key: 'monthly',
       icon: 'calendar',
@@ -1570,6 +1580,7 @@ function Reports() {
         title={current?.title ?? 'Reports'}
         about={current?.about}
       >
+        {tab === 'profit' && <ProfitReport />}
         {tab === 'monthly' && <MonthlySalesReport />}
         {tab === 'invoice' && <InvoiceGuide />}
         {tab === 'summary' && (

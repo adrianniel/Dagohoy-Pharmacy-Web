@@ -3948,3 +3948,207 @@
 .pdf-render-root .invoice-page {
   width: 100%;
 }
+
+/* Start shift: the cashier must tick that the counted drawer matches before starting. */
+.start-shift__confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid #176246;
+  border-radius: 10px;
+  background: #f4f8f1;
+  color: #13322a;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.start-shift__confirm input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: #176246;
+}
+
+/* Profit report: a verdict, where the money went, and sales against costs per month. */
+.profit-verdict {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.4rem 0 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  background: #176246;
+  color: #fff;
+}
+
+.profit-verdict.is-loss {
+  background: #a2372c;
+}
+
+.profit-verdict p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.profit-verdict strong {
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+
+.profit-verdict span {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.profit-split__bar {
+  display: flex;
+  height: 2rem;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eef0e4;
+}
+
+.profit-split__part,
+.profit-split__legend i,
+.profit-chart__key i,
+.profit-chart__bar {
+  display: inline-block;
+}
+
+.profit-split__part.is-cogs,
+.profit-split__legend i.is-cogs {
+  background: #8a9a90;
+}
+
+.profit-split__part.is-expenses,
+.profit-split__legend i.is-expenses {
+  background: #d79a2b;
+}
+
+.profit-split__part.is-other,
+.profit-split__legend i.is-other {
+  background: #c8b7a6;
+}
+
+.profit-split__part.is-profit,
+.profit-split__legend i.is-profit {
+  background: #2ea05c;
+}
+
+.profit-split__sales {
+  margin-top: 0.3rem;
+  border-top: 3px solid #13322a;
+  font-size: 0.8rem;
+  color: #13322a;
+}
+
+.profit-split__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: #3d4f45;
+}
+
+.profit-split__legend i,
+.profit-chart__key i {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-right: 0.35rem;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.profit-chart {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+  min-height: 15rem;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.profit-chart__month {
+  display: flex;
+  flex: 1 0 4.2rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.profit-chart__month.is-selected {
+  border-color: #176246;
+  background: #f4f8f1;
+}
+
+.profit-chart__result {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #176246;
+  white-space: nowrap;
+}
+
+.profit-chart__result.is-loss,
+.profit-chart__key b.is-loss,
+.profit-table__total.is-loss td {
+  color: #a2372c;
+}
+
+.profit-chart__bars {
+  display: flex;
+  flex: 1;
+  gap: 0.25rem;
+  align-items: flex-end;
+  width: 100%;
+  justify-content: center;
+}
+
+.profit-chart__bar {
+  width: 1.2rem;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+
+.profit-chart__bar.is-sales,
+.profit-chart__key i.is-sales {
+  background: #2ea05c;
+}
+
+.profit-chart__bar.is-costs,
+.profit-chart__key i.is-costs {
+  background: #8a9a90;
+}
+
+.profit-chart__label {
+  font-size: 0.8rem;
+  color: #3d4f45;
+}
+
+.profit-chart__key {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #3d4f45;
+}
+
+.profit-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.profit-table__total td {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #176246;
+  border-top: 2px solid #13322a;
+}
