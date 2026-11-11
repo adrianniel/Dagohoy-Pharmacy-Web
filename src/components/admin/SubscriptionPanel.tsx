@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { notifyBillingChanged, useBilling } from '../../services/useBilling';
 import { API_BASE_URL } from '../../services/apiClient';
 import { getBilling, submitBillingPayment, type ApiBilling } from '../../services/storeApi';
 import { ErrorState } from '../ErrorState';
@@ -11,9 +12,6 @@ import { useToast } from '../toast';
  * fee due on the 1st. Each GCash payment pays one month (the oldest unpaid one). It opens
  * 3 days before the 1st; 7 days after the 1st an unpaid month pauses the barcode lookup service.
  */
-
-/** Fired after a payment is sent, so the reminder at the top refreshes. */
-const BILLING_CHANGED = 'dagohoy-billing-changed';
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -64,7 +62,7 @@ export function SubscriptionPanel() {
       const sent = await submitBillingPayment(reference);
       setReference('');
       showToast(`Payment for ${monthName(sent.firstMonth)} sent for checking.`);
-      window.dispatchEvent(new Event(BILLING_CHANGED));
+      notifyBillingChanged();
       load();
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Could not send.', 'error');
@@ -177,21 +175,12 @@ export function SubscriptionPanel() {
 }
 
 /**
- * The reminder at the top of every owner page: 3 days before the 1st, while due (with the last
+ * The reminder at the top of every page, for the owner and the cashier: 3 days before the 1st, while due (with the last
  * day before the pause), and once the barcode lookup service is paused.
  */
 export function SubscriptionNotice() {
-  const [billing, setBilling] = useState<ApiBilling | null>(null);
+  const billing = useBilling();
   const { pathname } = useLocation();
-  useEffect(() => {
-    const load = () =>
-      getBilling()
-        .then(setBilling)
-        .catch(() => undefined); // a reminder only: stay quiet if it cannot load
-    load();
-    window.addEventListener(BILLING_CHANGED, load);
-    return () => window.removeEventListener(BILLING_CHANGED, load);
-  }, [pathname]);
 
   if (!billing || !['upcoming', 'due', 'overdue'].includes(billing.status)) return null;
   const [oldest] = billing.unpaidMonths;
@@ -213,14 +202,29 @@ export function SubscriptionNotice() {
     tone = 'is-late';
     text = `Barcode lookup service is paused: the subscription for ${monthName(
       oldest,
-    )} is not paid. New products must be typed in by hand until it is paid.${several}`;
+    )} is not paid. The barcode scanner is off until it is paid: type product names at the Sales Counter.${several}`;
   }
   return (
     <p className={`subscription-notice ${tone}`} role={tone === 'is-late' ? 'alert' : 'status'}>
       <span>{text}</span>
-      {!pathname.startsWith('/admin/settings') && (
-        <Link to="/admin/settings?tab=subscription">Pay now</Link>
+      {pathname !== '/admin/subscription' && !pathname.startsWith('/admin/settings') && (
+        <Link to="/admin/subscription">Pay now</Link>
       )}
     </p>
+  );
+}
+
+/** Subscription page in the sidebar, open to the owner and the cashier. */
+export function SubscriptionPage() {
+  return (
+    <div className="cashier-page">
+      <section className="cashier-panel subscription-page">
+        <h3>Subscription</h3>
+        <p className="register-empty">
+          The monthly plan for the barcode lookup service and system maintenance.
+        </p>
+        <SubscriptionPanel />
+      </section>
+    </div>
   );
 }

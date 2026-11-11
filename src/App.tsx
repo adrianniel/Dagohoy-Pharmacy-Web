@@ -48,6 +48,11 @@ const ShiftReportPage = lazy(() =>
 const CreditPage = lazy(() =>
   import('./pages/admin/CreditPage').then((module) => ({ default: module.CreditPage })),
 );
+const SubscriptionPage = lazy(() =>
+  import('./components/admin/SubscriptionPanel').then((module) => ({
+    default: module.SubscriptionPage,
+  })),
+);
 
 export function App() {
   const location = useLocation();
@@ -88,6 +93,7 @@ export function App() {
             <Route path="stock" element={<OperationsPage />} />
             <Route path="suppliers" element={<AdminPage section="suppliers" />} />
             <Route path="credits" element={<CreditPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
             {/* Owner and administrators only: income, expenses, staff accounts and pharmacy settings. */}
             <Route element={<AdminRoute />}>
               <Route index element={<Navigate to="dashboard" replace />} />

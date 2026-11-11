@@ -28,6 +28,7 @@ export const CASHIER_NAV_ITEMS: NavigationGroup[] = [
   {
     label: 'Account',
     items: [
+      { label: 'Subscription', path: '/admin/subscription', icon: 'purchases' },
       { label: 'Profile', path: '/cashier/profile', icon: 'profile' },
       { label: 'Log out', icon: 'logout', action: 'logout' },
     ],
@@ -66,6 +67,7 @@ export const ADMIN_NAV_ITEMS: NavigationGroup[] = [
     label: 'Account',
     items: [
       { label: 'Settings', path: '/admin/settings', icon: 'settings' },
+      { label: 'Subscription', path: '/admin/subscription', icon: 'purchases' },
       { label: 'Profile', path: '/cashier/profile', icon: 'profile' },
       { label: 'Log out', icon: 'logout', action: 'logout' },
     ],

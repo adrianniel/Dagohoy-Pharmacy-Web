@@ -890,7 +890,7 @@ function InventoryForm({
       } else if (result.status === 'paused') {
         setLookupState('missing');
         setLookupNote(
-          'Barcode lookup service is paused: the monthly subscription is not paid. Type the details in, and ask the owner to pay it.',
+          'Barcode lookup service is paused: the monthly subscription is not paid. Type the details in, and pay it in Subscription.',
         );
       } else {
         setLookupState('missing');

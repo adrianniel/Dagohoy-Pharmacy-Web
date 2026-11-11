@@ -5,6 +5,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
 import { syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
+import { useBilling } from '../../services/useBilling';
 import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
@@ -221,14 +222,19 @@ export function CashierPosPage() {
   const totalItems = cart.reduce((total, line) => total + line.quantity, 0);
   const discount = Math.round(((subtotal * discountPercent) / 100) * 100) / 100;
   const totalDue = subtotal - discount;
+  // The subscription is 7+ days late: the barcode scanner is off until it is paid. Selling goes
+  // on by product name. It comes back by itself once a payment is sent.
+  const billing = useBilling();
+  const scannerOff = billing?.lookupActive === false;
+
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
-        `${product.product} ${product.detail} ${product.barcode}`
+        `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
           .toLowerCase()
           .includes(query.trim().toLowerCase()),
       ),
-    [products, query],
+    [products, query, scannerOff],
   );
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
@@ -266,7 +272,7 @@ export function CashierPosPage() {
   /** Enter in the search: add the scanned product, or the only match of a typed name. */
   function scanOrPick(code: string) {
     if (!code) return;
-    const exact = products.find((product) => product.barcode === code);
+    const exact = scannerOff ? undefined : products.find((product) => product.barcode === code);
     const pick = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : undefined);
     if (!pick) {
       showToast(
@@ -306,6 +312,13 @@ export function CashierPosPage() {
   onScan.current = (code) => {
     // A scan on the "done" screen closes it and starts the next customer's sale.
     if (completedSale) closePayment();
+    if (scannerOff) {
+      showToast(
+        'Barcode scanner is off: the subscription is not paid. Type the product name instead.',
+        'error',
+      );
+      return;
+    }
     const product = products.find((item) => item.barcode === code);
     if (!product) {
       showToast(`No product has barcode ${code}. Add it in Products first.`, 'error');
@@ -704,12 +717,25 @@ export function CashierPosPage() {
                   event.preventDefault();
                   scanOrPick(typed);
                 }}
-                placeholder="Scanner not working? Type the product name or barcode"
+                placeholder={
+                  scannerOff
+                    ? 'Scanner off: type the product name'
+                    : 'Scanner not working? Type the product name or barcode'
+                }
                 aria-label="Search a product by name or barcode"
                 autoComplete="off"
                 autoFocus
               />
-              {priceCheck ? (
+              {scannerOff ? (
+                <span
+                  className="pos-scanner-sign is-off"
+                  role="status"
+                  title="The barcode scanner is off until the subscription is paid"
+                >
+                  <span className="pos-scanner-sign__dot" aria-hidden="true" />
+                  Scanner off
+                </span>
+              ) : priceCheck ? (
                 <span className="pos-scanner-sign is-check" role="status">
                   <span className="pos-scanner-sign__dot" aria-hidden="true" />
                   Checking prices
