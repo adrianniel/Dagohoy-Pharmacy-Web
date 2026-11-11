@@ -1343,11 +1343,13 @@ function AdminDashboard() {
   const expired = lots.filter((lot) => lot.days < 0);
   const expiringSoon = lots.filter((lot) => lot.days >= 0 && lot.days <= 30);
 
-  const change = salesYesterday
-    ? `${salesToday >= salesYesterday ? '▲' : '▼'} ${Math.abs(
-        Math.round(((salesToday - salesYesterday) / salesYesterday) * 100),
-      )}% vs yesterday (${money(salesYesterday)})`
-    : `${today.length} sale${today.length === 1 ? '' : 's'} so far`;
+  const change = !today.length
+    ? `No sales yet today · yesterday ${money(salesYesterday)}`
+    : salesYesterday
+      ? `${salesToday >= salesYesterday ? '▲' : '▼'} ${Math.abs(
+          Math.round(((salesToday - salesYesterday) / salesYesterday) * 100),
+        )}% vs yesterday (${money(salesYesterday)})`
+      : 'No sales yesterday to compare';
 
   return (
     <div className="cashier-page overview">
@@ -1363,24 +1365,40 @@ function AdminDashboard() {
         </p>
       </header>
 
-      <div className="cashier-summary-grid">
-        <Summary label="Sales today" value={money(salesToday)} detail={change} />
-        <Summary
-          label="Sales this month"
-          value={money(sum(monthSales))}
-          detail={`${monthSales.length} sale${monthSales.length === 1 ? '' : 's'}`}
-        />
-        <Summary
-          label="Unpaid credit (utang)"
-          value={money(unpaidCredit)}
-          detail="Still owed by customers"
-        />
-        <Summary
-          label="Stock value"
-          value={money(stockAtPrice)}
-          detail={`${inventory.length} product${inventory.length === 1 ? '' : 's'}, at selling price`}
-        />
-      </div>
+      {/* Today leads; the other numbers sit beside it as a short ledger, not four equal cards. */}
+      <section className="overview-glance" aria-label="Today and this month">
+        <div className="overview-glance__today">
+          <p>Sales today</p>
+          <strong>{money(salesToday)}</strong>
+          <span>
+            {today.length > 0 && `${today.length} sale${today.length === 1 ? '' : 's'} · `}
+            {change}
+          </span>
+        </div>
+        <dl className="overview-glance__ledger">
+          <div>
+            <dt>
+              This month <small>{monthSales.length} sales</small>
+            </dt>
+            <dd>{money(sum(monthSales))}</dd>
+          </div>
+          <div className={unpaidCredit > 0 ? 'is-owed' : ''}>
+            <dt>
+              Utang not yet paid <small>still owed by customers</small>
+            </dt>
+            <dd>{money(unpaidCredit)}</dd>
+          </div>
+          <div>
+            <dt>
+              Stock on the shelf{' '}
+              <small>
+                {inventory.length} product{inventory.length === 1 ? '' : 's'}, at selling price
+              </small>
+            </dt>
+            <dd>{money(stockAtPrice)}</dd>
+          </div>
+        </dl>
+      </section>
 
       <div className="overview__grid">
         <section className="cashier-panel overview__card overview__card--wide">
