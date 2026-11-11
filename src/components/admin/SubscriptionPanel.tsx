@@ -69,17 +69,37 @@ export function SubscriptionPanel() {
     <div className="subscription">
       <section className={`subscription__plan is-${status.tone}`}>
         <div>
-          <p>Maintenance & Support plan</p>
+          <p>Barcode scanner & maintenance plan</p>
           <strong>
             {money(billing.fee)} <small>/ month · due every 1st</small>
           </strong>
-          <span>
-            Updates, fixes, backups and help with the system.
-            {billing.paidThrough && ` Paid through ${monthName(billing.paidThrough)}.`}
-          </span>
+          {billing.paidThrough && <span>Paid through {monthName(billing.paidThrough)}.</span>}
         </div>
         <em>{status.label}</em>
       </section>
+
+      {/* What the monthly fee pays for, biggest first: the barcode scanner lookup leads. */}
+      <ul className="subscription__items">
+        {[...billing.items]
+          .sort((a, b) => b.amount - a.amount)
+          .map((item, index) => (
+            <li key={item.label} className={index === 0 ? 'is-main' : ''}>
+              <span>
+                {item.label}
+                <small>
+                  {index === 0
+                    ? 'Fills in the name and details when a new product is scanned.'
+                    : 'Updates, fixes, backups and help with the system.'}
+                </small>
+              </span>
+              <b>{money(item.amount)}</b>
+            </li>
+          ))}
+        <li className="subscription__items-total">
+          <span>Total per month</span>
+          <b>{money(billing.fee)}</b>
+        </li>
+      </ul>
 
       {billing.unpaidMonths.length > 0 && (
         <section className="subscription__pay">

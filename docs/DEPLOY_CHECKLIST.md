@@ -63,7 +63,7 @@ database, so the owner can try it before real use.
   BARCODE_API_KEY=…
   BARCODE_DAILY_LIMIT=200
   BILLING_START=YYYY-MM          # first billed month; leave empty until the plan starts
-  BILLING_MONTHLY_FEE=1000
+  BILLING_ITEMS=Barcode scanner lookup service=800|System maintenance & support=200
   BILLING_QR_FILE=private/billing-qr.png
   BILLING_REVIEW_KEY=…           # 32+ random characters, only you know it
   ```
