@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
+import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
@@ -1423,7 +1424,7 @@ function AdminDashboard() {
   );
 }
 
-type ReportsTab = 'monthly' | 'summary' | 'weekly';
+type ReportsTab = 'monthly' | 'invoice' | 'summary' | 'weekly';
 
 function Reports() {
   const [tab, setTab] = useState<ReportsTab>('monthly');
@@ -1469,6 +1470,15 @@ function Reports() {
         'Internal summary: sales for each day of the month from the sales records saved here, with totals. Export to Excel or save as PDF.',
     },
     {
+      key: 'invoice',
+      icon: 'receipt',
+      title: 'Invoice guide',
+      hint: 'For the BIR booklet',
+      tone: 'amber',
+      about:
+        'Each day of sales laid out like a page of the sales invoice booklet, from the sales recorded here, so the booklet is copied from real numbers. Export to Excel or save as PDF.',
+    },
+    {
       key: 'summary',
       icon: 'reports',
       title: 'Sales summary',
@@ -1504,6 +1514,7 @@ function Reports() {
         about={current?.about}
       >
         {tab === 'monthly' && <MonthlySalesReport />}
+        {tab === 'invoice' && <InvoiceGuide />}
         {tab === 'summary' && (
           <div className="cashier-summary-grid">
             <Summary

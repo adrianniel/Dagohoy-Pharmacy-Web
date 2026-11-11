@@ -3825,3 +3825,126 @@
   color: #176246;
   font-weight: 700;
 }
+
+/* Invoice guide: one card per booklet page, laid out like the store's sales invoice. */
+.invoice-guide {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.invoice-guide__day {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.invoice-guide__note {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #ecd49c;
+  border-radius: 8px;
+  background: #fff8e6;
+  color: #6b4e12;
+  font-size: 0.85rem;
+}
+
+.invoice-page {
+  width: min(100%, 36rem);
+  padding: 1rem 1.1rem;
+  border: 1px solid #d9c98f;
+  border-radius: 6px;
+  background: #fbf3d5;
+  color: #2b2a1f;
+  font-variant-numeric: tabular-nums;
+  break-inside: avoid;
+}
+
+.invoice-page__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.invoice-page__head strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
+.invoice-page__head span {
+  color: #6b6450;
+  font-size: 0.8rem;
+}
+
+.invoice-page__fields {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0 0 0.7rem;
+}
+
+.invoice-page__fields div {
+  display: flex;
+  gap: 0.4rem;
+  border-bottom: 1px solid #c9b97c;
+}
+
+.invoice-page__fields dt {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.invoice-page__fields dd {
+  margin: 0;
+}
+
+.invoice-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.invoice-page__table th,
+.invoice-page__table td {
+  padding: 0.22rem 0.4rem;
+  border: 1px solid #c9b97c;
+  text-align: left;
+}
+
+.invoice-page__table th:nth-child(n + 4),
+.invoice-page__table td:nth-child(n + 4),
+.invoice-page__table tfoot td:last-child {
+  text-align: right;
+}
+
+.invoice-page__table th:first-child,
+.invoice-page__table td:first-child {
+  width: 3rem;
+  text-align: center;
+}
+
+.invoice-page__table tr.is-empty td {
+  height: 1.55rem;
+}
+
+.invoice-page__table tfoot td:first-child {
+  width: auto;
+  text-align: right;
+  font-weight: 700;
+}
+
+.invoice-page__table tfoot tr.is-due td {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+/* In the PDF copy, pages sit one under another at A4 width. */
+.pdf-render-root .invoice-guide.is-print {
+  padding: 24px;
+  gap: 28px;
+}
+
+.pdf-render-root .invoice-page {
+  width: 100%;
+}

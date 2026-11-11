@@ -68,6 +68,11 @@ Staging prep (2026-11-10, before Hostinger is bought): `public/.htaccess` (deep 
 basic headers), `.env.production.example`, production notes in the server `.env.example`,
 reset and seed allowed on `_staging` databases (still refused on any other name), server
 production dependencies at 0 audit findings, and the draft `docs/DEPLOY_CHECKLIST.md`.
+Invoice guide (2026-11-11): owner Reports → Invoice guide lays each day's recorded sales out
+like a page of the store's NON-VAT sales invoice booklet (Qty, Unit, Articles/Description,
+Unit Price, Amount, Total Sales, Less SC/PWD Discount, Total Amount Due; 11 item lines per
+page, extra pages when a day has more), with Excel and PDF. It flags sales of ₱500 or more for
+the accountant and never invents entries.
 Next: step 8, Hostinger staging (after the owner buys the plan).
 
 ## "Ready locally" means
