@@ -54,7 +54,7 @@ export function ControlDeck<Key extends string>({
         {aside}
       </div>
       <div
-        className={`control-deck__grid control-deck__grid--${Math.min(items.length, 4)}`}
+        className={`control-deck__grid control-deck__grid--${items.length === 5 ? 5 : Math.min(items.length, 4)}`}
         role="tablist"
         aria-label={title}
       >

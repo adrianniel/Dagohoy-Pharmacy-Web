@@ -59,6 +59,17 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* Five keys fit one row: slightly smaller caps so the text still fits. */
+.control-deck__grid--5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px 10px;
+}
+
+.control-deck__grid--5 .control-deck__key {
+  min-height: 6.2rem;
+  padding: 12px 8px 13px;
+}
+
 .control-deck__key {
   --cap-face: #1b6b4c;
   --cap-edge: #13573c;
@@ -286,7 +297,8 @@
 
 @media (max-width: 900px) {
   .control-deck__grid,
-  .control-deck__grid--3 {
+  .control-deck__grid--3,
+  .control-deck__grid--5 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
