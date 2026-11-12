@@ -18,7 +18,7 @@ const TEMPLATE_HEADERS = [
   'Selling price',
   'Cost',
   'Opening stock',
-  'Lot',
+  'Batch',
   'Expiry (YYYY-MM-DD)',
 ];
 
@@ -232,7 +232,7 @@ export function ProductImport({
         <ol className="product-import__steps">
           <li>
             <strong>Download the template</strong> and fill it in (Excel or Google Sheets). One
-            product per row. Opening stock needs a lot and an expiry date.
+            product per row. Opening stock needs a batch and an expiry date.
             <button className="start-shift__secondary" type="button" onClick={downloadTemplate}>
               Download template (CSV)
             </button>

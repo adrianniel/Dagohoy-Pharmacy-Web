@@ -12,6 +12,7 @@ import {
 import { syncAfterStockChange } from '../../data/serverSync';
 import { adjustStock, receiveStock } from '../../services/storeApi';
 import { useToast } from '../toast';
+import { cleanBatch } from '../../data/batchCode';
 import { lastLotCost } from '../../data/lotCost';
 import { RestockOrder } from './RestockOrder';
 
@@ -209,7 +210,7 @@ export function StockControlCenter({
       count: data.receivedToday.length,
       hint: 'Deliveries today',
       about:
-        'Record a supplier delivery. Each delivery adds units to the shelf and saves its lot number and expiry date.',
+        'Record a supplier delivery. Each delivery adds units to the shelf and saves its batch number and expiry date.',
     },
     {
       key: 'expiry',
@@ -218,16 +219,16 @@ export function StockControlCenter({
       count: data.expired.length + data.soon.length,
       hint: `Expired or due in ${EXPIRY_SOON_DAYS} days`,
       alert: data.expired.length + data.soon.length > 0,
-      about: `Lots that are expired or expire within ${EXPIRY_WATCH_DAYS} days, soonest first. Sell the near ones first and return the expired ones.`,
+      about: `Batches that are expired or expire within ${EXPIRY_WATCH_DAYS} days, soonest first. Sell the near ones first and return the expired ones.`,
     },
     {
       key: 'batches',
       icon: 'inventory',
       title: 'Stock batches',
       count: data.lots.length,
-      hint: 'Lots on the shelf',
+      hint: 'Batches on the shelf',
       about:
-        'Every lot that still has units, grouped by product. Sell the lot marked "Sell first" before the others.',
+        'Every batch that still has units, grouped by product. Sell the batch marked "Sell first" before the others.',
     },
     {
       key: 'order',
@@ -244,7 +245,7 @@ export function StockControlCenter({
       icon: 'return',
       title: 'Return stocks',
       count: data.expired.length,
-      hint: 'Expired lots to return',
+      hint: 'Expired batches to return',
       alert: data.expired.length > 0,
       about: 'Send expired, damaged or wrong items back to the supplier and keep the return slip.',
     },
@@ -464,14 +465,14 @@ export function StockControlCenter({
             </div>
             {data.expired.length + data.soon.length + data.watch.length === 0 ? (
               <p className="stock-index__empty">
-                No lot expires in the next {EXPIRY_WATCH_DAYS} days.
+                No batch expires in the next {EXPIRY_WATCH_DAYS} days.
               </p>
             ) : (
               <table className="stock-index__table">
                 <thead>
                   <tr>
                     <th>Product</th>
-                    <th>Lot</th>
+                    <th>Batch</th>
                     <th>Expiry</th>
                     <th>Time left</th>
                     <th>Units</th>
@@ -506,7 +507,7 @@ export function StockControlCenter({
                               Return to supplier
                             </button>
                           ) : state === 'soon' ? (
-                            'Sell this lot first'
+                            'Sell this batch first'
                           ) : (
                             'Keep an eye on it'
                           )}
@@ -524,7 +525,7 @@ export function StockControlCenter({
           <>
             <div className="stock-index__chips">
               <span>
-                Lots on the shelf <b>{data.lots.length}</b>
+                Batches on the shelf <b>{data.lots.length}</b>
               </span>
               <span>
                 Units in these lots <b>{data.lots.reduce((sum, lot) => sum + lot.stock, 0)}</b>
@@ -541,14 +542,14 @@ export function StockControlCenter({
             </div>
             {data.lots.length === 0 ? (
               <p className="stock-index__empty">
-                No lots on the shelf yet. Lots are added when you receive a delivery.
+                No batches on the shelf yet. Batches are added when you receive a delivery.
               </p>
             ) : (
               <table className="stock-index__table">
                 <thead>
                   <tr>
+                    <th>Batch</th>
                     <th>Product</th>
-                    <th>Lot</th>
                     <th>Expiry</th>
                     <th>Units</th>
                     <th>Cost/unit</th>
@@ -566,6 +567,9 @@ export function StockControlCenter({
                       const state = lotState(lot.days);
                       return (
                         <tr key={lot.id}>
+                          <td className="stock-index__mono">
+                            <strong>{lot.lot}</strong>
+                          </td>
                           <td>
                             <strong>{lot.product}</strong>
                             {productByBarcode.get(lot.barcode) && (
@@ -574,7 +578,6 @@ export function StockControlCenter({
                               </small>
                             )}
                           </td>
-                          <td className="stock-index__mono">{lot.lot}</td>
                           <td>{shortDate(lot.expiry)}</td>
                           <td>{lot.stock}</td>
                           <td>{lot.unitCost !== undefined ? peso(lot.unitCost) : '—'}</td>
@@ -612,7 +615,7 @@ export function StockControlCenter({
           <>
             {data.expired.length > 0 && (
               <>
-                <h5 className="stock-index__subhead">Expired lots still on the shelf</h5>
+                <h5 className="stock-index__subhead">Expired batches still on the shelf</h5>
                 <div className="stock-index__picks">
                   {data.expired.map((lot) => (
                     <button
@@ -623,7 +626,8 @@ export function StockControlCenter({
                     >
                       <strong>{lot.product}</strong>
                       <small>
-                        Lot {lot.lot} · {lot.stock} units · {daysLeftLabel(lot.days).toLowerCase()}
+                        Batch {lot.lot} · {lot.stock} units ·{' '}
+                        {daysLeftLabel(lot.days).toLowerCase()}
                       </small>
                     </button>
                   ))}
@@ -803,7 +807,7 @@ function ReceiveForm({
       return;
     }
     if (!lot.trim()) {
-      showToast('Enter the lot number printed on the box.', 'error');
+      showToast('Enter the batch number printed on the box.', 'error');
       return;
     }
     if (!expiry || daysUntil(expiry) < 0) {
@@ -913,12 +917,13 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Lot number
+          Batch number
           <input
             required
             value={lot}
-            onChange={(event) => setLot(event.target.value)}
+            onChange={(event) => setLot(cleanBatch(event.target.value))}
             placeholder="e.g. BGC-250114"
+            title="Letters, numbers and - only"
           />
         </label>
         <label>
@@ -975,8 +980,8 @@ function ReceiveForm({
       )}
       {expiryDays !== null && expiryDays >= 0 && expiryDays <= EXPIRY_WATCH_DAYS && (
         <p className="stock-index__warn">
-          This lot expires in {expiryDays} day{expiryDays === 1 ? '' : 's'}. Check that the supplier
-          agreed to send short-dated stock.
+          This batch expires in {expiryDays} day{expiryDays === 1 ? '' : 's'}. Check that the
+          supplier agreed to send short-dated stock.
         </p>
       )}
       <div className="stock-index__actions">
@@ -1027,7 +1032,9 @@ export function StockWriteOffForm({
   const [barcode, setBarcode] = useState(preset?.barcode ?? '');
   const [quantity, setQuantity] = useState(preset ? String(preset.stock) : '');
   const [type, setType] = useState<AdjustmentType>('damaged');
-  const [reason, setReason] = useState(preset && daysUntil(preset.expiry) < 0 ? 'Lot expired' : '');
+  const [reason, setReason] = useState(
+    preset && daysUntil(preset.expiry) < 0 ? 'Batch expired' : '',
+  );
   const [reference, setReference] = useState('');
   const [batchId, setBatchId] = useState(preset?.id ?? '');
 
@@ -1094,8 +1101,8 @@ export function StockWriteOffForm({
     <form className="stock-index__form" onSubmit={submit}>
       <p className="stock-index__form-title">
         {isReturn
-          ? 'Pick the lot going back so its units come off the shelf, then note the return slip.'
-          : 'Pick what happened. If you know the lot, pick it too so the lot count stays right.'}
+          ? 'Pick the batch going back so its units come off the shelf, then note the return slip.'
+          : 'Pick what happened. If you know the batch, pick it too so the batch count stays right.'}
       </p>
       <div className="stock-index__form-grid">
         <label>
@@ -1125,9 +1132,11 @@ export function StockWriteOffForm({
           </label>
         )}
         <label>
-          {isReturn ? 'Lot going back' : 'Lot (optional)'}
+          {isReturn ? 'Batch going back' : 'Batch (optional)'}
           <select value={batchId} onChange={(event) => setBatchId(event.target.value)}>
-            <option value="">{isReturn ? 'Not from a recorded lot' : 'Not sure / any lot'}</option>
+            <option value="">
+              {isReturn ? 'Not from a recorded batch' : 'Not sure / any batch'}
+            </option>
             {productBatches.map((item) => (
               <option value={item.id} key={item.id}>
                 {item.lot} · expires {shortDate(item.expiry)} · {item.stock} in lot
@@ -1155,7 +1164,7 @@ export function StockWriteOffForm({
             onChange={(event) => setReason(event.target.value)}
             placeholder={
               isReturn
-                ? 'e.g. Lot expired, supplier agreed to take it back'
+                ? 'e.g. Batch expired, supplier agreed to take it back'
                 : type === 'customer-return'
                   ? 'e.g. Unopened box, from sale DP-123456'
                   : 'e.g. 3 blister packs crushed in storage'
@@ -1174,8 +1183,8 @@ export function StockWriteOffForm({
       {isReturn && batch && (
         <p className={daysUntil(batch.expiry) < 0 ? 'stock-index__note' : 'stock-index__warn'}>
           {daysUntil(batch.expiry) < 0
-            ? `Lot ${batch.lot} expired on ${shortDate(batch.expiry)}, so it can go back to the supplier.`
-            : `Lot ${batch.lot} is still good until ${shortDate(batch.expiry)}. Make sure the supplier accepts the return.`}
+            ? `Batch ${batch.lot} expired on ${shortDate(batch.expiry)}, so it can go back to the supplier.`
+            : `Batch ${batch.lot} is still good until ${shortDate(batch.expiry)}. Make sure the supplier accepts the return.`}
         </p>
       )}
       <div className="stock-index__actions">

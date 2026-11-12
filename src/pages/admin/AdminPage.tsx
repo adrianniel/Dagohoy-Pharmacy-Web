@@ -10,6 +10,7 @@ import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
 import { formatHour, hourRange } from '../../components/hours';
 import { ScanInput } from '../../components/ScanInput';
+import { cleanBatch } from '../../data/batchCode';
 import { notifyBillingChanged, useBilling, useScannerOff } from '../../services/useBilling';
 import { useToast } from '../../components/toast';
 import {
@@ -497,7 +498,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                                   type="button"
                                   onClick={() =>
                                     showToast(
-                                      `${supplier.name} · ${supplier.contact || 'No location'} · ${supplierLots(supplier.name)} lots received`,
+                                      `${supplier.name} · ${supplier.contact || 'No location'} · ${supplierLots(supplier.name)} batches received`,
                                       'info',
                                     )
                                   }
@@ -919,7 +920,7 @@ function InventoryForm({
     }
     if (isNew && openingQty > 0) {
       if (!lot.trim()) {
-        setError('Enter the lot number of the stock you are adding.');
+        setError('Enter the batch number of the stock you are adding.');
         return;
       }
       if (!expiry) {
@@ -1136,11 +1137,12 @@ function InventoryForm({
                   />
                 </label>
                 <label>
-                  Lot number {openingQty > 0 ? '' : '(if any)'}
+                  Batch number {openingQty > 0 ? '' : '(if any)'}
                   <input
                     value={lot}
-                    onChange={(event) => setLot(event.target.value)}
+                    onChange={(event) => setLot(cleanBatch(event.target.value))}
                     placeholder="e.g. BGC-250114"
+                    title="Letters, numbers and - only"
                     disabled={openingQty === 0}
                   />
                 </label>
@@ -1514,11 +1516,11 @@ function AdminDashboard() {
             </div>
             <div className={`overview__alert${expiringSoon.length ? ' is-warn' : ''}`}>
               <strong>{expiringSoon.length}</strong>
-              <span>Lots expiring in 30 days</span>
+              <span>Batches expiring in 30 days</span>
             </div>
             <div className={`overview__alert${expired.length ? ' is-bad' : ''}`}>
               <strong>{expired.length}</strong>
-              <span>Expired lots still on hand</span>
+              <span>Expired batches still on hand</span>
             </div>
           </div>
           {lowStock.length > 0 && (
