@@ -125,8 +125,7 @@
     background-color 180ms ease;
 }
 
-.landing-page .owner-cta__button svg,
-.landing-page .reach-row__arrow {
+.landing-page .owner-cta__button svg {
   width: 16px;
   height: 16px;
   fill: none;
@@ -182,8 +181,7 @@
 }
 
 .landing-page .owner-cta__button:focus-visible,
-.landing-page .owner-cta__link:focus-visible,
-.landing-page .reach-row.is-link:focus-visible {
+.landing-page .owner-cta__link:focus-visible {
   outline: 3px solid #8fc5b7;
   outline-offset: 3px;
 }
@@ -241,212 +239,410 @@
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
-.landing-page .reach-card {
-  padding: clamp(1.25rem, 2.4vw, 2rem);
-  border: 1px solid var(--cl-line);
-  border-radius: 20px;
-  background: var(--cl-paper);
-}
-
-.landing-page .reach-card__head {
-  margin-bottom: 1.4rem;
+/* --- The store's sign: green, like the hero ------------------------------------------- */
+.landing-page .store-sign {
+  position: relative;
+  padding: clamp(1.5rem, 3vw, 2.4rem);
   display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.landing-page .reach-card__head h3 {
-  margin: 0;
-  color: var(--cl-ink);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  text-align: left;
-}
-
-.landing-page .reach-card__head p {
-  margin: 0.1rem 0 0;
-  color: var(--cl-muted);
-  font-size: 0.85rem;
-  text-align: left;
-}
-
-.landing-page .reach-card__icon,
-.landing-page .reach-row__icon {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--cl-mint);
-  color: var(--cl-green);
-}
-
-.landing-page .reach-card__icon svg,
-.landing-page .reach-row__icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.landing-page .reach-row__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
-
-/* Open or closed, from the store's hours. */
-.landing-page .reach-status {
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.6rem;
-  border-radius: 12px;
-  background: #f3f1e4;
-  font-size: 0.9rem;
-}
-
-.landing-page .reach-status strong {
-  color: var(--cl-ink);
-}
-
-.landing-page .reach-status > span:last-child {
-  color: var(--cl-muted);
-}
-
-.landing-page .reach-status.is-open {
-  background: var(--cl-mint);
-}
-
-.landing-page .reach-status.is-open strong {
-  color: var(--cl-green);
-}
-
-.landing-page .reach-status__dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #b5b9a8;
-}
-
-.landing-page .is-open .reach-status__dot {
-  background: #2f9e6e;
-  animation: reach-ping 2.6s ease-out infinite;
-}
-
-@keyframes reach-ping {
-  0%,
-  55% {
-    box-shadow: 0 0 0 0 rgb(47 158 110 / 45%);
-  }
-  100% {
-    box-shadow: 0 0 0 8px rgb(47 158 110 / 0%);
-  }
-}
-
-.landing-page .reach-duty {
-  margin: 0.75rem 0 0;
-  color: var(--cl-muted);
-  font-size: 0.88rem;
-  text-align: left;
-}
-
-.landing-page .reach-duty strong {
-  margin-inline-start: 0.35rem;
-  color: var(--cl-ink);
-}
-
-.landing-page .reach-hours {
-  margin: 1.1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 2px;
-  list-style: none;
-}
-
-.landing-page .reach-hours li {
-  padding: 0.5rem 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  border-radius: 8px;
-  color: var(--cl-muted);
-  font-size: 0.88rem;
-}
-
-.landing-page .reach-hours strong {
-  color: var(--cl-ink);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.landing-page .reach-hours li.is-today {
+  flex-direction: column;
+  border-radius: 24px;
   background: var(--cl-green);
-  color: rgb(255 255 240 / 80%);
-}
-
-.landing-page .reach-hours li.is-today strong {
   color: var(--cl-cream);
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.landing-page .reach-rows {
-  margin-top: 1.1rem;
-  display: grid;
-  gap: 0.25rem;
+.landing-page .store-sign__band {
+  position: absolute;
+  z-index: -1;
+  top: -40%;
+  right: -25%;
+  width: 70%;
+  height: 180%;
+  background: rgb(255 255 240 / 6%);
+  transform: rotate(24deg);
 }
 
-.landing-page .reach-row {
-  min-height: 56px;
-  padding: 0.55rem 0.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  border-radius: 12px;
-  color: var(--cl-ink);
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    transform 180ms ease;
-}
-
-.landing-page .reach-row__text {
-  min-width: 0;
-  display: grid;
-  text-align: left;
-}
-
-.landing-page .reach-row__text small {
-  color: var(--cl-muted);
-  font-size: 0.7rem;
+.landing-page .store-sign__name {
+  margin: 0;
+  color: #a9dcc6;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.14em;
+  text-align: left;
   text-transform: uppercase;
 }
 
-.landing-page .reach-row__text span {
+/* Open or Closed, set large like the sign on the door. */
+.landing-page .store-sign__state {
+  margin: 0.4rem 0 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--cl-cream);
+  font-size: clamp(3rem, 6vw, 4.6rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.landing-page .store-sign__lamp {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #e0a34a;
+  box-shadow: 0 0 0 5px rgb(224 163 74 / 20%);
+}
+
+.landing-page .store-sign.is-open .store-sign__lamp {
+  background: #6ee7b0;
+  box-shadow: 0 0 0 5px rgb(110 231 176 / 22%);
+  animation: sign-lamp 2.6s ease-out infinite;
+}
+
+@keyframes sign-lamp {
+  0%,
+  50% {
+    box-shadow: 0 0 0 0 rgb(110 231 176 / 50%);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgb(110 231 176 / 0%);
+  }
+}
+
+.landing-page .store-sign__next {
+  margin: 0;
+  color: rgb(255 255 240 / 78%);
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.landing-page .store-sign__next strong {
+  color: var(--cl-cream);
+}
+
+/* Today on a 6 AM–10 PM line: the open hours filled, a mark at the time it is now. */
+.landing-page .store-day {
+  margin-top: 3rem;
+}
+
+.landing-page .store-day__line {
+  position: relative;
+  height: 10px;
+  border-radius: 10px;
+  background: rgb(255 255 240 / 14%);
+}
+
+.landing-page .store-day__open {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 10px;
+  background: #a9dcc6;
+  transform-origin: left;
+  animation: day-fill 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes day-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.landing-page .store-day__now {
+  position: absolute;
+  top: -7px;
+  bottom: -7px;
+  left: var(--at);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--cl-cream);
+}
+
+.landing-page .store-day__now b {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--cl-cream);
+  color: var(--cl-green);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* Near either end the label leans inward so it stays on the card. */
+.landing-page .store-day__now.is-start b {
+  left: 0;
+  transform: none;
+}
+
+.landing-page .store-day__now.is-end b {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.landing-page .store-day__ticks {
+  margin-top: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  color: rgb(255 255 240 / 55%);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* The week: one column per day, its open hours as a bar on the same 6 AM–10 PM scale. */
+.landing-page .store-week {
+  margin: 1.8rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+  list-style: none;
+}
+
+.landing-page .store-week li {
+  padding: 0.6rem 0.2rem 0.55rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  border-radius: 12px;
+  transition: background-color 180ms ease;
+}
+
+.landing-page .store-week li:hover {
+  background: rgb(255 255 240 / 8%);
+}
+
+.landing-page .store-week li.is-today {
+  background: var(--cl-cream);
+  color: var(--cl-green);
+}
+
+.landing-page .store-week__day {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.landing-page .store-week__track {
+  position: relative;
+  width: 8px;
+  height: 64px;
+  border-radius: 8px;
+  background: rgb(255 255 240 / 14%);
+}
+
+.landing-page .store-week__track i {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-radius: 8px;
+  background: #a9dcc6;
+}
+
+.landing-page .is-today .store-week__track {
+  background: var(--cl-mint);
+}
+
+.landing-page .is-today .store-week__track i {
+  background: var(--cl-green);
+}
+
+.landing-page .store-week__hours {
+  color: rgb(255 255 240 / 70%);
+  font-size: 0.66rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.landing-page .is-today .store-week__hours {
+  color: var(--cl-green);
+}
+
+.landing-page .store-sign__facts {
+  margin: 1.6rem 0 0;
+  padding-top: 1.2rem;
+  display: grid;
+  gap: 0.6rem;
+  border-top: 1px solid rgb(255 255 240 / 16%);
+}
+
+.landing-page .store-sign__facts div {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 1rem;
+  text-align: left;
+}
+
+.landing-page .store-sign__facts dt {
+  color: rgb(255 255 240 / 60%);
+  font-size: 0.8rem;
+}
+
+.landing-page .store-sign__facts dd {
+  margin: 0;
   overflow-wrap: anywhere;
   font-weight: 600;
 }
 
-.landing-page .reach-row__arrow {
+/* --- System support: the developer, then one large row per way to reach him ------------ */
+.landing-page .support-card {
+  padding: clamp(1.5rem, 3vw, 2.4rem);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--cl-line);
+  border-radius: 24px;
+  background: var(--cl-paper);
+}
+
+.landing-page .support-card__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.landing-page .support-card__photo {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  border: 3px solid var(--cl-paper);
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  box-shadow: 0 0 0 2px var(--cl-green);
+}
+
+.landing-page .support-card__head h3 {
+  margin: 0;
+  color: var(--cl-ink);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-align: left;
+}
+
+.landing-page .support-card__head p {
+  margin: 0.1rem 0 0;
+  color: var(--cl-muted);
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.landing-page .support-card__note {
+  margin: 1.3rem 0 1.1rem;
+  color: var(--cl-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.landing-page .support-links {
+  margin-top: auto;
+  border-top: 1px solid var(--cl-line);
+}
+
+.landing-page .support-link {
+  min-height: 76px;
+  padding: 0.9rem 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--cl-line);
+  color: var(--cl-ink);
+  text-decoration: none;
+  transition: padding 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .support-link__text {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+  text-align: left;
+}
+
+.landing-page .support-link__text small {
+  color: var(--cl-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-page .support-link__text > span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.landing-page .support-link__fb {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.landing-page .support-link__action {
   margin-inline-start: auto;
+  min-height: 40px;
+  padding: 0.45rem 0.95rem;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--cl-line);
+  border-radius: 999px;
   color: var(--cl-green);
-  opacity: 0.45;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
 }
 
-.landing-page .reach-row.is-link:hover {
-  background: var(--cl-mint);
-  transform: translateY(-2px);
+.landing-page .support-link__action svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.landing-page .reach-row.is-link:hover .reach-row__arrow {
-  opacity: 1;
-  transform: translateX(4px);
+.landing-page .support-link:hover {
+  padding-inline: 0.75rem 0.25rem;
 }
 
-.landing-page .reach-row.is-link:active {
-  transform: translateY(0);
+.landing-page .support-link:hover .support-link__action {
+  border-color: var(--cl-green);
+  background: var(--cl-green);
+  color: var(--cl-cream);
+}
+
+.landing-page .support-link:hover .support-link__action svg {
+  transform: translateX(3px);
+}
+
+.landing-page .support-link:active .support-link__action {
+  transform: scale(0.97);
+}
+
+.landing-page .support-link:focus-visible {
+  outline: 3px solid #8fc5b7;
+  outline-offset: 2px;
+  border-radius: 10px;
 }
 
 /* --- Tablet and phone ------------------------------------------------------------------- */
@@ -478,12 +674,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page .owner-cta__band,
-  .landing-page .is-open .reach-status__dot {
+  .landing-page .store-sign.is-open .store-sign__lamp,
+  .landing-page .store-day__open {
     animation: none;
   }
 
   .landing-page .owner-cta__button,
-  .landing-page .reach-row {
+  .landing-page .support-link,
+  .landing-page .support-link__action {
     transition: none;
   }
 }
