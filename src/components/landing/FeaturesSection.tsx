@@ -131,7 +131,7 @@ export function FeaturesSection() {
     shown.current = active;
     setDir(way);
     setLeaving({ index: before, dir: way });
-    const timer = window.setTimeout(() => setLeaving(null), 480);
+    const timer = window.setTimeout(() => setLeaving(null), 760);
     return () => window.clearTimeout(timer);
   }, [active]);
 
