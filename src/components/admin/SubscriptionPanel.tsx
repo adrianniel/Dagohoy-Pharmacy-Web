@@ -191,6 +191,7 @@ export function SubscriptionNotice() {
   const count = billing.unpaidMonths.length;
   const several = count > 1 ? ` ${count} months unpaid: pay ${fee} once for each month.` : '';
   let tone = 'is-soon';
+  let title = 'Subscription due soon';
   let text = '';
   if (billing.status === 'upcoming') {
     text = `Reminder: the ${fee} subscription for ${monthName(oldest)} is due on ${dayName(
@@ -198,20 +199,28 @@ export function SubscriptionNotice() {
     )}. Pay early to keep the barcode lookup service running.`;
   } else if (billing.status === 'due') {
     tone = 'is-due';
+    title = 'Subscription due now';
     text = `The ${fee} subscription for ${monthName(oldest)} is due. Pay by ${lastDay(
       billing.pauseDate ?? '',
     )}: the barcode lookup service pauses on ${dayName(billing.pauseDate ?? '')}.${several}`;
   } else {
     tone = 'is-late';
-    text = `Barcode lookup service is paused: the subscription for ${monthName(
+    title = 'Barcode scanner is off';
+    text = `The subscription for ${monthName(
       oldest,
-    )} is not paid. The barcode scanner is off until it is paid: type product names at the Sales Counter.${several}`;
+    )} is not paid, so the barcode lookup service is paused. Type product names at the Sales Counter until it is paid.${several}`;
   }
   return (
-    <p className={`subscription-notice ${tone}`} role={tone === 'is-late' ? 'alert' : 'status'}>
-      <span>{text}</span>
+    <div className={`subscription-notice ${tone}`} role={tone === 'is-late' ? 'alert' : 'status'}>
+      <span className="subscription-notice__icon" aria-hidden="true">
+        {tone === 'is-soon' ? 'i' : '!'}
+      </span>
+      <p>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </p>
       {pathname !== '/admin/subscription' && <Link to="/admin/subscription">Pay now</Link>}
-    </p>
+    </div>
   );
 }
 
