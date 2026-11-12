@@ -16,6 +16,34 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   localProductUnitId?: number | null;
 };
 type CartLine = { product: PosProduct; quantity: number };
+
+/**
+ * The sale on the counter is kept in this browser while it is open, so going to another page
+ * (or a refresh) and coming back continues it. Cleared when the sale is completed or cleared,
+ * and on logout.
+ */
+const OPEN_SALE_KEY = 'dagohoy_open_sale';
+
+function loadOpenSale(): { cart: CartLine[]; discount: string } {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPEN_SALE_KEY) ?? 'null') as {
+      cart?: CartLine[];
+      discount?: string;
+    } | null;
+    if (!saved?.cart?.length) return { cart: [], discount: '0' };
+    // Refresh each item from the current product list (price, stock); drop removed ones.
+    const inventory = getInventory();
+    const cart = saved.cart.flatMap((line) => {
+      const fresh = inventory.find((item) => item.barcode === line.product.barcode);
+      if (!fresh || !(line.quantity > 0)) return [];
+      const product: PosProduct = fresh.unregistered ? { ...fresh, stock: undefined } : fresh;
+      return [{ product, quantity: line.quantity }];
+    });
+    return { cart, discount: saved.discount ?? '0' };
+  } catch {
+    return { cart: [], discount: '0' };
+  }
+}
 type CompletedSale = {
   receipt: string;
   date: string;
@@ -166,7 +194,8 @@ export function CashierPosPage() {
   const [products, setProducts] = useState(getInventory);
   /** True while a sale, void or no-charge record is being saved on the server. */
   const [saving, setSaving] = useState(false);
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const [openSale] = useState(loadOpenSale);
+  const [cart, setCart] = useState<CartLine[]>(openSale.cart);
   /** Barcode of the item added last (highlighted in the list) and a counter that replays the flash. */
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [addPulse, setAddPulse] = useState(0);
@@ -175,7 +204,19 @@ export function CashierPosPage() {
   const [checked, setChecked] = useState<CatalogProduct | null>(null);
   const [query, setQuery] = useState('');
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [discountInput, setDiscountInput] = useState('0');
+  const [discountInput, setDiscountInput] = useState(openSale.discount);
+  // Keep the open sale so it is still here after visiting another page.
+  useEffect(() => {
+    try {
+      if (cart.length) {
+        localStorage.setItem(OPEN_SALE_KEY, JSON.stringify({ cart, discount: discountInput }));
+      } else {
+        localStorage.removeItem(OPEN_SALE_KEY);
+      }
+    } catch {
+      // Storage full or blocked: the sale still works, it is just not kept.
+    }
+  }, [cart, discountInput]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash');
   const [tendered, setTendered] = useState('');
   const [creditCustomer, setCreditCustomer] = useState('');

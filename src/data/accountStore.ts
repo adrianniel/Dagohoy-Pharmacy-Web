@@ -92,6 +92,7 @@ const SERVER_COPY_KEYS = [
   'dagohoy_demo_suppliers',
   'dagohoy_demo_staff_roster',
   'dagohoy_demo_pharmacy_settings',
+  'dagohoy_open_sale', // the sale left on the Sales Counter
 ];
 
 function remember(account: Account | null) {
