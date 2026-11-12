@@ -4254,35 +4254,49 @@ html:has(.landing-page) {
     font-size: 0.55rem;
   }
 
-  .landing-page .landing-nav__links {
-    inset-inline-start: 52%;
-    inset-inline-end: 0;
-    inset-block-end: 0;
-    height: 34px;
-    justify-content: center;
-    gap: clamp(0.45rem, 3vw, 1.2rem);
-    background: var(--hero-reference-green);
+  /* Phone: brand and Log in on one row, the three links on a row under them, inside the green. */
+  .landing-page .landing-nav {
+    grid-template-rows: 64px 40px;
   }
 
-  .landing-page .landing-nav__links a {
-    font-size: clamp(0.66rem, 2.6vw, 0.76rem);
+  .landing-page .landing-brand {
+    grid-row: 1;
+    background: transparent;
   }
 
   .landing-page .landing-nav__login {
+    grid-row: 1;
     min-width: auto;
-    min-height: 32px;
-    margin-inline-end: 0.45rem;
-    padding: 0.35rem 0.65rem;
-    font-size: 0.72rem;
+    min-height: 36px;
+    margin-inline-end: 1rem;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .landing-page .landing-nav__links {
+    position: static;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    justify-self: end;
+    height: auto;
+    margin-inline-end: 1rem;
+    gap: 1.1rem;
+    background: transparent;
+  }
+
+  .landing-page .landing-nav__links a {
+    font-size: 0.85rem;
   }
 
   .landing-page .landing-hero,
   .landing-page .landing-hero__stage {
-    min-height: 760px;
+    min-height: 0;
   }
 
+  /* The green covers only the top: its diagonal edge runs behind the computer, as on desktop. */
   .landing-page .landing-hero__green-shape {
-    height: 100%;
+    bottom: auto;
+    height: 520px;
   }
 
   .landing-page .landing-hero__green-shape-desktop {
@@ -4293,10 +4307,17 @@ html:has(.landing-page) {
     display: block;
   }
 
+  .landing-page .landing-hero__stage {
+    display: flex;
+    flex-direction: column;
+    padding: 124px 1rem 56px;
+  }
+
   .landing-page .landing-hero__intro {
-    top: 51%;
-    left: 7%;
-    width: 86%;
+    position: static;
+    order: 2;
+    width: auto;
+    margin-top: 1.75rem;
     transform: none;
   }
 
@@ -4320,9 +4341,10 @@ html:has(.landing-page) {
   }
 
   .landing-page .landing-hero__pos-image {
-    top: 14%;
-    right: 7%;
-    width: min(76%, 360px);
+    position: static;
+    order: 1;
+    align-self: center;
+    width: min(88%, 380px);
     transform: none;
   }
 }
