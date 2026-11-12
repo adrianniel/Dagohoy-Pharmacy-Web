@@ -64,8 +64,6 @@ function readStoreDetails() {
 export function ThermalReceipt({ data }: { data: ReceiptData }) {
   const store = readStoreDetails();
   const itemCount = data.lines.reduce((sum, line) => sum + line.quantity, 0);
-  const discountPercent =
-    data.subtotal > 0 ? Math.round((data.discount / data.subtotal) * 1000) / 10 : 0;
   const reference = data.gcashReference
     ? data.gcashReference.length < 13
       ? `…${data.gcashReference}`
@@ -142,7 +140,7 @@ export function ThermalReceipt({ data }: { data: ReceiptData }) {
       </div>
       {data.discount > 0 && (
         <div className="thermal__row">
-          <span>DISCOUNT {discountPercent}%</span>
+          <span>DISCOUNT</span>
           <span>-{amount(data.discount)}</span>
         </div>
       )}

@@ -174,7 +174,7 @@ function sanitizeMoneyInput(value: string): string {
 function sanitizeDiscountInput(value: string): string {
   const cleaned = value.replace(/[^\d.]/g, '');
   const dotIndex = cleaned.indexOf('.');
-  const integerPart = (dotIndex === -1 ? cleaned : cleaned.slice(0, dotIndex)).slice(0, 3);
+  const integerPart = (dotIndex === -1 ? cleaned : cleaned.slice(0, dotIndex)).slice(0, 6);
   const decimalPart =
     dotIndex === -1
       ? ''
@@ -187,7 +187,7 @@ function sanitizeDiscountInput(value: string): string {
   if (next === '' || next === '.') {
     return dotIndex === -1 ? '' : '0.';
   }
-  return Number(next) > 100 ? '100' : next;
+  return next;
 }
 
 export function CashierPosPage() {
@@ -264,9 +264,11 @@ export function CashierPosPage() {
     (total, line) => total + toAmount(line.product.price) * line.quantity,
     0,
   );
-  const discountPercent = Math.min(100, Math.max(0, Number(discountInput) || 0));
   const totalItems = cart.reduce((total, line) => total + line.quantity, 0);
-  const discount = Math.round(((subtotal * discountPercent) / 100) * 100) / 100;
+  // The cashier works out the amount off on a calculator and types it in pesos.
+  const discountTyped = Math.max(0, Math.round((Number(discountInput) || 0) * 100) / 100);
+  const discount = Math.min(discountTyped, subtotal);
+  const discountTooBig = discountTyped > subtotal && subtotal > 0;
   const totalDue = subtotal - discount;
   // The subscription is 7+ days late: the barcode scanner is off until it is paid. Selling goes
   // on by product name. It comes back by itself once a payment is sent.
@@ -703,7 +705,7 @@ export function CashierPosPage() {
     try {
       sale = await createSale({
         lines,
-        discountPercent,
+        discountAmount: discount,
         ...(paymentMethod === 'Cash'
           ? { payment: 'cash', amountTendered: paid }
           : paymentMethod === 'GCash'
@@ -976,19 +978,24 @@ export function CashierPosPage() {
             <div className="pos-ticket__row">
               <span>Discount</span>
               <label className="pos-ticket__discount">
+                <span>₱</span>
                 <input
-                  aria-label="Discount percent"
+                  aria-label="Discount amount in pesos"
                   type="text"
                   inputMode="decimal"
                   value={discountInput}
-                  placeholder="0"
-                  maxLength={6}
+                  placeholder="0.00"
+                  maxLength={9}
                   onChange={(event) => setDiscountInput(sanitizeDiscountInput(event.target.value))}
-                  onBlur={() => setDiscountInput(String(discountPercent))}
+                  onBlur={() => setDiscountInput(discountInput ? String(discount) : '0')}
                 />
-                <span>%</span>
               </label>
             </div>
+            {discountTooBig && (
+              <p className="pos-ticket__discount-warn" role="alert">
+                The discount is more than the items cost. It is set to {formatMoney(subtotal)}.
+              </p>
+            )}
             {discount > 0 && (
               <div className="pos-ticket__row">
                 <span>Less discount</span>
@@ -1395,7 +1402,7 @@ export function CashierPosPage() {
                       </div>
                       {discount > 0 && (
                         <div>
-                          <span>Discount ({discountPercent}%)</span>
+                          <span>Discount</span>
                           <span>−{formatMoney(discount)}</span>
                         </div>
                       )}

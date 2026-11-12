@@ -1037,7 +1037,7 @@
 }
 
 .pos-ticket__discount input {
-  width: 3.6rem;
+  width: 6.5rem;
   height: 2rem;
   padding: 0 0.5rem;
   border: 1px solid #cfd6c4;
@@ -5340,4 +5340,12 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
+}
+
+.pos-ticket__discount-warn {
+  margin: 0.2rem 0 0;
+  color: #b0402c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
 }

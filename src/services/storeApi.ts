@@ -262,6 +262,8 @@ export type NewSale = {
   lines: Array<{ productId: number; quantity: number }>;
   payment: 'cash' | 'gcash' | 'credit' | 'no_charge';
   discountPercent?: number;
+  /** Peso amount off the whole sale (typed by the cashier). */
+  discountAmount?: number;
   amountTendered?: number;
   gcashReference?: string;
   gcashPaid?: boolean;
