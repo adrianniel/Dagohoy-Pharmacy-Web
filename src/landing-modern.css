@@ -4254,9 +4254,11 @@ html:has(.landing-page) {
     font-size: 0.55rem;
   }
 
-  /* Phone: brand and Log in on one row, the three links on a row under them, inside the green. */
+  /* Phone: brand and Log in on one row, the three links stacked under Log in, inside the green. */
   .landing-page .landing-nav {
-    grid-template-rows: 64px 40px;
+    grid-template-rows: 64px auto;
+    align-content: start;
+    overflow: visible;
   }
 
   .landing-page .landing-brand {
@@ -4280,12 +4282,18 @@ html:has(.landing-page) {
     justify-self: end;
     height: auto;
     margin-inline-end: 1rem;
-    gap: 1.1rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
     background: transparent;
   }
 
+  /* Stacked under Log in, right-aligned with it; each link a full-height tap target. */
   .landing-page .landing-nav__links a {
-    font-size: 0.85rem;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9rem;
   }
 
   .landing-page .landing-hero,
