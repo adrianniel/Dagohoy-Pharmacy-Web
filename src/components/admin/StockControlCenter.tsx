@@ -15,6 +15,7 @@ import { useToast } from '../toast';
 import { cleanBatch } from '../../data/batchCode';
 import { lastLotCost } from '../../data/lotCost';
 import { RestockOrder } from './RestockOrder';
+import { ReturnStock } from './ReturnStock';
 
 type PanelKey =
   'products' | 'health' | 'receive' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments';
@@ -612,70 +613,16 @@ export function StockControlCenter({
         )}
 
         {active === 'return' && (
-          <>
-            {data.expired.length > 0 && (
-              <>
-                <h5 className="stock-index__subhead">Expired batches still on the shelf</h5>
-                <div className="stock-index__picks">
-                  {data.expired.map((lot) => (
-                    <button
-                      key={lot.id}
-                      type="button"
-                      className={`stock-index__pick${returnLot === lot.id ? ' is-picked' : ''}`}
-                      onClick={() => setReturnLot(lot.id)}
-                    >
-                      <strong>{lot.product}</strong>
-                      <small>
-                        Batch {lot.lot} · {lot.stock} units ·{' '}
-                        {daysLeftLabel(lot.days).toLowerCase()}
-                      </small>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            <StockWriteOffForm
-              key={`return-${returnLot}`}
-              mode="return"
-              batches={data.allBatches}
-              initialBatchId={returnLot}
-              onSaved={() => {
-                setReturnLot('');
-                handleStockSaved();
-              }}
-            />
-            <h5 className="stock-index__subhead">Returns to suppliers</h5>
-            {data.returns.length === 0 ? (
-              <p className="stock-index__empty">No supplier returns recorded yet.</p>
-            ) : (
-              <table className="stock-index__table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Product</th>
-                    <th>Units</th>
-                    <th>Reason</th>
-                    <th>Return slip</th>
-                    <th>By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.returns.slice(0, 8).map((movement) => (
-                    <tr key={movement.id}>
-                      <td className="stock-index__mono">{shortDateTime(movement.date)}</td>
-                      <td>
-                        <strong>{movement.product}</strong>
-                      </td>
-                      <td className="movement-negative">{movement.change}</td>
-                      <td>{movement.reason}</td>
-                      <td className="stock-index__mono">{movement.reference}</td>
-                      <td>{movement.staff}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </>
+          <ReturnStock
+            key={`return-${returnLot}-${revision}`}
+            batches={data.allBatches}
+            returns={data.returns}
+            initialBatchId={returnLot}
+            onSaved={() => {
+              setReturnLot('');
+              handleStockSaved();
+            }}
+          />
         )}
 
         {active === 'adjustments' && (
