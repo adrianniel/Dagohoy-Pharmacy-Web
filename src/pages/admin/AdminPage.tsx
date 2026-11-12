@@ -138,6 +138,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [showArchived, setShowArchived] = useState(false);
   /** Product list, or the products scanned and sold at the Sales Counter before they were added. */
   const [listView, setListView] = useState<'list' | 'unregistered'>('list');
+  /** "Receive stock for it" from New product: opens Receive stock with that product. */
+  const [receiveRequest, setReceiveRequest] = useState<{ barcode: string; at: number } | null>(
+    null,
+  );
   const isAdmin = getCurrentAccount()?.role === 'ADMIN';
   // Subscription unpaid past the allowance: search matches names only, not barcodes.
   const scannerOff = useScannerOff();
@@ -286,6 +290,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
         <>
           <StockControlCenter
             products={registeredProducts}
+            receiveRequest={receiveRequest}
             threshold={restockThreshold}
             restockCount={restockProducts.length}
             onStockChanged={() => setProducts(getInventory())}
@@ -457,10 +462,19 @@ export function AdminPage({ section }: { section: AdminSection }) {
           )}
           {formOpen && (
             <InventoryForm
+              key={editing?.barcode ?? `new-${newBarcode}`}
               product={editing}
               products={products}
               initialBarcode={newBarcode}
               onClose={() => setFormOpen(false)}
+              onReceiveExisting={(found) => {
+                setFormOpen(false);
+                setReceiveRequest({ barcode: found.barcode, at: Date.now() });
+              }}
+              onEditExisting={(found) => {
+                setNewBarcode('');
+                setEditing(found);
+              }}
               onArchive={
                 isAdmin && editing?.id
                   ? async () => {
@@ -893,6 +907,8 @@ function InventoryForm({
   onClose,
   onSave,
   onArchive,
+  onReceiveExisting,
+  onEditExisting,
 }: {
   product: InventoryProduct | null;
   products: InventoryProduct[];
@@ -900,6 +916,9 @@ function InventoryForm({
   onClose: () => void;
   /** Archives the product (owner/admin only). Resolves to an error message, or null. */
   onArchive?: () => Promise<string | null>;
+  /** The scanned barcode is already a product: receive a delivery of it, or edit it. */
+  onReceiveExisting?: (product: InventoryProduct) => void;
+  onEditExisting?: (product: InventoryProduct) => void;
   /** Saves on the server. Resolves to an error message, or null when saved. */
   onSave: (
     product: InventoryProduct,
@@ -928,10 +947,16 @@ function InventoryForm({
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
+  /** New product: the scanned barcode belongs to a product already on the list. */
+  const [existing, setExisting] = useState<InventoryProduct | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const existingRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [error]);
+  useEffect(() => {
+    if (existing) existingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [existing]);
   const [saving, setSaving] = useState(false);
   /** What the barcode scan found (or that nothing was found), shown under the barcode field. */
   const [lookupNote, setLookupNote] = useState('');
@@ -962,7 +987,9 @@ function InventoryForm({
         );
       } else if (result.status === 'in_catalog') {
         setLookupNote('');
-        setError(`Barcode ${code} is already used by ${result.name}.`);
+        const listed = products.find((item) => item.barcode === code);
+        if (listed) setExisting(listed);
+        else setError(`Barcode ${code} is already used by ${result.name} (archived or hidden).`);
       } else if (result.status === 'not_found') {
         setLookupState('missing');
         setLookupNote('No details found for this barcode. Type them in.');
@@ -992,7 +1019,7 @@ function InventoryForm({
     const owner = products.find((item) => item.barcode === code);
     if (owner) {
       setLookupNote('');
-      setError(`Barcode ${code} is already used by ${owner.product}.`);
+      setExisting(owner);
       return;
     }
     void fillFromBarcode(code);
@@ -1025,6 +1052,10 @@ function InventoryForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
+    if (existing && !noBarcode) {
+      setError(`${existing.product} already has this barcode. Use Receive stock to add its units.`);
+      return;
+    }
     if (noBarcode) {
       if (!name.trim()) {
         setError('Type the product name.');
@@ -1112,6 +1143,48 @@ function InventoryForm({
               ? 'Sold at the Sales Counter before it was on the list. Check the details, then fill in what is missing: cost, units on the shelf now, batch number and expiry date.'
               : 'Change the details and prices.'}
         </p>
+        {existing && (
+          <div className="product-form__existing" role="alert" ref={existingRef}>
+            <p className="product-form__existing-flag">Already on the product list</p>
+            <strong>{existing.product}</strong>
+            <span>
+              {existing.detail} · {existing.price} · {existing.stock} {existing.unit.toLowerCase()}
+              (s) on hand
+            </span>
+            <p>This is not a new product. To add the units that just arrived, use Receive stock.</p>
+            <div className="product-form__existing-actions">
+              {onReceiveExisting && (
+                <button
+                  type="button"
+                  className="cashier-primary-action"
+                  onClick={() => onReceiveExisting(existing)}
+                >
+                  Receive stock for it
+                </button>
+              )}
+              {onEditExisting && (
+                <button
+                  type="button"
+                  className="cashier-view-button"
+                  onClick={() => onEditExisting(existing)}
+                >
+                  Edit the product
+                </button>
+              )}
+              <button
+                type="button"
+                className="cashier-view-button"
+                onClick={() => {
+                  setExisting(null);
+                  setBarcode('');
+                  checkedBarcode.current = '';
+                }}
+              >
+                Scan another
+              </button>
+            </div>
+          </div>
+        )}
         {/* Problems show at the top, where they are seen, and the form scrolls up to them. */}
         {error && (
           <p className="pos-notice product-form__alert" role="alert" ref={errorRef}>
@@ -1150,6 +1223,7 @@ function InventoryForm({
                 onChange={(next) => {
                   setBarcode(next);
                   setError('');
+                  setExisting(null);
                   if (next.trim() !== checkedBarcode.current) {
                     setLookupNote('');
                     setLookupState('idle');
@@ -1159,7 +1233,8 @@ function InventoryForm({
                   const owner = products.find(
                     (item) => item.barcode === code && item.barcode !== product?.barcode,
                   );
-                  if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
+                  if (owner && isNew) setExisting(owner);
+                  else if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
                   else checkBarcode(code);
                 }}
                 placeholder={isNew ? 'Scan the product barcode' : 'Scan or type it'}

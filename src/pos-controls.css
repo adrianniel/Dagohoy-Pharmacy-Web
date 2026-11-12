@@ -5297,3 +5297,47 @@
   color: #8f2c1f;
   font-weight: 700;
 }
+
+/* New product: the scanned barcode is already a product on the list. */
+.pos-payment-modal .product-form__existing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border: 1px solid #b9d8c4;
+  border-left: 5px solid #1b6b4c;
+  border-radius: 12px;
+  background: #eef7f1;
+  color: #13322a;
+}
+
+.product-form__existing-flag {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1b6b4c;
+}
+
+.product-form__existing strong {
+  font-size: 1.05rem;
+}
+
+.product-form__existing span {
+  font-size: 0.84rem;
+  color: #3d4f45;
+}
+
+.product-form__existing > p:not(.product-form__existing-flag) {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+}
+
+.product-form__existing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}

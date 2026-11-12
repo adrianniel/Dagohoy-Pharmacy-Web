@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
 import { ProductPicker } from '../ScanInput';
 import { getInventory } from '../../data/inventoryStore';
@@ -22,6 +22,8 @@ type PanelKey =
 
 type StockControlCenterProps = {
   products: InventoryProduct[];
+  /** Opens Receive stock with this product picked (from "already on the list" in New product). */
+  receiveRequest?: { barcode: string; at: number } | null;
   threshold: number;
   restockCount: number;
   /** Called after a delivery, return or adjustment changes stock, so the product list reloads. */
@@ -97,12 +99,22 @@ function loadSupplierNames(): string[] {
 
 export function StockControlCenter({
   products,
+  receiveRequest,
   threshold,
   restockCount,
   onStockChanged,
   children,
 }: StockControlCenterProps) {
   const [active, setActive] = useState<PanelKey>('products');
+  const [receiveBarcode, setReceiveBarcode] = useState('');
+  useEffect(() => {
+    if (!receiveRequest) return;
+    setReceiveBarcode(receiveRequest.barcode);
+    setActive('receive');
+    window.requestAnimationFrame(() =>
+      document.getElementById('stock-index-panel')?.scrollIntoView({ behavior: 'smooth' }),
+    );
+  }, [receiveRequest]);
   /** Bumped after stock is saved so the counts and lists reload. */
   const [revision, setRevision] = useState(0);
   /** A lot picked from Expiry check or Return stocks, pre-filled in the return form. */
@@ -406,7 +418,16 @@ export function StockControlCenter({
 
         {active === 'receive' && (
           <>
-            <ReceiveForm batches={data.allBatches} products={products} onSaved={handleStockSaved} />
+            <ReceiveForm
+              key={`receive-${receiveBarcode}`}
+              batches={data.allBatches}
+              products={products}
+              initialBarcode={receiveBarcode}
+              onSaved={() => {
+                setReceiveBarcode('');
+                handleStockSaved();
+              }}
+            />
             <h5 className="stock-index__subhead">Recent deliveries</h5>
             {data.received.length === 0 ? (
               <p className="stock-index__empty">
@@ -690,15 +711,18 @@ const peso = (amount: number) =>
 function ReceiveForm({
   batches,
   products,
+  initialBarcode = '',
   onSaved,
 }: {
   batches: InventoryBatch[];
   products: InventoryProduct[];
+  /** A product picked before the form opens. */
+  initialBarcode?: string;
   onSaved: () => void;
 }) {
   const { showToast } = useToast();
   const suppliers = useMemo(loadSupplierNames, []);
-  const [barcode, setBarcode] = useState('');
+  const [barcode, setBarcode] = useState(initialBarcode);
   const [supplier, setSupplier] = useState(suppliers[0] ?? '');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
