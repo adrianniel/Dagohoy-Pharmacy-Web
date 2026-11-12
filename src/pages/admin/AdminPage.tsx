@@ -10,7 +10,7 @@ import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
 import { formatHour, hourRange } from '../../components/hours';
 import { ScanInput } from '../../components/ScanInput';
-import { useScannerOff } from '../../services/useBilling';
+import { notifyBillingChanged, useBilling, useScannerOff } from '../../services/useBilling';
 import { useToast } from '../../components/toast';
 import {
   getInventory,
@@ -799,6 +799,7 @@ function InventoryForm({
     opening?: { lot: string; expiry: string },
   ) => Promise<string | null>;
 }) {
+  const billing = useBilling();
   const isNew = !product;
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode);
@@ -826,6 +827,7 @@ function InventoryForm({
     setLookupState('loading');
     try {
       const result = await lookupBarcode(code);
+      notifyBillingChanged(); // a scan may have used a free scan
       if (result.status === 'found') {
         const found = result.suggestion;
         setName((current) => current || found.name);
@@ -994,6 +996,12 @@ function InventoryForm({
               placeholder={isNew ? 'Scan the product barcode' : 'Scan or type it'}
               inputProps={{ inputMode: 'numeric', autoFocus: isNew, 'aria-label': 'Barcode' }}
             />
+            {isNew && billing?.status === 'trial' && (
+              <p className="product-form__free">
+                Free trial: <b>{billing.freeScans.left}</b> of {billing.freeScans.total} free scans
+                left
+              </p>
+            )}
             <p className="product-form__lookup" aria-live="polite">
               {lookupNote ||
                 (isNew

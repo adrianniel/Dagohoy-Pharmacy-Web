@@ -4739,3 +4739,70 @@
   color: #13322a;
   border: 1px solid #c9d2c2;
 }
+
+/* Free trial: free scans left before the monthly subscription starts. */
+.subscription__trial {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 260px) auto;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 16px 22px;
+  border: 1px solid #cfe0f2;
+  border-radius: 14px;
+  background: #f3f8fd;
+}
+
+.subscription__trial p {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2f6fb0;
+}
+
+.subscription__trial strong {
+  display: block;
+  font-size: 1.6rem;
+  color: #13322a;
+}
+
+.subscription__trial strong small {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #6a7b71;
+}
+
+.subscription__trial span {
+  font-size: 0.84rem;
+  color: #3d4f45;
+}
+
+.subscription__trial > small {
+  font-size: 0.8rem;
+  color: #6a7b71;
+}
+
+.subscription__meter {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbe7f3;
+}
+
+.subscription__meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2f6fb0, #4b8fd1);
+}
+
+.product-form__free {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: #2f6fb0;
+}
+
+@media (max-width: 760px) {
+  .subscription__trial {
+    grid-template-columns: 1fr;
+  }
+}

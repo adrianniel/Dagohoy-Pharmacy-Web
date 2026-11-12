@@ -336,7 +336,9 @@ export const getProfit = (months = 6) =>
 
 /** The owner's monthly system subscription (Settings > Subscription). */
 export type ApiBilling = {
-  status: 'not_started' | 'paid' | 'pending' | 'upcoming' | 'due' | 'overdue';
+  status: 'trial' | 'not_started' | 'paid' | 'pending' | 'upcoming' | 'due' | 'overdue';
+  /** Free new-product scans before billing starts. */
+  freeScans: { total: number; used: number; left: number; ranOutAt: string | null };
   fee: number;
   startMonth: string | null;
   months: Array<{ month: string; state: 'paid' | 'pending' | 'unpaid' }>;

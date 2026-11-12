@@ -27,6 +27,7 @@ const lastDay = (pauseDate: string) => {
 };
 
 const STATUS: Record<ApiBilling['status'], { label: string; tone: string }> = {
+  trial: { label: 'Free trial', tone: 'ok' },
   not_started: { label: 'Not started yet', tone: 'muted' },
   paid: { label: 'Paid', tone: 'ok' },
   pending: { label: 'Waiting for confirmation', tone: 'wait' },
@@ -88,6 +89,8 @@ export function SubscriptionPanel() {
         </div>
         <em>{status.label}</em>
       </section>
+
+      {billing.status === 'trial' && <FreeScans billing={billing} />}
 
       {paying && (
         <section className="subscription__pay">
@@ -185,8 +188,36 @@ export function SubscriptionNotice() {
   const billing = useBilling();
   const { pathname } = useLocation();
 
-  if (!billing || !['upcoming', 'due', 'overdue'].includes(billing.status)) return null;
+  if (!billing) return null;
+  const scans = billing.freeScans;
+  // During the free trial, a reminder only when 10 or fewer free scans are left.
+  if (billing.status === 'trial') {
+    if (scans.left > 10) return null;
+    return (
+      <div className="subscription-notice is-soon" role="status">
+        <span className="subscription-notice__icon" aria-hidden="true">
+          i
+        </span>
+        <p>
+          <strong>
+            {scans.left} of {scans.total} free scans left
+          </strong>
+          <span>
+            When the free scans run out, the {money(billing.fee)} monthly subscription for the
+            barcode lookup service and system maintenance starts.
+          </span>
+        </p>
+        {pathname !== '/admin/subscription' && <Link to="/admin/subscription">See plan</Link>}
+      </div>
+    );
+  }
+  if (!['upcoming', 'due', 'overdue'].includes(billing.status)) return null;
   const [oldest] = billing.unpaidMonths;
+  // The month the free scans ran out in (local time, so a scan just after midnight counts right).
+  const ranOutMonth = scans.ranOutAt
+    ? new Date(scans.ranOutAt).toLocaleDateString('en-CA').slice(0, 7)
+    : '';
+  const ranOutNow = ranOutMonth !== '' && oldest === ranOutMonth;
   const fee = money(billing.fee);
   const count = billing.unpaidMonths.length;
   const several = count > 1 ? ` ${count} months unpaid: pay ${fee} once for each month.` : '';
@@ -199,10 +230,12 @@ export function SubscriptionNotice() {
     )}. Pay early to keep the barcode lookup service running.`;
   } else if (billing.status === 'due') {
     tone = 'is-due';
-    title = 'Subscription due now';
-    text = `The ${fee} subscription for ${monthName(oldest)} is due. Pay by ${lastDay(
-      billing.pauseDate ?? '',
-    )}: the barcode lookup service pauses on ${dayName(billing.pauseDate ?? '')}.${several}`;
+    title = ranOutNow ? `Your ${scans.total} free scans are used up` : 'Subscription due now';
+    text =
+      (ranOutNow ? `Pay ${fee} to keep scanning. ` : '') +
+      `The ${fee} subscription for ${monthName(oldest)} is due. Pay by ${lastDay(
+        billing.pauseDate ?? '',
+      )}: the barcode lookup service pauses on ${dayName(billing.pauseDate ?? '')}.${several}`;
   } else {
     tone = 'is-late';
     title = 'Barcode scanner is off';
@@ -230,5 +263,35 @@ export function SubscriptionPage() {
     <div className="cashier-page subscription-page">
       <SubscriptionPanel />
     </div>
+  );
+}
+
+/** The free trial meter: how many of the free scans are left. */
+function FreeScans({ billing }: { billing: ApiBilling }) {
+  const { total, used, left } = billing.freeScans;
+  return (
+    <section className="subscription__trial">
+      <div>
+        <p>Free trial</p>
+        <strong>
+          {left} <small>of {total} free scans left</small>
+        </strong>
+        <span>
+          Each new product scanned uses one free scan. When they run out, the monthly subscription
+          starts.
+        </span>
+      </div>
+      <div
+        className="subscription__meter"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={left}
+        aria-label="Free scans left"
+      >
+        <span style={{ width: `${total ? (left / total) * 100 : 0}%` }} />
+      </div>
+      <small>{used} used</small>
+    </section>
   );
 }
