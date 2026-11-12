@@ -74,8 +74,9 @@ database, so the owner can try it before real use.
 
 - [ ] Over SSH, in the app folder: `npm run db:migrate`, then `npm run db:verify` (all OK).
 - [ ] `npm run db:create-owner` (you type Jeanette's username and password; it is hidden).
-- [ ] Optional demo data: `npm run db:reset:dev` then `npm run db:seed:dev` (allowed only because
-      the name ends in `_staging`; the live database refuses both).
+- [ ] Staging stays clean (decided 2026-11-13): no seed. Products are typed in while testing.
+      (Demo data is possible with `npm run db:reset:dev` then `npm run db:seed:dev`, allowed only
+      because the name ends in `_staging`; the live database refuses both.)
 - [ ] Open `https://api-staging.YOUR-DOMAIN.com/api/health`: `"database":"connected"`.
 
 ## 4. Web (static files on `staging.`)
