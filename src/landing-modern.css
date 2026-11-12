@@ -4343,8 +4343,9 @@ html:has(.landing-page) {
   .landing-page .landing-hero__pos-image {
     position: static;
     order: 1;
-    align-self: center;
+    align-self: flex-end;
     width: min(88%, 380px);
+    margin-inline-end: -2rem;
     transform: none;
   }
 }
