@@ -4296,8 +4296,7 @@ html:has(.landing-page) {
   /* The green covers only the top: its diagonal edge runs behind the computer, as on desktop. */
   .landing-page .landing-hero__green-shape {
     bottom: auto;
-    /* Grows with the computer image, so the floor line stays on the edge of its glass base. */
-    height: min(calc(158px + 92.5vw), 587px);
+    height: 520px;
   }
 
   .landing-page .landing-hero__green-shape-desktop {
