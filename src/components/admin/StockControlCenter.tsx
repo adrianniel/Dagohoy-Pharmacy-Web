@@ -12,6 +12,8 @@ import {
 import { syncAfterStockChange } from '../../data/serverSync';
 import { adjustStock, receiveStock } from '../../services/storeApi';
 import { useToast } from '../toast';
+import { lastLotCost } from '../../data/lotCost';
+import { RestockOrder } from './RestockOrder';
 
 type PanelKey =
   'products' | 'health' | 'receive' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments';
@@ -20,8 +22,6 @@ type StockControlCenterProps = {
   products: InventoryProduct[];
   threshold: number;
   restockCount: number;
-  /** Downloads the restock order basis for the supplier. */
-  onOrderRestock: () => void;
   /** Called after a delivery, return or adjustment changes stock, so the product list reloads. */
   onStockChanged?: () => void;
   /** The product list: shown inside the card when the Product list tab is open. */
@@ -76,10 +76,6 @@ const LOT_LABEL = {
 
 const LOT_TONE = { expired: 'out', soon: 'low', watch: 'watch', ok: 'ok' } as const;
 
-/** Suggested order: bring the shelf back up to twice the reorder point. */
-const suggestedOrder = (stock: number, threshold: number) =>
-  Math.max(threshold * 2 - stock, threshold);
-
 function loadSupplierNames(): string[] {
   try {
     const stored = JSON.parse(localStorage.getItem(SUPPLIER_KEY) ?? 'null') as Array<{
@@ -101,7 +97,6 @@ export function StockControlCenter({
   products,
   threshold,
   restockCount,
-  onOrderRestock,
   onStockChanged,
   children,
 }: StockControlCenterProps) {
@@ -242,7 +237,7 @@ export function StockControlCenter({
       hint: 'Below reorder point',
       alert: restockCount > 0,
       about:
-        'Products under the reorder point, with how many to order. Download the list to send to your supplier.',
+        'Tick the low-stock products to order, set how many, then save the order list as a PDF.',
     },
     {
       key: 'return',
@@ -606,71 +601,11 @@ export function StockControlCenter({
         )}
 
         {active === 'order' && (
-          <>
-            {restockProducts.length === 0 ? (
-              <p className="stock-index__empty">
-                Every product is above the {threshold}-unit reorder point. Nothing to order.
-              </p>
-            ) : (
-              <table className="stock-index__table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Barcode</th>
-                    <th>On hand</th>
-                    <th>Reorder point</th>
-                    <th>Order</th>
-                    <th>Last cost</th>
-                    <th>Est. cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {restockProducts.map((product) => (
-                    <tr key={product.barcode}>
-                      <td>
-                        <strong>{product.product}</strong>
-                        <small className="stock-index__sub">{product.detail}</small>
-                      </td>
-                      <td className="stock-index__mono">{product.barcode}</td>
-                      <td>{product.stock}</td>
-                      <td>{threshold}</td>
-                      <td>
-                        <strong>{suggestedOrder(product.stock, threshold)}</strong>{' '}
-                        {product.unit.toLowerCase()}s
-                      </td>
-                      {(() => {
-                        const lastCost = lastLotCost(data.allBatches, product.barcode);
-                        return (
-                          <>
-                            <td>{lastCost !== undefined ? peso(lastCost) : '—'}</td>
-                            <td>
-                              {lastCost !== undefined
-                                ? peso(lastCost * suggestedOrder(product.stock, threshold))
-                                : '—'}
-                            </td>
-                          </>
-                        );
-                      })()}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            <p className="stock-index__note">
-              The order quantity brings each product back to {threshold * 2} units, twice the
-              reorder point. Check it against what the product really sells before you send it.
-            </p>
-            <div className="stock-index__actions">
-              <button
-                className="stock-index__action"
-                type="button"
-                onClick={onOrderRestock}
-                disabled={restockCount === 0}
-              >
-                Download order list (CSV)
-              </button>
-            </div>
-          </>
+          <RestockOrder
+            products={restockProducts}
+            threshold={threshold}
+            batches={data.allBatches}
+          />
         )}
 
         {active === 'return' && (
@@ -794,18 +729,6 @@ const priceValue = (price: string | undefined) => Number((price ?? '').replace(/
 
 const peso = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
-
-/** Cost per unit of the newest lot of a product that has one recorded. */
-function lastLotCost(batches: InventoryBatch[], barcode: string): number | undefined {
-  const withCost = batches
-    .map((batch, index) => ({ batch, index }))
-    .filter(({ batch }) => batch.barcode === barcode && batch.unitCost !== undefined)
-    .sort(
-      (a, b) =>
-        (b.batch.receivedAt ?? '').localeCompare(a.batch.receivedAt ?? '') || b.index - a.index,
-    );
-  return withCost[0]?.batch.unitCost;
-}
 
 /**
  * Records a supplier delivery: adds the units to the product, saves the lot with its expiry

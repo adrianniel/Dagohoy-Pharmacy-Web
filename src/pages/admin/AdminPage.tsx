@@ -142,29 +142,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       ),
     [products, query],
   );
-  function downloadRestockCsv() {
-    const rows = [
-      ['Product', 'Barcode', 'Category', 'Current stock', 'Reorder point', 'Suggested quantity'],
-      ...restockProducts.map((product) => [
-        product.product,
-        product.barcode,
-        product.category ?? 'Uncategorized',
-        String(product.stock),
-        String(restockThreshold),
-        String(Math.max(restockThreshold * 2 - product.stock, restockThreshold)),
-      ]),
-    ];
-    const csv = rows
-      .map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(','))
-      .join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'dagohoy-restock-order-basis.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('Restock order basis downloaded. Confirm quantities with your supplier.');
-  }
 
   const activeSuppliers = supplierList.filter((supplier) => supplier.status !== 'Inactive');
   const archivedSuppliers = supplierList.filter((supplier) => supplier.status === 'Inactive');
@@ -279,7 +256,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
             products={products}
             threshold={restockThreshold}
             restockCount={restockProducts.length}
-            onOrderRestock={downloadRestockCsv}
             onStockChanged={() => setProducts(getInventory())}
           >
             <section className="cashier-panel cashier-list-panel">

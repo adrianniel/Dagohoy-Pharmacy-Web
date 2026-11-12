@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { shiftDuration, shiftVariance, type ShiftRecord } from '../../data/shiftHistory';
 import { downloadPdf } from '../../lib/pdf';
+import { readStore } from '../../data/storeInfo';
 
 /*
  * The duty report of one closed shift: a printable page with the cash count, the sales,
@@ -23,23 +24,6 @@ const dateTime = (iso: string) =>
 
 const timeOnly = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' });
-
-function readStore() {
-  try {
-    const settings = JSON.parse(localStorage.getItem('dagohoy_demo_pharmacy_settings') ?? '{}') as {
-      name?: string;
-      address?: string;
-      phone?: string;
-    };
-    return {
-      name: settings.name?.trim() || 'Dagohoy Pharmacy',
-      address: settings.address?.trim() || '',
-      phone: settings.phone?.trim() || '',
-    };
-  } catch {
-    return { name: 'Dagohoy Pharmacy', address: '', phone: '' };
-  }
-}
 
 /** Short, readable report number from the shift id and closing date. */
 function reportNumber(shift: ShiftRecord) {

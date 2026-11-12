@@ -4490,3 +4490,162 @@
 .subscription-page {
   display: block;
 }
+
+/* Order for restock: tick the products, set quantities, then the A4 order list. */
+.restock-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.restock-pick__table input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1b6b4c;
+  cursor: pointer;
+}
+
+.restock-pick__table tr.is-picked td {
+  background: #f1f8f2;
+}
+
+.restock-pick__qty {
+  width: 76px;
+  padding: 6px 8px;
+  border: 1px solid #c9d2c2;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+}
+
+.restock-pick__qty:disabled {
+  background: #f3f4f0;
+  color: #9aa59e;
+}
+
+.restock-pick__out {
+  color: #b0402c;
+  font-weight: 800;
+}
+
+.restock-pick__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding: 14px 16px;
+  border: 1px solid #e3e8dc;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.restock-pick__foot label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #13322a;
+}
+
+.restock-pick__foot input {
+  padding: 8px 10px;
+  border: 1px solid #c9d2c2;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.restock-pick__foot p {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto 0 0;
+  font-size: 0.84rem;
+  color: #6a7b71;
+}
+
+.restock-pick__foot strong {
+  font-size: 1.2rem;
+  color: #13322a;
+}
+
+.restock-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.restock-preview__bar {
+  align-self: stretch;
+  justify-content: space-between;
+}
+
+.restock-doc__table {
+  width: 100%;
+  margin-top: 1.2rem;
+  border-collapse: collapse;
+}
+
+.restock-doc__table th,
+.restock-doc__table td {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid #dfe5d6;
+  text-align: left;
+  vertical-align: top;
+}
+
+.restock-doc__table th {
+  background: #13322a;
+  color: #fff;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.restock-doc__table td small {
+  display: block;
+  color: #6a7b71;
+}
+
+.restock-doc__table th:nth-child(n + 4),
+.restock-doc__table td:nth-child(n + 4) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.restock-doc__table tfoot td {
+  border-top: 2px solid #13322a;
+  border-bottom: 0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.restock-doc__note {
+  margin: 0.8rem 0 0;
+  font-size: 0.78rem;
+  color: #6a7b71;
+}
+
+.restock-doc__sign {
+  display: flex;
+  justify-content: space-between;
+  gap: 3rem;
+  margin-top: 3rem;
+}
+
+.restock-doc__sign span {
+  flex: 1;
+  padding-top: 0.4rem;
+  border-top: 1px solid #13322a;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #3d4f45;
+}
+
+.restock-preview__back {
+  background: #fff;
+  color: #13322a;
+  border: 1px solid #c9d2c2;
+}
