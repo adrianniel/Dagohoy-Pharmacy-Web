@@ -1,0 +1,1056 @@
+/*
+ * Features: the index of tools and the system's own screen. Cream ground and the hero's green,
+ * hairline rules, one radius scale (10 / 16 / 28).
+ */
+.landing-page .feat {
+  --feat-green: #006451;
+  --feat-green-deep: #004c3d;
+  --feat-ink: #0c2a23;
+  --feat-cream: #fffff0;
+  --feat-paper: #fffef8;
+  --feat-line: #dfe3cf;
+  --feat-muted: #5b6b63;
+  --feat-mint: #e6f1e8;
+
+  position: relative;
+  padding-block: clamp(72px, 9vw, 128px);
+  background: var(--feat-cream);
+  color: var(--feat-ink);
+  font-family: 'Poppins', sans-serif;
+}
+
+.landing-page .feat__wrap {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 5.6vw, 5rem);
+}
+
+/* Heading: two tones, as in the hero. */
+.landing-page .feat__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  margin-bottom: clamp(2.5rem, 4.5vw, 4rem);
+}
+
+.landing-page .feat__head h2 {
+  margin: 0;
+  color: var(--feat-ink);
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2.3rem, 4.4vw, 4.4rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  text-align: left;
+}
+
+.landing-page .feat__head h2 span {
+  display: block;
+}
+
+.landing-page .feat__head h2 span:first-child {
+  color: var(--feat-green);
+}
+
+.landing-page .feat__head p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--feat-muted);
+  font-size: clamp(1rem, 1.15vw, 1.12rem);
+  line-height: 1.6;
+  text-align: left;
+}
+
+.landing-page .feat__body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: start;
+  gap: clamp(2rem, 4.5vw, 4.5rem);
+}
+
+/* --- The index ------------------------------------------------------------------------- */
+.landing-page .feat__index {
+  border-top: 1px solid var(--feat-line);
+}
+
+.landing-page .feat__row {
+  position: relative;
+  border-bottom: 1px solid var(--feat-line);
+}
+
+/* The green bar of the picked row grows from the top. */
+.landing-page .feat__row::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--feat-green);
+  content: '';
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .feat__row.is-active::before {
+  transform: scaleY(1);
+}
+
+.landing-page .feat__tab {
+  width: 100%;
+  min-height: 60px;
+  padding: 0.85rem 0.25rem 0.85rem 1.1rem;
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto 1.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--feat-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.landing-page .feat__tab:focus-visible {
+  outline: 3px solid #8fc5b7;
+  outline-offset: -3px;
+  border-radius: 10px;
+}
+
+.landing-page .feat__num {
+  color: #9aa79f;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  transition: color 200ms ease;
+}
+
+.landing-page .feat__title {
+  font-size: clamp(1.02rem, 1.3vw, 1.22rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition:
+    color 200ms ease,
+    transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .feat__role {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--feat-line);
+  border-radius: 999px;
+  color: var(--feat-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.landing-page .feat__arrow svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--feat-green);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 200ms ease,
+    transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .feat__tab:hover .feat__title {
+  transform: translateX(4px);
+}
+
+.landing-page .feat__tab:hover .feat__arrow svg,
+.landing-page .is-active .feat__arrow svg {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.landing-page .feat__tab:active .feat__title {
+  transform: translateX(2px);
+}
+
+.landing-page .is-active .feat__num,
+.landing-page .is-active .feat__title {
+  color: var(--feat-green);
+}
+
+.landing-page .is-active .feat__role {
+  border-color: transparent;
+  background: var(--feat-mint);
+  color: var(--feat-green-deep);
+}
+
+/* The picked row opens to its sentence (and, on a phone, its screen). */
+.landing-page .feat__more {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 340ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .feat__more > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.landing-page .is-active .feat__more {
+  grid-template-rows: 1fr;
+}
+
+.landing-page .feat__text {
+  max-width: 46ch;
+  margin: 0;
+  padding: 0 1rem 1.1rem 4.05rem;
+  color: var(--feat-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.landing-page .feat__inline {
+  display: none;
+}
+
+/* --- The stage: the hero's green, holding the system's window --------------------------- */
+.landing-page .feat__stage {
+  position: sticky;
+  top: 24px;
+  padding: clamp(1.25rem, 2.6vw, 2.25rem);
+  border-radius: 28px;
+  background: var(--feat-green);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* One cream diagonal, the hero's edge, behind the window. */
+.landing-page .feat__stage::before {
+  position: absolute;
+  z-index: -1;
+  inset: auto -10% -42% 30%;
+  height: 70%;
+  background: rgb(255 255 240 / 7%);
+  content: '';
+  transform: rotate(-18deg);
+}
+
+.landing-page .feat-app {
+  border-radius: 16px;
+  background: var(--feat-paper);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 60%) inset,
+    0 24px 48px rgb(0 30 24 / 28%);
+  overflow: hidden;
+  animation: feat-in 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes feat-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.landing-page .feat-app__bar {
+  padding: 0.75rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--feat-line);
+  font-size: 0.78rem;
+}
+
+.landing-page .feat-app__brand {
+  color: var(--feat-green);
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.landing-page .feat-app__screen {
+  color: var(--feat-muted);
+  font-weight: 500;
+}
+
+.landing-page .feat-app__screen::before {
+  margin-inline-end: 0.65rem;
+  color: var(--feat-line);
+  content: '/';
+}
+
+.landing-page .feat-app__online {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--feat-green-deep);
+  font-weight: 600;
+}
+
+.landing-page .feat-app__online i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2f9e6e;
+  box-shadow: 0 0 0 0 rgb(47 158 110 / 45%);
+  animation: feat-ping 3s ease-out infinite;
+}
+
+@keyframes feat-ping {
+  0%,
+  60% {
+    box-shadow: 0 0 0 0 rgb(47 158 110 / 45%);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgb(47 158 110 / 0%);
+  }
+}
+
+.landing-page .feat-app__body {
+  min-height: 340px;
+  padding: clamp(1rem, 2vw, 1.6rem);
+  font-size: 0.9rem;
+}
+
+/* --- Shared screen parts ------------------------------------------------------------------ */
+.landing-page .feat .fp-muted {
+  color: var(--feat-muted);
+}
+
+.landing-page .feat .fp-heading {
+  margin: 0 0 0.9rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.landing-page .feat .fp-field {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid var(--feat-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.landing-page .feat .fp-field__label {
+  color: var(--feat-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.landing-page .feat .fp-field__value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-button {
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  display: block;
+  border-radius: 10px;
+  background: var(--feat-green);
+  color: var(--feat-cream);
+  font-weight: 600;
+  text-align: center;
+}
+
+.landing-page .feat .fp-button.is-ghost {
+  border: 1px solid var(--feat-green);
+  background: transparent;
+  color: var(--feat-green);
+}
+
+.landing-page .feat .fp-sum {
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.landing-page .feat .fp-sum > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.landing-page .feat .fp-sum dt {
+  color: var(--feat-muted);
+}
+
+.landing-page .feat .fp-sum dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-sum .is-total {
+  margin-top: 0.2rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--feat-line);
+}
+
+.landing-page .feat .fp-sum .is-total dt,
+.landing-page .feat .fp-sum .is-total dd {
+  color: var(--feat-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* --- 01 Scan: a beam crosses the barcode, the number types, the product is found ---------- */
+.landing-page .feat .fp-scan {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.landing-page .feat .fp-scan__code {
+  position: relative;
+  height: 112px;
+  padding: 14px 18px 26px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--feat-line);
+  overflow: hidden;
+}
+
+.landing-page .feat .fp-scan__bars {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--feat-ink) 0 2px,
+    transparent 2px 4px,
+    var(--feat-ink) 4px 5px,
+    transparent 5px 8px,
+    var(--feat-ink) 8px 11px,
+    transparent 11px 12px,
+    var(--feat-ink) 12px 13px,
+    transparent 13px 16px
+  );
+}
+
+.landing-page .feat .fp-scan__digits {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-align: center;
+}
+
+.landing-page .feat .fp-scan__beam {
+  position: absolute;
+  top: 8px;
+  bottom: 22px;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: #e5484d;
+  box-shadow: 0 0 14px 3px rgb(229 72 77 / 45%);
+  animation: fp-beam 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes fp-beam {
+  0% {
+    left: 4%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  38% {
+    left: 95%;
+    opacity: 1;
+  }
+  44%,
+  100% {
+    left: 95%;
+    opacity: 0;
+  }
+}
+
+.landing-page .feat .fp-scan__typed {
+  width: 13ch;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: fp-type 3.2s steps(13, end) infinite;
+}
+
+@keyframes fp-type {
+  0%,
+  10% {
+    width: 0;
+  }
+  40%,
+  100% {
+    width: 13ch;
+  }
+}
+
+.landing-page .feat .fp-found {
+  padding: 0.75rem 0.9rem;
+  display: grid;
+  gap: 0.1rem;
+  border-radius: 10px;
+  background: var(--feat-mint);
+  text-align: left;
+  animation: fp-found 3.2s ease infinite;
+}
+
+.landing-page .feat .fp-found span {
+  color: var(--feat-muted);
+  font-size: 0.82rem;
+}
+
+.landing-page .feat .fp-found .fp-found__flag {
+  color: var(--feat-green);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@keyframes fp-found {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  50%,
+  94% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- 02 Sale ---------------------------------------------------------------------------- */
+.landing-page .feat .fp-lines {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .feat .fp-lines li {
+  padding: 0.55rem 0.6rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.5rem 5.5rem;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--feat-line);
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-lines li span:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+.landing-page .feat .fp-lines li.is-new {
+  border-radius: 8px;
+  animation: fp-flash 3.6s ease infinite;
+}
+
+@keyframes fp-flash {
+  0%,
+  12% {
+    background: var(--feat-mint);
+  }
+  40%,
+  100% {
+    background: transparent;
+  }
+}
+
+.landing-page .feat .fp-pay {
+  margin-top: 1rem;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  border-radius: 10px;
+  background: #f1f3e6;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.landing-page .feat .fp-pay span {
+  padding: 0.45rem 0;
+  border-radius: 7px;
+  color: var(--feat-muted);
+}
+
+.landing-page .feat .fp-pay .is-on {
+  background: #fff;
+  color: var(--feat-green);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+
+/* --- 03 Batches ------------------------------------------------------------------------- */
+.landing-page .feat .fp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-table th {
+  padding: 0 0.7rem 0.5rem;
+  color: var(--feat-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.landing-page .feat .fp-table td {
+  padding: 0.75rem 0.7rem;
+  border-top: 1px solid var(--feat-line);
+  text-align: left;
+}
+
+.landing-page .feat .fp-table th:last-child,
+.landing-page .feat .fp-table td:last-child {
+  text-align: right;
+}
+
+.landing-page .feat .fp-table tr.is-next td {
+  background: var(--feat-mint);
+  font-weight: 600;
+}
+
+.landing-page .feat .fp-table tr.is-next td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.landing-page .feat .fp-table tr.is-next td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.landing-page .feat .fp-tag {
+  margin-inline-start: 0.5rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--feat-green);
+  color: var(--feat-cream);
+  font-size: 0.66rem;
+  font-weight: 600;
+  vertical-align: 1px;
+  animation: fp-nudge 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes fp-nudge {
+  0%,
+  70%,
+  100% {
+    transform: translateX(0);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+  90% {
+    transform: translateX(0);
+  }
+}
+
+/* --- 04 Expiry -------------------------------------------------------------------------- */
+.landing-page .feat .fp-expiry ul,
+.landing-page .feat .fp-credit ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-page .feat .fp-expiry li {
+  padding: 0.75rem 0.2rem;
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 72px 4.6rem;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--feat-line);
+}
+
+.landing-page .feat .fp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa79f;
+}
+
+.landing-page .feat .is-red .fp-dot {
+  background: #d64545;
+  animation: fp-blink 2.8s ease-in-out infinite;
+}
+
+.landing-page .feat .is-amber .fp-dot {
+  background: #d99a1e;
+}
+
+@keyframes fp-blink {
+  50% {
+    box-shadow: 0 0 0 5px rgb(214 69 69 / 18%);
+  }
+}
+
+.landing-page .feat .fp-meter {
+  height: 5px;
+  border-radius: 5px;
+  background: #eceee2;
+  overflow: hidden;
+}
+
+.landing-page .feat .fp-meter i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: #9aa79f;
+  transform-origin: left;
+  animation: fp-grow 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.landing-page .feat .is-red .fp-meter i {
+  background: #d64545;
+}
+
+.landing-page .feat .is-amber .fp-meter i {
+  background: #d99a1e;
+}
+
+@keyframes fp-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.landing-page .feat .fp-days {
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.landing-page .feat .is-red .fp-days {
+  color: #b23434;
+}
+
+/* --- 05 Receive ------------------------------------------------------------------------- */
+.landing-page .feat .fp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.landing-page .feat .fp-stockline {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  border-radius: 10px;
+  background: var(--feat-mint);
+}
+
+.landing-page .feat .fp-count {
+  position: relative;
+  display: inline-block;
+  min-width: 3.2ch;
+  height: 1.6em;
+  overflow: hidden;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+
+.landing-page .feat .fp-count b {
+  position: absolute;
+  inset: 0;
+  color: var(--feat-ink);
+}
+
+.landing-page .feat .fp-count__from {
+  animation: fp-roll-out 3.4s ease infinite;
+}
+
+.landing-page .feat .fp-count__to {
+  color: var(--feat-green);
+  animation: fp-roll-in 3.4s ease infinite;
+}
+
+@keyframes fp-roll-out {
+  0%,
+  35% {
+    transform: translateY(0);
+  }
+  45%,
+  100% {
+    transform: translateY(-110%);
+  }
+}
+
+@keyframes fp-roll-in {
+  0%,
+  35% {
+    transform: translateY(110%);
+  }
+  45%,
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.landing-page .feat .fp-up {
+  margin-inline-start: auto;
+  color: var(--feat-green);
+  font-weight: 700;
+}
+
+/* --- 06 Shift --------------------------------------------------------------------------- */
+.landing-page .feat .fp-balanced {
+  margin-top: 1.2rem;
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 10px;
+  background: var(--feat-mint);
+  color: var(--feat-green-deep);
+  font-weight: 600;
+}
+
+.landing-page .feat .fp-balanced svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--feat-green);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 22;
+  animation: fp-tick 3s ease infinite;
+}
+
+@keyframes fp-tick {
+  0%,
+  15% {
+    stroke-dashoffset: 22;
+  }
+  40%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --- 07 Credit -------------------------------------------------------------------------- */
+.landing-page .feat .fp-credit li {
+  padding: 0.7rem 0.2rem;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--feat-line);
+  text-align: left;
+}
+
+.landing-page .feat .fp-credit strong,
+.landing-page .feat .fp-credit small {
+  display: block;
+}
+
+.landing-page .feat .fp-credit small {
+  font-size: 0.76rem;
+}
+
+.landing-page .feat .fp-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--feat-mint);
+  color: var(--feat-green);
+  font-weight: 700;
+}
+
+.landing-page .feat .fp-balance {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-credit .is-paid .fp-balance {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--feat-green);
+  color: var(--feat-cream);
+  font-size: 0.75rem;
+  animation: fp-pop 3.2s ease infinite;
+}
+
+@keyframes fp-pop {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  78% {
+    transform: scale(1.08);
+  }
+}
+
+.landing-page .feat .fp-foot {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+/* --- 08 Reports ------------------------------------------------------------------------- */
+.landing-page .feat .fp-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.landing-page .feat .fp-kpis > div {
+  padding: 0.75rem 0.9rem;
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid var(--feat-line);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+}
+
+.landing-page .feat .fp-kpis span {
+  font-size: 0.75rem;
+}
+
+.landing-page .feat .fp-kpis strong {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat .fp-bars {
+  height: 150px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-items: end;
+  gap: 0.6rem;
+}
+
+.landing-page .feat .fp-bars span {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.landing-page .feat .fp-bars i {
+  width: 100%;
+  border-radius: 6px 6px 3px 3px;
+  background: #cfe0d4;
+  transform-origin: bottom;
+  animation: fp-rise 620ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.landing-page .feat .fp-bars .is-top i {
+  background: var(--feat-green);
+}
+
+.landing-page .feat .fp-bars small {
+  color: var(--feat-muted);
+  font-size: 0.7rem;
+}
+
+@keyframes fp-rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* --- Tablet and phone ------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .landing-page .feat__head,
+  .landing-page .feat__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The screen opens inside the picked row instead of beside the list. */
+  .landing-page .feat__stage {
+    display: none;
+  }
+
+  .landing-page .feat__inline {
+    display: block;
+    margin: 0 0 1.25rem;
+    padding: 1rem;
+    border-radius: 20px;
+    background: var(--feat-green);
+  }
+
+  .landing-page .feat__text {
+    padding-left: 1.1rem;
+  }
+
+  .landing-page .feat-app__body {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-page .feat__tab {
+    grid-template-columns: 1.8rem minmax(0, 1fr) auto;
+    padding-inline-start: 0.9rem;
+  }
+
+  .landing-page .feat__arrow {
+    display: none;
+  }
+
+  .landing-page .feat__inline {
+    padding: 0.6rem;
+  }
+
+  .landing-page .feat-app__brand {
+    display: none;
+  }
+
+  .landing-page .feat-app__screen::before {
+    display: none;
+  }
+
+  .landing-page .feat-app__body {
+    padding: 0.9rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .feat *,
+  .landing-page .feat *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* At rest the stock shows its new count only. */
+  .landing-page .feat .fp-count__from,
+  .landing-page .feat .fp-scan__beam {
+    display: none;
+  }
+}
