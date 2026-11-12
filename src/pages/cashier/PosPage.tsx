@@ -702,34 +702,36 @@ export function CashierPosPage() {
               </span>
               <h3 id="pos-sale-heading">Current sale</h3>
             </div>
-            <button
-              className={`pos-price-check${priceCheck ? ' is-on' : ''}`}
-              type="button"
-              aria-pressed={priceCheck}
-              title={
-                priceCheck
-                  ? 'Price check is on: scans show the price and are not added. Click to turn it off.'
-                  : 'Turn on to check a price: scans show the product and price without adding it.'
-              }
-              onClick={() => {
-                setPriceCheck((on) => !on);
-                setChecked(null);
-                document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus();
-              }}
-            >
-              <CashierIcon name="search" />
-              <span>{priceCheck ? 'Price check on' : 'Price check'}</span>
-            </button>
-            <button
-              className="pos-price-check pos-no-barcode"
-              type="button"
-              title="Add an item that has no barcode, or one that will not scan"
-              onClick={() => setNoBarcodeOpen(true)}
-              disabled={priceCheck}
-            >
-              <span aria-hidden="true">＋</span>
-              <span>No barcode</span>
-            </button>
+            <div className="pos-ticket__tools">
+              <button
+                className={`pos-price-check${priceCheck ? ' is-on' : ''}`}
+                type="button"
+                aria-pressed={priceCheck}
+                title={
+                  priceCheck
+                    ? 'Price check is on: scans show the price and are not added. Click to turn it off.'
+                    : 'Turn on to check a price: scans show the product and price without adding it.'
+                }
+                onClick={() => {
+                  setPriceCheck((on) => !on);
+                  setChecked(null);
+                  document.querySelector<HTMLInputElement>('input[name="product-search"]')?.focus();
+                }}
+              >
+                <CashierIcon name="search" />
+                <span>{priceCheck ? 'Price check on' : 'Price check'}</span>
+              </button>
+              <button
+                className="pos-price-check pos-no-barcode"
+                type="button"
+                title="Add an item that has no barcode, or one that will not scan"
+                onClick={() => setNoBarcodeOpen(true)}
+                disabled={priceCheck}
+              >
+                <span aria-hidden="true">＋</span>
+                <span>No barcode</span>
+              </button>
+            </div>
           </header>
           <div className="pos-scan-dock pos-ticket__scan">
             <div className="pos-scan-field">
