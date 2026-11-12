@@ -89,8 +89,14 @@ export function FeaturesSection() {
   const [active, setActive] = useState(0);
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
   const track = useRef<HTMLDivElement>(null);
+  const section = useRef<HTMLElement>(null);
+  /** The screen on its way out, and which way the scroll went (1 down, -1 up). */
+  const [leaving, setLeaving] = useState<{ index: number; dir: 1 | -1 } | null>(null);
+  const [dir, setDir] = useState<1 | -1>(1);
+  const shown = useRef(0);
 
-  // The pinned part steps through the eight tools as the page scrolls through the track.
+  // The pinned part steps through the eight tools as the page scrolls through the track. The
+  // progress also goes to CSS (--feat-p for the whole track, --feat-sp inside one step).
   useEffect(() => {
     let frame = 0;
     const update = () => {
@@ -99,7 +105,10 @@ export function FeaturesSection() {
       if (!box) return;
       const room = box.height - window.innerHeight;
       const progress = room > 0 ? Math.min(Math.max(-box.top / room, 0), 0.9999) : 0;
-      setActive(Math.floor(progress * features.length));
+      const step = progress * features.length;
+      section.current?.style.setProperty('--feat-p', progress.toFixed(4));
+      section.current?.style.setProperty('--feat-sp', (step % 1).toFixed(4));
+      setActive(Math.floor(step));
     };
     const onScroll = () => {
       if (!frame) frame = window.requestAnimationFrame(update);
@@ -113,6 +122,18 @@ export function FeaturesSection() {
       window.cancelAnimationFrame(frame);
     };
   }, []);
+
+  // A new tool: the old screen leaves the way the scroll went while the new one comes in.
+  useEffect(() => {
+    const before = shown.current;
+    if (before === active) return;
+    const way = active > before ? 1 : -1;
+    shown.current = active;
+    setDir(way);
+    setLeaving({ index: before, dir: way });
+    const timer = window.setTimeout(() => setLeaving(null), 480);
+    return () => window.clearTimeout(timer);
+  }, [active]);
 
   /** A click, tap or arrow key scrolls to that tool's place in the track, so both stay in step. */
   function pick(index: number, focus = false) {
@@ -148,6 +169,7 @@ export function FeaturesSection() {
 
   return (
     <section
+      ref={section}
       className="feat"
       id="features"
       aria-labelledby="features-title"
@@ -219,7 +241,35 @@ export function FeaturesSection() {
               role="tabpanel"
               aria-labelledby={`feat-tab-${active}`}
             >
-              <Screen feature={current} key={active} />
+              <div className="feat__float">
+                <div className="feat__deck">
+                  {leaving && (
+                    <div
+                      className="feat__card is-leaving"
+                      data-dir={leaving.dir}
+                      key={`out-${leaving.index}`}
+                      aria-hidden="true"
+                    >
+                      <Screen feature={features[leaving.index]} />
+                    </div>
+                  )}
+                  <div className="feat__card is-entering" data-dir={dir} key={active}>
+                    <Screen feature={current} />
+                  </div>
+                </div>
+              </div>
+              <div className="feat__meter" aria-hidden="true">
+                <span className="feat__count">
+                  <b key={active} data-dir={dir}>
+                    {String(active + 1).padStart(2, '0')}
+                  </b>
+                  <span> / {String(features.length).padStart(2, '0')}</span>
+                </span>
+                <span className="feat__line">
+                  <i />
+                </span>
+                <span className="feat__screen-name">{current.screen}</span>
+              </div>
             </div>
           </div>
         </div>

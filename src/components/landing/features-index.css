@@ -253,7 +253,8 @@
   height: 70%;
   background: rgb(255 255 240 / 7%);
   content: '';
-  transform: rotate(-18deg);
+  /* It slides across the panel as the page scrolls through the eight tools. */
+  transform: translateX(calc((0.5 - var(--feat-p, 0)) * 60%)) rotate(-18deg);
 }
 
 .landing-page .feat-app {
@@ -263,14 +264,203 @@
     0 1px 0 rgb(255 255 255 / 60%) inset,
     0 24px 48px rgb(0 30 24 / 28%);
   overflow: hidden;
-  animation: feat-in 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-@keyframes feat-in {
+/* --- Scroll motion ------------------------------------------------------------------------
+ * --feat-sp runs 0 to 1 inside each tool's stretch of scrolling, --feat-p over the whole track.
+ */
+
+/* The window drifts gently with the scroll inside one tool. */
+.landing-page .feat__float {
+  transform: translateY(calc((0.5 - var(--feat-sp, 0.5)) * 18px));
+  will-change: transform;
+}
+
+/* The screens are a deck: the old one leaves the way the scroll went, the new one follows. */
+.landing-page .feat__deck {
+  position: relative;
+}
+
+.landing-page .feat__card.is-leaving {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  pointer-events: none;
+  animation: feat-out-up 460ms cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+
+.landing-page .feat__card.is-leaving[data-dir='-1'] {
+  animation-name: feat-out-down;
+}
+
+.landing-page .feat__card.is-entering {
+  position: relative;
+  z-index: 1;
+  animation: feat-in-up 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.landing-page .feat__card.is-entering[data-dir='-1'] {
+  animation-name: feat-in-down;
+}
+
+@keyframes feat-in-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(56px) scale(0.95);
+    filter: blur(6px);
   }
+}
+
+@keyframes feat-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-56px) scale(0.95);
+    filter: blur(6px);
+  }
+}
+
+@keyframes feat-out-up {
+  to {
+    opacity: 0;
+    transform: translateY(-48px) scale(0.94);
+    filter: blur(6px);
+  }
+}
+
+@keyframes feat-out-down {
+  to {
+    opacity: 0;
+    transform: translateY(48px) scale(0.94);
+    filter: blur(6px);
+  }
+}
+
+/* What the screen holds comes in one row after another. */
+.landing-page
+  .feat__card.is-entering
+  :is(
+    .fp-lines li,
+    .fp-table tbody tr,
+    .fp-expiry li,
+    .fp-credit li,
+    .fp-grid > *,
+    .fp-sum > div,
+    .fp-kpis > div,
+    .fp-pay,
+    .fp-button,
+    .fp-stockline,
+    .fp-balanced,
+    .fp-scan__code,
+    .fp-scan > .fp-field
+  ) {
+  animation: fp-row-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: 160ms;
+}
+
+.landing-page
+  .feat__card.is-entering
+  :is(li, tr, .fp-grid > *, .fp-sum > div, .fp-kpis > div):nth-child(2) {
+  animation-delay: 220ms;
+}
+
+.landing-page
+  .feat__card.is-entering
+  :is(li, tr, .fp-grid > *, .fp-sum > div, .fp-kpis > div):nth-child(3) {
+  animation-delay: 280ms;
+}
+
+.landing-page
+  .feat__card.is-entering
+  :is(li, tr, .fp-grid > *, .fp-sum > div, .fp-kpis > div):nth-child(4) {
+  animation-delay: 340ms;
+}
+
+.landing-page
+  .feat__card.is-entering
+  :is(li, tr, .fp-grid > *, .fp-sum > div, .fp-kpis > div):nth-child(n + 5) {
+  animation-delay: 400ms;
+}
+
+.landing-page
+  .feat__card.is-entering
+  :is(.fp-pay, .fp-stockline, .fp-balanced, .fp-scan > .fp-field) {
+  animation-delay: 420ms;
+}
+
+.landing-page .feat__card.is-entering .fp-button {
+  animation-delay: 500ms;
+}
+
+@keyframes fp-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Under the window: the tool's number rolls, and a line fills toward the next one. */
+.landing-page .feat__meter {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: rgb(255 255 240 / 72%);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.landing-page .feat__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .feat__count b {
+  display: inline-block;
+  color: var(--feat-cream);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  animation: feat-num-up 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.landing-page .feat__count b[data-dir='-1'] {
+  animation-name: feat-num-down;
+}
+
+@keyframes feat-num-up {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+}
+
+@keyframes feat-num-down {
+  from {
+    opacity: 0;
+    transform: translateY(-70%);
+  }
+}
+
+.landing-page .feat__line {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(255 255 240 / 18%);
+  overflow: hidden;
+}
+
+.landing-page .feat__line i {
+  display: block;
+  height: 100%;
+  background: var(--feat-cream);
+  transform: scaleX(var(--feat-sp, 0));
+  transform-origin: left;
+}
+
+.landing-page .feat__screen-name {
+  white-space: nowrap;
 }
 
 .landing-page .feat-app__bar {
@@ -1085,6 +1275,19 @@
   .landing-page .feat *::before {
     animation: none !important;
     transition: none !important;
+  }
+
+  /* Nothing drifts with the scroll; the tools still change, without motion. */
+  .landing-page .feat__float {
+    transform: none;
+  }
+
+  .landing-page .feat__stage::before {
+    transform: rotate(-18deg);
+  }
+
+  .landing-page .feat__card.is-leaving {
+    display: none;
   }
 
   /* At rest the stock shows its new count only. */
