@@ -497,14 +497,12 @@
 }
 
 .landing-page .landing-hero__visual,
-.landing-page .feature-panel,
 .landing-page .contact-card {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 8px 30px rgb(22 62 48 / 5%);
 }
 
-.landing-page .feature-panel,
 .landing-page .contact-card {
   border: 1px solid #dce8e0;
 }
@@ -514,7 +512,6 @@
   border-radius: 10px;
 }
 
-.landing-page .section-heading h2,
 .landing-page .about-section h2,
 .landing-page .contact-section h2 {
   letter-spacing: -0.035em;

@@ -688,16 +688,6 @@ textarea:disabled {
   margin-inline: auto;
 }
 
-.features-section {
-  padding-block: clamp(5rem, 10vw, 8.25rem) 5.5rem;
-}
-
-.section-heading {
-  max-width: 610px;
-  margin-bottom: 2.1rem;
-}
-
-.section-heading h2,
 .about-section h2,
 .developer-section h2,
 .contact-section h2 {
@@ -708,7 +698,6 @@ textarea:disabled {
   line-height: 1.08;
 }
 
-.section-heading p,
 .about-section__content > p,
 .developer-section__copy > p:last-child,
 .contact-section > div > p {
@@ -717,55 +706,6 @@ textarea:disabled {
   color: var(--ink-soft);
   font-size: 1rem;
   line-height: 1.7;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 0.9fr;
-  align-items: stretch;
-  gap: 1rem;
-}
-
-.feature-panel {
-  min-height: 245px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.feature-panel--primary {
-  min-height: 290px;
-  background: var(--surface-soft);
-}
-
-.feature-panel--tertiary {
-  margin-top: 2.5rem;
-  min-height: 255px;
-}
-
-.feature-panel__number {
-  color: var(--accent);
-  font-size: 0.75rem;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-}
-
-.feature-panel h3 {
-  margin-bottom: 0.55rem;
-  font-size: 1.3rem;
-  letter-spacing: -0.035em;
-}
-
-.feature-panel p {
-  max-width: 36ch;
-  margin-bottom: 0;
-  color: var(--ink-soft);
-  font-size: 0.91rem;
-  line-height: 1.65;
 }
 
 .about-section {
@@ -1029,21 +969,6 @@ textarea:disabled {
 
   .snapshot__hours {
     grid-column: auto;
-  }
-
-  .features-section {
-    padding-block: 4.75rem 4rem;
-  }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-panel,
-  .feature-panel--primary,
-  .feature-panel--tertiary {
-    min-height: 210px;
-    margin-top: 0;
   }
 
   .about-section {

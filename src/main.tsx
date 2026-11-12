@@ -16,7 +16,6 @@ import './cashier-dashboard.css';
 import './stock-index.css';
 import './pos-controls.css';
 import './control-deck.css';
-import './components/landing/workflow-cards.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

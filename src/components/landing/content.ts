@@ -21,27 +21,6 @@ export const weeklyHours: WeeklyHoursEntry[] = [
   { day: 0, label: 'Sunday', opensAt: '09:00', closesAt: '18:00' },
 ];
 
-export const pharmacyFeatures = [
-  {
-    number: '01',
-    title: 'Sales Counter',
-    description: 'Fast and organized sales processing with barcode-ready workflows.',
-    className: 'feature-panel--primary',
-  },
-  {
-    number: '02',
-    title: 'Inventory Management',
-    description: 'Manage stock, batches, expiry dates, products, and receiving.',
-    className: 'feature-panel--secondary',
-  },
-  {
-    number: '03',
-    title: 'Reports',
-    description: 'View important sales and inventory information in one place.',
-    className: 'feature-panel--tertiary',
-  },
-];
-
 export const developerProfile = {
   name: 'Niel Adrian Garig',
   role: 'Software Developer',

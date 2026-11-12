@@ -5,8 +5,6 @@ const revealTargets = [
   '.landing-hero__visual',
   '.landing-hero__side',
   '.landing-hero__showcase > .landing-hero__visual',
-  '.features-section .section-heading',
-  '.features-workflow',
   '.developer-section__copy',
   '.developer-section__profile',
   '.contact-section__intro',
