@@ -5285,3 +5285,15 @@
 .cashier-shell.is-themed .pos-payment-modal .start-shift__confirm.is-on {
   border-color: #176246;
 }
+
+/* Product form: a problem is shown under the title, in red. */
+.pos-payment-modal .product-form__alert {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #f2c4bb;
+  border-left: 5px solid #c0392b;
+  border-radius: 10px;
+  background: #fdeeea;
+  color: #8f2c1f;
+  font-weight: 700;
+}

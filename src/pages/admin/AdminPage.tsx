@@ -928,6 +928,10 @@ function InventoryForm({
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [error]);
   const [saving, setSaving] = useState(false);
   /** What the barcode scan found (or that nothing was found), shown under the barcode field. */
   const [lookupNote, setLookupNote] = useState('');
@@ -1108,6 +1112,12 @@ function InventoryForm({
               ? 'Sold at the Sales Counter before it was on the list. Check the details, then fill in what is missing: cost, units on the shelf now, batch number and expiry date.'
               : 'Change the details and prices.'}
         </p>
+        {/* Problems show at the top, where they are seen, and the form scrolls up to them. */}
+        {error && (
+          <p className="pos-notice product-form__alert" role="alert" ref={errorRef}>
+            {error}
+          </p>
+        )}
 
         <fieldset className="product-form__section">
           <legend>1. {isNew ? 'Scan the barcode' : 'Barcode'}</legend>
@@ -1353,11 +1363,6 @@ function InventoryForm({
           )}
         </fieldset>
 
-        {error && (
-          <p className="pos-notice" role="alert">
-            {error}
-          </p>
-        )}
         <div className="product-form__actions">
           {onArchive && (
             <button
