@@ -1,10 +1,18 @@
-import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import './features-index.css';
 
 /*
- * Features: an index of the eight tools on the left, and on the right the system's own screen
- * for the one picked (a phone shows it inside the picked row). Picked by click, tap or the arrow
- * keys; nothing changes on its own and nothing moves because the page scrolled.
+ * Features: an index of the eight tools and the system's own screen for the open one. The body
+ * is pinned while the page scrolls through a tall track, and each stretch of scrolling opens the
+ * next tool; a click, tap or arrow key jumps the scroll to that tool. Past the last one the page
+ * carries on.
  */
 
 type Feature = {
@@ -80,11 +88,46 @@ const features: Feature[] = [
 export function FeaturesSection() {
   const [active, setActive] = useState(0);
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
+  const track = useRef<HTMLDivElement>(null);
 
+  // The pinned part steps through the eight tools as the page scrolls through the track.
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const box = track.current?.getBoundingClientRect();
+      if (!box) return;
+      const room = box.height - window.innerHeight;
+      const progress = room > 0 ? Math.min(Math.max(-box.top / room, 0), 0.9999) : 0;
+      setActive(Math.floor(progress * features.length));
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  /** A click, tap or arrow key scrolls to that tool's place in the track, so both stay in step. */
   function pick(index: number, focus = false) {
-    const next = (index + features.length) % features.length;
+    const next = Math.min(Math.max(index, 0), features.length - 1);
+    const box = track.current?.getBoundingClientRect();
+    if (box) {
+      const room = box.height - window.innerHeight;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({
+        top: window.scrollY + box.top + ((next + 0.5) / features.length) * room,
+        behavior: reduce ? 'auto' : 'smooth',
+      });
+    }
     setActive(next);
-    if (focus) tabs.current[next]?.focus();
+    if (focus) tabs.current[next]?.focus({ preventScroll: true });
   }
 
   function onKey(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -104,69 +147,80 @@ export function FeaturesSection() {
   const current = features[active];
 
   return (
-    <section className="feat" id="features" aria-labelledby="features-title">
+    <section
+      className="feat"
+      id="features"
+      aria-labelledby="features-title"
+      style={{ '--feat-steps': features.length } as CSSProperties}
+    >
       <div className="feat__wrap">
         <header className="feat__head">
           <h2 id="features-title">
             <span>From the shelf</span> <span>to the cash drawer.</span>
           </h2>
           <p>
-            Eight tools the owner and the cashier use every day, all saving to one record. Pick one
-            to see its screen.
+            Eight tools the owner and the cashier use every day, all saving to one record. Scroll to
+            open each one, or pick it from the list.
           </p>
         </header>
+      </div>
 
-        <div className="feat__body">
-          <div className="feat__index" role="tablist" aria-orientation="vertical">
-            {features.map((feature, index) => {
-              const on = index === active;
-              return (
-                <div className={`feat__row${on ? ' is-active' : ''}`} key={feature.title}>
-                  <button
-                    ref={(node) => {
-                      tabs.current[index] = node;
-                    }}
-                    className="feat__tab"
-                    type="button"
-                    role="tab"
-                    id={`feat-tab-${index}`}
-                    aria-selected={on}
-                    aria-controls="feat-panel"
-                    tabIndex={on ? 0 : -1}
-                    onClick={() => pick(index)}
-                    onKeyDown={(event) => onKey(event, index)}
-                  >
-                    <span className="feat__num">{String(index + 1).padStart(2, '0')}</span>
-                    <span className="feat__title">{feature.title}</span>
-                    <span className="feat__role">{feature.role}</span>
-                    <span className="feat__arrow" aria-hidden="true">
-                      <svg viewBox="0 0 16 16">
-                        <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
-                      </svg>
-                    </span>
-                  </button>
-                  <div className="feat__more">
-                    <div>
-                      <p className="feat__text">{feature.text}</p>
-                      {on && (
-                        <div className="feat__inline" aria-hidden="true">
-                          <Screen feature={feature} />
-                        </div>
-                      )}
+      <div className="feat__track" ref={track}>
+        <div className="feat__pin">
+          <div className="feat__wrap feat__body">
+            {/* Phone: one short bar per tool, filled up to the open one. */}
+            <div className="feat__steps" aria-hidden="true">
+              {features.map((feature, index) => (
+                <span key={feature.title} className={index <= active ? 'is-done' : undefined} />
+              ))}
+            </div>
+
+            <div className="feat__index" role="tablist" aria-orientation="vertical">
+              {features.map((feature, index) => {
+                const on = index === active;
+                return (
+                  <div className={`feat__row${on ? ' is-active' : ''}`} key={feature.title}>
+                    <button
+                      ref={(node) => {
+                        tabs.current[index] = node;
+                      }}
+                      className="feat__tab"
+                      type="button"
+                      role="tab"
+                      id={`feat-tab-${index}`}
+                      aria-selected={on}
+                      aria-controls="feat-panel"
+                      tabIndex={on ? 0 : -1}
+                      onClick={() => pick(index)}
+                      onKeyDown={(event) => onKey(event, index)}
+                    >
+                      <span className="feat__num">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="feat__title">{feature.title}</span>
+                      <span className="feat__role">{feature.role}</span>
+                      <span className="feat__arrow" aria-hidden="true">
+                        <svg viewBox="0 0 16 16">
+                          <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
+                        </svg>
+                      </span>
+                    </button>
+                    <div className="feat__more">
+                      <div>
+                        <p className="feat__text">{feature.text}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div
-            className="feat__stage"
-            id="feat-panel"
-            role="tabpanel"
-            aria-labelledby={`feat-tab-${active}`}
-          >
-            <Screen feature={current} key={active} />
+            <div
+              className="feat__stage"
+              id="feat-panel"
+              role="tabpanel"
+              aria-labelledby={`feat-tab-${active}`}
+            >
+              <Screen feature={current} key={active} />
+            </div>
           </div>
         </div>
       </div>

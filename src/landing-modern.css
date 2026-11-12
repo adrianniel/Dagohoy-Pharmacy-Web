@@ -3172,6 +3172,53 @@ html:has(.landing-page) {
   color: var(--hero-reference-green);
 }
 
+/* A band of light keeps passing across the headline, the second line a moment after the first. */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .landing-page .landing-hero__intro h1 span {
+    --sheen-base: #073b31;
+    --sheen-light: #5fae95;
+    width: fit-content;
+    background: linear-gradient(
+        105deg,
+        var(--sheen-base) 0 42%,
+        var(--sheen-light) 50%,
+        var(--sheen-base) 58% 100%
+      )
+      0 0 / 260% 100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: hero-sheen 5.5s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+  }
+
+  .landing-page .landing-hero__intro h1 span:first-child {
+    --sheen-base: var(--hero-reference-green);
+    --sheen-light: #8fd9bd;
+    color: transparent;
+  }
+
+  .landing-page .landing-hero__intro h1 span + span {
+    animation-delay: 0.35s;
+  }
+}
+
+@keyframes hero-sheen {
+  0% {
+    background-position: 100% 0;
+  }
+  55%,
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .landing-hero__intro h1 span {
+    animation: none;
+  }
+}
+
 .landing-page .landing-hero__intro .landing-hero__description {
   max-width: 650px;
   margin: 0 0 clamp(0.9rem, 1.3vw, 1.45rem);

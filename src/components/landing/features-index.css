@@ -13,7 +13,7 @@
   --feat-mint: #e6f1e8;
 
   position: relative;
-  padding-block: clamp(72px, 9vw, 128px);
+  padding-top: clamp(72px, 9vw, 128px);
   background: var(--feat-cream);
   color: var(--feat-ink);
   font-family: 'Poppins', sans-serif;
@@ -32,7 +32,25 @@
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   align-items: end;
   gap: clamp(1.5rem, 4vw, 4rem);
-  margin-bottom: clamp(2.5rem, 4.5vw, 4rem);
+}
+
+/* A tall track to scroll through; its pinned body holds the screen while the tools step on. */
+.landing-page .feat__track {
+  position: relative;
+  height: calc(100vh + var(--feat-steps, 8) * 40vh);
+}
+
+.landing-page .feat__pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+}
+
+.landing-page .feat__steps {
+  display: none;
 }
 
 .landing-page .feat__head h2 {
@@ -217,14 +235,9 @@
   text-align: left;
 }
 
-.landing-page .feat__inline {
-  display: none;
-}
-
 /* --- The stage: the hero's green, holding the system's window --------------------------- */
 .landing-page .feat__stage {
-  position: sticky;
-  top: 24px;
+  position: relative;
   padding: clamp(1.25rem, 2.6vw, 2.25rem);
   border-radius: 28px;
   background: var(--feat-green);
@@ -991,21 +1004,47 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* The screen opens inside the picked row instead of beside the list. */
-  .landing-page .feat__stage {
-    display: none;
+  /* Pinned on a phone: the step bars, the open tool, then its screen. */
+  .landing-page .feat__body {
+    gap: 0.9rem;
   }
 
-  .landing-page .feat__inline {
-    display: block;
-    margin: 0 0 1.25rem;
-    padding: 1rem;
-    border-radius: 20px;
+  .landing-page .feat__steps {
+    display: grid;
+    grid-template-columns: repeat(var(--feat-steps, 8), 1fr);
+    gap: 5px;
+  }
+
+  .landing-page .feat__steps span {
+    height: 4px;
+    border-radius: 4px;
+    background: var(--feat-line);
+    transition: background-color 260ms ease;
+  }
+
+  .landing-page .feat__steps span.is-done {
     background: var(--feat-green);
   }
 
+  .landing-page .feat__index {
+    border-top: 0;
+  }
+
+  .landing-page .feat__row:not(.is-active) {
+    display: none;
+  }
+
+  .landing-page .feat__row {
+    border-bottom: 0;
+  }
+
   .landing-page .feat__text {
-    padding-left: 1.1rem;
+    padding: 0 0.5rem 0 1.1rem;
+  }
+
+  .landing-page .feat__stage {
+    padding: 0.75rem;
+    border-radius: 20px;
   }
 
   .landing-page .feat-app__body {
@@ -1023,8 +1062,8 @@
     display: none;
   }
 
-  .landing-page .feat__inline {
-    padding: 0.6rem;
+  .landing-page .feat__stage {
+    padding: 0.5rem;
   }
 
   .landing-page .feat-app__brand {
