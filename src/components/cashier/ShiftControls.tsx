@@ -277,7 +277,7 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                       Count is different
                     </button>
                   </div>
-                  <label className="start-shift__confirm">
+                  <label className={`start-shift__confirm${cashConfirmed ? ' is-on' : ''}`}>
                     <input
                       type="checkbox"
                       checked={cashConfirmed}
@@ -286,7 +286,12 @@ export function StartShiftModal({ onClose }: { onClose: () => void }) {
                         setError('');
                       }}
                     />
-                    I counted the drawer and it has <strong>{money(carriedOver)}</strong>.
+                    <span>
+                      <small>
+                        {cashConfirmed ? 'Drawer count confirmed' : 'Tick after counting the cash'}
+                      </small>
+                      I counted the drawer and it has <strong>{money(carriedOver)}</strong>
+                    </span>
                   </label>
                 </>
               ) : (
