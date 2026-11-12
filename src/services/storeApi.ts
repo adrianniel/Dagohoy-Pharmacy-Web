@@ -16,6 +16,8 @@ export type ApiProduct = {
   updatedAt: string;
   /** Sold at the Sales Counter before it was on the product list; waits for Register. */
   unregistered?: boolean;
+  /** Has no barcode of its own (its code is NB-000123); found by name. */
+  noBarcode?: boolean;
 };
 
 export type ProductInput = {
@@ -26,9 +28,12 @@ export type ProductInput = {
   unit: string;
   price: number;
   cost?: number | null;
-  opening?: { quantity: number; lot: string; expiry: string };
+  /** Batch and expiry may be empty for items that have none. */
+  opening?: { quantity: number; lot?: string; expiry?: string };
   /** Scanned and sold at the Sales Counter before it is registered. */
   unregistered?: boolean;
+  /** No barcode: the server gives it its own code (NB-000123). */
+  noBarcode?: boolean;
 };
 
 export const listProducts = () => apiRequest<ApiProduct[]>('/products');
@@ -134,8 +139,10 @@ export const receiveStock = (input: {
   productId: number;
   quantity: number;
   unitCost: number;
-  lot: string;
-  expiry: string;
+  /** Empty: NO-BATCH. */
+  lot?: string;
+  /** Empty: the item does not expire. */
+  expiry?: string;
   supplier?: string;
   reference?: string;
   sellingPrice?: number;

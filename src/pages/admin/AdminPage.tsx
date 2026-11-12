@@ -29,6 +29,7 @@ import {
   saveSettings as saveStoreSettings,
   updateProduct,
   registerProduct,
+  receiveStock,
 } from '../../services/storeApi';
 import { cacheSettings, syncAfterStockChange, syncSuppliers } from '../../data/serverSync';
 import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
@@ -65,6 +66,20 @@ function readCountedSales(): SavedSale[] {
   }
 }
 const SUPPLIER_KEY = 'dagohoy_demo_suppliers';
+/** Active supplier names from the synced copy, for the product form's supplier field. */
+function supplierNames(): string[] {
+  try {
+    const stored = JSON.parse(localStorage.getItem(SUPPLIER_KEY) ?? '[]') as Array<{
+      name?: string;
+      status?: string;
+    }>;
+    return stored
+      .filter((item) => item.status !== 'Inactive' && item.name)
+      .map((item) => item.name as string);
+  } catch {
+    return [];
+  }
+}
 const SETTINGS_KEY = 'dagohoy_demo_pharmacy_settings';
 type PharmacySettings = {
   name: string;
@@ -388,7 +403,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
                           <td>
                             <strong>{product.product}</strong>
                           </td>
-                          <td className="cashier-mono">{product.barcode}</td>
+                          <td className="cashier-mono">
+                            {product.noBarcode ? 'No barcode' : product.barcode}
+                          </td>
                           <td className="product-category-cell">
                             <strong>{product.category ?? 'Uncategorized'}</strong>
                             <small>{product.detail}</small>
@@ -471,15 +488,40 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   cost: product.cost ?? null,
                 };
                 try {
+                  // A supplier (items without a barcode) is recorded through Receive stock.
+                  const viaDelivery = Boolean(
+                    opening?.supplier && product.stock > 0 && product.cost,
+                  );
+                  const receive = (productId: number) =>
+                    receiveStock({
+                      productId,
+                      quantity: product.stock,
+                      unitCost: product.cost!,
+                      lot: opening?.lot || undefined,
+                      expiry: opening?.expiry || undefined,
+                      supplier: opening?.supplier,
+                    });
                   if (editing?.id && editing.unregistered) {
                     await registerProduct(
                       editing.id,
-                      opening && product.stock > 0
+                      opening && product.stock > 0 && !viaDelivery
                         ? { ...fields, opening: { quantity: product.stock, ...opening } }
                         : fields,
                     );
+                    if (viaDelivery) await receive(editing.id);
                   } else if (editing?.id) {
                     await updateProduct(editing.id, fields);
+                  } else if (product.noBarcode) {
+                    const created = await createProduct({
+                      ...fields,
+                      barcode: '',
+                      noBarcode: true,
+                      opening:
+                        opening && product.stock > 0 && !viaDelivery
+                          ? { quantity: product.stock, lot: opening.lot, expiry: opening.expiry }
+                          : undefined,
+                    });
+                    if (viaDelivery) await receive(created.id);
                   } else {
                     await createProduct(
                       opening && product.stock > 0
@@ -861,7 +903,7 @@ function InventoryForm({
   /** Saves on the server. Resolves to an error message, or null when saved. */
   onSave: (
     product: InventoryProduct,
-    opening?: { lot: string; expiry: string },
+    opening?: { lot: string; expiry: string; supplier?: string },
   ) => Promise<string | null>;
 }) {
   const billing = useBilling();
@@ -869,6 +911,12 @@ function InventoryForm({
   /** Sold at the Sales Counter before it was on the list: fill in the rest and the stock. */
   const registering = Boolean(product?.unregistered);
   const withOpening = isNew || registering;
+  /**
+   * No barcode (cotton, bandages, loose items): only name, cost and selling price are needed;
+   * generic, category, supplier, batch and expiry are optional.
+   */
+  const [noBarcode, setNoBarcode] = useState(Boolean(product?.noBarcode));
+  const [supplier, setSupplier] = useState('');
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode);
   const [detail, setDetail] = useState(product?.detail ?? '');
@@ -973,7 +1021,16 @@ function InventoryForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
-    if (!name.trim() || !barcode.trim() || !detail.trim()) {
+    if (noBarcode) {
+      if (!name.trim()) {
+        setError('Type the product name.');
+        return;
+      }
+      if (withOpening && !hasCost) {
+        setError('Enter how much it costs you (what you pay the supplier).');
+        return;
+      }
+    } else if (!name.trim() || !barcode.trim() || !detail.trim()) {
       setError('Fill in the product name, barcode and generic / brand.');
       return;
     }
@@ -985,7 +1042,7 @@ function InventoryForm({
       setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
       return;
     }
-    if (withOpening && openingQty > 0) {
+    if (withOpening && openingQty > 0 && !noBarcode) {
       if (!lot.trim()) {
         setError('Enter the batch number of the stock you are adding.');
         return;
@@ -1000,9 +1057,10 @@ function InventoryForm({
     const problem = await onSave(
       {
         ...(product ?? {}),
-        barcode: barcode.trim(),
+        barcode: noBarcode ? (product?.barcode ?? '') : barcode.trim(),
+        noBarcode: noBarcode || undefined,
         product: name.trim(),
-        detail: detail.trim(),
+        detail: detail.trim() || name.trim(),
         category: category.trim() || 'Other',
         unit,
         price: `₱${priceValue.toFixed(2)}`,
@@ -1010,7 +1068,9 @@ function InventoryForm({
         stock: quantity,
         status: stockStatus(quantity),
       },
-      withOpening && openingQty > 0 ? { lot: lot.trim().toUpperCase(), expiry } : undefined,
+      withOpening && openingQty > 0
+        ? { lot: lot.trim().toUpperCase(), expiry, supplier: supplier.trim() || undefined }
+        : undefined,
     );
     setSaving(false);
     if (problem) setError(problem);
@@ -1051,40 +1111,64 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>1. {isNew ? 'Scan the barcode' : 'Barcode'}</legend>
-          <div className={`product-form__scan is-${lookupState}`}>
-            <ScanInput
-              value={barcode}
-              onChange={(next) => {
-                setBarcode(next);
-                setError('');
-                if (next.trim() !== checkedBarcode.current) {
-                  setLookupNote('');
-                  setLookupState('idle');
-                }
-              }}
-              onEnter={(code) => {
-                const owner = products.find(
-                  (item) => item.barcode === code && item.barcode !== product?.barcode,
-                );
-                if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
-                else checkBarcode(code);
-              }}
-              placeholder={isNew ? 'Scan the product barcode' : 'Scan or type it'}
-              inputProps={{ inputMode: 'numeric', autoFocus: isNew, 'aria-label': 'Barcode' }}
-            />
-            {isNew && billing?.status === 'trial' && (
-              <p className="product-form__free">
-                Free trial: <b>{billing.freeScans.left}</b> of {billing.freeScans.total} free scans
-                left
-              </p>
-            )}
-            <p className="product-form__lookup" aria-live="polite">
-              {lookupNote ||
-                (isNew
-                  ? 'Scan it and the name, brand and category fill in by themselves. No barcode? Type a code of your own.'
-                  : 'Change it only if the product has a new barcode.')}
+          {isNew && (
+            <label className={`product-form__nobarcode${noBarcode ? ' is-on' : ''}`}>
+              <input
+                type="checkbox"
+                checked={noBarcode}
+                onChange={(event) => {
+                  setNoBarcode(event.target.checked);
+                  setError('');
+                }}
+              />
+              <span>
+                <strong>This item has no barcode</strong>
+                <small>Cotton, bandages, loose items… Only the name and prices are needed.</small>
+              </span>
+            </label>
+          )}
+          {noBarcode ? (
+            <p className="product-form__lookup">
+              {isNew
+                ? 'The system gives it its own code. Find it by name at the Sales Counter.'
+                : `No barcode · code ${product?.barcode ?? ''}. Find it by name at the Sales Counter.`}
             </p>
-          </div>
+          ) : (
+            <div className={`product-form__scan is-${lookupState}`}>
+              <ScanInput
+                value={barcode}
+                onChange={(next) => {
+                  setBarcode(next);
+                  setError('');
+                  if (next.trim() !== checkedBarcode.current) {
+                    setLookupNote('');
+                    setLookupState('idle');
+                  }
+                }}
+                onEnter={(code) => {
+                  const owner = products.find(
+                    (item) => item.barcode === code && item.barcode !== product?.barcode,
+                  );
+                  if (owner) setError(`Barcode ${code} is already used by ${owner.product}.`);
+                  else checkBarcode(code);
+                }}
+                placeholder={isNew ? 'Scan the product barcode' : 'Scan or type it'}
+                inputProps={{ inputMode: 'numeric', autoFocus: isNew, 'aria-label': 'Barcode' }}
+              />
+              {isNew && billing?.status === 'trial' && (
+                <p className="product-form__free">
+                  Free trial: <b>{billing.freeScans.left}</b> of {billing.freeScans.total} free
+                  scans left
+                </p>
+              )}
+              <p className="product-form__lookup" aria-live="polite">
+                {lookupNote ||
+                  (isNew
+                    ? 'Scan it and the name, brand and category fill in by themselves. No barcode? Type a code of your own.'
+                    : 'Change it only if the product has a new barcode.')}
+              </p>
+            </div>
+          )}
         </fieldset>
 
         <fieldset className="product-form__section">
@@ -1099,7 +1183,7 @@ function InventoryForm({
               />
             </label>
             <label>
-              Generic / brand
+              Generic / brand{noBarcode ? ' (optional)' : ''}
               <input
                 value={detail}
                 onChange={(event) => setDetail(event.target.value)}
@@ -1107,7 +1191,7 @@ function InventoryForm({
               />
             </label>
             <label>
-              Category
+              Category{noBarcode ? ' (optional)' : ''}
               <input
                 list="product-form-categories"
                 value={category}
@@ -1212,7 +1296,7 @@ function InventoryForm({
                   />
                 </label>
                 <label>
-                  Batch number {openingQty > 0 ? '' : '(if any)'}
+                  Batch number {openingQty > 0 && !noBarcode ? '' : '(optional)'}
                   <input
                     value={lot}
                     onChange={(event) => setLot(cleanBatch(event.target.value))}
@@ -1222,7 +1306,7 @@ function InventoryForm({
                   />
                 </label>
                 <label>
-                  Expiry date
+                  Expiry date{noBarcode ? ' (optional)' : ''}
                   <input
                     type="date"
                     value={expiry}
@@ -1231,6 +1315,23 @@ function InventoryForm({
                   />
                 </label>
               </div>
+              {noBarcode && (
+                <label className="product-form__supplier">
+                  Supplier (optional)
+                  <input
+                    list="product-form-suppliers"
+                    value={supplier}
+                    onChange={(event) => setSupplier(event.target.value)}
+                    placeholder="Who you bought it from"
+                    disabled={openingQty === 0}
+                  />
+                  <datalist id="product-form-suppliers">
+                    {supplierNames().map((item) => (
+                      <option key={item} value={item} />
+                    ))}
+                  </datalist>
+                </label>
+              )}
               <p className="product-form__hint">
                 {openingQty > 0
                   ? `${openingQty} ${unit.toLowerCase()}(s) will be added as opening stock${

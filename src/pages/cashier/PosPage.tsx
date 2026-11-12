@@ -3,7 +3,7 @@ import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
-import { ScannedNewProduct } from '../../components/cashier/ScannedNewProduct';
+import { NoBarcodeItem, ScannedNewProduct } from '../../components/cashier/ScannedNewProduct';
 import { syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
@@ -197,6 +197,8 @@ export function CashierPosPage() {
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
   /** A scanned barcode that is not on the product list: the new-product popup is open. */
   const [newScan, setNewScan] = useState('');
+  /** The "No barcode" popup is open. */
+  const [noBarcodeOpen, setNoBarcodeOpen] = useState(false);
   const [controlModal, setControlModal] = useState<'void' | 'charge' | null>(null);
   const [voidTarget, setVoidTarget] = useState('');
   const [voidReason, setVoidReason] = useState('');
@@ -384,7 +386,8 @@ export function CashierPosPage() {
 
   /** While the payment panel or a dialog is open, its own fields take the keys. */
   const scanPaused = useRef(false);
-  scanPaused.current = (paymentOpen && !completedSale) || controlModal !== null || newScan !== '';
+  scanPaused.current =
+    (paymentOpen && !completedSale) || controlModal !== null || newScan !== '' || noBarcodeOpen;
 
   // A scanner types the whole barcode in a few milliseconds. Those keys are caught here before
   // they reach the search box, so the number never shows and no list pops up: the item goes
@@ -717,6 +720,16 @@ export function CashierPosPage() {
               <CashierIcon name="search" />
               <span>{priceCheck ? 'Price check on' : 'Price check'}</span>
             </button>
+            <button
+              className="pos-price-check pos-no-barcode"
+              type="button"
+              title="Add an item that has no barcode, or one that will not scan"
+              onClick={() => setNoBarcodeOpen(true)}
+              disabled={priceCheck}
+            >
+              <span aria-hidden="true">＋</span>
+              <span>No barcode</span>
+            </button>
           </header>
           <div className="pos-scan-dock pos-ticket__scan">
             <div className="pos-scan-field">
@@ -785,7 +798,7 @@ export function CashierPosPage() {
                     <span>
                       <strong>{product.product}</strong>
                       <small>
-                        {product.detail} · {product.barcode}
+                        {product.detail} · {product.noBarcode ? 'No barcode' : product.barcode}
                       </small>
                     </span>
                     <span>
@@ -1102,6 +1115,19 @@ export function CashierPosPage() {
           </div>
         </aside>
       </div>
+      {noBarcodeOpen && (
+        <NoBarcodeItem
+          onCancel={() => setNoBarcodeOpen(false)}
+          onAdded={(product) => {
+            setNoBarcodeOpen(false);
+            setProducts(getInventory());
+            addProduct(product);
+            if (product.unregistered) {
+              showToast(`${product.product} added. Register it later in Products › Unregistered.`);
+            }
+          }}
+        />
+      )}
       {newScan && (
         <ScannedNewProduct
           key={newScan}

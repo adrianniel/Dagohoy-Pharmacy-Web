@@ -235,7 +235,14 @@ export function ReturnStock({
               {expired.map((batch) => {
                 const on = batch.id in picked;
                 return (
-                  <tr key={batch.id} className={on ? 'is-picked' : ''}>
+                  <tr
+                    key={batch.id}
+                    className={on ? 'is-picked' : ''}
+                    onClick={(event) => {
+                      if ((event.target as HTMLElement).closest('input, button, select')) return;
+                      toggle(batch);
+                    }}
+                  >
                     <td>
                       <input
                         type="checkbox"

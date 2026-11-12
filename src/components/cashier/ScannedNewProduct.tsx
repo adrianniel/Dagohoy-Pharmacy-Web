@@ -173,3 +173,120 @@ export function ScannedNewProduct({
     </div>
   );
 }
+
+/**
+ * Sales Counter: an item without a barcode (or one that will not scan). Only a name and the
+ * price: it is added to the sale and saved as an unregistered item without a barcode, to be
+ * registered later. A name already on the list adds that product instead.
+ */
+export function NoBarcodeItem({
+  onCancel,
+  onAdded,
+}: {
+  onCancel: () => void;
+  onAdded: (product: InventoryProduct) => void;
+}) {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const typed = name.trim().toLowerCase();
+  const existing = typed
+    ? getInventory().find((item) => item.product.trim().toLowerCase() === typed)
+    : undefined;
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (existing) return onAdded(existing);
+    const amount = Number(price);
+    if (!name.trim()) return setError('Type the product name.');
+    if (!Number.isFinite(amount) || amount <= 0) return setError('Type how much it is.');
+    setSaving(true);
+    setError('');
+    try {
+      const saved = await createProduct({
+        name: name.trim(),
+        barcode: '',
+        detail: name.trim(),
+        category: 'Other',
+        unit: 'Piece',
+        price: Math.round(amount * 100) / 100,
+        unregistered: true,
+        noBarcode: true,
+      });
+      await syncCatalog();
+      const product = getInventory().find((item) => item.id === saved.id);
+      if (!product) throw new Error('Saved, but the product list did not refresh. Try again.');
+      onAdded(product);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not add the item.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="pos-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !saving) onCancel();
+      }}
+    >
+      <form className="pos-payment-modal pos-new-product" onSubmit={(event) => void submit(event)}>
+        <button className="pos-modal-close" type="button" onClick={onCancel} aria-label="Close">
+          ×
+        </button>
+        <p className="pos-new-product__flag">No barcode</p>
+        <h2>Add an item without a barcode</h2>
+        <p className="pos-new-product__note">
+          For items with no barcode or one that will not scan.
+        </p>
+        <div className="pos-new-product__grid">
+          <label className="is-wide">
+            Product name
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="e.g. Cotton balls (small pack)"
+              autoFocus
+            />
+          </label>
+          {existing ? (
+            <p className="pos-new-product__match is-wide">
+              Already on the list: <b>{existing.product}</b> at {existing.price}. OK adds it.
+            </p>
+          ) : (
+            <label className="is-wide pos-new-product__price">
+              How much is it? (₱)
+              <input
+                value={price}
+                onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ''))}
+                inputMode="decimal"
+                placeholder="0.00"
+              />
+            </label>
+          )}
+        </div>
+        {!existing && (
+          <p className="pos-new-product__hint">
+            It is added to this sale and saved under Products › Unregistered, where the cost and
+            stock can be filled in later.
+          </p>
+        )}
+        {error && (
+          <p className="pos-new-product__error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="pos-new-product__actions">
+          <button type="button" className="cashier-view-button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="submit" className="cashier-primary-action" disabled={saving}>
+            {saving ? 'Adding…' : 'OK, add to sale'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

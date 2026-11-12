@@ -21,6 +21,8 @@ export type InventoryProduct = {
   cost?: number;
   /** Scanned and sold at the Sales Counter before it was added; waits for Register. */
   unregistered?: boolean;
+  /** No barcode of its own (code NB-000123): found by name. */
+  noBarcode?: boolean;
 };
 
 const INVENTORY_KEY = 'dagohoy_demo_inventory';

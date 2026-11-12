@@ -4589,14 +4589,70 @@
 }
 
 .restock-pick__table input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  accent-color: #1b6b4c;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  border: 2px solid #9aab9f;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+  appearance: none;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.restock-pick__table input[type='checkbox']::after {
+  content: '';
+  width: 7px;
+  height: 13px;
+  margin-top: -3px;
+  border: solid #fff;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.12s ease;
+}
+
+.restock-pick__table input[type='checkbox']:hover {
+  border-color: #1b6b4c;
+  box-shadow: 0 0 0 4px rgba(27, 107, 76, 0.12);
+}
+
+.restock-pick__table input[type='checkbox']:checked {
+  border-color: #1b6b4c;
+  background: #1b6b4c;
+}
+
+.restock-pick__table input[type='checkbox']:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.restock-pick__table input[type='checkbox']:focus-visible {
+  outline: 3px solid #13322a;
+  outline-offset: 2px;
+}
+
+/* The ticked row stands out: green tint and a green bar on the left. */
+.restock-pick__table tbody tr {
   cursor: pointer;
 }
 
+.restock-pick__table tbody tr.is-picked td:first-child {
+  box-shadow: inset 4px 0 0 #1b6b4c;
+}
+
+.restock-pick__table th:first-child,
+.restock-pick__table td:first-child {
+  width: 52px;
+  text-align: center;
+}
+
 .restock-pick__table tr.is-picked td {
-  background: #f1f8f2;
+  background: #e6f3ea;
+  font-weight: 600;
 }
 
 .restock-pick__qty {
@@ -5059,4 +5115,66 @@
   .return-stock__common {
     grid-template-columns: 1fr;
   }
+}
+
+/* Product form: an item without a barcode. */
+.product-form__nobarcode {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px dashed #c9d2c2;
+  border-radius: 10px;
+  background: #fafbf7;
+  cursor: pointer;
+}
+
+.product-form__nobarcode.is-on {
+  border-style: solid;
+  border-color: #1b6b4c;
+  background: #eef6f0;
+}
+
+.product-form__nobarcode input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: #1b6b4c;
+}
+
+.product-form__nobarcode span {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-form__nobarcode small {
+  color: #6a7b71;
+  font-weight: 500;
+}
+
+.product-form__supplier {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.pos-no-barcode {
+  margin-left: 0.5rem;
+}
+
+.pos-no-barcode:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pos-new-product__match {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eef6f0;
+  color: #13322a;
+  font-size: 0.88rem;
 }

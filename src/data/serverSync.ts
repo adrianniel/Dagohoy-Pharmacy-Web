@@ -76,6 +76,7 @@ export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
       stock,
       status: stockStatus(stock),
       unregistered: item.unregistered || undefined,
+      noBarcode: item.noBarcode || undefined,
     };
   });
 }

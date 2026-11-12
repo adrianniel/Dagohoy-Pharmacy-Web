@@ -175,7 +175,15 @@ export function RestockOrder({
             const on = barcode in picked;
             const quantity = quantityOf(barcode);
             return (
-              <tr key={barcode} className={on ? 'is-picked' : ''}>
+              <tr
+                key={barcode}
+                className={on ? 'is-picked' : ''}
+                onClick={(event) => {
+                  // A click anywhere on the row ticks it, except in the fields.
+                  if ((event.target as HTMLElement).closest('input, button, select')) return;
+                  toggle(line);
+                }}
+              >
                 <td>
                   <input
                     type="checkbox"
