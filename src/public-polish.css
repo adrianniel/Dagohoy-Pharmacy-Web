@@ -496,24 +496,13 @@
   }
 }
 
-.landing-page .landing-hero__visual,
-.landing-page .contact-card {
+.landing-page .landing-hero__visual {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 8px 30px rgb(22 62 48 / 5%);
 }
 
-.landing-page .contact-card {
-  border: 1px solid #dce8e0;
-}
-
-.landing-page .action-link {
-  min-height: 48px;
-  border-radius: 10px;
-}
-
-.landing-page .about-section h2,
-.landing-page .contact-section h2 {
+.landing-page .about-section h2 {
   letter-spacing: -0.035em;
   line-height: 1.2;
 }

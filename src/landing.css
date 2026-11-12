@@ -115,8 +115,7 @@
   transform: translateY(-1px);
   background: rgb(119 214 154 / 17%);
 }
-.landing-nav__login span,
-.action-link span {
+.landing-nav__login span {
   margin-left: 0.4rem;
 }
 
@@ -170,27 +169,7 @@
   font-size: 0.97rem;
   line-height: 1.75;
 }
-.action-link {
-  display: inline-flex;
-  min-height: 47px;
-  align-items: center;
-  padding: 0.76rem 1.25rem;
-  border: 1px solid #86e0a2;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #27814b, #1b6439);
-  color: #f3fff5;
-  box-shadow: 0 8px 24px rgb(20 112 56 / 25%);
-  font-size: 0.89rem;
-  font-weight: 720;
-  text-decoration: none;
-  transition:
-    background 180ms ease,
-    transform 180ms ease;
-}
-.action-link:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #329454, #237849);
-}
+
 .landing-operations-strip {
   margin-top: 1.65rem;
   padding-top: 1.1rem;
@@ -417,23 +396,14 @@
   font-weight: 750;
 }
 
-.section-wrap {
-  width: min(100% - 3rem, 1120px);
-  margin-inline: auto;
-}
-
-.about-section h2,
-.developer-section h2,
-.contact-section h2 {
+.about-section h2 {
   margin-bottom: 0.7rem;
   font-size: clamp(1.9rem, 3.8vw, 2.8rem);
   font-weight: 680;
   letter-spacing: -0.055em;
   line-height: 1.1;
 }
-.about-section__content > p:last-child,
-.developer-section__copy > p:not(.eyebrow),
-.contact-section__intro > p:last-child {
+.about-section__content > p:last-child {
   max-width: 58ch;
   margin-bottom: 0;
   color: var(--ink-soft);
@@ -465,140 +435,6 @@
   max-width: 65ch;
 }
 
-.developer-section {
-  padding: clamp(1.5rem, 4vw, 2.7rem);
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 4rem);
-  border: 1px solid rgb(119 214 154 / 22%);
-  border-radius: 20px;
-  background:
-    radial-gradient(ellipse at 0% 0%, rgb(39 129 75 / 17%), transparent 65%),
-    linear-gradient(140deg, #10241a, #0d1b14);
-  box-shadow: 0 24px 70px rgb(0 0 0 / 19%);
-}
-.developer-section__copy h2 {
-  max-width: 17ch;
-  font-size: clamp(1.75rem, 3vw, 2.45rem);
-}
-.developer-section__copy > p:not(.eyebrow) {
-  margin-bottom: 1.3rem;
-  font-size: 0.87rem;
-}
-.developer-section__contact {
-  min-height: 42px;
-  padding: 0.63rem 0.95rem;
-  font-size: 0.82rem;
-}
-.developer-section .action-link {
-  background: linear-gradient(135deg, #27814b, #1b6439);
-  color: #f3fff5;
-}
-.developer-section__profile {
-  padding: 1.3rem;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: rgb(3 12 7 / 20%);
-}
-.developer-section__label {
-  margin-bottom: 0.45rem;
-  color: var(--ink-faint);
-  font-size: 0.7rem;
-}
-.developer-section__profile h3 {
-  margin-bottom: 0.15rem;
-  font-size: 1.08rem;
-}
-.developer-section__role {
-  margin-bottom: 1rem;
-  color: var(--accent);
-  font-size: 0.75rem;
-}
-.developer-section__services {
-  margin: 0 0 1.1rem;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
-  color: var(--ink-soft);
-  font-size: 0.74rem;
-  list-style: none;
-}
-.developer-section__services li::before {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin: 0 0.48rem 2px 0;
-  border-radius: 50%;
-  background: var(--accent);
-  content: '';
-}
-.developer-section__links {
-  padding-top: 0.9rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  border-top: 1px solid var(--line);
-}
-.developer-section__links a {
-  display: grid;
-  gap: 0.18rem;
-  color: var(--ink-faint);
-  font-size: 0.69rem;
-  text-decoration: none;
-}
-.developer-section__links a:hover {
-  color: var(--accent);
-}
-.developer-section__links a > span {
-  color: var(--accent);
-}
-.developer-section__links a small {
-  color: var(--ink-faint);
-  font-size: 0.62rem;
-}
-
-.contact-section {
-  padding-block: 5rem 4rem;
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  align-items: start;
-  gap: 3rem;
-}
-.contact-section h2 {
-  font-size: clamp(1.7rem, 3vw, 2.25rem);
-}
-.contact-section__intro > p:last-child {
-  font-size: 0.85rem;
-}
-.contact-section__groups {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-.contact-card {
-  padding: 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgb(255 255 255 / 3%);
-}
-.contact-card h3 {
-  margin-bottom: 0.75rem;
-  font-size: 0.84rem;
-}
-.contact-card address {
-  display: grid;
-  gap: 0.5rem;
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-  font-style: normal;
-  line-height: 1.5;
-}
-.contact-card a {
-  color: var(--ink-faint);
-  text-underline-offset: 3px;
-}
 .landing-footer {
   border-top: 1px solid var(--line);
   background: rgb(0 0 0 / 12%);
@@ -646,16 +482,11 @@
   .hours-row {
     font-size: 0.68rem;
   }
-  .contact-section {
-    grid-template-columns: 1fr;
-    gap: 1.4rem;
-  }
 }
 
 @media (max-width: 700px) {
   .landing-nav,
   .landing-hero,
-  .section-wrap,
   .landing-footer__inner {
     width: min(100% - 2rem, 1280px);
   }
@@ -720,13 +551,7 @@
   .about-section__label {
     margin-bottom: 0.7rem;
   }
-  .developer-section {
-    grid-template-columns: 1fr;
-    gap: 1.6rem;
-  }
-  .contact-section {
-    padding-block: 3.7rem 3rem;
-  }
+
   .landing-footer__inner {
     padding-block: 1rem;
     align-items: flex-start;
@@ -755,14 +580,9 @@
   .today-label {
     display: none;
   }
-  .contact-section__groups {
-    grid-template-columns: 1fr;
-  }
+
   .hero-caption-location {
     display: none;
-  }
-  .developer-section__services {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -910,18 +730,7 @@
   font-size: clamp(1rem, 1.45vw, 1.23rem);
   line-height: 1.55;
 }
-.landing-hero__copy > .action-link {
-  min-width: 235px;
-  justify-content: center;
-}
-.landing-hero__copy > .action-link--outline {
-  min-width: 220px;
-  margin-top: -47px;
-  margin-left: 250px;
-  border: 1px solid rgb(223 246 232 / 40%);
-  background: rgb(3 18 11 / 44%);
-  box-shadow: none;
-}
+
 .snapshot {
   width: min(100%, 1080px);
   margin: auto 0 0;
@@ -1095,13 +904,7 @@
   .landing-hero__description {
     font-size: 0.93rem;
   }
-  .landing-hero__copy > .action-link {
-    min-width: 0;
-  }
-  .landing-hero__copy > .action-link--outline {
-    min-width: 0;
-    margin: 0.6rem 0 0;
-  }
+
   .snapshot {
     margin-top: auto;
     padding: 0.7rem;

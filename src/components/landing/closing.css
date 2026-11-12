@@ -1,0 +1,489 @@
+/*
+ * The page's close: the owners' offer on the hero's green, then the contact cards on cream.
+ * Same tokens as the features (cream, green, hairlines; radius 10 / 20 / 28).
+ */
+.landing-page .owner-cta,
+.landing-page .reach {
+  --cl-green: #006451;
+  --cl-green-deep: #004c3d;
+  --cl-ink: #0c2a23;
+  --cl-cream: #fffff0;
+  --cl-paper: #fffef8;
+  --cl-line: #dfe3cf;
+  --cl-muted: #5b6b63;
+  --cl-mint: #e6f1e8;
+
+  background: var(--cl-cream);
+  color: var(--cl-ink);
+  font-family: 'Poppins', sans-serif;
+}
+
+.landing-page .closing-wrap {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 5.6vw, 5rem);
+}
+
+/* --- For pharmacy owners ---------------------------------------------------------------- */
+.landing-page .owner-cta {
+  padding-block: clamp(56px, 7vw, 96px) clamp(40px, 5vw, 72px);
+}
+
+.landing-page .owner-cta__panel {
+  position: relative;
+  padding: clamp(2rem, 5vw, 4.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  border-radius: 28px;
+  background: var(--cl-green);
+  color: var(--cl-cream);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* The hero's diagonal, as a cream band crossing behind the card; it drifts slowly. */
+.landing-page .owner-cta__band {
+  position: absolute;
+  z-index: -1;
+  top: -30%;
+  right: -12%;
+  width: 62%;
+  height: 160%;
+  background: rgb(255 255 240 / 7%);
+  transform: rotate(24deg);
+  animation: owner-band 9s ease-in-out infinite alternate;
+}
+
+@keyframes owner-band {
+  to {
+    transform: translateX(-4%) rotate(24deg);
+  }
+}
+
+.landing-page .owner-cta__eyebrow {
+  margin: 0 0 1rem;
+  color: #a9dcc6;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.landing-page .owner-cta h2 {
+  margin: 0 0 1.1rem;
+  color: var(--cl-cream);
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2.2rem, 4.2vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  text-align: left;
+}
+
+.landing-page .owner-cta h2 span {
+  display: block;
+}
+
+.landing-page .owner-cta h2 span + span {
+  color: #a9dcc6;
+}
+
+.landing-page .owner-cta__text {
+  max-width: 50ch;
+  margin: 0 0 2rem;
+  color: rgb(255 255 240 / 82%);
+  font-size: clamp(1rem, 1.15vw, 1.1rem);
+  line-height: 1.65;
+  text-align: left;
+}
+
+.landing-page .owner-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.landing-page .owner-cta__button {
+  min-height: 50px;
+  padding: 0.75rem 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 999px;
+  background: var(--cl-cream);
+  color: var(--cl-green);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.landing-page .owner-cta__button svg,
+.landing-page .reach-row__arrow {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .owner-cta__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgb(0 30 24 / 28%);
+  background: #ffffff;
+}
+
+.landing-page .owner-cta__button:hover svg {
+  transform: translateX(4px);
+}
+
+.landing-page .owner-cta__button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+
+.landing-page .owner-cta__link {
+  position: relative;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--cl-cream);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* The underline draws on hover. */
+.landing-page .owner-cta__link::after {
+  position: absolute;
+  right: 0;
+  bottom: 9px;
+  left: 0;
+  height: 1.5px;
+  background: currentColor;
+  content: '';
+  transform: scaleX(0.25);
+  transform-origin: left;
+  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.landing-page .owner-cta__link:hover::after,
+.landing-page .owner-cta__link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.landing-page .owner-cta__button:focus-visible,
+.landing-page .owner-cta__link:focus-visible,
+.landing-page .reach-row.is-link:focus-visible {
+  outline: 3px solid #8fc5b7;
+  outline-offset: 3px;
+}
+
+.landing-page .owner-cta__profile {
+  display: flex;
+  justify-content: center;
+}
+
+/* --- Contact ---------------------------------------------------------------------------- */
+.landing-page .reach {
+  padding-block: clamp(32px, 4vw, 56px) clamp(64px, 8vw, 112px);
+}
+
+.landing-page .reach__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  margin-bottom: clamp(2rem, 3.5vw, 3rem);
+}
+
+.landing-page .reach__head h2 {
+  margin: 0;
+  color: var(--cl-ink);
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(2rem, 3.6vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  text-align: left;
+}
+
+.landing-page .reach__head h2 span {
+  display: block;
+}
+
+.landing-page .reach__head h2 span:first-child {
+  color: var(--cl-green);
+}
+
+.landing-page .reach__head p {
+  max-width: 42ch;
+  margin: 0;
+  color: var(--cl-muted);
+  font-size: clamp(1rem, 1.1vw, 1.08rem);
+  line-height: 1.6;
+  text-align: left;
+}
+
+.landing-page .reach__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.landing-page .reach-card {
+  padding: clamp(1.25rem, 2.4vw, 2rem);
+  border: 1px solid var(--cl-line);
+  border-radius: 20px;
+  background: var(--cl-paper);
+}
+
+.landing-page .reach-card__head {
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.landing-page .reach-card__head h3 {
+  margin: 0;
+  color: var(--cl-ink);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+
+.landing-page .reach-card__head p {
+  margin: 0.1rem 0 0;
+  color: var(--cl-muted);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.landing-page .reach-card__icon,
+.landing-page .reach-row__icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--cl-mint);
+  color: var(--cl-green);
+}
+
+.landing-page .reach-card__icon svg,
+.landing-page .reach-row__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.landing-page .reach-row__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* Open or closed, from the store's hours. */
+.landing-page .reach-status {
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  border-radius: 12px;
+  background: #f3f1e4;
+  font-size: 0.9rem;
+}
+
+.landing-page .reach-status strong {
+  color: var(--cl-ink);
+}
+
+.landing-page .reach-status > span:last-child {
+  color: var(--cl-muted);
+}
+
+.landing-page .reach-status.is-open {
+  background: var(--cl-mint);
+}
+
+.landing-page .reach-status.is-open strong {
+  color: var(--cl-green);
+}
+
+.landing-page .reach-status__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #b5b9a8;
+}
+
+.landing-page .is-open .reach-status__dot {
+  background: #2f9e6e;
+  animation: reach-ping 2.6s ease-out infinite;
+}
+
+@keyframes reach-ping {
+  0%,
+  55% {
+    box-shadow: 0 0 0 0 rgb(47 158 110 / 45%);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgb(47 158 110 / 0%);
+  }
+}
+
+.landing-page .reach-duty {
+  margin: 0.75rem 0 0;
+  color: var(--cl-muted);
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.landing-page .reach-duty strong {
+  margin-inline-start: 0.35rem;
+  color: var(--cl-ink);
+}
+
+.landing-page .reach-hours {
+  margin: 1.1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  list-style: none;
+}
+
+.landing-page .reach-hours li {
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 8px;
+  color: var(--cl-muted);
+  font-size: 0.88rem;
+}
+
+.landing-page .reach-hours strong {
+  color: var(--cl-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-page .reach-hours li.is-today {
+  background: var(--cl-green);
+  color: rgb(255 255 240 / 80%);
+}
+
+.landing-page .reach-hours li.is-today strong {
+  color: var(--cl-cream);
+}
+
+.landing-page .reach-rows {
+  margin-top: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.landing-page .reach-row {
+  min-height: 56px;
+  padding: 0.55rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border-radius: 12px;
+  color: var(--cl-ink);
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.landing-page .reach-row__text {
+  min-width: 0;
+  display: grid;
+  text-align: left;
+}
+
+.landing-page .reach-row__text small {
+  color: var(--cl-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.landing-page .reach-row__text span {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.landing-page .reach-row__arrow {
+  margin-inline-start: auto;
+  color: var(--cl-green);
+  opacity: 0.45;
+}
+
+.landing-page .reach-row.is-link:hover {
+  background: var(--cl-mint);
+  transform: translateY(-2px);
+}
+
+.landing-page .reach-row.is-link:hover .reach-row__arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.landing-page .reach-row.is-link:active {
+  transform: translateY(0);
+}
+
+/* --- Tablet and phone ------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .landing-page .owner-cta__panel,
+  .landing-page .reach__head,
+  .landing-page .reach__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .landing-page .owner-cta__band {
+    top: 40%;
+    right: -30%;
+    width: 110%;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-page .owner-cta__panel {
+    padding: 2rem 1.25rem 2.5rem;
+    border-radius: 22px;
+  }
+
+  .landing-page .owner-cta__button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .owner-cta__band,
+  .landing-page .is-open .reach-status__dot {
+    animation: none;
+  }
+
+  .landing-page .owner-cta__button,
+  .landing-page .reach-row {
+    transition: none;
+  }
+}

@@ -433,9 +433,7 @@ textarea:disabled {
   white-space: nowrap;
 }
 
-.landing-nav__login span,
-.action-link span,
-.developer-section__contact span {
+.landing-nav__login span {
   margin-left: 0.35rem;
   color: var(--accent);
 }
@@ -485,31 +483,6 @@ textarea:disabled {
   color: var(--ink-soft);
   font-size: 1.07rem;
   line-height: 1.72;
-}
-
-.action-link {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  padding: 0.78rem 1.25rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition:
-    background 180ms ease,
-    transform 180ms ease;
-}
-
-.action-link span {
-  color: #fff;
-}
-
-.action-link:hover {
-  background: var(--accent-strong);
-  transform: translateY(-2px);
 }
 
 .landing-hero__image-wrap {
@@ -683,14 +656,7 @@ textarea:disabled {
   font-weight: 750;
 }
 
-.section-wrap {
-  width: min(100% - 3rem, 1120px);
-  margin-inline: auto;
-}
-
-.about-section h2,
-.developer-section h2,
-.contact-section h2 {
+.about-section h2 {
   margin-bottom: 0.7rem;
   font-size: clamp(2rem, 3.8vw, 3rem);
   font-weight: 680;
@@ -698,9 +664,7 @@ textarea:disabled {
   line-height: 1.08;
 }
 
-.about-section__content > p,
-.developer-section__copy > p:last-child,
-.contact-section > div > p {
+.about-section__content > p {
   max-width: 55ch;
   margin-bottom: 0;
   color: var(--ink-soft);
@@ -730,80 +694,6 @@ textarea:disabled {
 
 .about-section__content > p {
   max-width: 57ch;
-}
-
-.developer-section {
-  padding: clamp(1.7rem, 4vw, 3rem);
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr auto;
-  align-items: center;
-  gap: 2rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-soft);
-}
-
-.developer-section__copy h2 {
-  max-width: 15ch;
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
-}
-
-.developer-section__copy > p:last-child {
-  font-size: 0.91rem;
-}
-
-.developer-section__services {
-  display: grid;
-  gap: 0.7rem;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-}
-
-.developer-section__services span::before {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin: 0 0.6rem 2px 0;
-  border-radius: 50%;
-  background: var(--accent);
-  content: '';
-}
-
-.developer-section__contact {
-  min-width: max-content;
-  padding: 0.78rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  font-size: 0.88rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition:
-    border-color 180ms ease,
-    transform 180ms ease;
-}
-
-.developer-section__contact:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.contact-section {
-  margin-top: 5rem;
-  padding-block: 3rem;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 2rem;
-  border-top: 1px solid var(--line);
-}
-
-.contact-section h2 {
-  font-size: clamp(1.75rem, 3vw, 2.3rem);
-}
-
-.contact-section > div > p {
-  font-size: 0.9rem;
 }
 
 .contact-details {
@@ -859,12 +749,7 @@ textarea:disabled {
     --shadow: 0 20px 48px rgb(0 0 0 / 20%);
   }
 
-  .landing-brand__mark,
-  .action-link {
-    color: #17231c;
-  }
-
-  .action-link span {
+  .landing-brand__mark {
     color: #17231c;
   }
 
@@ -898,14 +783,6 @@ textarea:disabled {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.5rem;
   }
-
-  .developer-section {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .developer-section__contact {
-    justify-self: start;
-  }
 }
 
 @media (max-width: 700px) {
@@ -936,7 +813,6 @@ textarea:disabled {
 
   .landing-hero,
   .snapshot,
-  .section-wrap,
   .landing-footer__inner {
     width: min(100% - 2rem, 1280px);
   }
@@ -979,21 +855,6 @@ textarea:disabled {
 
   .about-section__label {
     margin-bottom: 1rem;
-  }
-
-  .developer-section {
-    grid-template-columns: 1fr;
-    gap: 1.6rem;
-  }
-
-  .developer-section__services {
-    padding-top: 0.2rem;
-  }
-
-  .contact-section {
-    margin-top: 3.5rem;
-    grid-template-columns: 1fr;
-    gap: 1.3rem;
   }
 
   .contact-details {
