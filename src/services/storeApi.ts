@@ -14,6 +14,8 @@ export type ApiProduct = {
   onHand: number;
   reorderPoint: number | null;
   updatedAt: string;
+  /** Sold at the Sales Counter before it was on the product list; waits for Register. */
+  unregistered?: boolean;
 };
 
 export type ProductInput = {
@@ -25,6 +27,8 @@ export type ProductInput = {
   price: number;
   cost?: number | null;
   opening?: { quantity: number; lot: string; expiry: string };
+  /** Scanned and sold at the Sales Counter before it is registered. */
+  unregistered?: boolean;
 };
 
 export const listProducts = () => apiRequest<ApiProduct[]>('/products');
@@ -34,6 +38,13 @@ export const createProduct = (input: ProductInput) =>
 
 export const updateProduct = (id: number, changes: Partial<Omit<ProductInput, 'opening'>>) =>
   apiRequest<ApiProduct>(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(changes) });
+
+/** Fills in the rest of a product sold before it was registered; the stock becomes `opening`. */
+export const registerProduct = (id: number, input: Partial<ProductInput>) =>
+  apiRequest<ApiProduct>(`/products/${id}/register`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 
 export type ApiSupplier = {
   id: number;
@@ -148,6 +159,13 @@ export const adjustStock = (input: {
   apiRequest<{ onHand: number }>('/stock/adjustments', {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+
+/** Several items in one save (a supplier return of many items): all saved, or none. */
+export const adjustStockMany = (items: Array<Parameters<typeof adjustStock>[0]>) =>
+  apiRequest<{ saved: number }>('/stock/adjustments/batch', {
+    method: 'POST',
+    body: JSON.stringify({ items }),
   });
 
 /* ---- Archive and import ---- */

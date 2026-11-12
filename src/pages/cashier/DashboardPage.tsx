@@ -140,7 +140,7 @@ export function CashierDashboardPage() {
   const bestPeak = Math.max(1, ...bestSellers.map(([, value]) => value.quantity));
 
   const lowStock = inventory
-    .filter((product) => product.status !== 'In Stock')
+    .filter((product) => !product.unregistered && product.status !== 'In Stock')
     .sort((a, b) => a.stock - b.stock);
   const recent = todaySales.slice(0, 5);
 

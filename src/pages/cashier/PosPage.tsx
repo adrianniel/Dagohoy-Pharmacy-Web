@@ -3,6 +3,7 @@ import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
+import { ScannedNewProduct } from '../../components/cashier/ScannedNewProduct';
 import { syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
@@ -194,6 +195,8 @@ export function CashierPosPage() {
   });
   const [expandedProduct, setExpandedProduct] = useState<CatalogProduct | null>(null);
   const [selectedLine, setSelectedLine] = useState<string | null>(null);
+  /** A scanned barcode that is not on the product list: the new-product popup is open. */
+  const [newScan, setNewScan] = useState('');
   const [controlModal, setControlModal] = useState<'void' | 'charge' | null>(null);
   const [voidTarget, setVoidTarget] = useState('');
   const [voidReason, setVoidReason] = useState('');
@@ -274,6 +277,11 @@ export function CashierPosPage() {
     const exact = scannerOff ? undefined : products.find((product) => product.barcode === code);
     const pick = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : undefined);
     if (!pick) {
+      if (!filteredProducts.length && !priceCheck && !scannerOff && /^\d{8,14}$/.test(code)) {
+        setQuery('');
+        setNewScan(code);
+        return;
+      }
       showToast(
         filteredProducts.length
           ? 'Several products match. Pick one from the list.'
@@ -287,7 +295,7 @@ export function CashierPosPage() {
       setQuery('');
       return;
     }
-    if (pick.stock < 1) {
+    if (!pick.unregistered && pick.stock < 1) {
       showToast(`${pick.product} is out of stock.`, 'error');
       setQuery('');
       return;
@@ -317,7 +325,12 @@ export function CashierPosPage() {
     }
     const product = products.find((item) => item.barcode === code);
     if (!product) {
-      showToast(`No product has barcode ${code}. Add it in Products first.`, 'error');
+      if (priceCheck) {
+        showToast(`No product has barcode ${code}. Turn off Price check to add it.`, 'info');
+        return;
+      }
+      // Not on the product list: look it up and let the cashier set a price.
+      setNewScan(code);
       return;
     }
     if (priceCheck) {
@@ -325,7 +338,7 @@ export function CashierPosPage() {
       playSound('tap');
       return;
     }
-    if (product.stock < 1) {
+    if (!product.unregistered && product.stock < 1) {
       showToast(`${product.product} is out of stock.`, 'error');
       return;
     }
@@ -371,7 +384,7 @@ export function CashierPosPage() {
 
   /** While the payment panel or a dialog is open, its own fields take the keys. */
   const scanPaused = useRef(false);
-  scanPaused.current = (paymentOpen && !completedSale) || controlModal !== null;
+  scanPaused.current = (paymentOpen && !completedSale) || controlModal !== null || newScan !== '';
 
   // A scanner types the whole barcode in a few milliseconds. Those keys are caught here before
   // they reach the search box, so the number never shows and no list pops up: the item goes
@@ -427,6 +440,8 @@ export function CashierPosPage() {
   }, []);
 
   function addProduct(product: PosProduct) {
+    // An unregistered product has no counted stock yet: it is sold without a stock limit.
+    if (product.unregistered) product = { ...product, stock: undefined };
     if (product.stock !== undefined && product.stock < 1) {
       showToast(`${product.product} is out of stock.`, 'error');
       return;
@@ -461,7 +476,11 @@ export function CashierPosPage() {
         if (line.product.barcode !== barcodeValue) return [line];
         const quantity = line.quantity + delta;
         if (quantity < 1) return [];
-        if (line.product.stock !== undefined && quantity > line.product.stock) {
+        if (
+          !line.product.unregistered &&
+          line.product.stock !== undefined &&
+          quantity > line.product.stock
+        ) {
           showToast(
             `Only ${line.product.stock} ${line.product.unit.toLowerCase()}s are available.`,
             'error',
@@ -761,7 +780,7 @@ export function CashierPosPage() {
                       setChecked(product);
                       setQuery('');
                     }}
-                    disabled={!priceCheck && product.stock < 1}
+                    disabled={!priceCheck && !product.unregistered && product.stock < 1}
                   >
                     <span>
                       <strong>{product.product}</strong>
@@ -771,7 +790,13 @@ export function CashierPosPage() {
                     </span>
                     <span>
                       <b>{product.price}</b>
-                      <small>{product.stock > 0 ? `${product.stock} left` : 'Out of stock'}</small>
+                      <small>
+                        {product.unregistered
+                          ? 'New · not registered'
+                          : product.stock > 0
+                            ? `${product.stock} left`
+                            : 'Out of stock'}
+                      </small>
                     </span>
                   </button>
                 ))}
@@ -837,7 +862,14 @@ export function CashierPosPage() {
                 )}
                 <span className="pos-ticket-line__no">{String(index + 1).padStart(2, '0')}</span>
                 <div className="pos-ticket-line__name">
-                  <strong>{product.product}</strong>
+                  <strong>
+                    {product.product}
+                    {product.unregistered && (
+                      <span className="pos-ticket-line__new" title="Not on the product list yet">
+                        New
+                      </span>
+                    )}
+                  </strong>
                   <small>
                     {formatMoney(toAmount(product.price))} / {product.unit}
                   </small>
@@ -1070,6 +1102,19 @@ export function CashierPosPage() {
           </div>
         </aside>
       </div>
+      {newScan && (
+        <ScannedNewProduct
+          key={newScan}
+          barcode={newScan}
+          onCancel={() => setNewScan('')}
+          onAdded={(product) => {
+            setNewScan('');
+            setProducts(getInventory());
+            addProduct(product);
+            showToast(`${product.product} added to the sale. Register it later in Products.`);
+          }}
+        />
+      )}
       {controlModal && (
         <div
           className="pos-modal-backdrop"

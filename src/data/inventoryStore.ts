@@ -19,6 +19,8 @@ export type InventoryProduct = {
   category?: string;
   /** Latest cost per unit paid to the supplier (from Receive stock or the product form). */
   cost?: number;
+  /** Scanned and sold at the Sales Counter before it was added; waits for Register. */
+  unregistered?: boolean;
 };
 
 const INVENTORY_KEY = 'dagohoy_demo_inventory';

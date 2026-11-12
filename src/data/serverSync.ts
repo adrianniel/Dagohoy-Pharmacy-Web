@@ -62,7 +62,8 @@ export async function syncAfterSale() {
 /** Products from the server, in the shape the pages read. Stock comes from the ledger. */
 export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
   return server.map((item) => {
-    const stock = item.onHand;
+    // An unregistered product has no counted stock yet (its early sales go below zero).
+    const stock = item.unregistered ? 0 : item.onHand;
     return {
       id: item.id,
       barcode: item.barcode ?? '',
@@ -74,6 +75,7 @@ export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
       category: item.category ?? undefined,
       stock,
       status: stockStatus(stock),
+      unregistered: item.unregistered || undefined,
     };
   });
 }

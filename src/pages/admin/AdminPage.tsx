@@ -28,6 +28,7 @@ import {
   setSupplierActive,
   saveSettings as saveStoreSettings,
   updateProduct,
+  registerProduct,
 } from '../../services/storeApi';
 import { cacheSettings, syncAfterStockChange, syncSuppliers } from '../../data/serverSync';
 import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
@@ -120,6 +121,8 @@ export function AdminPage({ section }: { section: AdminSection }) {
   );
   const [importOpen, setImportOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  /** Product list, or the products scanned and sold at the Sales Counter before they were added. */
+  const [listView, setListView] = useState<'list' | 'unregistered'>('list');
   const isAdmin = getCurrentAccount()?.role === 'ADMIN';
   // Subscription unpaid past the allowance: search matches names only, not barcodes.
   const scannerOff = useScannerOff();
@@ -134,17 +137,27 @@ export function AdminPage({ section }: { section: AdminSection }) {
       ? Number(pharmacySettings.threshold)
       : getLowStockThreshold();
   const restockProducts = useMemo(
-    () => products.filter((product) => product.stock < restockThreshold),
+    () => products.filter((product) => !product.unregistered && product.stock < restockThreshold),
     [products, restockThreshold],
+  );
+  const registeredProducts = useMemo(
+    () => products.filter((product) => !product.unregistered),
+    [products],
+  );
+  const unregisteredProducts = useMemo(
+    () => products.filter((product) => product.unregistered),
+    [products],
   );
   const filteredProducts = useMemo(
     () =>
-      products.filter((product) =>
-        `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
-          .toLowerCase()
-          .includes(query.toLowerCase()),
+      products.filter(
+        (product) =>
+          Boolean(product.unregistered) === (listView === 'unregistered') &&
+          `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
       ),
-    [products, query, scannerOff],
+    [products, query, scannerOff, listView],
   );
 
   const activeSuppliers = supplierList.filter((supplier) => supplier.status !== 'Inactive');
@@ -257,7 +270,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === 'products' && (
         <>
           <StockControlCenter
-            products={products}
+            products={registeredProducts}
             threshold={restockThreshold}
             restockCount={restockProducts.length}
             onStockChanged={() => setProducts(getInventory())}
@@ -317,6 +330,37 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   </>
                 )}
               </div>
+              {!showArchived && (
+                <div className="product-list-switch" role="tablist" aria-label="Which products">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={listView === 'list'}
+                    className={listView === 'list' ? 'is-active' : ''}
+                    onClick={() => setListView('list')}
+                  >
+                    Product list <b>{products.length - unregisteredProducts.length}</b>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={listView === 'unregistered'}
+                    className={`${listView === 'unregistered' ? 'is-active' : ''}${
+                      unregisteredProducts.length ? ' has-items' : ''
+                    }`}
+                    onClick={() => setListView('unregistered')}
+                  >
+                    Unregistered <b>{unregisteredProducts.length}</b>
+                  </button>
+                </div>
+              )}
+              {!showArchived && listView === 'unregistered' && (
+                <p className="product-list-switch__note">
+                  Scanned and sold at the Sales Counter before they were added. Press Register to
+                  fill in the cost, the units on the shelf now, the batch number and the expiry
+                  date.
+                </p>
+              )}
               {showArchived ? (
                 <ArchivedProducts onRestored={reloadCatalog} />
               ) : (
@@ -352,20 +396,28 @@ export function AdminPage({ section }: { section: AdminSection }) {
                           <td>
                             <strong>{product.price}</strong>
                           </td>
-                          <td>{product.stock}</td>
+                          <td>{product.unregistered ? '—' : product.stock}</td>
                           <td>
-                            <StatusBadge value={product.status} />
+                            {product.unregistered ? (
+                              <span className="product-new-badge">Not registered</span>
+                            ) : (
+                              <StatusBadge value={product.status} />
+                            )}
                           </td>
                           <td>
                             <button
-                              className="cashier-view-button"
+                              className={
+                                product.unregistered
+                                  ? 'cashier-primary-action'
+                                  : 'cashier-view-button'
+                              }
                               type="button"
                               onClick={() => {
                                 setEditing(product);
                                 setFormOpen(true);
                               }}
                             >
-                              Edit / stock
+                              {product.unregistered ? 'Register' : 'Edit / stock'}
                             </button>
                           </td>
                         </tr>
@@ -376,8 +428,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
               )}
               <div className="cashier-table-footer">
                 <span>
-                  Showing {filteredProducts.length} of {products.length} product
-                  {products.length === 1 ? '' : 's'}
+                  Showing {filteredProducts.length}{' '}
+                  {listView === 'unregistered' ? 'unregistered ' : ''}product
+                  {filteredProducts.length === 1 ? '' : 's'}
                 </span>
               </div>
             </section>
@@ -418,7 +471,14 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   cost: product.cost ?? null,
                 };
                 try {
-                  if (editing?.id) {
+                  if (editing?.id && editing.unregistered) {
+                    await registerProduct(
+                      editing.id,
+                      opening && product.stock > 0
+                        ? { ...fields, opening: { quantity: product.stock, ...opening } }
+                        : fields,
+                    );
+                  } else if (editing?.id) {
                     await updateProduct(editing.id, fields);
                   } else {
                     await createProduct(
@@ -434,7 +494,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 }
                 setProducts(getInventory());
                 setFormOpen(false);
-                showToast(`${product.product} saved.`);
+                showToast(
+                  editing?.unregistered
+                    ? `${product.product} registered and moved to the product list.`
+                    : `${product.product} saved.`,
+                );
                 return null;
               }}
             />
@@ -802,6 +866,9 @@ function InventoryForm({
 }) {
   const billing = useBilling();
   const isNew = !product;
+  /** Sold at the Sales Counter before it was on the list: fill in the rest and the stock. */
+  const registering = Boolean(product?.unregistered);
+  const withOpening = isNew || registering;
   const [name, setName] = useState(product?.product ?? '');
   const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode);
   const [detail, setDetail] = useState(product?.detail ?? '');
@@ -918,7 +985,7 @@ function InventoryForm({
       setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
       return;
     }
-    if (isNew && openingQty > 0) {
+    if (withOpening && openingQty > 0) {
       if (!lot.trim()) {
         setError('Enter the batch number of the stock you are adding.');
         return;
@@ -928,7 +995,7 @@ function InventoryForm({
         return;
       }
     }
-    const quantity = isNew ? openingQty : product.stock;
+    const quantity = withOpening ? openingQty : product.stock;
     setSaving(true);
     const problem = await onSave(
       {
@@ -943,7 +1010,7 @@ function InventoryForm({
         stock: quantity,
         status: stockStatus(quantity),
       },
-      isNew && openingQty > 0 ? { lot: lot.trim().toUpperCase(), expiry } : undefined,
+      withOpening && openingQty > 0 ? { lot: lot.trim().toUpperCase(), expiry } : undefined,
     );
     setSaving(false);
     if (problem) setError(problem);
@@ -967,11 +1034,19 @@ function InventoryForm({
           ×
         </button>
         <p className="eyebrow">Products &amp; Stock</p>
-        <h2>{isNew ? 'New product' : `Edit ${product.product}`}</h2>
+        <h2>
+          {isNew
+            ? 'New product'
+            : registering
+              ? `Register ${product.product}`
+              : `Edit ${product.product}`}
+        </h2>
         <p className="inventory-form-note">
           {isNew
             ? 'For a medicine or item that is not in the list yet.'
-            : 'Change the details and prices.'}
+            : registering
+              ? 'Sold at the Sales Counter before it was on the list. Check the details, then fill in what is missing: cost, units on the shelf now, batch number and expiry date.'
+              : 'Change the details and prices.'}
         </p>
 
         <fieldset className="product-form__section">
@@ -1124,7 +1199,7 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>4. Stock</legend>
-          {isNew ? (
+          {withOpening ? (
             <>
               <div className="product-form__grid product-form__grid--three">
                 <label>
@@ -1209,7 +1284,13 @@ function InventoryForm({
             Cancel
           </button>
           <button className="product-form__save" type="submit" disabled={saving}>
-            {saving ? 'Saving…' : isNew ? 'Add product' : 'Save changes'}
+            {saving
+              ? 'Saving…'
+              : isNew
+                ? 'Add product'
+                : registering
+                  ? 'Register product'
+                  : 'Save changes'}
           </button>
         </div>
       </form>
@@ -1376,7 +1457,7 @@ function AdminDashboard() {
     .map(([label, value]) => ({ label, value: value.amount, detail: `${value.quantity} sold` }));
 
   const lowStock = inventory
-    .filter((product) => product.stock < threshold)
+    .filter((product) => !product.unregistered && product.stock < threshold)
     .sort((a, b) => a.stock - b.stock);
   const lots = loadBatches(initialBatches)
     .filter((batch) => batch.stock > 0 && batch.expiry)
