@@ -5,7 +5,7 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
 import { syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
-import { useBilling } from '../../services/useBilling';
+import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
 import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
 
 type CatalogProduct = ReturnType<typeof getInventory>[number];
@@ -224,8 +224,7 @@ export function CashierPosPage() {
   const totalDue = subtotal - discount;
   // The subscription is 7+ days late: the barcode scanner is off until it is paid. Selling goes
   // on by product name. It comes back by itself once a payment is sent.
-  const billing = useBilling();
-  const scannerOff = billing?.lookupActive === false;
+  const scannerOff = useScannerOff();
 
   const filteredProducts = useMemo(
     () =>
@@ -313,10 +312,7 @@ export function CashierPosPage() {
     // A scan on the "done" screen closes it and starts the next customer's sale.
     if (completedSale) closePayment();
     if (scannerOff) {
-      showToast(
-        'Barcode scanner is off: the subscription is not paid. Type the product name instead.',
-        'error',
-      );
+      showToast(SCANNER_OFF_MESSAGE, 'error');
       return;
     }
     const product = products.find((item) => item.barcode === code);

@@ -10,6 +10,7 @@ import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
 import { formatHour, hourRange } from '../../components/hours';
 import { ScanInput } from '../../components/ScanInput';
+import { useScannerOff } from '../../services/useBilling';
 import { useToast } from '../../components/toast';
 import {
   getInventory,
@@ -119,6 +120,8 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [importOpen, setImportOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const isAdmin = getCurrentAccount()?.role === 'ADMIN';
+  // Subscription unpaid past the allowance: search matches names only, not barcodes.
+  const scannerOff = useScannerOff();
 
   /** Reloads products, lots and movements from the server after a bulk change. */
   async function reloadCatalog() {
@@ -136,11 +139,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const filteredProducts = useMemo(
     () =>
       products.filter((product) =>
-        `${product.product} ${product.detail} ${product.barcode}`
+        `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [products, query],
+    [products, query, scannerOff],
   );
 
   const activeSuppliers = supplierList.filter((supplier) => supplier.status !== 'Inactive');
