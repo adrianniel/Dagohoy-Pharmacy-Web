@@ -65,6 +65,7 @@ database, so the owner can try it before real use.
   BARCODE_SETUP_LIMIT=3000       # while the shop's stock is first encoded...
   BARCODE_SETUP_UNTIL=YYYY-MM-DD # ...up to and including the 5th day of encoding; then 300 by itself
   BILLING_START=2026-12          # November 2026 was paid in person; the first GCash month is December
+  BILLING_DUE_DAY=13             # due every 13th (went live Nov 13): first payment Dec 13
   BILLING_MONTHLY_FEE=800        # one fixed fee a month; one GCash payment = one month
   BILLING_FREE_SCANS=0           # no free trial: they already pay (with free scans, using them up in
                                  # November would bill November again)

@@ -298,6 +298,14 @@ only the web build, run the owner script.
 
 **Done when:** the client tested a full day on staging and signed off.
 
+**What actually worked on Hostinger (first client, see `docs/DEPLOYMENT.md`):** both the web
+and the API are Hostinger **Node.js web apps** on their own subdomains, deployed by **uploading
+a zip** made with `git archive` (GitHub deploy is off under shared access). Environment
+variables go in by "Import .env" from a local, never-committed file. Migrations and the owner
+script run from the laptop through **External connections** (Remote MySQL) opened for your IP
+only, then closed. The Hostinger plugin for Claude Code reads the shared plan, so each step can
+be checked without screenshots.
+
 **Rules:** ask before every action on a live account; back up before every migration; remote
 database access only from my own address and removed after.
 
@@ -391,6 +399,15 @@ database access only from my own address and removed after.
 | Testing needs a login the agent may not type | The owner and cashier passwords belong to me | The agent makes a temporary test admin with a random password in the dev database, uses it, then removes it |
 | Paying for product data | Barcode APIs differ a lot in price and in how well they know local products | Prefer a local provider (BarCloud PH for the Philippines), test with free credits on 20 real barcodes, cache every answer so each barcode is paid once |
 | Test rows that cannot be deleted | Ledger rows are never deleted (by design) | Name test rows clearly, hide them, and reset the dev database in Phase 7 |
+| Free domain claimed on the wrong account | The plan and its free domain belong to the client's account; shared access could not claim it | The client claims the free domain on their own login (5 minutes, any device) before the deploy day |
+| Build failed silently risk | `NODE_ENV=production` set at build time makes npm skip dev dependencies (Nest CLI, TypeScript) | Add `NPM_CONFIG_INCLUDE=dev` to the host's environment variables |
+| Database password refused | Hostinger requires an uppercase letter; the planned password had none | Make the password to the host's rules first, then put the same one in the app's settings |
+| Remote database refused my IP | The ISP used a second public address for the database connection | Read the address in the "Access denied for user …@IP" message and allow that one too |
+| Owner script failed on the live DB | The remote database closed the idle connection while the password was typed | Interactive scripts open the database connection only after the questions are answered |
+| `.env.live` could have been committed | The gitignore listed `.env` and `.env.local`, not other names | Add every local secrets file name to `.gitignore` before creating it |
+| Private file missing on the host | Hostinger publishes only the build output (`dist/`); the QR in `private/` stayed behind | Copy run-time files into the build output in the build script, and check them on the live site |
+| Billing on the 1st did not fit | The client went live on the 13th and wanted each month from that day | Make the due day a setting (`BILLING_DUE_DAY`) instead of fixing the 1st |
+| Host under maintenance mid-deploy | hPanel sections and the API answered "temporarily under maintenance" | Wait and retry; check the app's own `/api/health`, which kept working |
 
 ---
 - Once the server records money (sales, payments), stop trusting totals the browser sends.
@@ -450,4 +467,4 @@ cash drawer, BIR monthly sales report (the BIR checks only the monthly sales).
 | 2026-11-10 | 9, part 2 | Dev reset, 45-day seed through the real services (simulated clock, ledger untouched), 13 database tests on a separate test database, and a restore command that only fills an empty database; backup → empty → restore gave identical counts and totals |
 | 2026-11-10 | 10 | Acceptance run in two browsers (cashier in one, owner in the other): shift, delivery, every payment type, void and utang payment all showed at once on both sides. Found and fixed: seed float carried the whole drawer, a leftover "receipt" word, ledger Staff column showed the login instead of the cashier on duty, movements list had no paging |
 | 2026-11-10 | 10, change | Owner feedback: expenses must come out of the drawer. Cash out now takes a category and is the expense record (migration 009 links them); Expenses page became a report |
-| next | 6 | Sales, utang and expenses, reports |
+| 2026-11-13 | 9 | **Live.** Hostinger Unlimited (PH) on the client's account, boncales.com claimed by the owner, Admin access shared. Web at dagohoypharmacy.boncales.com and API at api-dagohoypharmacy.boncales.com as Node.js web apps from uploaded zips; MariaDB 12.3.3; 13 migrations and verify from the laptop over External connections; owner created. Subscription ₱800 a month, November paid in person, due every 13th from Dec 13; barcode limit 3000 a day until Nov 18, then 300. Steps in `docs/DEPLOYMENT.md` |
