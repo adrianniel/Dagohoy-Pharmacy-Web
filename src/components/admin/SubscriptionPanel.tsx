@@ -9,9 +9,20 @@ import { useToast } from '../toast';
 
 /*
  * The owner's monthly subscription: barcode lookup service and system maintenance, one fixed
- * fee due on the 1st. Each GCash payment pays one month (the oldest unpaid one). It opens
- * 3 days before the 1st; 7 days after the 1st an unpaid month pauses the barcode lookup service.
+ * fee due on the same day each month (the server's due day, e.g. the 13th). Each GCash payment
+ * pays one month (the oldest unpaid one). It opens 3 days before the due day; 7 days after it an
+ * unpaid month pauses the barcode lookup service.
  */
+
+/** 1st, 2nd, 3rd, 13th, 21st… */
+const ordinal = (day: number) => {
+  const tens = day % 100;
+  const suffix =
+    tens >= 11 && tens <= 13
+      ? 'th'
+      : (({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th');
+  return `${day}${suffix}`;
+};
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -28,7 +39,7 @@ const lastDay = (pauseDate: string) => {
 
 const STATUS: Record<ApiBilling['status'], { label: string; tone: string }> = {
   trial: { label: 'Free trial', tone: 'ok' },
-  not_started: { label: 'Not started yet', tone: 'muted' },
+  not_started: { label: 'Nothing due yet', tone: 'muted' },
   paid: { label: 'Paid', tone: 'ok' },
   pending: { label: 'Waiting for confirmation', tone: 'wait' },
   upcoming: { label: 'Due soon', tone: 'due' },
@@ -83,9 +94,16 @@ export function SubscriptionPanel() {
         <div>
           <p>Barcode lookup service & system maintenance</p>
           <strong>
-            {money(billing.fee)} <small>/ month · due every 1st</small>
+            {money(billing.fee)} <small>/ month · due every {ordinal(billing.dueDay ?? 1)}</small>
           </strong>
           {billing.paidThrough && <span>Paid through {monthName(billing.paidThrough)}.</span>}
+          {billing.status === 'not_started' && billing.startMonth && (
+            <span>
+              First payment: {money(billing.fee)} due on{' '}
+              {dayName(`${billing.startMonth}-${String(billing.dueDay ?? 1).padStart(2, '0')}`)},{' '}
+              {billing.startMonth.slice(0, 4)}.
+            </span>
+          )}
         </div>
         <em>{status.label}</em>
       </section>
@@ -181,7 +199,7 @@ export function SubscriptionPanel() {
 }
 
 /**
- * The reminder at the top of every page, for the owner and the cashier: 3 days before the 1st,
+ * The reminder at the top of every page, for the owner and the cashier: 3 days before the due day,
  * while due (with the last day before the pause), and once the barcode lookup service is paused.
  */
 export function SubscriptionNotice() {

@@ -371,6 +371,8 @@ export type ApiBilling = {
   months: Array<{ month: string; state: 'paid' | 'pending' | 'unpaid' }>;
   unpaidMonths: string[];
   paidThrough: string | null;
+  /** Day of the month each payment is due (older servers leave it out: the 1st). */
+  dueDay?: number;
   dueDate: string | null;
   pauseDate: string | null;
   lookupActive: boolean;
