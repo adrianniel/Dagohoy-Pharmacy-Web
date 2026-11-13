@@ -61,7 +61,9 @@ database, so the owner can try it before real use.
   BARCODE_LOOKUP_ENABLED=true
   BARCODE_API_URL=https://api.barcloud.ph
   BARCODE_API_KEY=…
-  BARCODE_DAILY_LIMIT=3000       # the monthly BarCloud credits; only a guard against a runaway fault
+  BARCODE_DAILY_LIMIT=300        # normal days; only a guard against a fault using up the credits
+  BARCODE_SETUP_LIMIT=3000       # while the shop's stock is first encoded...
+  BARCODE_SETUP_UNTIL=YYYY-MM-DD # ...up to and including the 5th day of encoding; then 300 by itself
   BILLING_START=2026-12          # November 2026 was paid in person; the first GCash month is December
   BILLING_MONTHLY_FEE=800        # one fixed fee a month; one GCash payment = one month
   BILLING_FREE_SCANS=0           # no free trial: they already pay (with free scans, using them up in
