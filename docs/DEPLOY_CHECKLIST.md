@@ -62,13 +62,15 @@ database, so the owner can try it before real use.
   BARCODE_API_URL=https://api.barcloud.ph
   BARCODE_API_KEY=…
   BARCODE_DAILY_LIMIT=200
-  BILLING_START=YYYY-MM          # first billed month; leave empty until the plan starts
-  BILLING_MONTHLY_FEE=1000       # one fixed fee a month; one GCash payment = one month
-  BILLING_QR_FILE=private/billing-qr.png
+  BILLING_START=2026-12          # November 2026 was paid in person; the first GCash month is December
+  BILLING_MONTHLY_FEE=800        # one fixed fee a month; one GCash payment = one month
+  BILLING_FREE_SCANS=0           # no free trial: they already pay (with free scans, using them up in
+                                 # November would bill November again)
+  BILLING_QR_FILE=private/qrcode.jpg
   BILLING_REVIEW_KEY=…           # 32+ random characters, only you know it
   ```
 
-- [ ] Upload your GCash QR picture to `private/billing-qr.png` in the app folder (File Manager).
+- [ ] Upload your GCash QR picture (the ₱800 one) to `private/qrcode.jpg` in the app folder (File Manager).
       It is not in git. Then open `https://api-staging.YOUR-DOMAIN.com/api/billing/review`, type
       the review key, and save it in your phone's password manager.
 
