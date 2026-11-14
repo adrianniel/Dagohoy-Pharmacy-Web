@@ -1236,13 +1236,13 @@ function InventoryForm({
       setError('Fill in the product name, barcode and generic / brand.');
       return;
     }
-    // The price may be left for later (it then waits under Needs price); a typed one must be
-    // above ₱0, and an item sold at the counter before it was added already has one.
-    if (price.trim() !== '' && !hasPrice) {
-      setError('The selling price must be above ₱0, or leave it blank to set it later.');
+    // A blank or ₱0 price sends the product to Needs price (the counter will not sell it until
+    // it has one). An item already sold at the counter before it was added keeps a price.
+    if (price.trim() !== '' && !Number.isFinite(priceValue)) {
+      setError('Type the selling price as a number, like 12.50, or leave it blank.');
       return;
     }
-    if (!hasPrice && (product?.unregistered || (product && !product.needsPrice))) {
+    if (!hasPrice && product?.unregistered) {
       setError('Enter the selling price.');
       return;
     }
@@ -1478,10 +1478,10 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>3. Price per {unit.toLowerCase()}</legend>
-          {!product?.unregistered && (!product || product.needsPrice) && (
+          {!product?.unregistered && (
             <p className="product-form__later">
-              Not sure yet? Leave both blank: the product is saved under <b>Needs price</b> with its
-              stock, and can be sold once its selling price is set.
+              Not sure yet? Leave the price blank or 0: the product is saved under{' '}
+              <b>Needs price</b> with its stock, and can be sold once its selling price is set.
             </p>
           )}
           <div className="product-form__grid">
