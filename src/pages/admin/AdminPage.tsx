@@ -1256,8 +1256,8 @@ function InventoryForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
-    // Fast encoding: a new product needs only its name, cost and selling price. A blank barcode
-    // gets the system's own code; the other details can be filled in later with Edit.
+    // Fast encoding: a new product needs only its name. A blank barcode gets the system's own
+    // code; no price sends it to Needs price; the rest can be filled in later with Edit.
     const withoutBarcode = noBarcode || (isNew && !barcode.trim());
     if (existing && !withoutBarcode) {
       setError(`${existing.product} already has this barcode. Use Receive stock to add its units.`);
@@ -1265,10 +1265,6 @@ function InventoryForm({
     }
     if (!name.trim()) {
       setError('Type the product name.');
-      return;
-    }
-    if (isNew && (!hasCost || !hasPrice)) {
-      setError('Enter the cost and the selling price (both more than ₱0).');
       return;
     }
     // A blank or ₱0 price sends the product to Needs price (the counter will not sell it until
@@ -1281,8 +1277,9 @@ function InventoryForm({
       setError('Enter the selling price.');
       return;
     }
-    if (cost.trim() !== '' && !hasCost) {
-      setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
+    // A blank or ₱0 cost is "not known yet": the product then shows under Needs cost.
+    if (cost.trim() !== '' && !Number.isFinite(costValue)) {
+      setError('Type the cost as a number, like 8.75, or leave it blank.');
       return;
     }
     if (
@@ -1509,7 +1506,7 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>3. Price per {unit.toLowerCase()}</legend>
-          {product && !product.unregistered && (
+          {!product?.unregistered && (
             <p className="product-form__later">
               Not sure yet? Leave the price blank or 0: the product is saved under{' '}
               <b>Needs price</b> with its stock, and can be sold once its selling price is set.
