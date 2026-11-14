@@ -441,7 +441,7 @@
   opacity: 0.5;
 }
 
-/* "Delivery received": a clear confirmation after Receive delivery. */
+/* Success popup (ToastProvider): a clear "done" after Receive delivery, Add product and other saves. */
 .received-popup {
   position: fixed;
   inset: 0;

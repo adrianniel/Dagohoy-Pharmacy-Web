@@ -49,7 +49,7 @@ export function ReturnStock({
   initialBatchId?: string;
   onSaved: () => void;
 }) {
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const live = getInventory().filter((product) => !product.unregistered);
   const expired = batches.filter((batch) => batch.stock > 0 && daysUntil(batch.expiry) < 0);
   /** Ticked expired batches and the units going back for each, by batch id. */
@@ -151,7 +151,10 @@ export function ReturnStock({
       setSaving(false);
     }
     const units = items.reduce((sum, item) => sum + item.quantity, 0);
-    showToast(`${items.length} item(s), ${units} unit(s) returned to the supplier.`);
+    showSuccess({
+      title: 'Return saved',
+      message: `${items.length} item(s), ${units} unit(s) returned to the supplier.`,
+    });
     setPicked({});
     setRows([]);
     setSlip('');

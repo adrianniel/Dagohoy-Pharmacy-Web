@@ -31,47 +31,6 @@ type PanelKey =
 /** A delivery just saved, for the "Delivery received" popup. */
 type Received = { product: string; units: string; notes: string[] };
 
-/** Clear confirmation after Receive delivery: an animated check and what was saved. */
-function ReceivedPopup({ received, onClose }: { received: Received; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'Enter') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-  return (
-    <div
-      className="received-popup"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div className="received-popup__card" role="alertdialog" aria-labelledby="received-title">
-        <svg className="received-popup__check" viewBox="0 0 52 52" aria-hidden="true">
-          <circle cx="26" cy="26" r="24" />
-          <path d="M15 27.5 22.5 35 37.5 18.5" />
-        </svg>
-        <h3 id="received-title">Delivery received</h3>
-        <p className="received-popup__main">
-          <b>{received.units}</b> of <b>{received.product}</b> added to the shelf.
-        </p>
-        {received.notes.length > 0 && (
-          <ul className="received-popup__notes">
-            {received.notes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        )}
-        <button className="stock-index__action" type="button" onClick={onClose} autoFocus>
-          Done
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /** Stock of a barcoded product received without its batch number (TBD- or NO-BATCH). */
 const needsDetails = (batch: InventoryBatch) =>
   batch.stock > 0 &&
@@ -181,8 +140,7 @@ export function StockControlCenter({
   const [revision, setRevision] = useState(0);
   /** A lot picked from Expiry check or Return stocks, pre-filled in the return form. */
   const [returnLot, setReturnLot] = useState('');
-  /** The delivery just saved: shown in the "Delivery received" popup. */
-  const [received, setReceived] = useState<Received | null>(null);
+  const { showSuccess } = useToast();
 
   const handleStockSaved = () => {
     setRevision((count) => count + 1);
@@ -511,7 +469,15 @@ export function StockControlCenter({
               onSaved={(done) => {
                 setReceiveBarcode('');
                 handleStockSaved();
-                setReceived(done);
+                showSuccess({
+                  title: 'Delivery received',
+                  message: (
+                    <>
+                      <b>{done.units}</b> of <b>{done.product}</b> added to the shelf.
+                    </>
+                  ),
+                  notes: done.notes,
+                });
               }}
             />
             <h5 className="stock-index__subhead">Recent deliveries</h5>
@@ -782,7 +748,6 @@ export function StockControlCenter({
           </>
         )}
       </section>
-      {received && <ReceivedPopup received={received} onClose={() => setReceived(null)} />}
     </>
   );
 }
@@ -798,7 +763,7 @@ const peso = (amount: number) =>
  * expiry from the box; the server keeps the ledger as it is.
  */
 function NeedsDetails({ batches, onSaved }: { batches: InventoryBatch[]; onSaved: () => void }) {
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const [open, setOpen] = useState<InventoryBatch | null>(null);
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -828,7 +793,7 @@ function NeedsDetails({ batches, onSaved }: { batches: InventoryBatch[]; onSaved
     } finally {
       setSaving(false);
     }
-    showToast(`${open.product}: batch ${code} saved.`);
+    showSuccess({ title: 'Batch details saved', message: `${open.product}: batch ${code}.` });
     setOpen(null);
     onSaved();
   }
@@ -1211,7 +1176,7 @@ export function StockWriteOffForm({
   initialBatchId?: string;
   onSaved: () => void;
 }) {
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const live = getInventory();
   const preset = batches.find((batch) => batch.id === initialBatchId);
   const isReturn = mode === 'return';
@@ -1275,11 +1240,12 @@ export function StockWriteOffForm({
     setReason('');
     setReference('');
     setBatchId('');
-    showToast(
-      isReturn
+    showSuccess({
+      title: isReturn ? 'Return saved' : 'Stock updated',
+      message: isReturn
         ? `${qty} unit(s) of ${product.product} returned to the supplier.`
-        : `Stock ${adds ? 'added' : 'taken out'}: ${change > 0 ? '+' : ''}${change} ${product.product}.`,
-    );
+        : `${change > 0 ? '+' : ''}${change} ${product.product} (${adds ? 'added' : 'taken out'}).`,
+    });
     onSaved();
   }
 

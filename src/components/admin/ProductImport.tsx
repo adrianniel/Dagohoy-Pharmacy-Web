@@ -143,7 +143,7 @@ export function ProductImport({
   /** Called after products were added, to refresh the product list. */
   onImported: () => Promise<void>;
 }) {
-  const { showToast } = useToast();
+  const { showSuccess } = useToast();
   const [fileName, setFileName] = useState('');
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
@@ -203,7 +203,10 @@ export function ProductImport({
       setDone(true);
       const added = saved.filter((result) => result.status === 'added').length;
       await onImported();
-      showToast(`${added} product${added === 1 ? '' : 's'} added.`, 'success');
+      showSuccess({
+        title: 'Products imported',
+        message: `${added} product${added === 1 ? '' : 's'} added.`,
+      });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not import the products.');
     } finally {

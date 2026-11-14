@@ -88,7 +88,7 @@ export function CreditPage() {
   const [view, setView] = useState<CreditView>('customers');
   /** The customer opened from the list (or picked to pay); empty shows the whole list. */
   const [selectedKey, setSelectedKey] = useState('');
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const customers = useMemo(() => groupCustomers(sales), [sales]);
   const owing = customers.filter((customer) => customer.owed > 0);
   const outstanding = owing.reduce((total, customer) => total + customer.owed, 0);
@@ -122,12 +122,19 @@ export function CreditPage() {
     }
     setSales(readCreditSales());
     openCustomer(customer.key);
-    showToast(
-      shiftOpen
-        ? `${customer.name} paid ${money(amount)}. Added to the cash drawer.`
-        : `${customer.name} paid ${money(amount)}. No shift is open, so it is not in a drawer count.`,
-      'success',
-    );
+    showSuccess({
+      title: 'Payment recorded',
+      message: (
+        <>
+          <b>{customer.name}</b> paid <b>{money(amount)}</b>.
+        </>
+      ),
+      notes: [
+        shiftOpen
+          ? 'Added to the cash drawer.'
+          : 'No shift is open, so it is not in a drawer count.',
+      ],
+    });
     return true;
   }
 

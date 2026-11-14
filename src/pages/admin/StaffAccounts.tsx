@@ -33,7 +33,7 @@ export function StaffAccounts() {
   const [accountsError, setAccountsError] = useState('');
   const [roster, setRoster] = useState<RosterStaff[]>(loadRoster);
   const [form, setForm] = useState<FormState>(null);
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const me = getCurrentAccount();
   const cashier = accounts.find((account) => account.role === 'CASHIER');
   const admins = accounts.filter((account) => account.role === 'ADMIN');
@@ -308,10 +308,14 @@ export function StaffAccounts() {
             await createAccount({ username, displayName, password, role: form.role });
             refresh();
             setForm(null);
-            showToast(
-              form.role === 'CASHIER' ? 'Cashier account created.' : 'Administrator added.',
-              'success',
-            );
+            showSuccess({
+              title: form.role === 'CASHIER' ? 'Cashier account created' : 'Administrator added',
+              message: (
+                <>
+                  <b>{displayName}</b> can now log in as <b>{username}</b>.
+                </>
+              ),
+            });
           }}
         />
       )}
@@ -324,10 +328,14 @@ export function StaffAccounts() {
             await updateAccount(form.account.id, changes);
             refresh();
             setForm(null);
-            showToast(
-              changes.password ? 'Account and password updated.' : 'Account updated.',
-              'success',
-            );
+            showSuccess({
+              title: changes.password ? 'Account and password updated' : 'Account updated',
+              message: (
+                <>
+                  <b>{form.account.displayName}</b> is saved.
+                </>
+              ),
+            });
           }}
         />
       )}

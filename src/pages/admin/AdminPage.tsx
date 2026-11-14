@@ -170,7 +170,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
   );
   const [supplierTab, setSupplierTab] = useState<SupplierTab>('list');
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('details');
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
@@ -380,7 +380,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
       });
       cacheSettings(saved);
       setPharmacySettings(loadLocalValue(SETTINGS_KEY, defaultSettings));
-      showToast('Settings saved.');
+      showSuccess({ title: 'Settings saved', message: 'The store details are up to date.' });
     } catch (caught) {
       showToast(caught instanceof Error ? caught.message : 'Could not save the settings.', 'error');
     }
@@ -742,11 +742,22 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 }
                 setProducts(getInventory());
                 setFormOpen(false);
-                showToast(
-                  editing?.unregistered
-                    ? `${product.product} registered and moved to the product list.`
-                    : `${product.product} saved.`,
-                );
+                showSuccess({
+                  title: editing?.unregistered
+                    ? 'Product registered'
+                    : editing
+                      ? 'Product updated'
+                      : 'Product added',
+                  message: editing?.unregistered ? (
+                    <>
+                      <b>{product.product}</b> moved to the product list.
+                    </>
+                  ) : (
+                    <>
+                      <b>{product.product}</b> is saved.
+                    </>
+                  ),
+                });
                 return null;
               }}
             />
@@ -863,7 +874,14 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   }
                   setSupplierList(loadLocalList(SUPPLIER_KEY, suppliers));
                   setSupplierTab('list');
-                  showToast('Supplier saved.');
+                  showSuccess({
+                    title: 'Supplier added',
+                    message: (
+                      <>
+                        <b>{value.name}</b> is on the supplier list.
+                      </>
+                    ),
+                  });
                   return null;
                 }}
               />

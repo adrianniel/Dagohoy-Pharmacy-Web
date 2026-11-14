@@ -1,7 +1,12 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 
 export type ToastTone = 'success' | 'error' | 'info';
-export type ToastContextValue = { showToast: (message: string, tone?: ToastTone) => void };
+/** A finished save worth a clear "done": an animated check, a title, what was saved. */
+export type Success = { title: string; message: ReactNode; notes?: string[] };
+export type ToastContextValue = {
+  showToast: (message: string, tone?: ToastTone) => void;
+  showSuccess: (success: Success) => void;
+};
 
 export const ToastContext = createContext<ToastContextValue | null>(null);
 

@@ -28,7 +28,7 @@ export function ProductBatches({
   productPrice: number | null;
   onSaved: () => Promise<void> | void;
 }) {
-  const { showToast } = useToast();
+  const { showToast, showSuccess } = useToast();
   const [editing, setEditing] = useState<string | null>(null);
   const [cost, setCost] = useState('');
   const [price, setPrice] = useState('');
@@ -57,7 +57,7 @@ export function ProductBatches({
       await setLotPrices(Number(batch.id), { unitCost: costValue, sellingPrice: priceValue });
       await onSaved();
       setEditing(null);
-      showToast(`Batch ${lotName(batch.lot)} saved.`);
+      showSuccess({ title: 'Batch saved', message: `Batch ${lotName(batch.lot)} is updated.` });
     } catch (caught) {
       showToast(caught instanceof Error ? caught.message : 'Could not save the batch.', 'error');
     } finally {
