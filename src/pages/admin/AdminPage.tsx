@@ -65,11 +65,6 @@ const DEFAULT_HOURS: HoursRow[] = [
   opensAt: day === 0 ? '09:00' : '08:00',
   closesAt: day === 0 ? '18:00' : '20:00',
 }));
-/** 08:00 → 8:00 AM */
-const clockText = (value: string) => {
-  const [hour = 0, minute = 0] = value.split(':').map(Number);
-  return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
-};
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -900,9 +895,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               onChange={(event) => change({ closesAt: event.target.value })}
                               aria-label={`${row.label} closes at`}
                             />
-                            <small>
-                              {clockText(row.opensAt)} – {clockText(row.closesAt)}
-                            </small>
                           </span>
                         ) : (
                           <span className="opening-hours__times is-muted">Closed all day</span>
