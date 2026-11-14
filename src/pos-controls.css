@@ -5536,12 +5536,15 @@
     grid-template-columns: 1fr auto;
   }
 
+  /* Both times on one line, sharing the width. */
   .settings-form .opening-hours__times {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
 
   .settings-form .opening-hours__times input[type='time'] {
-    width: 8.5rem;
+    width: 100%;
     min-width: 0;
+    padding: 6px 8px;
   }
 }

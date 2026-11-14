@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useTableLabels } from './useTableLabels';
 import { CashierHeader } from '../components/cashier/CashierHeader';
 import { CashierSidebar } from '../components/cashier/CashierSidebar';
 import { SubscriptionNotice } from '../components/admin/SubscriptionPanel';
@@ -29,6 +30,8 @@ export function CashierLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const title = routeTitles[location.pathname] ?? 'Cashier Workspace';
   const isPos = location.pathname === '/cashier/pos';
+  const content = useRef<HTMLElement>(null);
+  useTableLabels(content);
 
   return (
     <>
@@ -44,7 +47,7 @@ export function CashierLayout() {
         />
         <div className={`cashier-workspace${isPos ? ' is-pos' : ''}`}>
           <CashierHeader title={title} onOpenSidebar={() => setMobileOpen(true)} />
-          <main className="cashier-content" id="workspace-content" tabIndex={-1}>
+          <main className="cashier-content" id="workspace-content" tabIndex={-1} ref={content}>
             {/* Subscription reminder for the owner and the cashier alike. */}
             <SubscriptionNotice />
             <Outlet />

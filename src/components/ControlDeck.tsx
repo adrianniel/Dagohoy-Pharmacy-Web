@@ -70,7 +70,17 @@ export function ControlDeck<Key extends string>({
             role="tab"
             aria-selected={active === item.key}
             aria-controls={`${id}-panel`}
-            onClick={() => onSelect(item.key)}
+            onClick={() => {
+              onSelect(item.key);
+              // On a phone the card opens below the buttons, out of sight: bring it up.
+              if (window.matchMedia('(max-width: 640px)').matches) {
+                window.requestAnimationFrame(() =>
+                  document
+                    .getElementById(`${id}-panel`)
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                );
+              }
+            }}
           >
             {item.count !== undefined && <b className="control-deck__count">{item.count}</b>}
             <span className="control-deck__icon" aria-hidden="true">

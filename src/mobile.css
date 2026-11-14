@@ -1,0 +1,266 @@
+/*
+ * Phone layout for the owner and cashier workspace. Loaded last, so on small screens it wins
+ * over the many older stylesheets.
+ *  - Top bar: the menu, the page title and the one shift button that applies now.
+ *  - Tables: each row becomes a card; every value carries its column name (useTableLabels).
+ */
+@media (max-width: 640px) {
+  /* ---- Top bar ---------------------------------------------------------------------- */
+  .cashier-shell .cashier-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 60px;
+    padding: 8px 12px;
+  }
+
+  .cashier-shell .cashier-header__menu {
+    flex: 0 0 auto;
+  }
+
+  .cashier-shell .cashier-header__title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cashier-shell .cashier-header__title h1 {
+    overflow: hidden;
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cashier-shell .cashier-header__meta {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  /* Less important on a phone: the date, the store status words, the ms reading. */
+  .cashier-shell .cashier-header__date,
+  .cashier-shell .cashier-store-status {
+    display: none;
+  }
+
+  .cashier-shell .connection-signal {
+    min-height: 0;
+    padding: 6px;
+  }
+
+  .cashier-shell .connection-signal span {
+    display: none;
+  }
+
+  /* Only the shift button that can be used now: Start when closed, Close when open. */
+  .cashier-shell .cashier-shift-actions {
+    display: flex;
+    gap: 0;
+  }
+
+  .cashier-shell .cashier-shift-action.is-unavailable {
+    display: none;
+  }
+
+  .cashier-shell .cashier-shift-action {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  /* ---- Page buttons (control deck): short two-column keys, so the work shows sooner ---- */
+  .cashier-shell .control-deck__head p {
+    display: none;
+  }
+
+  .cashier-shell .control-deck__grid {
+    gap: 8px;
+  }
+
+  .cashier-shell .stock-index__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .cashier-shell .control-deck__key,
+  .cashier-shell .stock-index__tile {
+    position: relative;
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .cashier-shell .control-deck__key .control-deck__icon,
+  .cashier-shell .stock-index__tile .stock-index__icon {
+    width: 26px;
+    height: 26px;
+    margin: 0;
+  }
+
+  .cashier-shell .control-deck__key .control-deck__icon svg,
+  .cashier-shell .stock-index__tile .stock-index__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Up to two lines, so "Order for restock" or "Stock health" read in full. */
+  .cashier-shell .control-deck__key strong,
+  .cashier-shell .stock-index__tile strong {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .cashier-shell .control-deck__key small,
+  .cashier-shell .stock-index__tile small {
+    display: none;
+  }
+
+  .cashier-shell .control-deck__key,
+  .cashier-shell .stock-index__tile {
+    padding-right: 34px;
+    padding-left: 8px;
+    gap: 6px;
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+
+  /* The count sits inside the key, on the right, so it is never cut off. */
+  .cashier-shell .control-deck__key .control-deck__count,
+  .cashier-shell .stock-index__tile .stock-index__figure {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    min-width: 0;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    transform: translateY(-50%);
+  }
+
+  /* The "OPEN" tag of the chosen key: the key's own highlight is enough on a phone. */
+  .cashier-shell .control-deck__key.is-active::after,
+  .cashier-shell .stock-index__tile.is-active::after {
+    display: none;
+  }
+
+  .cashier-shell #stock-index-panel {
+    scroll-margin-top: 70px;
+  }
+
+  .cashier-shell .control-panel {
+    scroll-margin-top: 70px;
+  }
+
+  /* ---- Tables as cards ---------------------------------------------------------------- */
+  .cashier-shell .cashier-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .cashier-shell .cashier-table-wrap::before {
+    display: none;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    border: 0;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table thead {
+    display: none;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table tbody,
+  .cashier-shell .cashier-content table.cashier-table tfoot {
+    display: block;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table tr {
+    display: block;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border: 1px solid #dfe3cf;
+    border-radius: 14px;
+    background: #fffef8;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td,
+  .cashier-shell .cashier-content table.cashier-table tfoot th {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    width: auto;
+    padding: 4px 0;
+    border: 0;
+    font-size: 0.86rem;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    max-width: 45%;
+    color: #6a7b71;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  /* The first value is the card's title (a product, a reference, a name). */
+  .cashier-shell .cashier-content table.cashier-table td:first-child {
+    display: block;
+    padding-bottom: 6px;
+    font-size: 0.98rem;
+    text-align: left;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td:first-child::before {
+    display: none;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td:empty {
+    display: none;
+  }
+
+  /* A cell that holds the row's buttons: full-width, easy to tap. */
+  .cashier-shell .cashier-content table.cashier-table td:has(> button) {
+    margin-top: 6px;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td:has(> button)::before {
+    display: none;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td > button {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
+
+  /* A message row spanning every column (e.g. "No records yet"). */
+  .cashier-shell .cashier-content table.cashier-table td[colspan] {
+    display: block;
+    text-align: center;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table td[colspan]::before {
+    display: none;
+  }
+}

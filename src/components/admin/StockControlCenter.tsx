@@ -304,7 +304,17 @@ export function StockControlCenter({
               role="tab"
               aria-selected={active === tile.key}
               aria-controls="stock-index-panel"
-              onClick={() => setActive(tile.key)}
+              onClick={() => {
+                setActive(tile.key);
+                // On a phone the card opens below the tiles, out of sight: bring it up.
+                if (window.matchMedia('(max-width: 640px)').matches) {
+                  window.requestAnimationFrame(() =>
+                    document
+                      .getElementById('stock-index-panel')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                  );
+                }
+              }}
             >
               <b
                 className="stock-index__figure"

@@ -16,6 +16,8 @@ import './cashier-dashboard.css';
 import './stock-index.css';
 import './pos-controls.css';
 import './control-deck.css';
+// Phone layout of the workspace: last, so it wins on small screens.
+import './mobile.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
