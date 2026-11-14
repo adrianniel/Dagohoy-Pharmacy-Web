@@ -28,6 +28,50 @@ type PanelKey =
   | 'return'
   | 'adjustments';
 
+/** A delivery just saved, for the "Delivery received" popup. */
+type Received = { product: string; units: string; notes: string[] };
+
+/** Clear confirmation after Receive delivery: an animated check and what was saved. */
+function ReceivedPopup({ received, onClose }: { received: Received; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' || event.key === 'Enter') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div
+      className="received-popup"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="received-popup__card" role="alertdialog" aria-labelledby="received-title">
+        <svg className="received-popup__check" viewBox="0 0 52 52" aria-hidden="true">
+          <circle cx="26" cy="26" r="24" />
+          <path d="M15 27.5 22.5 35 37.5 18.5" />
+        </svg>
+        <h3 id="received-title">Delivery received</h3>
+        <p className="received-popup__main">
+          <b>{received.units}</b> of <b>{received.product}</b> added to the shelf.
+        </p>
+        {received.notes.length > 0 && (
+          <ul className="received-popup__notes">
+            {received.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        )}
+        <button className="stock-index__action" type="button" onClick={onClose} autoFocus>
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** Stock of a barcoded product received without its batch number (TBD- or NO-BATCH). */
 const needsDetails = (batch: InventoryBatch) =>
   batch.stock > 0 &&
@@ -137,6 +181,8 @@ export function StockControlCenter({
   const [revision, setRevision] = useState(0);
   /** A lot picked from Expiry check or Return stocks, pre-filled in the return form. */
   const [returnLot, setReturnLot] = useState('');
+  /** The delivery just saved: shown in the "Delivery received" popup. */
+  const [received, setReceived] = useState<Received | null>(null);
 
   const handleStockSaved = () => {
     setRevision((count) => count + 1);
@@ -462,9 +508,10 @@ export function StockControlCenter({
               batches={data.allBatches}
               products={products}
               initialBarcode={receiveBarcode}
-              onSaved={() => {
+              onSaved={(done) => {
                 setReceiveBarcode('');
                 handleStockSaved();
+                setReceived(done);
               }}
             />
             <h5 className="stock-index__subhead">Recent deliveries</h5>
@@ -735,6 +782,7 @@ export function StockControlCenter({
           </>
         )}
       </section>
+      {received && <ReceivedPopup received={received} onClose={() => setReceived(null)} />}
     </>
   );
 }
@@ -883,7 +931,7 @@ function ReceiveForm({
   products: InventoryProduct[];
   /** A product picked before the form opens. */
   initialBarcode?: string;
-  onSaved: () => void;
+  onSaved: (received: Received) => void;
 }) {
   const { showToast } = useToast();
   const suppliers = useMemo(loadSupplierNames, []);
@@ -978,17 +1026,21 @@ function ReceiveForm({
     setExpiry('');
     setReference('');
     const noPrice = !priceChanged && !priceValue(product.price);
-    const where = lotCode
-      ? ` into lot ${lotCode}.`
-      : product.noBarcode
-        ? '.'
-        : '. Add its batch number later under Needs details.';
-    showToast(
-      `${qty} unit(s) of ${product.product} received${where}${
-        priceChanged ? ` This batch sells at ${peso(newPrice)}.` : ''
-      }${noPrice ? ' It has no selling price yet: find it under Needs price.' : ''}`,
-    );
-    onSaved();
+    onSaved({
+      product: product.product,
+      units: `${qty} ${product.unit.toLowerCase()}${qty === 1 ? '' : 's'}`,
+      notes: [
+        lotCode
+          ? `Batch ${lotCode}`
+          : product.noBarcode
+            ? ''
+            : 'No batch number yet: fill it in under Needs details',
+        expiry ? `Expires ${shortDate(expiry)}` : '',
+        unitCost !== undefined ? `Cost ${peso(unitCost)} each` : 'Cost not set yet',
+        priceChanged ? `This batch sells at ${peso(newPrice)}` : '',
+        noPrice ? 'No selling price yet: find it under Needs price' : '',
+      ].filter(Boolean),
+    });
   }
 
   return (
@@ -1119,8 +1171,8 @@ function ReceiveForm({
         </p>
       )}
       <div className="stock-index__actions">
-        <button className="stock-index__action" type="submit">
-          Receive delivery
+        <button className="stock-index__action" type="submit" disabled={saving}>
+          {saving ? 'Saving…' : 'Receive delivery'}
         </button>
       </div>
     </form>
