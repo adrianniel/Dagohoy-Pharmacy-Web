@@ -148,6 +148,9 @@ function loadLocalValue<T>(key: string, fallback: T): T {
 const viewOf = (product: InventoryProduct) =>
   product.unregistered ? 'unregistered' : product.needsPrice ? 'needs-price' : 'list';
 
+/** On sale with a selling price (often set at the Sales Counter) but no cost yet. */
+const needsCost = (product: InventoryProduct) => viewOf(product) === 'list' && !product.cost;
+
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
   /** Barcode scanned in the list search that matched no product: prefilled in New product. */
@@ -195,7 +198,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
    * Product list; products added without a selling price yet; or the products scanned and sold
    * at the Sales Counter before they were added.
    */
-  const [listView, setListView] = useState<'list' | 'needs-price' | 'unregistered'>('list');
+  const [listView, setListView] = useState<'list' | 'needs-price' | 'needs-cost' | 'unregistered'>(
+    'list',
+  );
   /** "Receive stock for it" from New product: opens Receive stock with that product. */
   const [receiveRequest, setReceiveRequest] = useState<{ barcode: string; at: number } | null>(
     null,
@@ -229,11 +234,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
     () => products.filter((product) => product.needsPrice),
     [products],
   );
+  const needsCostProducts = useMemo(() => products.filter(needsCost), [products]);
   const filteredProducts = useMemo(
     () =>
       products.filter(
         (product) =>
-          viewOf(product) === listView &&
+          (listView === 'needs-cost' ? needsCost(product) : viewOf(product) === listView) &&
           `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
             .toLowerCase()
             .includes(query.toLowerCase()),
@@ -455,6 +461,17 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   <button
                     type="button"
                     role="tab"
+                    aria-selected={listView === 'needs-cost'}
+                    className={`${listView === 'needs-cost' ? 'is-active' : ''}${
+                      needsCostProducts.length ? ' has-items' : ''
+                    }`}
+                    onClick={() => setListView('needs-cost')}
+                  >
+                    Needs cost <b>{needsCostProducts.length}</b>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
                     aria-selected={listView === 'unregistered'}
                     className={`${listView === 'unregistered' ? 'is-active' : ''}${
                       unregisteredProducts.length ? ' has-items' : ''
@@ -469,6 +486,13 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 <p className="product-list-switch__note">
                   Added with their stock but no selling price yet. They cannot be sold until the
                   price is set: press Set price to add the cost and the selling price.
+                </p>
+              )}
+              {!showArchived && listView === 'needs-cost' && (
+                <p className="product-list-switch__note">
+                  They have a selling price and can be sold, but their cost is not set yet (for
+                  example the price was set at the Sales Counter). Press Set cost when you know what
+                  you pay the supplier, so the profit is right. They also stay on the Product list.
                 </p>
               )}
               {!showArchived && listView === 'unregistered' && (
@@ -530,7 +554,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
                           <td>
                             <button
                               className={
-                                product.unregistered || product.needsPrice
+                                product.unregistered ||
+                                product.needsPrice ||
+                                listView === 'needs-cost'
                                   ? 'cashier-primary-action'
                                   : 'cashier-view-button'
                               }
@@ -544,7 +570,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
                                 ? 'Register'
                                 : product.needsPrice
                                   ? 'Set price'
-                                  : 'Edit / stock'}
+                                  : listView === 'needs-cost'
+                                    ? 'Set cost'
+                                    : 'Edit / stock'}
                             </button>
                           </td>
                         </tr>
@@ -560,7 +588,9 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     ? 'unregistered '
                     : listView === 'needs-price'
                       ? 'unpriced '
-                      : ''}
+                      : listView === 'needs-cost'
+                        ? 'no-cost '
+                        : ''}
                   product
                   {filteredProducts.length === 1 ? '' : 's'}
                 </span>
