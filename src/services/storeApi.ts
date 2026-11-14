@@ -161,7 +161,7 @@ export const receiveStock = (input: {
   quantity: number;
   /** Leave out when the cost is not known yet. */
   unitCost?: number;
-  /** Empty: NO-BATCH. */
+  /** Empty: its own TBD- batch (NO-BATCH for an item without a barcode). */
   lot?: string;
   /** Empty: the item does not expire. */
   expiry?: string;
@@ -170,6 +170,13 @@ export const receiveStock = (input: {
   sellingPrice?: number;
 }) =>
   apiRequest<{ batchId: number; onHand: number }>('/stock/receive', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+/** Needs details: the batch number (and expiry) of stock received without one. */
+export const fillLotDetails = (batchId: number, input: { lot: string; expiry?: string }) =>
+  apiRequest<{ batchId: number }>(`/stock/lots/${batchId}/details`, {
     method: 'POST',
     body: JSON.stringify(input),
   });

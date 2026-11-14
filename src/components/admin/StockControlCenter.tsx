@@ -10,7 +10,7 @@ import {
   loadMovements,
 } from '../../data/operationsStore';
 import { syncAfterStockChange } from '../../data/serverSync';
-import { adjustStock, receiveStock } from '../../services/storeApi';
+import { adjustStock, fillLotDetails, receiveStock } from '../../services/storeApi';
 import { useToast } from '../toast';
 import { cleanBatch } from '../../data/batchCode';
 import { lastLotCost } from '../../data/lotCost';
@@ -18,7 +18,22 @@ import { RestockOrder } from './RestockOrder';
 import { ReturnStock } from './ReturnStock';
 
 type PanelKey =
-  'products' | 'health' | 'receive' | 'expiry' | 'batches' | 'order' | 'return' | 'adjustments';
+  | 'products'
+  | 'health'
+  | 'receive'
+  | 'details'
+  | 'expiry'
+  | 'batches'
+  | 'order'
+  | 'return'
+  | 'adjustments';
+
+/** Stock of a barcoded product received without its batch number (TBD- or NO-BATCH). */
+const needsDetails = (batch: InventoryBatch) =>
+  batch.stock > 0 &&
+  batch.barcode !== '' &&
+  !batch.barcode.startsWith('NB-') &&
+  (batch.lot === 'NO-BATCH' || batch.lot.startsWith('TBD-'));
 
 type StockControlCenterProps = {
   products: InventoryProduct[];
@@ -175,6 +190,7 @@ export function StockControlCenter({
     );
     return {
       allBatches,
+      needsDetails: allBatches.filter(needsDetails),
       lots,
       expired,
       soon,
@@ -224,6 +240,16 @@ export function StockControlCenter({
       hint: 'Deliveries today',
       about:
         'Record a supplier delivery. Each delivery adds units to the shelf and saves its batch number and expiry date.',
+    },
+    {
+      key: 'details',
+      icon: 'batches',
+      title: 'Needs details',
+      count: data.needsDetails.length,
+      hint: 'Batch number to fill in',
+      alert: data.needsDetails.length > 0,
+      about:
+        'Stock received without its batch number. When you have time, copy the batch number and expiry date from the box.',
     },
     {
       key: 'expiry',
@@ -482,6 +508,10 @@ export function StockControlCenter({
           </>
         )}
 
+        {active === 'details' && (
+          <NeedsDetails batches={data.needsDetails} onSaved={handleStockSaved} />
+        )}
+
         {active === 'expiry' && (
           <>
             <div className="stock-index__chips">
@@ -713,6 +743,128 @@ const peso = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 
 /**
+ * Needs details: stock received without its batch number. Fill in copies the batch number and
+ * expiry from the box; the server keeps the ledger as it is.
+ */
+function NeedsDetails({ batches, onSaved }: { batches: InventoryBatch[]; onSaved: () => void }) {
+  const { showToast } = useToast();
+  const [open, setOpen] = useState<InventoryBatch | null>(null);
+  const [lot, setLot] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  function start(batch: InventoryBatch) {
+    setOpen(batch);
+    setLot('');
+    setExpiry(batch.expiry);
+  }
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!open || saving) return;
+    const code = lot.trim().toUpperCase();
+    if (!code) {
+      showToast('Enter the batch number printed on the box.', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await fillLotDetails(Number(open.id), { lot: code, expiry: expiry || undefined });
+      await syncAfterStockChange();
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'Could not save the details.', 'error');
+      return;
+    } finally {
+      setSaving(false);
+    }
+    showToast(`${open.product}: batch ${code} saved.`);
+    setOpen(null);
+    onSaved();
+  }
+
+  if (!batches.length) {
+    return (
+      <p className="stock-index__empty">
+        Every delivery has its batch number. Stock received without one shows here.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {open && (
+        <form className="stock-index__form" onSubmit={save}>
+          <p className="stock-index__form-title">
+            <b>{open.product}</b> · {open.stock} on hand
+            {open.receivedAt ? ` · received ${shortDateTime(open.receivedAt)}` : ''}
+          </p>
+          <div className="stock-index__form-grid">
+            <label>
+              Batch number
+              <input
+                value={lot}
+                onChange={(event) => setLot(cleanBatch(event.target.value))}
+                placeholder="e.g. BGC-250114"
+                title="Letters, numbers and - only"
+                autoFocus
+              />
+            </label>
+            <label>
+              Expiry date (optional)
+              <input
+                type="date"
+                value={expiry}
+                onChange={(event) => setExpiry(event.target.value)}
+              />
+            </label>
+          </div>
+          <div className="stock-index__actions">
+            <button className="stock-index__action" type="submit" disabled={saving}>
+              {saving ? 'Saving…' : 'Save details'}
+            </button>
+            <button className="cashier-view-button" type="button" onClick={() => setOpen(null)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      <table className="stock-index__table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>On hand</th>
+            <th>Received</th>
+            <th>Expiry</th>
+            <th>Fill in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map((batch) => (
+            <tr key={batch.id}>
+              <td>
+                <strong>{batch.product}</strong>
+              </td>
+              <td>{batch.stock}</td>
+              <td>{batch.receivedAt ? shortDateTime(batch.receivedAt) : '—'}</td>
+              <td>{batch.expiry ? shortDate(batch.expiry) : 'Not set'}</td>
+              <td>
+                <button
+                  className="cashier-primary-action"
+                  type="button"
+                  onClick={() => start(batch)}
+                >
+                  Fill in
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+/**
  * Records a supplier delivery: adds the units to the product, saves the lot with its expiry
  * date and its cost per unit (adding to the same lot if it is already on the shelf), and
  * writes a Received movement. The supplier price changes from delivery to delivery, so the
@@ -779,17 +931,14 @@ function ReceiveForm({
       showToast('Enter how many units arrived, as a whole number.', 'error');
       return;
     }
-    // Cost, selling price and expiry may stay blank: set them later on the product.
-    if (cost.trim() !== '' && !hasCost) {
-      showToast('The cost per unit must be more than zero, or leave it blank.', 'error');
+    // Only the product and the units are needed. Blank (or ₱0) cost and price are set later on
+    // the product (Needs cost / Needs price); a blank batch is filled in under Needs details.
+    if (cost.trim() !== '' && !Number.isFinite(costValue)) {
+      showToast('Type the cost as a number, like 8.75, or leave it blank.', 'error');
       return;
     }
-    if (selling.trim() !== '' && !hasSelling) {
-      showToast('The selling price must be more than zero, or leave it blank.', 'error');
-      return;
-    }
-    if (!lot.trim()) {
-      showToast('Enter the batch number printed on the box.', 'error');
+    if (selling.trim() !== '' && !Number.isFinite(sellingValue)) {
+      showToast('Type the selling price as a number, like 12.50, or leave it blank.', 'error');
       return;
     }
     if (expiry && daysUntil(expiry) < 0) {
@@ -807,7 +956,7 @@ function ReceiveForm({
         productId: product.id,
         quantity: qty,
         unitCost,
-        lot: lotCode,
+        lot: lotCode || undefined,
         expiry: expiry || undefined,
         supplier: supplier || undefined,
         reference: reference.trim() || undefined,
@@ -826,8 +975,13 @@ function ReceiveForm({
     setExpiry('');
     setReference('');
     const noPrice = !priceChanged && !priceValue(product.price);
+    const where = lotCode
+      ? ` into lot ${lotCode}.`
+      : product.noBarcode
+        ? '.'
+        : '. Add its batch number later under Needs details.';
     showToast(
-      `${qty} unit(s) of ${product.product} received into lot ${lotCode}.${
+      `${qty} unit(s) of ${product.product} received${where}${
         priceChanged ? ` Selling price updated to ${peso(newPrice)}.` : ''
       }${noPrice ? ' It has no selling price yet: find it under Needs price.' : ''}`,
     );
@@ -837,9 +991,9 @@ function ReceiveForm({
   return (
     <form className="stock-index__form" onSubmit={submit}>
       <p className="stock-index__form-title">
-        Copy the details from the delivery receipt and the box label. Not sure of the cost, the
-        selling price or the expiry yet? Leave them blank and set them later; a product with no
-        selling price waits under Needs price.
+        Only the product and the units received are needed. Everything else can be left blank and
+        filled in later: a missing batch number or expiry under Needs details, a missing selling
+        price under Needs price.
       </p>
       <div className="stock-index__form-grid">
         <label>
@@ -847,7 +1001,7 @@ function ReceiveForm({
           <ProductPicker products={products} value={barcode} onPick={pickProduct} />
         </label>
         <label>
-          Supplier
+          Supplier (optional)
           <input
             list="receive-suppliers"
             value={supplier}
@@ -899,9 +1053,8 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Batch number
+          Batch number (optional)
           <input
-            required
             value={lot}
             onChange={(event) => setLot(cleanBatch(event.target.value))}
             placeholder="e.g. BGC-250114"
