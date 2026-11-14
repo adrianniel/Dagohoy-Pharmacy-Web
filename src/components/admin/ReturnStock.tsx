@@ -17,8 +17,11 @@ import { useToast } from '../toast';
  * previewed and saved as an A4 PDF for the owner.
  */
 
+// A batch may have no expiry: formatting an empty date would throw and blank the page.
 const shortDate = (date: string) =>
-  new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`));
+  date
+    ? new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`))
+    : 'No expiry';
 const dateTime = (iso: string) =>
   new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(
     new Date(iso),

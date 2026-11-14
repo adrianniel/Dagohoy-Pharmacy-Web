@@ -62,8 +62,11 @@ function daysUntil(date: string) {
   );
 }
 
+// A batch may have no expiry: formatting an empty date would throw and blank the page.
 const shortDate = (date: string) =>
-  new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`));
+  date
+    ? new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(new Date(`${date}T12:00:00`))
+    : 'No expiry';
 
 const shortDateTime = (iso: string) =>
   new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(
