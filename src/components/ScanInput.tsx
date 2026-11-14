@@ -1,3 +1,4 @@
+import { rankProducts } from '../data/productSearch';
 import { useId, useRef, useState, type InputHTMLAttributes, type KeyboardEvent } from 'react';
 import type { InventoryProduct } from '../data/inventoryStore';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../services/useBilling';
@@ -132,15 +133,11 @@ export function ProductPicker({
   const listId = useId();
   const scannerOff = useScannerOff();
 
-  const needle = text.trim().toLowerCase();
+  const needle = text.trim();
   const matches = needle
-    ? products
-        .filter((product) =>
-          `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
-            .toLowerCase()
-            .includes(needle),
-        )
-        .slice(0, 6)
+    ? rankProducts(products, needle, !scannerOff)
+        .slice(0, 8)
+        .map((hit) => hit.product)
     : products.slice(0, 6);
 
   function choose(product: InventoryProduct) {

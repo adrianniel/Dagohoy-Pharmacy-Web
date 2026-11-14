@@ -21,7 +21,7 @@ export type InventoryProduct = {
   cost?: number;
   /** Scanned and sold at the Sales Counter before it was added; waits for Register. */
   unregistered?: boolean;
-  /** Added without a selling price yet (price shows ₱0.00): cannot be sold until it has one. */
+  /** Added without a selling price yet: the Sales Counter asks for the price when it is sold. */
   needsPrice?: boolean;
   /** No barcode of its own (code NB-000123): found by name. */
   noBarcode?: boolean;

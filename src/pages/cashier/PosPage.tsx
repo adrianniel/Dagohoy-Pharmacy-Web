@@ -1,3 +1,4 @@
+import { clearBest, rankProducts } from '../../data/productSearch';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
@@ -289,15 +290,11 @@ export function CashierPosPage() {
   // on by product name. It comes back by itself once a payment is sent.
   const scannerOff = useScannerOff();
 
-  const filteredProducts = useMemo(
-    () =>
-      products.filter((product) =>
-        `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
-          .toLowerCase()
-          .includes(query.trim().toLowerCase()),
-      ),
+  const searchHits = useMemo(
+    () => rankProducts(products, query, !scannerOff),
     [products, query, scannerOff],
   );
+  const filteredProducts = useMemo(() => searchHits.map((hit) => hit.product), [searchHits]);
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
 
@@ -335,7 +332,7 @@ export function CashierPosPage() {
   function scanOrPick(code: string) {
     if (!code) return;
     const exact = scannerOff ? undefined : products.find((product) => product.barcode === code);
-    const pick = exact ?? (filteredProducts.length === 1 ? filteredProducts[0] : undefined);
+    const pick = exact ?? clearBest(searchHits);
     if (!pick) {
       if (!filteredProducts.length && !priceCheck && !scannerOff && /^\d{8,14}$/.test(code)) {
         setQuery('');
@@ -501,8 +498,8 @@ export function CashierPosPage() {
   }, []);
 
   function addProduct(product: PosProduct) {
-    // No selling price yet: ask for it instead of selling at ₱0.
-    if (product.needsPrice) {
+    // No selling price yet (and no batch price either): ask for it instead of selling at ₱0.
+    if (product.needsPrice && !(unitPriceOf(product) > 0)) {
       setPricing(product);
       return;
     }
@@ -848,7 +845,7 @@ export function CashierPosPage() {
             </div>
             {query.trim() && (
               <div className="pos-scan-results" aria-live="polite">
-                {filteredProducts.slice(0, 6).map((product) => (
+                {filteredProducts.slice(0, 8).map((product) => (
                   <button
                     key={product.barcode}
                     className="pos-scan-result"
@@ -867,7 +864,11 @@ export function CashierPosPage() {
                       </small>
                     </span>
                     <span>
-                      <b>{formatMoney(unitPriceOf(product))}</b>
+                      <b>
+                        {product.needsPrice && !(unitPriceOf(product) > 0)
+                          ? 'Set price'
+                          : formatMoney(unitPriceOf(product))}
+                      </b>
                       <small>
                         {product.unregistered
                           ? 'New · not registered'
