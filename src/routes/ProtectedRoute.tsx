@@ -17,13 +17,15 @@ export function ProtectedRoute() {
 
   useEffect(() => {
     let alive = true;
-    let synced = false;
+    let syncedAt = 0;
     const verify = () =>
       refreshSession()
         .then(async () => {
-          // First time: bring products, suppliers, staff and settings from the server.
-          if (!synced) {
-            synced = true;
+          // Bring products, suppliers, staff and settings from the server: at the start, and
+          // again when this window comes back to the front (at most once a minute), so changes
+          // made on another device show here too.
+          if (Date.now() - syncedAt > 60_000) {
+            syncedAt = Date.now();
             await syncFromServer();
           }
           if (alive) setCheck('ok');

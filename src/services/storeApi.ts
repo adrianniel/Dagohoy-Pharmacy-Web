@@ -26,7 +26,8 @@ export type ProductInput = {
   detail: string;
   category: string;
   unit: string;
-  price: number;
+  /** Null: no selling price yet (the product waits under Needs price). */
+  price: number | null;
   cost?: number | null;
   /** Batch and expiry may be empty for items that have none. */
   opening?: { quantity: number; lot?: string; expiry?: string };
@@ -94,15 +95,35 @@ export type ApiSettings = {
   phone: string;
   email: string;
   businessHours: string;
+  /** The weekly hours (Monday first); null when never set in Settings. */
+  openingHours?: ApiDayHours[] | null;
   lowStockThreshold: number;
   gcashNumber: string;
   gcashQrUrl: string;
 };
 
+/** One day of the week: 0 = Sunday … 6 = Saturday; no times = closed. */
+export type ApiDayHours = {
+  day: number;
+  label: string;
+  opensAt: string | null;
+  closesAt: string | null;
+};
+
 export const getSettings = () => apiRequest<ApiSettings>('/settings');
 
-export const saveSettings = (settings: ApiSettings) =>
-  apiRequest<ApiSettings>('/settings', { method: 'PUT', body: JSON.stringify(settings) });
+export const saveSettings = (
+  settings: Omit<ApiSettings, 'openingHours'> & {
+    openingHours?: Array<Pick<ApiDayHours, 'day' | 'opensAt' | 'closesAt'>>;
+  },
+) => apiRequest<ApiSettings>('/settings', { method: 'PUT', body: JSON.stringify(settings) });
+
+/** What the landing page shows: no login needed. */
+export type ApiPublicSettings = Pick<ApiSettings, 'name' | 'address' | 'phone' | 'email'> & {
+  openingHours: ApiDayHours[] | null;
+};
+
+export const getPublicSettings = () => apiRequest<ApiPublicSettings>('/settings/public');
 
 /* ---- Stock: lots, the ledger, deliveries and adjustments ---- */
 

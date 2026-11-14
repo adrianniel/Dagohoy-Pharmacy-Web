@@ -76,14 +76,18 @@ export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
       stock,
       status: stockStatus(stock),
       unregistered: item.unregistered || undefined,
+      needsPrice: (!item.unregistered && item.price == null) || undefined,
       noBarcode: item.noBarcode || undefined,
     };
   });
 }
 
+/** Fired after the products were brought from the server (pages showing them refresh). */
+export const CATALOG_SYNCED = 'dagohoy-catalog-synced';
+
 export async function syncCatalog() {
   saveInventory(mergeCatalog(await listProducts()));
-  window.dispatchEvent(new Event('dagohoy-catalog-synced'));
+  window.dispatchEvent(new Event(CATALOG_SYNCED));
 }
 
 /** Lots and the stock ledger, in the shapes the stock pages read. */

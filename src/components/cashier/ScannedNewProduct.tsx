@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { getInventory, type InventoryProduct } from '../../data/inventoryStore';
 import { syncCatalog } from '../../data/serverSync';
 import { notifyBillingChanged } from '../../services/useBilling';
-import { createProduct, lookupBarcode } from '../../services/storeApi';
+import { createProduct, lookupBarcode, updateProduct } from '../../services/storeApi';
 
 /*
  * Sales Counter: a scanned barcode that is not on the product list. The details are looked up,
@@ -169,6 +169,91 @@ export function ScannedNewProduct({
             </div>
           </>
         )}
+      </form>
+    </div>
+  );
+}
+
+/**
+ * Sales Counter: a product that is on the list but has no selling price yet (it was added while
+ * the stock was counted). The cashier sets the price once; it is saved on the product and the
+ * item goes into the sale.
+ */
+export function SetPriceItem({
+  product,
+  onCancel,
+  onPriced,
+}: {
+  product: InventoryProduct;
+  onCancel: () => void;
+  onPriced: (product: InventoryProduct) => void;
+}) {
+  const [price, setPrice] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    const amount = Number(price);
+    if (!Number.isFinite(amount) || amount <= 0) return setError('Set the selling price.');
+    if (!product.id) return setError('This product is not saved yet. Refresh the page.');
+    setSaving(true);
+    setError('');
+    try {
+      await updateProduct(product.id, { price: Math.round(amount * 100) / 100 });
+      await syncCatalog();
+      const priced = getInventory().find((item) => item.id === product.id);
+      if (!priced) throw new Error('Saved, but the product list did not refresh. Scan it again.');
+      onPriced(priced);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not save the price.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="pos-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !saving) onCancel();
+      }}
+    >
+      <form className="pos-payment-modal pos-new-product" onSubmit={(event) => void submit(event)}>
+        <button className="pos-modal-close" type="button" onClick={onCancel} aria-label="Close">
+          ×
+        </button>
+        <p className="pos-new-product__flag">No price yet</p>
+        <h2>{product.product}</h2>
+        <p className="pos-new-product__note">
+          This product is on the list but its selling price was not set. Set it now to sell it; it
+          is saved for next time.
+        </p>
+        <div className="pos-new-product__grid">
+          <label className="is-wide pos-new-product__price">
+            Selling price (₱ per {product.unit.toLowerCase()})
+            <input
+              value={price}
+              onChange={(event) => setPrice(event.target.value.replace(/[^\d.]/g, ''))}
+              inputMode="decimal"
+              placeholder="0.00"
+              autoFocus
+            />
+          </label>
+        </div>
+        {error && (
+          <p className="pos-new-product__error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="pos-new-product__actions">
+          <button type="button" className="cashier-view-button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="submit" className="cashier-primary-action" disabled={saving}>
+            {saving ? 'Saving…' : 'OK, add to sale'}
+          </button>
+        </div>
       </form>
     </div>
   );

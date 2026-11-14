@@ -3,8 +3,12 @@ import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { getInventory } from '../../data/inventoryStore';
-import { NoBarcodeItem, ScannedNewProduct } from '../../components/cashier/ScannedNewProduct';
-import { syncAfterSale } from '../../data/serverSync';
+import {
+  NoBarcodeItem,
+  ScannedNewProduct,
+  SetPriceItem,
+} from '../../components/cashier/ScannedNewProduct';
+import { CATALOG_SYNCED, syncAfterSale } from '../../data/serverSync';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
 import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
@@ -192,6 +196,12 @@ function sanitizeDiscountInput(value: string): string {
 
 export function CashierPosPage() {
   const [products, setProducts] = useState(getInventory);
+  // Products and prices changed on another device show here once this window syncs again.
+  useEffect(() => {
+    const refresh = () => setProducts(getInventory());
+    window.addEventListener(CATALOG_SYNCED, refresh);
+    return () => window.removeEventListener(CATALOG_SYNCED, refresh);
+  }, []);
   /** True while a sale, void or no-charge record is being saved on the server. */
   const [saving, setSaving] = useState(false);
   const [openSale] = useState(loadOpenSale);
@@ -240,6 +250,8 @@ export function CashierPosPage() {
   const [newScan, setNewScan] = useState('');
   /** The "No barcode" popup is open. */
   const [noBarcodeOpen, setNoBarcodeOpen] = useState(false);
+  /** A product on the list without a selling price yet: the price is asked before it is sold. */
+  const [pricing, setPricing] = useState<PosProduct | null>(null);
   const [controlModal, setControlModal] = useState<'void' | 'charge' | null>(null);
   const [voidTarget, setVoidTarget] = useState('');
   const [voidReason, setVoidReason] = useState('');
@@ -486,6 +498,11 @@ export function CashierPosPage() {
   }, []);
 
   function addProduct(product: PosProduct) {
+    // No selling price yet: ask for it instead of selling at ₱0.
+    if (product.needsPrice) {
+      setPricing(product);
+      return;
+    }
     // An unregistered product has no counted stock yet: it is sold without a stock limit.
     if (product.unregistered) product = { ...product, stock: undefined };
     if (product.stock !== undefined && product.stock < 1) {
@@ -1175,6 +1192,18 @@ export function CashierPosPage() {
             if (product.unregistered) {
               showToast(`${product.product} added. Register it later in Products › Unregistered.`);
             }
+          }}
+        />
+      )}
+      {pricing && (
+        <SetPriceItem
+          product={{ ...pricing, stock: pricing.stock ?? 0, status: 'In Stock' }}
+          onCancel={() => setPricing(null)}
+          onPriced={(product) => {
+            setPricing(null);
+            setProducts(getInventory());
+            addProduct(product);
+            showToast(`${product.product} now sells at ${product.price}.`);
           }}
         />
       )}

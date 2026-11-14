@@ -5345,3 +5345,149 @@
   font-weight: 700;
   text-align: right;
 }
+
+/* Settings > Opening hours: one row per day, Monday first. */
+.opening-hours {
+  display: grid;
+  gap: 6px;
+}
+
+.opening-hours__row {
+  display: grid;
+  grid-template-columns: 7.5rem 6.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #dfe3cf;
+  border-radius: 12px;
+  background: #fffef8;
+}
+
+.opening-hours__row.is-closed {
+  background: #f3f1e4;
+}
+
+.opening-hours__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.opening-hours__times {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.opening-hours__times input[type='time'] {
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid #c9d3c4;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+
+.opening-hours__times small,
+.opening-hours__times.is-muted {
+  color: #6a7b71;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 640px) {
+  .opening-hours__row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .opening-hours__times {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Product form: the price may be set later. */
+.product-form__later {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #eef7f1;
+  color: #2f4a3e;
+  font-size: 0.86rem;
+}
+
+/* Phone: the three product tabs share the width, and each product is a card with its
+   action button at full width (Set price, Register or Edit / stock). */
+@media (max-width: 640px) {
+  .product-list-switch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .product-list-switch button {
+    min-height: 52px;
+    padding: 6px 4px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    font-size: 0.8rem;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .product-table thead {
+    display: none;
+  }
+
+  .product-table,
+  .product-table tbody,
+  .product-table tr,
+  .product-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .product-table tr {
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border: 1px solid #dfe3cf;
+    border-radius: 14px;
+    background: #fffef8;
+  }
+
+  .product-table td {
+    padding: 3px 0;
+    border: 0;
+  }
+
+  .product-table td:first-child strong {
+    font-size: 1rem;
+  }
+
+  .product-table td[data-label] {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.86rem;
+  }
+
+  .product-table td[data-label]::before {
+    content: attr(data-label);
+    color: #6a7b71;
+    font-weight: 600;
+  }
+
+  .product-table td.product-category-cell {
+    text-align: right;
+  }
+
+  .product-table td:last-child {
+    margin-top: 8px;
+  }
+
+  .product-table td:last-child button {
+    width: 100%;
+    min-height: 44px;
+  }
+}

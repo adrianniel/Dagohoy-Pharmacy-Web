@@ -27,11 +27,17 @@ import {
   createSupplier,
   setSupplierActive,
   saveSettings as saveStoreSettings,
+  getSettings as getStoreSettings,
   updateProduct,
   registerProduct,
   receiveStock,
 } from '../../services/storeApi';
-import { cacheSettings, syncAfterStockChange, syncSuppliers } from '../../data/serverSync';
+import {
+  CATALOG_SYNCED,
+  cacheSettings,
+  syncAfterStockChange,
+  syncSuppliers,
+} from '../../data/serverSync';
 import { ArchivedProducts } from '../../components/admin/ArchivedProducts';
 import { ProductImport } from '../../components/admin/ProductImport';
 import { getCurrentAccount } from '../../data/accountStore';
@@ -39,7 +45,31 @@ import { StaffAccounts } from './StaffAccounts';
 
 type AdminSection = 'dashboard' | 'products' | 'suppliers' | 'reports' | 'staff' | 'settings';
 type SupplierTab = 'list' | 'archived' | 'add';
-type SettingsTab = 'details' | 'alerts' | 'gcash';
+type SettingsTab = 'details' | 'hours' | 'alerts' | 'gcash';
+
+/** One day in Settings › Opening hours (0 = Sunday … 6 = Saturday). */
+type HoursRow = { day: number; label: string; open: boolean; opensAt: string; closesAt: string };
+/** Until the owner saves the hours: the store's usual week, Monday first. */
+const DEFAULT_HOURS: HoursRow[] = [
+  ['Monday', 1],
+  ['Tuesday', 2],
+  ['Wednesday', 3],
+  ['Thursday', 4],
+  ['Friday', 5],
+  ['Saturday', 6],
+  ['Sunday', 0],
+].map(([label, day]) => ({
+  day: day as number,
+  label: label as string,
+  open: true,
+  opensAt: day === 0 ? '09:00' : '08:00',
+  closesAt: day === 0 ? '18:00' : '20:00',
+}));
+/** 08:00 → 8:00 AM */
+const clockText = (value: string) => {
+  const [hour = 0, minute = 0] = value.split(':').map(Number);
+  return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+};
 
 const money = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
@@ -118,11 +148,21 @@ function loadLocalValue<T>(key: string, fallback: T): T {
   }
 }
 
+/** Which tab of the product list a product belongs to. */
+const viewOf = (product: InventoryProduct) =>
+  product.unregistered ? 'unregistered' : product.needsPrice ? 'needs-price' : 'list';
+
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
   /** Barcode scanned in the list search that matched no product: prefilled in New product. */
   const [newBarcode, setNewBarcode] = useState('');
   const [products, setProducts] = useState(getInventory);
+  // Products added or priced on another device show here once this window syncs again.
+  useEffect(() => {
+    const refresh = () => setProducts(getInventory());
+    window.addEventListener(CATALOG_SYNCED, refresh);
+    return () => window.removeEventListener(CATALOG_SYNCED, refresh);
+  }, []);
   const [editing, setEditing] = useState<InventoryProduct | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [supplierList, setSupplierList] = useState<Supplier[]>(() =>
@@ -134,10 +174,32 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const [pharmacySettings, setPharmacySettings] = useState<PharmacySettings>(() =>
     loadLocalValue(SETTINGS_KEY, defaultSettings),
   );
+  /** Settings › Opening hours, read from the server (the landing page shows the same). */
+  const [hours, setHours] = useState<HoursRow[]>(DEFAULT_HOURS);
+  useEffect(() => {
+    if (section !== 'settings') return;
+    getStoreSettings()
+      .then((saved) => {
+        if (!saved.openingHours) return;
+        setHours(
+          saved.openingHours.map((entry) => ({
+            day: entry.day,
+            label: entry.label,
+            open: Boolean(entry.opensAt && entry.closesAt),
+            opensAt: entry.opensAt ?? '08:00',
+            closesAt: entry.closesAt ?? '20:00',
+          })),
+        );
+      })
+      .catch(() => {});
+  }, [section]);
   const [importOpen, setImportOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
-  /** Product list, or the products scanned and sold at the Sales Counter before they were added. */
-  const [listView, setListView] = useState<'list' | 'unregistered'>('list');
+  /**
+   * Product list; products added without a selling price yet; or the products scanned and sold
+   * at the Sales Counter before they were added.
+   */
+  const [listView, setListView] = useState<'list' | 'needs-price' | 'unregistered'>('list');
   /** "Receive stock for it" from New product: opens Receive stock with that product. */
   const [receiveRequest, setReceiveRequest] = useState<{ barcode: string; at: number } | null>(
     null,
@@ -167,11 +229,15 @@ export function AdminPage({ section }: { section: AdminSection }) {
     () => products.filter((product) => product.unregistered),
     [products],
   );
+  const needsPriceProducts = useMemo(
+    () => products.filter((product) => product.needsPrice),
+    [products],
+  );
   const filteredProducts = useMemo(
     () =>
       products.filter(
         (product) =>
-          Boolean(product.unregistered) === (listView === 'unregistered') &&
+          viewOf(product) === listView &&
           `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
             .toLowerCase()
             .includes(query.toLowerCase()),
@@ -238,10 +304,19 @@ export function AdminPage({ section }: { section: AdminSection }) {
       key: 'details',
       icon: 'store',
       title: 'Pharmacy details',
-      hint: 'Name, contact, hours',
+      hint: 'Name and contact',
       tone: 'forest',
       about:
         'Shown on sales records and the public page. Keep the name, number and address correct.',
+    },
+    {
+      key: 'hours',
+      icon: 'clock',
+      title: 'Opening hours',
+      hint: `Open ${hours.filter((row) => row.open).length} days a week`,
+      tone: 'forest',
+      about:
+        'Shown on the public page: open or closed right now, today, and the whole week. Set each day, then Save.',
     },
     {
       key: 'alerts',
@@ -270,6 +345,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
         phone: pharmacySettings.phone,
         email: pharmacySettings.email ?? '',
         businessHours: pharmacySettings.businessHours ?? '',
+        // The server stores the week and the public page reads it from there.
+        openingHours: hours.map((row) => ({
+          day: row.day,
+          opensAt: row.open ? row.opensAt : null,
+          closesAt: row.open ? row.closesAt : null,
+        })),
         lowStockThreshold: Number(pharmacySettings.threshold),
         gcashNumber: pharmacySettings.gcashNumber ?? '',
         gcashQrUrl: pharmacySettings.gcashQrUrl ?? '',
@@ -359,7 +440,21 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     className={listView === 'list' ? 'is-active' : ''}
                     onClick={() => setListView('list')}
                   >
-                    Product list <b>{products.length - unregisteredProducts.length}</b>
+                    Product list{' '}
+                    <b>
+                      {products.length - unregisteredProducts.length - needsPriceProducts.length}
+                    </b>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={listView === 'needs-price'}
+                    className={`${listView === 'needs-price' ? 'is-active' : ''}${
+                      needsPriceProducts.length ? ' has-items' : ''
+                    }`}
+                    onClick={() => setListView('needs-price')}
+                  >
+                    Needs price <b>{needsPriceProducts.length}</b>
                   </button>
                   <button
                     type="button"
@@ -373,6 +468,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     Unregistered <b>{unregisteredProducts.length}</b>
                   </button>
                 </div>
+              )}
+              {!showArchived && listView === 'needs-price' && (
+                <p className="product-list-switch__note">
+                  Added with their stock but no selling price yet. They cannot be sold until the
+                  price is set: press Set price to add the cost and the selling price.
+                </p>
               )}
               {!showArchived && listView === 'unregistered' && (
                 <p className="product-list-switch__note">
@@ -390,7 +491,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   aria-label="Products table"
                   tabIndex={0}
                 >
-                  <table className="cashier-table">
+                  <table className="cashier-table product-table">
                     <thead>
                       <tr>
                         <th>Product</th>
@@ -408,18 +509,22 @@ export function AdminPage({ section }: { section: AdminSection }) {
                           <td>
                             <strong>{product.product}</strong>
                           </td>
-                          <td className="cashier-mono">
+                          <td className="cashier-mono" data-label="Barcode">
                             {product.noBarcode ? 'No barcode' : product.barcode}
                           </td>
-                          <td className="product-category-cell">
+                          <td className="product-category-cell" data-label="Category">
                             <strong>{product.category ?? 'Uncategorized'}</strong>
                             <small>{product.detail}</small>
                           </td>
-                          <td>
-                            <strong>{product.price}</strong>
+                          <td data-label="Price">
+                            {product.needsPrice ? (
+                              <span className="product-new-badge">No price yet</span>
+                            ) : (
+                              <strong>{product.price}</strong>
+                            )}
                           </td>
-                          <td>{product.unregistered ? '—' : product.stock}</td>
-                          <td>
+                          <td data-label="On hand">{product.unregistered ? '—' : product.stock}</td>
+                          <td data-label="Status">
                             {product.unregistered ? (
                               <span className="product-new-badge">Not registered</span>
                             ) : (
@@ -429,7 +534,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                           <td>
                             <button
                               className={
-                                product.unregistered
+                                product.unregistered || product.needsPrice
                                   ? 'cashier-primary-action'
                                   : 'cashier-view-button'
                               }
@@ -439,7 +544,11 @@ export function AdminPage({ section }: { section: AdminSection }) {
                                 setFormOpen(true);
                               }}
                             >
-                              {product.unregistered ? 'Register' : 'Edit / stock'}
+                              {product.unregistered
+                                ? 'Register'
+                                : product.needsPrice
+                                  ? 'Set price'
+                                  : 'Edit / stock'}
                             </button>
                           </td>
                         </tr>
@@ -451,7 +560,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
               <div className="cashier-table-footer">
                 <span>
                   Showing {filteredProducts.length}{' '}
-                  {listView === 'unregistered' ? 'unregistered ' : ''}product
+                  {listView === 'unregistered'
+                    ? 'unregistered '
+                    : listView === 'needs-price'
+                      ? 'unpriced '
+                      : ''}
+                  product
                   {filteredProducts.length === 1 ? '' : 's'}
                 </span>
               </div>
@@ -498,7 +612,8 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   detail: product.detail,
                   category: product.category ?? 'Other',
                   unit: product.unit,
-                  price: Number(product.price.replace(/[₱,]/g, '')),
+                  // No price yet: left out, so the product waits under Needs price.
+                  price: product.needsPrice ? null : Number(product.price.replace(/[₱,]/g, '')),
                   cost: product.cost ?? null,
                 };
                 try {
@@ -749,6 +864,54 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   </label>
                 </>
               )}
+              {settingsTab === 'hours' && (
+                <div className="opening-hours" role="group" aria-label="Opening hours">
+                  {hours.map((row, index) => {
+                    const change = (patch: Partial<HoursRow>) =>
+                      setHours((current) =>
+                        current.map((item, at) => (at === index ? { ...item, ...patch } : item)),
+                      );
+                    return (
+                      <div
+                        className={`opening-hours__row${row.open ? '' : ' is-closed'}`}
+                        key={row.day}
+                      >
+                        <strong>{row.label}</strong>
+                        <label className="opening-hours__open">
+                          <input
+                            type="checkbox"
+                            checked={row.open}
+                            onChange={(event) => change({ open: event.target.checked })}
+                          />
+                          {row.open ? 'Open' : 'Closed'}
+                        </label>
+                        {row.open ? (
+                          <span className="opening-hours__times">
+                            <input
+                              type="time"
+                              value={row.opensAt}
+                              onChange={(event) => change({ opensAt: event.target.value })}
+                              aria-label={`${row.label} opens at`}
+                            />
+                            <span aria-hidden="true">to</span>
+                            <input
+                              type="time"
+                              value={row.closesAt}
+                              onChange={(event) => change({ closesAt: event.target.value })}
+                              aria-label={`${row.label} closes at`}
+                            />
+                            <small>
+                              {clockText(row.opensAt)} – {clockText(row.closesAt)}
+                            </small>
+                          </span>
+                        ) : (
+                          <span className="opening-hours__times is-muted">Closed all day</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               {settingsTab === 'alerts' && (
                 <label>
                   Low-stock alert threshold
@@ -942,7 +1105,9 @@ function InventoryForm({
   const [category, setCategory] = useState(product?.category ?? '');
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
   const [cost, setCost] = useState(product?.cost ? String(product.cost) : '');
-  const [price, setPrice] = useState(product ? product.price.replace(/[₱,]/g, '') : '');
+  const [price, setPrice] = useState(
+    product && !product.needsPrice ? product.price.replace(/[₱,]/g, '') : '',
+  );
   const [stock, setStock] = useState('');
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -1069,7 +1234,13 @@ function InventoryForm({
       setError('Fill in the product name, barcode and generic / brand.');
       return;
     }
-    if (!hasPrice) {
+    // The price may be left for later (it then waits under Needs price); a typed one must be
+    // above ₱0, and an item sold at the counter before it was added already has one.
+    if (price.trim() !== '' && !hasPrice) {
+      setError('The selling price must be above ₱0, or leave it blank to set it later.');
+      return;
+    }
+    if (!hasPrice && (product?.unregistered || (product && !product.needsPrice))) {
       setError('Enter the selling price.');
       return;
     }
@@ -1098,7 +1269,8 @@ function InventoryForm({
         detail: detail.trim() || name.trim(),
         category: category.trim() || 'Other',
         unit,
-        price: `₱${priceValue.toFixed(2)}`,
+        price: `₱${(hasPrice ? priceValue : 0).toFixed(2)}`,
+        needsPrice: !hasPrice || undefined,
         cost: hasCost ? Math.round(costValue * 100) / 100 : product?.cost,
         stock: quantity,
         status: stockStatus(quantity),
@@ -1302,6 +1474,12 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>3. Price per {unit.toLowerCase()}</legend>
+          {!product?.unregistered && (!product || product.needsPrice) && (
+            <p className="product-form__later">
+              Not sure yet? Leave both blank: the product is saved under <b>Needs price</b> with its
+              stock, and can be sold once its selling price is set.
+            </p>
+          )}
           <div className="product-form__grid">
             <label>
               Cost (what you pay the supplier)

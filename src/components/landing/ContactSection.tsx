@@ -1,7 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import developerPhoto from '../../assets/developer.jpg';
 import { getSession } from '../../data/registerSession';
-import { developerProfile, pharmacyProfile, weeklyHours } from './content';
+import { getPublicSettings } from '../../services/storeApi';
+import { developerProfile, pharmacyProfile, weeklyHours as defaultHours } from './content';
+import type { WeeklyHoursEntry } from './types';
 import { getPharmacyStatus } from './pharmacyTime';
 import './closing.css';
 
@@ -74,10 +76,25 @@ const supportActions: Record<string, string> = {
 export function ContactSection() {
   const [profile, setProfile] = useState(getPharmacyContact);
   const [now, setNow] = useState(() => new Date());
+  /** The week set in Settings › Opening hours; the usual hours until the server answers. */
+  const [weeklyHours, setWeeklyHours] = useState<WeeklyHoursEntry[]>(defaultHours);
 
   useEffect(() => {
     const sync = () => setProfile(getPharmacyContact());
     sync();
+    // Read without a login, so every visitor sees the owner's details and hours.
+    getPublicSettings()
+      .then((store) => {
+        if (store.openingHours) setWeeklyHours(store.openingHours);
+        setProfile((current) => ({
+          ...current,
+          name: store.name || current.name,
+          address: store.address || current.address,
+          phone: store.phone || current.phone,
+          email: store.email || current.email,
+        }));
+      })
+      .catch(() => {});
     window.addEventListener('storage', sync);
     window.addEventListener('pharmacy-settings-changed', sync);
     // Open or closed, and the "now" mark, follow the clock.
