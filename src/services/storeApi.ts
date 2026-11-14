@@ -159,7 +159,8 @@ export const listMovements = () => apiRequest<ApiMovement[]>('/stock/movements')
 export const receiveStock = (input: {
   productId: number;
   quantity: number;
-  unitCost: number;
+  /** Leave out when the cost is not known yet. */
+  unitCost?: number;
   /** Empty: NO-BATCH. */
   lot?: string;
   /** Empty: the item does not expire. */

@@ -31,6 +31,7 @@ import {
   updateProduct,
   registerProduct,
   receiveStock,
+  adjustStock,
 } from '../../services/storeApi';
 import {
   CATALOG_SYNCED,
@@ -613,14 +614,12 @@ export function AdminPage({ section }: { section: AdminSection }) {
                 };
                 try {
                   // A supplier (items without a barcode) is recorded through Receive stock.
-                  const viaDelivery = Boolean(
-                    opening?.supplier && product.stock > 0 && product.cost,
-                  );
+                  const viaDelivery = Boolean(opening?.supplier && product.stock > 0);
                   const receive = (productId: number) =>
                     receiveStock({
                       productId,
                       quantity: product.stock,
-                      unitCost: product.cost!,
+                      unitCost: product.cost ?? undefined,
                       lot: opening?.lot || undefined,
                       expiry: opening?.expiry || undefined,
                       supplier: opening?.supplier,
@@ -635,6 +634,17 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     if (viaDelivery) await receive(editing.id);
                   } else if (editing?.id) {
                     await updateProduct(editing.id, fields);
+                    // Needs price: the shelf count was corrected in the form. Saved as a
+                    // count adjustment, so the ledger keeps the change.
+                    const diff = product.stock - editing.stock;
+                    if (editing.needsPrice && diff !== 0) {
+                      await adjustStock({
+                        productId: editing.id,
+                        kind: diff > 0 ? 'count-more' : 'count-less',
+                        quantity: Math.abs(diff),
+                        reason: 'Shelf count corrected before pricing',
+                      });
+                    }
                   } else if (product.noBarcode) {
                     const created = await createProduct({
                       ...fields,
@@ -1085,6 +1095,8 @@ function InventoryForm({
   /** Sold at the Sales Counter before it was on the list: fill in the rest and the stock. */
   const registering = Boolean(product?.unregistered);
   const withOpening = isNew || registering;
+  /** Waiting under Needs price: the shelf count may still be corrected while setting the price. */
+  const countEditable = !withOpening && Boolean(product?.needsPrice);
   /**
    * No barcode (cotton, bandages, loose items): only name, cost and selling price are needed;
    * generic, category, supplier, batch and expiry are optional.
@@ -1100,7 +1112,9 @@ function InventoryForm({
   const [price, setPrice] = useState(
     product && !product.needsPrice ? product.price.replace(/[₱,]/g, '') : '',
   );
-  const [stock, setStock] = useState('');
+  const [stock, setStock] = useState(
+    product?.needsPrice && !product.unregistered ? String(product.stock) : '',
+  );
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [error, setError] = useState('');
@@ -1218,10 +1232,6 @@ function InventoryForm({
         setError('Type the product name.');
         return;
       }
-      if (withOpening && !hasCost) {
-        setError('Enter how much it costs you (what you pay the supplier).');
-        return;
-      }
     } else if (!name.trim() || !barcode.trim() || !detail.trim()) {
       setError('Fill in the product name, barcode and generic / brand.');
       return;
@@ -1240,17 +1250,19 @@ function InventoryForm({
       setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
       return;
     }
-    if (withOpening && openingQty > 0 && !noBarcode) {
-      if (!lot.trim()) {
-        setError('Enter the batch number of the stock you are adding.');
-        return;
-      }
-      if (!expiry) {
-        setError('Enter the expiry date of the stock you are adding.');
-        return;
-      }
+    // The expiry may stay blank (not on the box, or set later); the batch number is needed.
+    if (withOpening && openingQty > 0 && !noBarcode && !lot.trim()) {
+      setError('Enter the batch number of the stock you are adding.');
+      return;
     }
-    const quantity = withOpening ? openingQty : product.stock;
+    if (
+      countEditable &&
+      (stock.trim() === '' || !Number.isInteger(Number(stock)) || Number(stock) < 0)
+    ) {
+      setError('Enter the units on the shelf now, as a whole number (0 or more).');
+      return;
+    }
+    const quantity = withOpening || countEditable ? openingQty : product.stock;
     setSaving(true);
     const problem = await onSave(
       {
@@ -1561,7 +1573,7 @@ function InventoryForm({
                   />
                 </label>
                 <label>
-                  Expiry date{noBarcode ? ' (optional)' : ''}
+                  Expiry date (optional)
                   <input
                     type="date"
                     value={expiry}
@@ -1593,6 +1605,23 @@ function InventoryForm({
                       hasCost ? `, worth ${peso(openingQty * costValue)} at cost` : ''
                     }.`
                   : 'Leave it at 0 if the first delivery has not arrived. Add it later with Receive stock.'}
+              </p>
+            </>
+          ) : countEditable ? (
+            <>
+              <label>
+                Units on the shelf now
+                <input
+                  value={stock}
+                  onChange={(event) => setStock(event.target.value.replace(/\D/g, ''))}
+                  placeholder="0"
+                  inputMode="numeric"
+                />
+              </label>
+              <p className="product-form__hint">
+                {openingQty !== product.stock
+                  ? `Recorded as a count correction: ${product.stock} → ${openingQty}.`
+                  : 'Count the shelf. If the number is wrong, fix it here before you set the price.'}
               </p>
             </>
           ) : (

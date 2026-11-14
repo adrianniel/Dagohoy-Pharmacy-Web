@@ -779,25 +779,26 @@ function ReceiveForm({
       showToast('Enter how many units arrived, as a whole number.', 'error');
       return;
     }
-    if (!hasCost) {
-      showToast('Enter the cost per unit from the delivery receipt.', 'error');
+    // Cost, selling price and expiry may stay blank: set them later on the product.
+    if (cost.trim() !== '' && !hasCost) {
+      showToast('The cost per unit must be more than zero, or leave it blank.', 'error');
       return;
     }
-    if (!hasSelling) {
-      showToast('Enter the selling price per unit.', 'error');
+    if (selling.trim() !== '' && !hasSelling) {
+      showToast('The selling price must be more than zero, or leave it blank.', 'error');
       return;
     }
     if (!lot.trim()) {
       showToast('Enter the batch number printed on the box.', 'error');
       return;
     }
-    if (!expiry || daysUntil(expiry) < 0) {
-      showToast('Enter an expiry date that has not passed yet.', 'error');
+    if (expiry && daysUntil(expiry) < 0) {
+      showToast('That expiry date has passed. Check the box, or leave it blank.', 'error');
       return;
     }
-    const unitCost = Math.round(costValue * 100) / 100;
+    const unitCost = hasCost ? Math.round(costValue * 100) / 100 : undefined;
     const newPrice = Math.round(sellingValue * 100) / 100;
-    const priceChanged = Math.abs(newPrice - priceValue(product.price)) >= 0.005;
+    const priceChanged = hasSelling && Math.abs(newPrice - priceValue(product.price)) >= 0.005;
     const lotCode = lot.trim().toUpperCase();
     setSaving(true);
     try {
@@ -807,7 +808,7 @@ function ReceiveForm({
         quantity: qty,
         unitCost,
         lot: lotCode,
-        expiry,
+        expiry: expiry || undefined,
         supplier: supplier || undefined,
         reference: reference.trim() || undefined,
         sellingPrice: priceChanged ? newPrice : undefined,
@@ -824,10 +825,11 @@ function ReceiveForm({
     setLot('');
     setExpiry('');
     setReference('');
+    const noPrice = !priceChanged && !priceValue(product.price);
     showToast(
       `${qty} unit(s) of ${product.product} received into lot ${lotCode}.${
         priceChanged ? ` Selling price updated to ${peso(newPrice)}.` : ''
-      }`,
+      }${noPrice ? ' It has no selling price yet: find it under Needs price.' : ''}`,
     );
     onSaved();
   }
@@ -835,8 +837,9 @@ function ReceiveForm({
   return (
     <form className="stock-index__form" onSubmit={submit}>
       <p className="stock-index__form-title">
-        Copy the details from the delivery receipt and the box label. The supplier price can change
-        each delivery, so enter the cost every time.
+        Copy the details from the delivery receipt and the box label. Not sure of the cost, the
+        selling price or the expiry yet? Leave them blank and set them later; a product with no
+        selling price waits under Needs price.
       </p>
       <div className="stock-index__form-grid">
         <label>
@@ -870,12 +873,11 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Cost per unit (what you paid)
+          Cost per unit (optional)
           <input
             type="number"
             min="0.01"
             step="0.01"
-            required
             inputMode="decimal"
             value={cost}
             onChange={(event) => setCost(event.target.value)}
@@ -885,12 +887,11 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Selling price per unit
+          Selling price per unit (optional)
           <input
             type="number"
             min="0.01"
             step="0.01"
-            required
             inputMode="decimal"
             value={selling}
             onChange={(event) => setSelling(event.target.value)}
@@ -908,13 +909,8 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Expiry date
-          <input
-            type="date"
-            required
-            value={expiry}
-            onChange={(event) => setExpiry(event.target.value)}
-          />
+          Expiry date (optional)
+          <input type="date" value={expiry} onChange={(event) => setExpiry(event.target.value)} />
         </label>
         <label>
           Delivery receipt no. (optional)
