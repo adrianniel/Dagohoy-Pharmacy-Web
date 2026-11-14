@@ -985,7 +985,7 @@ function ReceiveForm({
         : '. Add its batch number later under Needs details.';
     showToast(
       `${qty} unit(s) of ${product.product} received${where}${
-        priceChanged ? ` Selling price updated to ${peso(newPrice)}.` : ''
+        priceChanged ? ` This batch sells at ${peso(newPrice)}.` : ''
       }${noPrice ? ' It has no selling price yet: find it under Needs price.' : ''}`,
     );
     onSaved();
@@ -1096,7 +1096,8 @@ function ReceiveForm({
         </span>
         {hasSelling && currentPrice > 0 && Math.abs(sellingValue - currentPrice) >= 0.005 && (
           <span>
-            New selling price <b>{peso(sellingValue)}</b> (was {peso(currentPrice)})
+            This batch sells at <b>{peso(sellingValue)}</b> (earlier batches keep{' '}
+            {peso(currentPrice)})
           </span>
         )}
       </div>

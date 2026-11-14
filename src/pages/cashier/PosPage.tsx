@@ -9,6 +9,8 @@ import {
   SetPriceItem,
 } from '../../components/cashier/ScannedNewProduct';
 import { CATALOG_SYNCED, syncAfterSale } from '../../data/serverSync';
+import { initialBatches, loadBatches } from '../../data/operationsStore';
+import { lineAmount, nextUnitPrice, priceParts } from '../../data/batchPricing';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
 import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
@@ -105,7 +107,6 @@ function voidMoneyNote(sale: StoredSale) {
       return `Return ${formatMoney(total)} to the customer.`;
   }
 }
-const toAmount = (price: string) => Number(price.replace(/[₱,]/g, ''));
 const formatMoney = (amount: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 const formatReceiptDate = (value: string) =>
@@ -272,10 +273,12 @@ export function CashierPosPage() {
   }, []);
   // The Sales Counter is always ready for the scanner: a sale is open as soon as it has an item.
   const transactionActive = cart.length > 0;
-  const subtotal = cart.reduce(
-    (total, line) => total + toAmount(line.product.price) * line.quantity,
-    0,
-  );
+  // Each batch may sell at its own price; the batches reload with the products after a sync.
+  const batches = useMemo(() => loadBatches(initialBatches), [products]);
+  const amountOf = (product: PosProduct, quantity: number) =>
+    lineAmount(product, quantity, batches);
+  const unitPriceOf = (product: PosProduct) => nextUnitPrice(product, batches);
+  const subtotal = cart.reduce((total, line) => total + amountOf(line.product, line.quantity), 0);
   const totalItems = cart.reduce((total, line) => total + line.quantity, 0);
   // The cashier works out the amount off on a calculator and types it in pesos.
   const discountTyped = Math.max(0, Math.round((Number(discountInput) || 0) * 100) / 100);
@@ -864,7 +867,7 @@ export function CashierPosPage() {
                       </small>
                     </span>
                     <span>
-                      <b>{product.price}</b>
+                      <b>{formatMoney(unitPriceOf(product))}</b>
                       <small>
                         {product.unregistered
                           ? 'New · not registered'
@@ -895,7 +898,7 @@ export function CashierPosPage() {
                       </small>
                     </div>
                     <div className="pos-price-card__price">
-                      <b>{formatMoney(toAmount(checked.price))}</b>
+                      <b>{formatMoney(unitPriceOf(checked))}</b>
                       <small>per {checked.unit.toLowerCase()}</small>
                       <button
                         type="button"
@@ -946,7 +949,14 @@ export function CashierPosPage() {
                     )}
                   </strong>
                   <small>
-                    {formatMoney(toAmount(product.price))} / {product.unit}
+                    {/* Units from batches with different prices: show each price. */}
+                    {priceParts(product, quantity, batches)
+                      .map(
+                        (part) =>
+                          `${part.quantity > 1 || quantity > 1 ? `${part.quantity} × ` : ''}${formatMoney(part.price)}`,
+                      )
+                      .join(' + ')}{' '}
+                    / {product.unit}
                   </small>
                 </div>
                 <div className="pos-ticket-qty">
@@ -973,7 +983,7 @@ export function CashierPosPage() {
                   </button>
                 </div>
                 <strong className="pos-ticket-line__amount">
-                  {formatMoney(toAmount(product.price) * quantity)}
+                  {formatMoney(amountOf(product, quantity))}
                 </strong>
               </div>
             ))}
@@ -1418,7 +1428,7 @@ export function CashierPosPage() {
                           <span>
                             <b>{quantity}×</b> {product.product}
                           </span>
-                          <span>{formatMoney(toAmount(product.price) * quantity)}</span>
+                          <span>{formatMoney(amountOf(product, quantity))}</span>
                         </li>
                       ))}
                     </ul>

@@ -137,8 +137,20 @@ export type ApiLot = {
   onHand: number;
   receivedAt: string | null;
   unitCost: number | null;
+  /** This batch's own selling price; null: it sells at the product's price. */
+  sellingPrice: number | null;
   supplier: string | null;
 };
+
+/** A batch's own cost and selling price. Left out: unchanged; null: cleared. */
+export const setLotPrices = (
+  batchId: number,
+  input: { unitCost?: number | null; sellingPrice?: number | null },
+) =>
+  apiRequest<ApiLot>(`/stock/lots/${batchId}/prices`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 
 export type ApiMovement = {
   id: number;

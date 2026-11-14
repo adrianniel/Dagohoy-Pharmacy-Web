@@ -35,6 +35,9 @@ export type InventoryBatch = {
   receivedAt?: string;
   /** Cost per unit paid to the supplier for this lot. */
   unitCost?: number;
+  /** This lot's own selling price; missing: it sells at the product's price. */
+  sellingPrice?: number;
+  productId?: number;
   supplier?: string;
 };
 

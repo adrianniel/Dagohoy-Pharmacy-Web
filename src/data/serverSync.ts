@@ -103,6 +103,8 @@ export async function syncStock() {
       stock: lot.onHand,
       receivedAt: lot.receivedAt ?? undefined,
       unitCost: lot.unitCost ?? undefined,
+      sellingPrice: lot.sellingPrice ?? undefined,
+      productId: lot.productId,
       supplier: lot.supplier ?? undefined,
     })),
   );

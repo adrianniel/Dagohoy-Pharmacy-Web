@@ -4963,6 +4963,122 @@
   color: #6a7b71;
 }
 
+/* The batches of a product, right under its row in the product list. */
+.product-batches-row > td {
+  padding-top: 0 !important;
+  border-top: 0 !important;
+  text-align: left !important;
+}
+
+.product-batches {
+  /* The product table scrolls sideways; the batches stay in view on the left. */
+  position: sticky;
+  left: 0;
+  max-width: min(620px, 78vw);
+  white-space: normal;
+  display: grid;
+  gap: 6px;
+  margin: 0 0 4px;
+  padding: 0 0 0 14px;
+  border-left: 3px solid #dfe6da;
+  list-style: none;
+}
+
+.product-batches__item {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f6f8f2;
+  font-size: 0.84rem;
+}
+
+.product-batches__lot,
+.product-batches__money {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.product-batches__lot small,
+.product-batches__money small {
+  color: #6a7b71;
+  font-size: 0.74rem;
+}
+
+.product-batches__money i {
+  color: #6a7b71;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.product-batches__item > button {
+  min-height: 34px;
+  padding: 0 14px;
+}
+
+.product-batches__edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+
+.product-batches__edit label {
+  display: grid;
+  gap: 3px;
+  font-size: 0.74rem;
+  color: #6a7b71;
+}
+
+.product-batches__edit input {
+  width: 150px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cfd8c8;
+  border-radius: 8px;
+  font: inherit;
+  color: #13322a;
+}
+
+.product-batches__actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .product-batches {
+    position: static;
+    max-width: none;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .product-batches__item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .product-batches__lot {
+    grid-column: 1 / -1;
+  }
+
+  .product-batches__item > button {
+    grid-column: 1 / -1;
+  }
+
+  .product-batches__edit input {
+    width: 100%;
+  }
+
+  .product-batches__edit label {
+    flex: 1 1 130px;
+  }
+}
+
 .product-new-badge {
   display: inline-block;
   padding: 3px 10px;

@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
@@ -19,7 +19,8 @@ import {
   InventoryProduct,
   stockStatus,
 } from '../../data/inventoryStore';
-import { initialBatches, loadBatches } from '../../data/operationsStore';
+import { initialBatches, loadBatches, type InventoryBatch } from '../../data/operationsStore';
+import { ProductBatches } from '../../components/admin/ProductBatches';
 import {
   archiveProduct,
   createProduct,
@@ -235,6 +236,26 @@ export function AdminPage({ section }: { section: AdminSection }) {
     [products],
   );
   const needsCostProducts = useMemo(() => products.filter(needsCost), [products]);
+  /** Batches with units, by product (they reload with the products after a sync). */
+  const batchesByProduct = useMemo(() => {
+    const map = new Map<number, InventoryBatch[]>();
+    for (const batch of loadBatches(initialBatches)) {
+      if (batch.productId === undefined || batch.stock <= 0) continue;
+      map.set(batch.productId, [...(map.get(batch.productId) ?? []), batch]);
+    }
+    return map;
+  }, [products]);
+  /** The product price, or "₱78 – ₱80" when its batches sell at different prices. */
+  const priceRange = (product: InventoryProduct) => {
+    const base = Number(product.price.replace(/[₱,]/g, ''));
+    const prices = (product.id !== undefined ? (batchesByProduct.get(product.id) ?? []) : []).map(
+      (batch) => batch.sellingPrice ?? base,
+    );
+    if (!prices.length) return product.price;
+    const low = Math.min(...prices);
+    const high = Math.max(...prices);
+    return low === high ? `₱${low.toFixed(2)}` : `₱${low.toFixed(2)} – ₱${high.toFixed(2)}`;
+  };
   const filteredProducts = useMemo(
     () =>
       products.filter(
@@ -525,57 +546,78 @@ export function AdminPage({ section }: { section: AdminSection }) {
                     </thead>
                     <tbody>
                       {filteredProducts.map((product) => (
-                        <tr key={product.barcode}>
-                          <td>
-                            <strong>{product.product}</strong>
-                          </td>
-                          <td className="cashier-mono" data-label="Barcode">
-                            {product.noBarcode ? 'No barcode' : product.barcode}
-                          </td>
-                          <td className="product-category-cell" data-label="Category">
-                            <strong>{product.category ?? 'Uncategorized'}</strong>
-                            <small>{product.detail}</small>
-                          </td>
-                          <td data-label="Price">
-                            {product.needsPrice ? (
-                              <span className="product-new-badge">No price yet</span>
-                            ) : (
-                              <strong>{product.price}</strong>
+                        <Fragment key={product.barcode}>
+                          <tr>
+                            <td>
+                              <strong>{product.product}</strong>
+                            </td>
+                            <td className="cashier-mono" data-label="Barcode">
+                              {product.noBarcode ? 'No barcode' : product.barcode}
+                            </td>
+                            <td className="product-category-cell" data-label="Category">
+                              <strong>{product.category ?? 'Uncategorized'}</strong>
+                              <small>{product.detail}</small>
+                            </td>
+                            <td data-label="Price">
+                              {product.needsPrice ? (
+                                <span className="product-new-badge">No price yet</span>
+                              ) : (
+                                <strong>{priceRange(product)}</strong>
+                              )}
+                            </td>
+                            <td data-label="On hand">
+                              {product.unregistered ? '—' : product.stock}
+                            </td>
+                            <td data-label="Status">
+                              {product.unregistered ? (
+                                <span className="product-new-badge">Not registered</span>
+                              ) : (
+                                <StatusBadge value={product.status} />
+                              )}
+                            </td>
+                            <td>
+                              <button
+                                className={
+                                  product.unregistered ||
+                                  product.needsPrice ||
+                                  listView === 'needs-cost'
+                                    ? 'cashier-primary-action'
+                                    : 'cashier-view-button'
+                                }
+                                type="button"
+                                onClick={() => {
+                                  setEditing(product);
+                                  setFormOpen(true);
+                                }}
+                              >
+                                {product.unregistered
+                                  ? 'Register'
+                                  : product.needsPrice
+                                    ? 'Set price'
+                                    : listView === 'needs-cost'
+                                      ? 'Set cost'
+                                      : 'Edit / stock'}
+                              </button>
+                            </td>
+                          </tr>
+                          {/* Its batches, right under it: units, cost and price of each. */}
+                          {product.id !== undefined &&
+                            (batchesByProduct.get(product.id)?.length ?? 0) > 0 && (
+                              <tr className="product-batches-row">
+                                <td colSpan={7} data-label-fixed="">
+                                  <ProductBatches
+                                    batches={batchesByProduct.get(product.id)!}
+                                    productPrice={
+                                      product.needsPrice
+                                        ? null
+                                        : Number(product.price.replace(/[₱,]/g, ''))
+                                    }
+                                    onSaved={reloadCatalog}
+                                  />
+                                </td>
+                              </tr>
                             )}
-                          </td>
-                          <td data-label="On hand">{product.unregistered ? '—' : product.stock}</td>
-                          <td data-label="Status">
-                            {product.unregistered ? (
-                              <span className="product-new-badge">Not registered</span>
-                            ) : (
-                              <StatusBadge value={product.status} />
-                            )}
-                          </td>
-                          <td>
-                            <button
-                              className={
-                                product.unregistered ||
-                                product.needsPrice ||
-                                listView === 'needs-cost'
-                                  ? 'cashier-primary-action'
-                                  : 'cashier-view-button'
-                              }
-                              type="button"
-                              onClick={() => {
-                                setEditing(product);
-                                setFormOpen(true);
-                              }}
-                            >
-                              {product.unregistered
-                                ? 'Register'
-                                : product.needsPrice
-                                  ? 'Set price'
-                                  : listView === 'needs-cost'
-                                    ? 'Set cost'
-                                    : 'Edit / stock'}
-                            </button>
-                          </td>
-                        </tr>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>

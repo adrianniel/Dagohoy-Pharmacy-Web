@@ -263,4 +263,21 @@
   .cashier-shell .cashier-content table.cashier-table td[colspan]::before {
     display: none;
   }
+
+  /* A product's batches: part of the product's card, just below it. */
+  .cashier-shell .cashier-content table.cashier-table tr:has(+ tr.product-batches-row) {
+    margin-bottom: 0;
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table tr.product-batches-row {
+    padding-top: 0;
+    border-top: 0;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .cashier-shell .cashier-content table.cashier-table tr.product-batches-row td {
+    text-align: left;
+  }
 }
