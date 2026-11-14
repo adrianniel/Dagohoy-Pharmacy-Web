@@ -1134,7 +1134,10 @@ function InventoryForm({
   const [noBarcode, setNoBarcode] = useState(Boolean(product?.noBarcode));
   const [supplier, setSupplier] = useState('');
   const [name, setName] = useState(product?.product ?? '');
-  const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode);
+  // An item saved without a barcode starts blank here, so its real one can be added later.
+  const [barcode, setBarcode] = useState(
+    product?.noBarcode ? '' : (product?.barcode ?? initialBarcode),
+  );
   const [detail, setDetail] = useState(product?.detail ?? '');
   const [category, setCategory] = useState(product?.category ?? '');
   const [unit, setUnit] = useState(product?.unit ?? 'Tablet');
@@ -1253,17 +1256,19 @@ function InventoryForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
-    if (existing && !noBarcode) {
+    // Fast encoding: a new product needs only its name, cost and selling price. A blank barcode
+    // gets the system's own code; the other details can be filled in later with Edit.
+    const withoutBarcode = noBarcode || (isNew && !barcode.trim());
+    if (existing && !withoutBarcode) {
       setError(`${existing.product} already has this barcode. Use Receive stock to add its units.`);
       return;
     }
-    if (noBarcode) {
-      if (!name.trim()) {
-        setError('Type the product name.');
-        return;
-      }
-    } else if (!name.trim() || !barcode.trim() || !detail.trim()) {
-      setError('Fill in the product name, barcode and generic / brand.');
+    if (!name.trim()) {
+      setError('Type the product name.');
+      return;
+    }
+    if (isNew && (!hasCost || !hasPrice)) {
+      setError('Enter the cost and the selling price (both more than ₱0).');
       return;
     }
     // A blank or ₱0 price sends the product to Needs price (the counter will not sell it until
@@ -1280,11 +1285,6 @@ function InventoryForm({
       setError('The cost must be above ₱0, or leave it blank if you do not know it yet.');
       return;
     }
-    // The expiry may stay blank (not on the box, or set later); the batch number is needed.
-    if (withOpening && openingQty > 0 && !noBarcode && !lot.trim()) {
-      setError('Enter the batch number of the stock you are adding.');
-      return;
-    }
     if (
       countEditable &&
       (stock.trim() === '' || !Number.isInteger(Number(stock)) || Number(stock) < 0)
@@ -1297,8 +1297,9 @@ function InventoryForm({
     const problem = await onSave(
       {
         ...(product ?? {}),
-        barcode: noBarcode ? (product?.barcode ?? '') : barcode.trim(),
-        noBarcode: noBarcode || undefined,
+        // Batch and expiry left blank: saved as NO-BATCH with no expiry.
+        barcode: withoutBarcode ? (product?.barcode ?? '') : barcode.trim() || product!.barcode,
+        noBarcode: (isNew ? withoutBarcode : product.noBarcode && !barcode.trim()) || undefined,
         product: name.trim(),
         detail: detail.trim() || name.trim(),
         category: category.trim() || 'Other',
@@ -1416,11 +1417,9 @@ function InventoryForm({
               </span>
             </label>
           )}
-          {noBarcode ? (
+          {isNew && noBarcode ? (
             <p className="product-form__lookup">
-              {isNew
-                ? 'The system gives it its own code. Find it by name at the Sales Counter.'
-                : `No barcode · code ${product?.barcode ?? ''}. Find it by name at the Sales Counter.`}
+              The system gives it its own code. Find it by name at the Sales Counter.
             </p>
           ) : (
             <div className={`product-form__scan is-${lookupState}`}>
@@ -1455,8 +1454,10 @@ function InventoryForm({
               <p className="product-form__lookup" aria-live="polite">
                 {lookupNote ||
                   (isNew
-                    ? 'Scan it and the name, brand and category fill in by themselves. No barcode? Type a code of your own.'
-                    : 'Change it only if the product has a new barcode.')}
+                    ? 'Scan it and the name, brand and category fill in by themselves. No barcode yet? Leave it blank and add it later.'
+                    : product?.noBarcode
+                      ? `No barcode yet (code ${product.barcode}). Scan it here when you have it.`
+                      : 'Change it only if the product has a new barcode.')}
               </p>
             </div>
           )}
@@ -1474,7 +1475,7 @@ function InventoryForm({
               />
             </label>
             <label>
-              Generic / brand{noBarcode ? ' (optional)' : ''}
+              Generic / brand (optional)
               <input
                 value={detail}
                 onChange={(event) => setDetail(event.target.value)}
@@ -1482,7 +1483,7 @@ function InventoryForm({
               />
             </label>
             <label>
-              Category{noBarcode ? ' (optional)' : ''}
+              Category (optional)
               <input
                 list="product-form-categories"
                 value={category}
@@ -1508,7 +1509,7 @@ function InventoryForm({
 
         <fieldset className="product-form__section">
           <legend>3. Price per {unit.toLowerCase()}</legend>
-          {!product?.unregistered && (
+          {product && !product.unregistered && (
             <p className="product-form__later">
               Not sure yet? Leave the price blank or 0: the product is saved under{' '}
               <b>Needs price</b> with its stock, and can be sold once its selling price is set.
@@ -1593,7 +1594,7 @@ function InventoryForm({
                   />
                 </label>
                 <label>
-                  Batch number {openingQty > 0 && !noBarcode ? '' : '(optional)'}
+                  Batch number (optional)
                   <input
                     value={lot}
                     onChange={(event) => setLot(cleanBatch(event.target.value))}
