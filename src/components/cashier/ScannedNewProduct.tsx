@@ -181,10 +181,13 @@ export function ScannedNewProduct({
  */
 export function SetPriceItem({
   product,
+  byPiece,
   onCancel,
   onPriced,
 }: {
   product: InventoryProduct;
+  /** Sets the price of one piece instead of the whole unit's. */
+  byPiece?: boolean;
   onCancel: () => void;
   onPriced: (product: InventoryProduct) => void;
 }) {
@@ -200,7 +203,8 @@ export function SetPriceItem({
     setSaving(true);
     setError('');
     try {
-      await updateProduct(product.id, { price: Math.round(amount * 100) / 100 });
+      const rounded = Math.round(amount * 100) / 100;
+      await updateProduct(product.id, byPiece ? { piecePrice: rounded } : { price: rounded });
       await syncCatalog();
       const priced = getInventory().find((item) => item.id === product.id);
       if (!priced) throw new Error('Saved, but the product list did not refresh. Scan it again.');
@@ -226,8 +230,9 @@ export function SetPriceItem({
         <p className="pos-new-product__flag">No price yet</p>
         <h2>{product.product}</h2>
         <p className="pos-new-product__note">
-          This product is on the list but its selling price was not set. Set it now to sell it; it
-          is saved for next time.
+          This product is on the list but its{' '}
+          {byPiece ? `price per ${product.unit.toLowerCase()}` : 'selling price'} was not set. Set
+          it now to sell it; it is saved for next time.
         </p>
         <div className="pos-new-product__grid">
           <label className="is-wide pos-new-product__price">

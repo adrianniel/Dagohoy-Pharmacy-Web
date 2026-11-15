@@ -1,3 +1,9 @@
+import {
+  PieceSaleFields,
+  pieceSettingOf,
+  readPieceSetting,
+  type PieceSetting,
+} from '../../components/admin/PieceSaleFields';
 import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
@@ -564,9 +570,24 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               ) : (
                                 <strong>{priceRange(product)}</strong>
                               )}
+                              {product.piecesPerUnit && (
+                                <small className="product-piece-note">
+                                  {product.piecePrice
+                                    ? `₱${product.piecePrice.toFixed(2)}`
+                                    : 'No price'}{' '}
+                                  per {(product.pieceName || 'piece').toLowerCase()}
+                                </small>
+                              )}
                             </td>
                             <td data-label="On hand">
                               {product.unregistered ? '—' : product.stock}
+                              {product.loosePieces ? (
+                                <small className="product-piece-note">
+                                  + {product.loosePieces} loose{' '}
+                                  {(product.pieceName || 'piece').toLowerCase()}
+                                  {product.loosePieces === 1 ? '' : 's'}
+                                </small>
+                              ) : null}
                             </td>
                             <td data-label="Status">
                               {product.unregistered ? (
@@ -683,6 +704,10 @@ export function AdminPage({ section }: { section: AdminSection }) {
                   // No price yet: left out, so the product waits under Needs price.
                   price: product.needsPrice ? null : Number(product.price.replace(/[₱,]/g, '')),
                   cost: product.cost ?? null,
+                  // Sold by piece: left out (null) turns it off.
+                  piecesPerUnit: product.piecesPerUnit ?? null,
+                  piecePrice: product.piecePrice ?? null,
+                  pieceName: product.pieceName ?? null,
                 };
                 try {
                   // A supplier (items without a barcode) is recorded through Receive stock.
@@ -1210,6 +1235,7 @@ function InventoryForm({
   );
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
+  const [pieces, setPieces] = useState<PieceSetting>(() => pieceSettingOf(product));
   const [error, setError] = useState('');
   /** New product: the scanned barcode belongs to a product already on the list. */
   const [existing, setExisting] = useState<InventoryProduct | null>(null);
@@ -1349,6 +1375,11 @@ function InventoryForm({
       setError('Enter the units on the shelf now, as a whole number (0 or more).');
       return;
     }
+    const pieceFields = readPieceSetting(pieces);
+    if (typeof pieceFields === 'string') {
+      setError(pieceFields);
+      return;
+    }
     const quantity = withOpening || countEditable ? openingQty : product.stock;
     setSaving(true);
     const problem = await onSave(
@@ -1366,6 +1397,9 @@ function InventoryForm({
         cost: hasCost ? Math.round(costValue * 100) / 100 : product?.cost,
         stock: quantity,
         status: stockStatus(quantity),
+        piecesPerUnit: pieceFields.piecesPerUnit ?? undefined,
+        piecePrice: pieceFields.piecePrice ?? undefined,
+        pieceName: pieceFields.pieceName ?? undefined,
       },
       withOpening && openingQty > 0
         ? { lot: lot.trim().toUpperCase(), expiry, supplier: supplier.trim() || undefined }
@@ -1634,6 +1668,14 @@ function InventoryForm({
               </>
             )}
           </div>
+          {!product?.unregistered && (
+            <PieceSaleFields
+              unit={unit}
+              unitPrice={hasPrice ? priceValue : undefined}
+              value={pieces}
+              onChange={setPieces}
+            />
+          )}
         </fieldset>
 
         <fieldset className="product-form__section">

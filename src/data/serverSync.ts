@@ -78,6 +78,10 @@ export function mergeCatalog(server: ApiProduct[]): InventoryProduct[] {
       unregistered: item.unregistered || undefined,
       needsPrice: (!item.unregistered && item.price == null) || undefined,
       noBarcode: item.noBarcode || undefined,
+      piecesPerUnit: item.piecesPerUnit ?? undefined,
+      piecePrice: item.piecePrice ?? undefined,
+      pieceName: item.pieceName ?? undefined,
+      loosePieces: item.loosePieces || undefined,
     };
   });
 }

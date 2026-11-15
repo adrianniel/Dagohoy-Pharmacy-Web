@@ -1,7 +1,14 @@
 import type { InventoryBatch } from './operationsStore';
 
 /** The parts of a product the pricing needs (a Sales Counter item or a product list row). */
-type InventoryProduct = { id?: number; barcode: string; price: string; unregistered?: boolean };
+type InventoryProduct = {
+  id?: number;
+  barcode: string;
+  price: string;
+  unregistered?: boolean;
+  /** Sold by piece: one price per piece, whatever the batch. */
+  byPiece?: boolean;
+};
 
 /**
  * What a quantity of a product costs the customer, the way the server prices a sale: units
@@ -46,7 +53,7 @@ export function priceParts(
   batches: InventoryBatch[],
 ): PricePart[] {
   const base = toAmount(product.price);
-  if (product.unregistered) return [{ quantity, price: base }];
+  if (product.unregistered || product.byPiece) return [{ quantity, price: base }];
   const parts: PricePart[] = [];
   let left = quantity;
   for (const batch of sellableBatches(product, batches)) {

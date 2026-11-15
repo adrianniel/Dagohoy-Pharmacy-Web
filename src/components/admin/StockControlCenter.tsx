@@ -10,7 +10,14 @@ import {
   loadMovements,
 } from '../../data/operationsStore';
 import { syncAfterStockChange } from '../../data/serverSync';
-import { adjustStock, fillLotDetails, receiveStock } from '../../services/storeApi';
+import { adjustStock, fillLotDetails, receiveStock, updateProduct } from '../../services/storeApi';
+import {
+  PieceSaleFields,
+  pieceSettingChanged,
+  pieceSettingOf,
+  readPieceSetting,
+  type PieceSetting,
+} from './PieceSaleFields';
 import { useToast } from '../toast';
 import { cleanBatch } from '../../data/batchCode';
 import { lastLotCost } from '../../data/lotCost';
@@ -909,6 +916,8 @@ function ReceiveForm({
   const [lot, setLot] = useState('');
   const [expiry, setExpiry] = useState('');
   const [reference, setReference] = useState('');
+  const picked = products.find((item) => item.barcode === barcode);
+  const [pieces, setPieces] = useState<PieceSetting>(() => pieceSettingOf(picked));
 
   const expiryDays = expiry ? daysUntil(expiry) : null;
   const currentPrice = priceValue(products.find((item) => item.barcode === barcode)?.price);
@@ -928,8 +937,10 @@ function ReceiveForm({
 
   function pickProduct(next: string) {
     setBarcode(next);
-    const value = priceValue(products.find((item) => item.barcode === next)?.price);
+    const found = products.find((item) => item.barcode === next);
+    const value = priceValue(found?.price);
     setSelling(value ? value.toFixed(2) : '');
+    setPieces(pieceSettingOf(found));
   }
 
   const [saving, setSaving] = useState(false);
@@ -965,8 +976,15 @@ function ReceiveForm({
     const newPrice = Math.round(sellingValue * 100) / 100;
     const priceChanged = hasSelling && Math.abs(newPrice - priceValue(product.price)) >= 0.005;
     const lotCode = lot.trim().toUpperCase();
+    const pieceFields = readPieceSetting(pieces);
+    if (typeof pieceFields === 'string') {
+      showToast(pieceFields, 'error');
+      return;
+    }
     setSaving(true);
     try {
+      // Sold by piece is a setting of the product: saved on it before the delivery.
+      if (pieceSettingChanged(pieces, product)) await updateProduct(product.id, pieceFields);
       // The server saves the delivery, the lot and the ledger entry together.
       await receiveStock({
         productId: product.id,
@@ -1004,6 +1022,13 @@ function ReceiveForm({
         unitCost !== undefined ? `Cost ${peso(unitCost)} each` : 'Cost not set yet',
         priceChanged ? `This batch sells at ${peso(newPrice)}` : '',
         noPrice ? 'No selling price yet: find it under Needs price' : '',
+        pieceFields.piecesPerUnit
+          ? `Sold by ${(pieceFields.pieceName || 'piece').toLowerCase()} too: ${
+              pieceFields.piecesPerUnit
+            } in one ${product.unit.toLowerCase()}${
+              pieceFields.piecePrice ? `, ${peso(pieceFields.piecePrice)} each` : ''
+            }`
+          : '',
       ].filter(Boolean),
     });
   }
@@ -1094,6 +1119,14 @@ function ReceiveForm({
           />
         </label>
       </div>
+      {picked && !picked.unregistered && (
+        <PieceSaleFields
+          unit={picked.unit}
+          unitPrice={hasSelling ? sellingValue : currentPrice || undefined}
+          value={pieces}
+          onChange={setPieces}
+        />
+      )}
       <div className="stock-index__chips">
         <span>
           Profit per unit{' '}

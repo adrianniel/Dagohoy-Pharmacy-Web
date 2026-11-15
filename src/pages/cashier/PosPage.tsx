@@ -21,8 +21,36 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   stock?: number;
   localProductId?: number;
   localProductUnitId?: number | null;
+  /** The "(per piece)" row of a product also sold by piece: quantity and price are pieces. */
+  byPiece?: boolean;
+  /** For a piece row: what one whole unit is (Sachet, Bottle). */
+  packUnit?: string;
 };
 type CartLine = { product: PosProduct; quantity: number };
+
+/** Ends the code of a "(per piece)" row, so it is its own line in the sale. */
+const PIECE_CODE = '#piece';
+type PieceRow = CatalogProduct & Pick<PosProduct, 'byPiece' | 'packUnit'>;
+
+/**
+ * A product also sold by piece, as its own row: price per piece, and the pieces there are
+ * (loose pieces plus every whole unit opened). The server opens a unit when needed.
+ */
+function pieceRow(product: CatalogProduct): PieceRow {
+  const perUnit = product.piecesPerUnit ?? 1;
+  const piece = product.pieceName || 'Piece';
+  return {
+    ...product,
+    barcode: `${product.barcode}${PIECE_CODE}`,
+    product: `${product.product} (per ${piece.toLowerCase()})`,
+    unit: piece,
+    packUnit: product.unit,
+    price: `₱${(product.piecePrice ?? 0).toFixed(2)}`,
+    needsPrice: product.piecePrice === undefined || undefined,
+    stock: product.stock * perUnit + (product.loosePieces ?? 0),
+    byPiece: true,
+  };
+}
 
 /**
  * The sale on the counter is kept in this browser while it is open, so going to another page
@@ -41,9 +69,17 @@ function loadOpenSale(): { cart: CartLine[]; discount: string } {
     // Refresh each item from the current product list (price, stock); drop removed ones.
     const inventory = getInventory();
     const cart = saved.cart.flatMap((line) => {
-      const fresh = inventory.find((item) => item.barcode === line.product.barcode);
-      if (!fresh || !(line.quantity > 0)) return [];
-      const product: PosProduct = fresh.unregistered ? { ...fresh, stock: undefined } : fresh;
+      const byPiece = line.product.barcode.endsWith(PIECE_CODE);
+      const code = byPiece
+        ? line.product.barcode.slice(0, -PIECE_CODE.length)
+        : line.product.barcode;
+      const fresh = inventory.find((item) => item.barcode === code);
+      if (!fresh || !(line.quantity > 0) || (byPiece && !fresh.piecesPerUnit)) return [];
+      const product: PosProduct = byPiece
+        ? pieceRow(fresh)
+        : fresh.unregistered
+          ? { ...fresh, stock: undefined }
+          : fresh;
       return [{ product, quantity: line.quantity }];
     });
     return { cart, discount: saved.discount ?? '0' };
@@ -294,7 +330,16 @@ export function CashierPosPage() {
     () => rankProducts(products, query, !scannerOff),
     [products, query, scannerOff],
   );
-  const filteredProducts = useMemo(() => searchHits.map((hit) => hit.product), [searchHits]);
+  // A product also sold by piece shows a "(per piece)" row right under it.
+  const filteredProducts = useMemo(
+    () =>
+      searchHits.flatMap((hit): PieceRow[] =>
+        hit.product.piecesPerUnit && !hit.product.unregistered
+          ? [hit.product, pieceRow(hit.product)]
+          : [hit.product],
+      ),
+    [searchHits],
+  );
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
 
@@ -644,7 +689,11 @@ export function CashierPosPage() {
       );
       return null;
     }
-    return cart.map((line) => ({ productId: line.product.id!, quantity: line.quantity }));
+    return cart.map((line) => ({
+      productId: line.product.id!,
+      quantity: line.quantity,
+      byPiece: line.product.byPiece || undefined,
+    }));
   }
 
   async function submitVoid(event: FormEvent<HTMLFormElement>) {
@@ -860,7 +909,9 @@ export function CashierPosPage() {
                     <span>
                       <strong>{product.product}</strong>
                       <small>
-                        {product.detail} · {product.noBarcode ? 'No barcode' : product.barcode}
+                        {product.byPiece
+                          ? `${product.piecesPerUnit} ${product.unit.toLowerCase()}s in one ${product.packUnit?.toLowerCase()}`
+                          : `${product.detail} · ${product.noBarcode ? 'No barcode' : product.barcode}`}
                       </small>
                     </span>
                     <span>
@@ -873,7 +924,7 @@ export function CashierPosPage() {
                         {product.unregistered
                           ? 'New · not registered'
                           : product.stock > 0
-                            ? `${product.stock} left`
+                            ? `${product.stock}${product.byPiece ? ` ${product.unit.toLowerCase()}s` : ''} left`
                             : 'Out of stock'}
                       </small>
                     </span>
@@ -892,7 +943,7 @@ export function CashierPosPage() {
                       <strong>{checked.product}</strong>
                       <small>{checked.detail}</small>
                       <small>
-                        {checked.barcode} ·{' '}
+                        {checked.barcode.replace(PIECE_CODE, '')} ·{' '}
                         {checked.stock > 0
                           ? `${checked.stock} ${checked.unit.toLowerCase()}s left`
                           : 'Out of stock'}
@@ -1209,10 +1260,12 @@ export function CashierPosPage() {
       {pricing && (
         <SetPriceItem
           product={{ ...pricing, stock: pricing.stock ?? 0, status: 'In Stock' }}
+          byPiece={pricing.byPiece}
           onCancel={() => setPricing(null)}
           onPriced={(product) => {
             setPricing(null);
             setProducts(getInventory());
+            product = pricing.byPiece ? pieceRow(product) : product;
             addProduct(product);
             showToast(`${product.product} now sells at ${product.price}.`);
           }}

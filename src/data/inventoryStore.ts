@@ -25,6 +25,14 @@ export type InventoryProduct = {
   needsPrice?: boolean;
   /** No barcode of its own (code NB-000123): found by name. */
   noBarcode?: boolean;
+  /** Also sold by piece: pieces in one unit (35 tablets a sachet). */
+  piecesPerUnit?: number;
+  /** Price of one piece; missing: the Sales Counter asks for it. */
+  piecePrice?: number;
+  /** What one piece is called (Tablet, Sachet); missing: "Piece". */
+  pieceName?: string;
+  /** Pieces left from opened units (not counted in stock). */
+  loosePieces?: number;
 };
 
 const INVENTORY_KEY = 'dagohoy_demo_inventory';

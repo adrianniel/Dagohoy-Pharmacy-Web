@@ -18,6 +18,14 @@ export type ApiProduct = {
   unregistered?: boolean;
   /** Has no barcode of its own (its code is NB-000123); found by name. */
   noBarcode?: boolean;
+  /** Also sold by piece: pieces in one unit (35 tablets a sachet); null: whole units only. */
+  piecesPerUnit?: number | null;
+  /** Price of one piece; null: not set yet. */
+  piecePrice?: number | null;
+  /** What one piece is called (Tablet, Sachet); null: "Piece". */
+  pieceName?: string | null;
+  /** Pieces left from units opened for piece sales (not counted in onHand). */
+  loosePieces?: number;
 };
 
 export type ProductInput = {
@@ -35,6 +43,12 @@ export type ProductInput = {
   unregistered?: boolean;
   /** No barcode: the server gives it its own code (NB-000123). */
   noBarcode?: boolean;
+  /** Also sold by piece: pieces in one unit. Null turns it off. */
+  piecesPerUnit?: number | null;
+  /** Price of one piece; null: set it later. */
+  piecePrice?: number | null;
+  /** What one piece is called (Tablet, Sachet); empty: "Piece". */
+  pieceName?: string | null;
 };
 
 export const listProducts = () => apiRequest<ApiProduct[]>('/products');
@@ -300,7 +314,8 @@ export type ApiSale = {
 };
 
 export type NewSale = {
-  lines: Array<{ productId: number; quantity: number }>;
+  /** byPiece: the quantity is pieces of a product sold by piece. */
+  lines: Array<{ productId: number; quantity: number; byPiece?: boolean }>;
   payment: 'cash' | 'gcash' | 'credit' | 'no_charge';
   discountPercent?: number;
   /** Peso amount off the whole sale (typed by the cashier). */
