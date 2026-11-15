@@ -35,6 +35,9 @@ export type InventoryProduct = {
   loosePieces?: number;
 };
 
+/** What one unit of stock is (the product form's and Receive stock's "Sold per"). */
+export const UNITS = ['Tablet', 'Capsule', 'Sachet', 'Bottle', 'Tube', 'Pack', 'Box', 'Piece'];
+
 const INVENTORY_KEY = 'dagohoy_demo_inventory';
 
 export function getInventory(): InventoryProduct[] {

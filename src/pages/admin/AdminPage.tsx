@@ -1,3 +1,4 @@
+import { UNITS } from '../../data/inventoryStore';
 import {
   PieceSaleFields,
   pieceSettingOf,
@@ -1157,7 +1158,6 @@ function SupplierForm({
     </form>
   );
 }
-const UNITS = ['Tablet', 'Capsule', 'Sachet', 'Bottle', 'Tube', 'Pack', 'Box', 'Piece'];
 const COMMON_CATEGORIES = [
   'Pain & fever',
   'Cough & cold',

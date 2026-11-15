@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
 import { ProductPicker } from '../ScanInput';
-import { getInventory } from '../../data/inventoryStore';
+import { getInventory, UNITS } from '../../data/inventoryStore';
 import type { InventoryProduct } from '../../data/inventoryStore';
 import {
   InventoryBatch,
@@ -918,6 +918,9 @@ function ReceiveForm({
   const [reference, setReference] = useState('');
   const picked = products.find((item) => item.barcode === barcode);
   const [pieces, setPieces] = useState<PieceSetting>(() => pieceSettingOf(picked));
+  /** "Sold per": what one unit is; changing it renames the unit, the count stays. */
+  const [unit, setUnit] = useState(picked?.unit ?? 'Tablet');
+  const unitName = unit.toLowerCase();
 
   const expiryDays = expiry ? daysUntil(expiry) : null;
   const currentPrice = priceValue(products.find((item) => item.barcode === barcode)?.price);
@@ -941,6 +944,7 @@ function ReceiveForm({
     const value = priceValue(found?.price);
     setSelling(value ? value.toFixed(2) : '');
     setPieces(pieceSettingOf(found));
+    if (found) setUnit(found.unit);
   }
 
   const [saving, setSaving] = useState(false);
@@ -984,7 +988,12 @@ function ReceiveForm({
     setSaving(true);
     try {
       // Sold by piece is a setting of the product: saved on it before the delivery.
-      if (pieceSettingChanged(pieces, product)) await updateProduct(product.id, pieceFields);
+      // Sold per and selling by piece are settings of the product: saved on it first.
+      const productChanges = {
+        ...(unit !== product.unit ? { unit } : {}),
+        ...(pieceSettingChanged(pieces, product) ? pieceFields : {}),
+      };
+      if (Object.keys(productChanges).length) await updateProduct(product.id, productChanges);
       // The server saves the delivery, the lot and the ledger entry together.
       await receiveStock({
         productId: product.id,
@@ -1011,7 +1020,7 @@ function ReceiveForm({
     const noPrice = !priceChanged && !priceValue(product.price);
     onSaved({
       product: product.product,
-      units: `${qty} ${product.unit.toLowerCase()}${qty === 1 ? '' : 's'}`,
+      units: `${qty} ${unitName}${qty === 1 ? '' : 's'}`,
       notes: [
         lotCode
           ? `Batch ${lotCode}`
@@ -1025,7 +1034,7 @@ function ReceiveForm({
         pieceFields.piecesPerUnit
           ? `Sold by ${(pieceFields.pieceName || 'piece').toLowerCase()} too: ${
               pieceFields.piecesPerUnit
-            } in one ${product.unit.toLowerCase()}${
+            } in one ${unitName}${
               pieceFields.piecePrice ? `, ${peso(pieceFields.piecePrice)} each` : ''
             }`
           : '',
@@ -1059,8 +1068,24 @@ function ReceiveForm({
             ))}
           </datalist>
         </label>
+        {picked && !picked.unregistered && (
+          <label>
+            Sold per
+            <select value={unit} onChange={(event) => setUnit(event.target.value)}>
+              {[...new Set([...UNITS, picked.unit])].map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+            {unit !== picked.unit && picked.stock > 0 && (
+              <small className="product-form__unit-note">
+                Only the name changes: the {picked.stock} on hand stay {picked.stock}, now counted
+                as {unitName}s.
+              </small>
+            )}
+          </label>
+        )}
         <label>
-          Units received
+          {picked ? `${unit}s received` : 'Units received'}
           <input
             type="number"
             min="1"
@@ -1072,7 +1097,7 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Cost per unit (optional)
+          Cost per {picked ? unitName : 'unit'} (optional)
           <input
             type="number"
             min="0.01"
@@ -1086,7 +1111,7 @@ function ReceiveForm({
           />
         </label>
         <label>
-          Selling price per unit (optional)
+          Selling price per {picked ? unitName : 'unit'} (optional)
           <input
             type="number"
             min="0.01"
@@ -1121,10 +1146,11 @@ function ReceiveForm({
       </div>
       {picked && !picked.unregistered && (
         <PieceSaleFields
-          unit={picked.unit}
+          unit={unit}
           unitPrice={hasSelling ? sellingValue : currentPrice || undefined}
           value={pieces}
           onChange={setPieces}
+          onProductForm
         />
       )}
       <div className="stock-index__chips">
