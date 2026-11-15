@@ -832,3 +832,19 @@
   outline: 3px solid #23a26b;
   outline-offset: 2px;
 }
+
+/* Receive stock as a popup: wide enough for its two-column form. */
+.receive-modal {
+  width: min(860px, 100%);
+}
+
+.receive-modal .stock-index__form {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.stock-index__action.receive-open {
+  margin-bottom: 14px;
+}

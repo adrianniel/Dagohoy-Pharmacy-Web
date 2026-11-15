@@ -38,6 +38,9 @@ type PanelKey =
 /** A delivery just saved, for the "Delivery received" popup. */
 type Received = { product: string; units: string; notes: string[] };
 
+/** Box → Boxes, Sachet → Sachets. */
+const plural = (word: string) => (/(x|s|ch|sh)$/i.test(word) ? `${word}es` : `${word}s`);
+
 /** Stock of a barcoded product received without its batch number (TBD- or NO-BATCH). */
 const needsDetails = (batch: InventoryBatch) =>
   batch.stock > 0 &&
@@ -135,10 +138,16 @@ export function StockControlCenter({
 }: StockControlCenterProps) {
   const [active, setActive] = useState<PanelKey>('products');
   const [receiveBarcode, setReceiveBarcode] = useState('');
+  /** Receive stock opens as a popup form, on its own over the page. */
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  useEffect(() => {
+    if (active === 'receive') setReceiveOpen(true);
+  }, [active]);
   useEffect(() => {
     if (!receiveRequest) return;
     setReceiveBarcode(receiveRequest.barcode);
     setActive('receive');
+    setReceiveOpen(true);
     window.requestAnimationFrame(() =>
       document.getElementById('stock-index-panel')?.scrollIntoView({ behavior: 'smooth' }),
     );
@@ -468,29 +477,17 @@ export function StockControlCenter({
 
         {active === 'receive' && (
           <>
-            <ReceiveForm
-              key={`receive-${receiveBarcode}`}
-              batches={data.allBatches}
-              products={products}
-              initialBarcode={receiveBarcode}
-              onSaved={(done) => {
-                setReceiveBarcode('');
-                handleStockSaved();
-                showSuccess({
-                  title: 'Delivery received',
-                  message: (
-                    <>
-                      <b>{done.units}</b> of <b>{done.product}</b> added to the shelf.
-                    </>
-                  ),
-                  notes: done.notes,
-                });
-              }}
-            />
+            <button
+              className="stock-index__action receive-open"
+              type="button"
+              onClick={() => setReceiveOpen(true)}
+            >
+              + Receive a delivery
+            </button>
             <h5 className="stock-index__subhead">Recent deliveries</h5>
             {data.received.length === 0 ? (
               <p className="stock-index__empty">
-                No deliveries recorded yet. Use the form above when a supplier delivery arrives.
+                No deliveries recorded yet. Tap Receive a delivery when a supplier delivery arrives.
               </p>
             ) : (
               <table className="stock-index__table">
@@ -755,6 +752,53 @@ export function StockControlCenter({
           </>
         )}
       </section>
+      {receiveOpen && (
+        <div
+          className="pos-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setReceiveOpen(false);
+          }}
+        >
+          <div
+            className="pos-payment-modal inventory-form receive-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="receive-modal-title"
+          >
+            <button
+              className="pos-modal-close"
+              type="button"
+              onClick={() => setReceiveOpen(false)}
+              aria-label="Close Receive stock"
+            >
+              ×
+            </button>
+            <p className="eyebrow">Products &amp; Stock</p>
+            <h2 id="receive-modal-title">Receive a delivery</h2>
+            <ReceiveForm
+              key={`receive-${receiveBarcode}`}
+              batches={data.allBatches}
+              products={products}
+              initialBarcode={receiveBarcode}
+              onSaved={(done) => {
+                setReceiveBarcode('');
+                setReceiveOpen(false);
+                handleStockSaved();
+                showSuccess({
+                  title: 'Delivery received',
+                  message: (
+                    <>
+                      <b>{done.units}</b> of <b>{done.product}</b> added to the shelf.
+                    </>
+                  ),
+                  notes: done.notes,
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -1079,13 +1123,13 @@ function ReceiveForm({
             {unit !== picked.unit && picked.stock > 0 && (
               <small className="product-form__unit-note">
                 Only the name changes: the {picked.stock} on hand stay {picked.stock}, now counted
-                as {unitName}s.
+                as {plural(unitName)}.
               </small>
             )}
           </label>
         )}
         <label>
-          {picked ? `${unit}s received` : 'Units received'}
+          {picked ? `${plural(unit)} received` : 'Units received'}
           <input
             type="number"
             min="1"
