@@ -12,6 +12,7 @@ import { ControlDeck, ControlPanel, type ControlItem } from '../../components/Co
 import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
 import { ProfitReport } from '../../components/admin/ProfitReport';
+import { StockValueReport } from '../../components/admin/StockValueReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
 import { StatusBadge } from '../../components/cashier/StatusBadge';
 import { HourlyBars } from '../../components/HourlyBars';
@@ -251,8 +252,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
   const viewOf = (product: InventoryProduct) =>
     product.unregistered ? 'unregistered' : !hasPrice(product) ? 'needs-price' : 'list';
   /** On sale with a selling price (often set at the Sales Counter) but no cost yet. */
-  const needsCost = (product: InventoryProduct) =>
-    viewOf(product) === 'list' && !hasCost(product);
+  const needsCost = (product: InventoryProduct) => viewOf(product) === 'list' && !hasCost(product);
   const needsPriceProducts = products.filter((product) => viewOf(product) === 'needs-price');
   const needsCostProducts = products.filter(needsCost);
   /** The product price, or "₱78 – ₱80" when its batches sell at different prices. */
@@ -2142,7 +2142,7 @@ function AdminDashboard() {
   );
 }
 
-type ReportsTab = 'profit' | 'monthly' | 'invoice' | 'summary' | 'weekly';
+type ReportsTab = 'profit' | 'stock-value' | 'monthly' | 'invoice' | 'summary' | 'weekly';
 
 function Reports() {
   const [tab, setTab] = useState<ReportsTab>('profit');
@@ -2186,6 +2186,15 @@ function Reports() {
       tone: 'forest',
       about:
         'Sales minus what the sold items cost, the expenses, items given free and stock lost. Month by month, with where the money went.',
+    },
+    {
+      key: 'stock-value',
+      icon: 'reports',
+      title: 'Stock value',
+      hint: 'If all stock is sold',
+      tone: 'teal',
+      about:
+        'What the stock on hand now cost, what it sells for, and the profit if all of it is sold. Worked out fresh each time you open it.',
     },
     {
       key: 'monthly',
@@ -2241,6 +2250,7 @@ function Reports() {
         about={current?.about}
       >
         {tab === 'profit' && <ProfitReport />}
+        {tab === 'stock-value' && <StockValueReport />}
         {tab === 'monthly' && <MonthlySalesReport />}
         {tab === 'invoice' && <InvoiceGuide />}
         {tab === 'summary' && (
