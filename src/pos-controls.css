@@ -5686,3 +5686,15 @@
   color: #4a5d52;
   font-size: 0.84rem;
 }
+
+.product-form__unit-note {
+  display: block;
+  margin-top: 4px;
+  color: #8a5a12;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.piece-sale__warn {
+  margin: 0;
+}

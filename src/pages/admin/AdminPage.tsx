@@ -1594,6 +1594,12 @@ function InventoryForm({
                   <option key={item}>{item}</option>
                 ))}
               </select>
+              {product && !product.unregistered && unit !== product.unit && product.stock > 0 && (
+                <small className="product-form__unit-note">
+                  Only the name changes: the {product.stock} on hand stay {product.stock}, now
+                  counted as {unit.toLowerCase()}s.
+                </small>
+              )}
             </label>
           </div>
         </fieldset>
@@ -1674,6 +1680,7 @@ function InventoryForm({
               unitPrice={hasPrice ? priceValue : undefined}
               value={pieces}
               onChange={setPieces}
+              onProductForm
             />
           )}
         </fieldset>

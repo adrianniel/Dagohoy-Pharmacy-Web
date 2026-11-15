@@ -52,12 +52,15 @@ export function pieceSettingChanged(setting: PieceSetting, product?: WithPieces 
 }
 
 const PIECE_NAMES = ['Tablet', 'Capsule', 'Sachet', 'Piece', 'Strip', 'Pack'];
+/** Units that are already single pieces: a product counted in these is not split further. */
+const SMALL_UNITS = ['Tablet', 'Capsule', 'Piece'];
 
 export function PieceSaleFields({
   unit,
   unitPrice,
   value,
   onChange,
+  onProductForm = false,
 }: {
   /** The whole unit the stock is counted in (Sachet, Box, Bottle). */
   unit: string;
@@ -65,6 +68,8 @@ export function PieceSaleFields({
   unitPrice?: number;
   value: PieceSetting;
   onChange: (next: PieceSetting) => void;
+  /** On the product form, where Sold per can be changed right above. */
+  onProductForm?: boolean;
 }) {
   const set = (changes: Partial<PieceSetting>) => onChange({ ...value, ...changes });
   const piece = (value.name.trim() || 'piece').toLowerCase();
@@ -88,6 +93,13 @@ export function PieceSaleFields({
           </small>
         </span>
       </label>
+      {value.on && SMALL_UNITS.includes(unit) && (
+        <p className="pos-notice piece-sale__warn" role="alert">
+          This product is counted per <b>{whole}</b>, which is already the smallest piece. Change{' '}
+          <b>Sold per</b> {onProductForm ? 'above' : 'in Edit product'} to what the stock comes in
+          (Sachet, Box or Bottle), then set the {whole}s inside it here.
+        </p>
+      )}
       {value.on && (
         <div className="product-form__grid product-form__grid--three">
           <label>
