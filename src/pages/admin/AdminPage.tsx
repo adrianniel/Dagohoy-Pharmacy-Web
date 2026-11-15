@@ -152,13 +152,6 @@ function loadLocalValue<T>(key: string, fallback: T): T {
   }
 }
 
-/** Which tab of the product list a product belongs to. */
-const viewOf = (product: InventoryProduct) =>
-  product.unregistered ? 'unregistered' : product.needsPrice ? 'needs-price' : 'list';
-
-/** On sale with a selling price (often set at the Sales Counter) but no cost yet. */
-const needsCost = (product: InventoryProduct) => viewOf(product) === 'list' && !product.cost;
-
 export function AdminPage({ section }: { section: AdminSection }) {
   const [query, setQuery] = useState('');
   /** Barcode scanned in the list search that matched no product: prefilled in New product. */
@@ -238,11 +231,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
     () => products.filter((product) => product.unregistered),
     [products],
   );
-  const needsPriceProducts = useMemo(
-    () => products.filter((product) => product.needsPrice),
-    [products],
-  );
-  const needsCostProducts = useMemo(() => products.filter(needsCost), [products]);
   /** Batches with units, by product (they reload with the products after a sync). */
   const batchesByProduct = useMemo(() => {
     const map = new Map<number, InventoryBatch[]>();
@@ -252,27 +240,38 @@ export function AdminPage({ section }: { section: AdminSection }) {
     }
     return map;
   }, [products]);
+  const batchesOf = (product: InventoryProduct) =>
+    product.id === undefined ? [] : (batchesByProduct.get(product.id) ?? []);
+  // A price or cost typed on a batch (the rows under the product) counts: the product is done.
+  const hasPrice = (product: InventoryProduct) =>
+    !product.needsPrice || batchesOf(product).some((batch) => (batch.sellingPrice ?? 0) > 0);
+  const hasCost = (product: InventoryProduct) =>
+    Boolean(product.cost) || batchesOf(product).some((batch) => (batch.unitCost ?? 0) > 0);
+  /** Which tab of the product list a product belongs to. */
+  const viewOf = (product: InventoryProduct) =>
+    product.unregistered ? 'unregistered' : !hasPrice(product) ? 'needs-price' : 'list';
+  /** On sale with a selling price (often set at the Sales Counter) but no cost yet. */
+  const needsCost = (product: InventoryProduct) =>
+    viewOf(product) === 'list' && !hasCost(product);
+  const needsPriceProducts = products.filter((product) => viewOf(product) === 'needs-price');
+  const needsCostProducts = products.filter(needsCost);
   /** The product price, or "₱78 – ₱80" when its batches sell at different prices. */
   const priceRange = (product: InventoryProduct) => {
     const base = Number(product.price.replace(/[₱,]/g, ''));
-    const prices = (product.id !== undefined ? (batchesByProduct.get(product.id) ?? []) : []).map(
-      (batch) => batch.sellingPrice ?? base,
-    );
+    const prices = batchesOf(product)
+      .map((batch) => batch.sellingPrice ?? base)
+      .filter((price) => price > 0);
     if (!prices.length) return product.price;
     const low = Math.min(...prices);
     const high = Math.max(...prices);
     return low === high ? `₱${low.toFixed(2)}` : `₱${low.toFixed(2)} – ₱${high.toFixed(2)}`;
   };
-  const filteredProducts = useMemo(
-    () =>
-      products.filter(
-        (product) =>
-          (listView === 'needs-cost' ? needsCost(product) : viewOf(product) === listView) &&
-          `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-      ),
-    [products, query, scannerOff, listView],
+  const filteredProducts = products.filter(
+    (product) =>
+      (listView === 'needs-cost' ? needsCost(product) : viewOf(product) === listView) &&
+      `${product.product} ${product.detail} ${scannerOff ? '' : product.barcode}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
   );
 
   const activeSuppliers = supplierList.filter((supplier) => supplier.status !== 'Inactive');
@@ -566,7 +565,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               <small>{product.detail}</small>
                             </td>
                             <td data-label="Price">
-                              {product.needsPrice ? (
+                              {!hasPrice(product) ? (
                                 <span className="product-new-badge">No price yet</span>
                               ) : (
                                 <strong>{priceRange(product)}</strong>
@@ -601,7 +600,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               <button
                                 className={
                                   product.unregistered ||
-                                  product.needsPrice ||
+                                  !hasPrice(product) ||
                                   listView === 'needs-cost'
                                     ? 'cashier-primary-action'
                                     : 'cashier-view-button'
@@ -614,7 +613,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
                               >
                                 {product.unregistered
                                   ? 'Register'
-                                  : product.needsPrice
+                                  : !hasPrice(product)
                                     ? 'Set price'
                                     : listView === 'needs-cost'
                                       ? 'Set cost'
