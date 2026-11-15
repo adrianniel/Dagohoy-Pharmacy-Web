@@ -119,8 +119,11 @@ export function ProductPicker({
   value,
   onPick,
   placeholder = 'Type a name or scan the barcode',
+  autoFocus = false,
 }: {
   products: InventoryProduct[];
+  /** Puts the cursor in the search right away (a form that opens to pick a product). */
+  autoFocus?: boolean;
   /** Barcode of the picked product, or ''. */
   value: string;
   onPick: (barcode: string) => void;
@@ -169,6 +172,7 @@ export function ProductPicker({
         placeholder={placeholder}
         inputProps={{
           role: 'combobox',
+          autoFocus,
           'aria-expanded': open && matches.length > 0,
           'aria-controls': listId,
           onFocus: () => setOpen(true),

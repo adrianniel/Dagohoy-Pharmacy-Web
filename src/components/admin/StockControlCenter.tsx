@@ -1094,9 +1094,15 @@ function ReceiveForm({
         price under Needs price.
       </p>
       <div className="stock-index__form-grid">
-        <label>
+        <label className="receive-product">
           Product
-          <ProductPicker products={products} value={barcode} onPick={pickProduct} />
+          <ProductPicker
+            products={products}
+            value={barcode}
+            onPick={pickProduct}
+            autoFocus={!initialBarcode}
+            placeholder="Type the product name, or scan its barcode"
+          />
         </label>
         <label>
           Supplier (optional)
