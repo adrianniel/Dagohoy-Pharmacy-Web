@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { CashierIcon } from '../cashier/CashierIcon';
 import { ProductPicker } from '../ScanInput';
+import { ExpiryInput, UNFINISHED_EXPIRY, UNFINISHED_EXPIRY_MESSAGE } from '../ExpiryInput';
 import { getInventory, UNITS } from '../../data/inventoryStore';
 import type { InventoryProduct } from '../../data/inventoryStore';
 import {
@@ -834,6 +835,10 @@ function NeedsDetails({ batches, onSaved }: { batches: InventoryBatch[]; onSaved
       showToast('Enter the batch number printed on the box.', 'error');
       return;
     }
+    if (expiry === UNFINISHED_EXPIRY) {
+      showToast(UNFINISHED_EXPIRY_MESSAGE, 'error');
+      return;
+    }
     setSaving(true);
     try {
       await fillLotDetails(Number(open.id), { lot: code, expiry: expiry || undefined });
@@ -878,11 +883,7 @@ function NeedsDetails({ batches, onSaved }: { batches: InventoryBatch[]; onSaved
             </label>
             <label>
               Expiry date (optional)
-              <input
-                type="date"
-                value={expiry}
-                onChange={(event) => setExpiry(event.target.value)}
-              />
+              <ExpiryInput value={expiry} onChange={setExpiry} />
             </label>
           </div>
           <div className="stock-index__actions">
@@ -966,7 +967,7 @@ function ReceiveForm({
   const [unit, setUnit] = useState(picked?.unit ?? 'Tablet');
   const unitName = unit.toLowerCase();
 
-  const expiryDays = expiry ? daysUntil(expiry) : null;
+  const expiryDays = expiry && expiry !== UNFINISHED_EXPIRY ? daysUntil(expiry) : null;
   const currentPrice = priceValue(products.find((item) => item.barcode === barcode)?.price);
   const costValue = Number(cost);
   const sellingValue = Number(selling);
@@ -1014,6 +1015,10 @@ function ReceiveForm({
     }
     if (selling.trim() !== '' && !Number.isFinite(sellingValue)) {
       showToast('Type the selling price as a number, like 12.50, or leave it blank.', 'error');
+      return;
+    }
+    if (expiry === UNFINISHED_EXPIRY) {
+      showToast(UNFINISHED_EXPIRY_MESSAGE, 'error');
       return;
     }
     if (expiry && daysUntil(expiry) < 0) {
@@ -1183,7 +1188,7 @@ function ReceiveForm({
         </label>
         <label>
           Expiry date (optional)
-          <input type="date" value={expiry} onChange={(event) => setExpiry(event.target.value)} />
+          <ExpiryInput value={expiry} onChange={setExpiry} />
         </label>
         <label>
           Delivery receipt no. (optional)

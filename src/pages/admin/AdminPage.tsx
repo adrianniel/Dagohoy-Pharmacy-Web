@@ -11,6 +11,11 @@ import { CashierIcon } from '../../components/cashier/CashierIcon';
 import { ControlDeck, ControlPanel, type ControlItem } from '../../components/ControlDeck';
 import { InvoiceGuide } from '../../components/admin/InvoiceGuide';
 import { MonthlySalesReport } from '../../components/admin/MonthlySalesReport';
+import {
+  ExpiryInput,
+  UNFINISHED_EXPIRY,
+  UNFINISHED_EXPIRY_MESSAGE,
+} from '../../components/ExpiryInput';
 import { ProfitReport } from '../../components/admin/ProfitReport';
 import { StockValueReport } from '../../components/admin/StockValueReport';
 import { StockControlCenter } from '../../components/admin/StockControlCenter';
@@ -1379,6 +1384,10 @@ function InventoryForm({
       setError(pieceFields);
       return;
     }
+    if (withOpening && openingQty > 0 && expiry === UNFINISHED_EXPIRY) {
+      setError(UNFINISHED_EXPIRY_MESSAGE);
+      return;
+    }
     const quantity = withOpening || countEditable ? openingQty : product.stock;
     setSaving(true);
     const problem = await onSave(
@@ -1710,12 +1719,7 @@ function InventoryForm({
                 </label>
                 <label>
                   Expiry date (optional)
-                  <input
-                    type="date"
-                    value={expiry}
-                    onChange={(event) => setExpiry(event.target.value)}
-                    disabled={openingQty === 0}
-                  />
+                  <ExpiryInput value={expiry} onChange={setExpiry} disabled={openingQty === 0} />
                 </label>
               </div>
               {noBarcode && (
