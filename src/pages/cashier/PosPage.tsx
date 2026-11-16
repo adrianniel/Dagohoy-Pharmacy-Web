@@ -661,6 +661,20 @@ export function CashierPosPage() {
     );
   }
 
+  /** A quantity typed in the sale: never more than there is in stock. */
+  function setQuantity(barcodeValue: string, typed: number) {
+    const line = cart.find((item) => item.product.barcode === barcodeValue);
+    if (!line) return;
+    const max =
+      !line.product.unregistered && line.product.stock !== undefined
+        ? line.product.stock
+        : Infinity;
+    if (typed > max) {
+      showToast(`Only ${max} ${line.product.unit.toLowerCase()}s are available.`, 'error');
+    }
+    changeQuantity(barcodeValue, Math.min(typed, max) - line.quantity);
+  }
+
   function clearSale() {
     setCart([]);
     setSelectedLine(null);
@@ -1085,7 +1099,11 @@ export function CashierPosPage() {
                   >
                     −
                   </button>
-                  <span>{quantity}</span>
+                  <QuantityInput
+                    quantity={quantity}
+                    label={`Quantity of ${product.product}`}
+                    onCommit={(typed) => setQuantity(product.barcode, typed)}
+                  />
                   <button
                     type="button"
                     aria-label={`Increase ${product.product}`}
@@ -1920,6 +1938,56 @@ function SaleComplete({ sale, onDone }: { sale: CompletedSale; onDone: () => voi
     </div>
   );
 }
+/**
+ * The quantity of a sale line, typed in (the − and + buttons still work). Saved on Enter or
+ * when leaving the box; blank or 0 goes back to the old number (− removes the item).
+ */
+function QuantityInput({
+  quantity,
+  label,
+  onCommit,
+}: {
+  quantity: number;
+  label: string;
+  onCommit: (quantity: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const cancelled = useRef(false);
+  const commit = () => {
+    const typed = Number(draft);
+    setDraft(null);
+    if (cancelled.current) {
+      cancelled.current = false;
+      return;
+    }
+    if (draft !== null && Number.isInteger(typed) && typed >= 1 && typed !== quantity) {
+      onCommit(typed);
+    }
+  };
+  return (
+    <input
+      className="pos-ticket-qty__input"
+      inputMode="numeric"
+      aria-label={label}
+      value={draft ?? String(quantity)}
+      onFocus={(event) => event.currentTarget.select()}
+      onClick={(event) => event.stopPropagation()}
+      onChange={(event) => setDraft(event.target.value.replace(/\D/g, '').slice(0, 5))}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        // Enter saves the number here; it does not open the payment.
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          event.currentTarget.blur();
+        } else if (event.key === 'Escape') {
+          cancelled.current = true;
+          event.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
 function matchesCartLine(left: PosProduct, right: PosProduct): boolean {
   if (left.localProductId !== undefined && right.localProductId !== undefined) {
     return (
