@@ -8,6 +8,8 @@ type InventoryProduct = {
   unregistered?: boolean;
   /** Sold by piece: one price per piece, whatever the batch. */
   byPiece?: boolean;
+  /** Sold from one batch the cashier picked: that batch's price. */
+  batchId?: number;
 };
 
 /**
@@ -28,7 +30,7 @@ function today() {
 }
 
 /** The product's sellable batches, in the order they leave the shelf. */
-function sellableBatches(product: InventoryProduct, batches: InventoryBatch[]) {
+export function sellableBatches(product: InventoryProduct, batches: InventoryBatch[]) {
   const day = today();
   return batches
     .filter(
@@ -53,7 +55,9 @@ export function priceParts(
   batches: InventoryBatch[],
 ): PricePart[] {
   const base = toAmount(product.price);
-  if (product.unregistered || product.byPiece) return [{ quantity, price: base }];
+  if (product.unregistered || product.byPiece || product.batchId) {
+    return [{ quantity, price: base }];
+  }
   const parts: PricePart[] = [];
   let left = quantity;
   for (const batch of sellableBatches(product, batches)) {
@@ -68,6 +72,21 @@ export function priceParts(
   // More than the batches on file (the counter refuses it anyway): show the product price.
   if (left > 0) parts.push({ quantity: left, price: base });
   return parts;
+}
+
+/**
+ * The batches to pick from at the Sales Counter: only when they sell at different prices,
+ * so the cashier chooses which one (and at what price) the customer gets.
+ */
+export function batchChoices(
+  product: InventoryProduct & { needsPrice?: boolean },
+  batches: InventoryBatch[],
+) {
+  if (product.unregistered || product.byPiece || product.batchId) return [];
+  const base = product.needsPrice ? null : toAmount(product.price);
+  const sellable = sellableBatches(product, batches);
+  const prices = new Set(sellable.map((batch) => batch.sellingPrice ?? base));
+  return prices.size > 1 ? sellable : [];
 }
 
 export const lineAmount = (

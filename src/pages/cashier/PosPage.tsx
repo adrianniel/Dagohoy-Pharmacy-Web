@@ -11,7 +11,8 @@ import {
 } from '../../components/cashier/ScannedNewProduct';
 import { CATALOG_SYNCED, syncAfterSale } from '../../data/serverSync';
 import { initialBatches, loadBatches } from '../../data/operationsStore';
-import { lineAmount, nextUnitPrice, priceParts } from '../../data/batchPricing';
+import { batchChoices, lineAmount, nextUnitPrice, priceParts } from '../../data/batchPricing';
+import type { InventoryBatch } from '../../data/operationsStore';
 import { createSale, voidSale, type ApiSale, type NewSale } from '../../services/storeApi';
 import { SCANNER_OFF_MESSAGE, useScannerOff } from '../../services/useBilling';
 import { getSession, STORE_STATUS_CHANGE_EVENT } from '../../data/registerSession';
@@ -25,12 +26,17 @@ type PosProduct = Omit<CatalogProduct, 'stock' | 'status'> & {
   byPiece?: boolean;
   /** For a piece row: what one whole unit is (Sachet, Bottle). */
   packUnit?: string;
+  /** A batch row: sold from this batch only, at its price. */
+  batchId?: number;
+  batchNote?: string;
 };
 type CartLine = { product: PosProduct; quantity: number };
 
 /** Ends the code of a "(per piece)" row, so it is its own line in the sale. */
 const PIECE_CODE = '#piece';
-type PieceRow = CatalogProduct & Pick<PosProduct, 'byPiece' | 'packUnit'>;
+type PieceRow = CatalogProduct & Pick<PosProduct, 'byPiece' | 'packUnit' | 'batchId' | 'batchNote'>;
+/** Ends the code of a batch row: "#batch12". */
+const BATCH_CODE = '#batch';
 
 /**
  * A product also sold by piece, as its own row: price per piece, and the pieces there are
@@ -53,6 +59,33 @@ function pieceRow(product: CatalogProduct): PieceRow {
 }
 
 /**
+ * One batch of a product whose batches sell at different prices, as its own row, so the
+ * cashier picks which batch (and price) is sold. Units come from that batch only.
+ */
+function batchRow(product: CatalogProduct, batch: InventoryBatch): PieceRow {
+  const price =
+    batch.sellingPrice ??
+    (product.needsPrice ? undefined : Number(product.price.replace(/[₱,]/g, '')));
+  const expiry = batch.expiry
+    ? new Date(`${batch.expiry}T00:00:00`).toLocaleDateString('en-PH', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : 'no expiry';
+  return {
+    ...product,
+    barcode: `${product.barcode}${BATCH_CODE}${batch.id}`,
+    product: `${product.product} (batch ${batch.lot})`,
+    price: `₱${(price ?? 0).toFixed(2)}`,
+    needsPrice: price === undefined || undefined,
+    stock: batch.stock,
+    batchId: Number(batch.id),
+    batchNote: `Batch ${batch.lot} · expires ${expiry}`,
+  };
+}
+
+/**
  * The sale on the counter is kept in this browser while it is open, so going to another page
  * (or a refresh) and coming back continues it. Cleared when the sale is completed or cleared,
  * and on logout.
@@ -68,18 +101,29 @@ function loadOpenSale(): { cart: CartLine[]; discount: string } {
     if (!saved?.cart?.length) return { cart: [], discount: '0' };
     // Refresh each item from the current product list (price, stock); drop removed ones.
     const inventory = getInventory();
+    const batches = loadBatches(initialBatches);
     const cart = saved.cart.flatMap((line) => {
       const byPiece = line.product.barcode.endsWith(PIECE_CODE);
+      const batchAt = line.product.barcode.indexOf(BATCH_CODE);
       const code = byPiece
         ? line.product.barcode.slice(0, -PIECE_CODE.length)
-        : line.product.barcode;
+        : batchAt >= 0
+          ? line.product.barcode.slice(0, batchAt)
+          : line.product.barcode;
       const fresh = inventory.find((item) => item.barcode === code);
       if (!fresh || !(line.quantity > 0) || (byPiece && !fresh.piecesPerUnit)) return [];
+      const batchId = batchAt >= 0 ? line.product.barcode.slice(batchAt + BATCH_CODE.length) : '';
+      const batch = batchId
+        ? batches.find((item) => item.id === batchId && item.stock > 0)
+        : undefined;
+      if (batchId && !batch) return [];
       const product: PosProduct = byPiece
         ? pieceRow(fresh)
-        : fresh.unregistered
-          ? { ...fresh, stock: undefined }
-          : fresh;
+        : batch
+          ? batchRow(fresh, batch)
+          : fresh.unregistered
+            ? { ...fresh, stock: undefined }
+            : fresh;
       return [{ product, quantity: line.quantity }];
     });
     return { cart, discount: saved.discount ?? '0' };
@@ -330,15 +374,20 @@ export function CashierPosPage() {
     () => rankProducts(products, query, !scannerOff),
     [products, query, scannerOff],
   );
-  // A product also sold by piece shows a "(per piece)" row right under it.
+  // A product also sold by piece shows a "(per piece)" row right under it. A product whose
+  // batches sell at different prices shows one row per batch instead, to pick from.
   const filteredProducts = useMemo(
     () =>
-      searchHits.flatMap((hit): PieceRow[] =>
-        hit.product.piecesPerUnit && !hit.product.unregistered
-          ? [hit.product, pieceRow(hit.product)]
-          : [hit.product],
-      ),
-    [searchHits],
+      searchHits.flatMap((hit): PieceRow[] => {
+        const choices = batchChoices(hit.product, batches);
+        const rows: PieceRow[] = choices.length
+          ? choices.map((batch) => batchRow(hit.product, batch))
+          : [hit.product];
+        return hit.product.piecesPerUnit && !hit.product.unregistered
+          ? [...rows, pieceRow(hit.product)]
+          : rows;
+      }),
+    [searchHits, batches],
   );
   const change = Math.max(0, Number(tendered) - totalDue);
   const creditBalance = Math.max(0, totalDue - Number(tendered || 0));
@@ -402,6 +451,12 @@ export function CashierPosPage() {
       setQuery('');
       return;
     }
+    // Its batches sell at different prices: the list shows them; the cashier picks one.
+    if (!priceCheck && batchChoices(pick, batches).length) {
+      if (!exact) setQuery(pick.product);
+      showToast('This item has batches at different prices. Pick the batch to sell.', 'info');
+      return;
+    }
     addProduct(pick);
   }
 
@@ -442,6 +497,12 @@ export function CashierPosPage() {
     }
     if (!product.unregistered && product.stock < 1) {
       showToast(`${product.product} is out of stock.`, 'error');
+      return;
+    }
+    // Its batches sell at different prices: show them in the list so the cashier picks one.
+    if (batchChoices(product, batches).length) {
+      setQuery(code);
+      showToast('This item has batches at different prices. Pick the batch to sell.', 'info');
       return;
     }
     addProduct(product);
@@ -693,6 +754,7 @@ export function CashierPosPage() {
       productId: line.product.id!,
       quantity: line.quantity,
       byPiece: line.product.byPiece || undefined,
+      batchId: line.product.batchId,
     }));
   }
 
@@ -911,7 +973,8 @@ export function CashierPosPage() {
                       <small>
                         {product.byPiece
                           ? `${product.piecesPerUnit} ${product.unit.toLowerCase()}s in one ${product.packUnit?.toLowerCase()}`
-                          : `${product.detail} · ${product.noBarcode ? 'No barcode' : product.barcode}`}
+                          : (product.batchNote ??
+                            `${product.detail} · ${product.noBarcode ? 'No barcode' : product.barcode}`)}
                       </small>
                     </span>
                     <span>
@@ -924,7 +987,7 @@ export function CashierPosPage() {
                         {product.unregistered
                           ? 'New · not registered'
                           : product.stock > 0
-                            ? `${product.stock}${product.byPiece ? ` ${product.unit.toLowerCase()}s` : ''} left`
+                            ? `${product.stock}${product.byPiece ? ` ${product.unit.toLowerCase()}s` : ''} left${product.batchId ? ' in batch' : ''}`
                             : 'Out of stock'}
                       </small>
                     </span>

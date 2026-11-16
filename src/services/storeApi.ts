@@ -315,7 +315,8 @@ export type ApiSale = {
 
 export type NewSale = {
   /** byPiece: the quantity is pieces of a product sold by piece. */
-  lines: Array<{ productId: number; quantity: number; byPiece?: boolean }>;
+  /** batchId: whole units from that batch only (the cashier picked its price). */
+  lines: Array<{ productId: number; quantity: number; byPiece?: boolean; batchId?: number }>;
   payment: 'cash' | 'gcash' | 'credit' | 'no_charge';
   discountPercent?: number;
   /** Peso amount off the whole sale (typed by the cashier). */
