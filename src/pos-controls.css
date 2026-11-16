@@ -5699,11 +5699,16 @@
   margin: 0;
 }
 
-/* Expiry date: Day · Month · Year, the same in every form. */
+/* Expiry date: Day · Month · Year, the same in every form. Its own full row, so the three
+   boxes never squeeze into a narrow column. */
+label:has(> .expiry-input) {
+  grid-column: 1 / -1;
+}
 .expiry-input {
   display: grid;
-  grid-template-columns: minmax(64px, 0.7fr) minmax(96px, 1.2fr) minmax(80px, 0.9fr);
-  gap: 8px;
+  grid-template-columns: 90px minmax(150px, 1fr) 110px;
+  gap: 10px;
+  max-width: 460px;
 }
 .expiry-input > input,
 .expiry-input > select {
