@@ -1,5 +1,5 @@
 import { clearBest, rankProducts } from '../../data/productSearch';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../components/toast';
 import { isSoundEnabled, playSound, setSoundEnabled } from '../../lib/sound';
 import { CashierIcon } from '../../components/cashier/CashierIcon';
@@ -370,9 +370,12 @@ export function CashierPosPage() {
   // on by product name. It comes back by itself once a payment is sent.
   const scannerOff = useScannerOff();
 
+  // The list follows a step behind fast typing, so letters never wait for the search of
+  // 1000+ products (on a slow counter computer).
+  const searchQuery = useDeferredValue(query);
   const searchHits = useMemo(
-    () => rankProducts(products, query, !scannerOff),
-    [products, query, scannerOff],
+    () => rankProducts(products, searchQuery, !scannerOff),
+    [products, searchQuery, scannerOff],
   );
   // A product also sold by piece shows a "(per piece)" row right under it. A product whose
   // batches sell at different prices shows one row per batch instead, to pick from.
@@ -426,7 +429,8 @@ export function CashierPosPage() {
   function scanOrPick(code: string) {
     if (!code) return;
     const exact = scannerOff ? undefined : products.find((product) => product.barcode === code);
-    const pick = exact ?? clearBest(searchHits);
+    // Ranked again from what was typed: the shown list may still be a step behind.
+    const pick = exact ?? clearBest(rankProducts(products, code, !scannerOff));
     if (!pick) {
       if (!filteredProducts.length && !priceCheck && !scannerOff && /^\d{8,14}$/.test(code)) {
         setQuery('');
