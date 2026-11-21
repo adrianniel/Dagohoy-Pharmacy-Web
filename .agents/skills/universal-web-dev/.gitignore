@@ -1,8 +1,0 @@
-__pycache__/
-*.py[cod]
-.venv/
-artifacts/
-.verification/
-*.local
-.env
-.env.*

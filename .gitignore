@@ -24,3 +24,21 @@ coverage/
 .env.staging
 # Local Claude Code preview config
 .claude/launch.json
+
+# AI docs / instructions
+KNOWLEDGE.md
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+AGENTS.md
+GEMINI.md
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+.windsurfrules
+.codex/
+# Agent skills, their lock file and the skills' generated reports
+.agents/
+skills-lock.json
+.taste-skill/
+.hallmark/
