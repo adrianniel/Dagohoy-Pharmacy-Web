@@ -1,8 +1,7 @@
 # Deployment: what actually worked (Hostinger, 2026-11-13)
 
 The live Dagohoy Pharmacy system was deployed this way on the first try that worked. Use it as
-the recipe for the next deploy and for future clients. `docs/DEPLOY_CHECKLIST.md` is the older
-plan; where the two differ, this file is right.
+the recipe for the next deploy and for future clients.
 
 | Part                    | Address                                                  | Hostinger type                            |
 | ----------------------- | -------------------------------------------------------- | ----------------------------------------- |
@@ -17,8 +16,8 @@ have none). Node **22.x**. No staging for now: deployed straight to live with an
 
 - The client buys the plan on **their own** account, claims the free domain there, and gives
   you **Admin** access (Profile → Account sharing). You work from your own login.
-- Hostinger's API plugin for Claude Code (`hostinger@claude-plugins-official`) reads the shared
-  plan: websites, deployments, databases. It was used read-only to check each step.
+- Hostinger's API can read the shared plan (websites, deployments, databases); it was used
+  read-only to check each step.
 - GitHub deploy is **disabled under shared access** ("while managing clients"). Upload zips.
 
 ## 1. Make the upload zips (on the laptop)

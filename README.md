@@ -133,7 +133,7 @@ src/
 ├── routes/       Session and role guards
 ├── services/     REST API client
 └── types/        Shared types
-docs/             Running locally, deployment, plans and the development playbook
+docs/             Running locally and deployment
 ```
 
 ## Deployment
@@ -144,9 +144,6 @@ The web app runs on Hostinger as a static Vite build, next to the API (a Node.js
 
 - [Running locally](docs/RUNNING_LOCALLY.md): start the API, database and web on the maintainer's computer; backups.
 - [Deployment](docs/DEPLOYMENT.md): Hostinger deployment as done on 2026-11-13, and how to update.
-- [Deploy checklist](docs/DEPLOY_CHECKLIST.md): the earlier draft for a staging site.
-- [Implementation plan](docs/IMPLEMENTATION_PLAN.md): the phases that moved the app from browser storage to the API.
-- [Development playbook](docs/DEVELOPMENT_PLAYBOOK.md): how this system was built, reused for other clients.
 
 ## License
 

@@ -42,3 +42,7 @@ GEMINI.md
 skills-lock.json
 .taste-skill/
 .hallmark/
+# AI-related project docs (the agentic development playbook and plans written for the agent)
+docs/DEVELOPMENT_PLAYBOOK.md
+docs/IMPLEMENTATION_PLAN.md
+docs/DEPLOY_CHECKLIST.md
