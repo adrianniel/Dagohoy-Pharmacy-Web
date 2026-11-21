@@ -1,122 +1,153 @@
 # Dagohoy Pharmacy Web
 
-> A browser-based point-of-sale and pharmacy operations workspace for owners, administrators, and cashiers.
+> The browser app of the Dagohoy Pharmacy **Inventory & Sales Record System**: stock by batch and expiry, the Sales Counter, shifts, credit (utang), expenses and owner reports.
 
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=20232A)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![React Router](https://img.shields.io/badge/React%20Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)
-
-## Tech stack
-
-| Area                  | Technology              | Role                                             |
-| --------------------- | ----------------------- | ------------------------------------------------ |
-| UI                    | React                   | Landing page and role-based workspace screens    |
-| Language              | TypeScript              | Application and API types                        |
-| Routing               | React Router            | Public, cashier, and admin routes                |
-| Build and development | Vite                    | Local development server and production bundle   |
-| Server communication  | Fetch-based REST client | Calls the separately operated pharmacy API       |
-| Browser cache         | `localStorage`          | Holds client-side copies used by workspace pages |
+![License: proprietary](https://img.shields.io/badge/license-proprietary-555555?style=flat-square)
 
 ## Overview
 
-The web app provides a public pharmacy landing page and a staff workspace. After signing in, cashiers can use the sales counter, manage shifts and review transactions; owners and administrators also have access to inventory, staff, reports, expenses, credit accounts, and pharmacy settings.
+A web app for one pharmacy, used by the owner (admin) and by cashiers who share one cashier login and type their names when they start a shift. Customers do not use it, apart from the public landing page.
 
-The API is a separate service and is not included in this repository. The frontend sends authenticated requests to it and caches selected server data in the browser for existing page workflows. Some dashboard figures and inventory fallbacks are illustrative sample data; confirm a page's data source before using its figures operationally.
+It is an **inventory and sales record system, not a POS**. The selling page is called the **Sales Counter**, and each sale is kept as an internal record shown on screen. **No receipt is printed or given to customers, and sales are never deleted**: a mistake is corrected with a void that gives a reason. This follows the store's BIR decision; do not add receipt printing or sale deletion without a new BIR accreditation decision.
+
+The data lives on a separate API and database (a private repository). This repository is the frontend only.
+
+## Tech stack
+
+| Area                 | Technology                                    | Role                                                                                   |
+| -------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| UI                   | React 19                                      | Landing page and the owner/cashier workspace                                           |
+| Language             | TypeScript                                    | App code and API types                                                                 |
+| Routing              | React Router 7                                | Public, cashier and admin routes, guarded by role                                      |
+| Build                | Vite 7                                        | Dev server and the production bundle in `dist/`                                        |
+| Server communication | `fetch` REST client (`src/services`)          | Calls the API with the session cookie                                                  |
+| Browser copy         | `localStorage` (`src/data`)                   | Copies of products, stock and recent sales that the pages read; refreshed from the API |
+| Files                | `read-excel-file`, `jspdf`, `html2canvas-pro` | Product import from Excel/CSV; Excel and PDF exports                                   |
 
 ## Features
 
-- Public pharmacy landing page and staff sign-in.
-- Role-gated owner/admin and cashier workspaces.
-- Point of sale with product search/barcode lookup, discounts, payment methods, receipt preview, and sale records.
-- Shift opening and closing, cash events, shift history, and reports.
-- Product catalog, batch and expiry views, stock receiving and adjustments, supplier records, and stock movement views.
-- Owner tools for staff accounts, pharmacy settings, expenses, credit accounts, and sales reporting.
-- Excel exports for transactions and shift reports; shift reports also support PDF preview/export.
+**Sales Counter (cashier)**
 
-Some screens contain sample or illustrative figures. Server-backed operations require the companion API to be available; see [Data and integration status](#data-and-integration-status).
+- Barcode scanner support: a USB or Bluetooth scanner adds the item straight into the sale, with no clicking.
+- Forgiving product search: word order, extra words and small typos still find the product, and a barcode match comes first.
+- Batches that sell at different prices appear one row per batch, so the cashier picks the batch and its price.
+- Products sold by piece (a tablet from a sachet, a sachet from a box) at their own price.
+- Quantities can be typed or changed with − / +, and never go above the stock.
+- Payment by cash, GCash (with reference), credit (utang) or no charge (with a reason); a discount in pesos.
+- Price check mode, voids with a reason, and selling an item scanned before it was added to the product list (it then waits under _Not registered_).
+
+**Shifts and records**
+
+- Open a shift with the starting cash, record cash in and out, and close it with a drawer count; duty reports.
+- Transactions list with the on-screen sales record, and credit (utang) accounts with payments.
+
+**Products and stock (owner)**
+
+- Products with category, unit (_Sold per_), cost, price and optional selling by piece.
+- _Needs price_, _Needs cost_ and _Not registered_ lists for items still missing details.
+- Import from an Excel/CSV template; archive and restore; barcode lookup for new products (when enabled on the API).
+- Receive deliveries with batch, expiry (one _Day · Month · Year_ field everywhere), cost and selling price; batches that sell first-expiry-first.
+- Expiry check, batches, stock health, restock order, supplier returns and stock adjustments. Every stock change stays in a ledger.
+
+**Owner reports and settings**
+
+- Profit by month, **stock value** (cost, selling value and expected profit of the stock on hand), monthly sales, an invoice guide for copying the store's BIR invoice booklet, and 7-day sales; Excel and PDF exports.
+- Expenses, suppliers, the staff roster with the shared cashier login and admin accounts, store settings and opening hours, and the system subscription page.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Staff["Owner, admin, or cashier"]
-    subgraph Client["Browser"]
-        UI["React workspace"]
-        Cache["localStorage cache"]
+    Staff["Owner or cashier"]
+    subgraph Browser["Browser: this repository"]
+        UI["React pages"]
+        Copy["localStorage copy"]
     end
+    API["Pharmacy API (private repository)"]
+    DB[("MariaDB")]
     Staff --> UI
-    UI -->|"REST requests with session cookie"| API["Pharmacy API (separate service)"]
-    API -->|"API responses"| UI
-    API -->|"Read and write pharmacy records"| DB[("MariaDB")]
-    UI -->|"Selected data copied for page workflows"| Cache
-    Cache --> UI
+    UI -->|"REST + httpOnly session cookie"| API
+    API --> DB
+    UI -->|"refresh after login and changes"| Copy
+    Copy --> UI
 ```
 
-The route and page UI lives in `src/pages` and `src/components`. API calls are centralized in `src/services`; `src/data/serverSync.ts` refreshes local browser copies after login and after selected changes. The diagram's API and database are external to this repository. The API client sends cookies with requests; it does not store the session token in browser storage.
+- Pages and components are in `src/pages` and `src/components`.
+- All API calls go through `src/services/storeApi.ts`.
+- `src/data/serverSync.ts` refreshes the browser copies after login and after each sale or stock change.
+- The server is the source of truth. A browser copy is only a cache, never the pharmacy's record.
+- The session token is an httpOnly cookie. The app never keeps it in browser storage.
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js and npm.
-- The companion pharmacy API running and reachable for sign-in and server-backed workspace features.
+- Node.js 22 or newer, and npm (the project uses `package-lock.json`).
+- The companion API running and reachable. Login and every workspace page need it. The maintainer's full local setup (API, MariaDB, sample data) is in [Running locally](docs/RUNNING_LOCALLY.md).
 
 ### Install and run
 
 ```bash
-git clone https://github.com/adrianniel/Dagohoy-Pharmacy-Web.git
-cd Dagohoy-Pharmacy-Web
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-Open the local URL printed by Vite (typically `http://localhost:5173`). The root route displays the public landing page; use **Log in** to open the staff workspace. For the companion API and database setup used by the maintainer, see [Running locally](docs/RUNNING_LOCALLY.md).
+Open the address Vite prints (usually `http://localhost:5173`). The landing page is at `/`; **Log in** opens the workspace.
 
 ### Configuration
 
-`VITE_API_BASE_URL` sets the API base URL. It defaults to `http://localhost:3001/api` if omitted. The value is embedded in the frontend bundle at build time; create a separate build for each API environment. This is public client configuration—never put database passwords, API keys, or other server secrets in a `VITE_` variable.
+| Variable            | Kind               | Meaning                                            |
+| ------------------- | ------------------ | -------------------------------------------------- |
+| `VITE_API_BASE_URL` | Public, build time | API base URL. Default: `http://localhost:3001/api` |
 
-For a production build, `.env.production.example` documents the expected setting format. The linked [deployment checklist](docs/DEPLOY_CHECKLIST.md) is explicitly a draft; it is not evidence that a production deployment has been completed or verified.
+The value is built into the web files, so each target (local, staging, live) needs its own build. See `.env.production.example`. Never put a password, database setting or API key in a `VITE_` variable, because everything in it can be read by anyone who opens the site.
 
-## Development commands
+## Commands
 
-| Command                | Purpose                                                |
-| ---------------------- | ------------------------------------------------------ |
-| `npm run dev`          | Start the Vite development server                      |
-| `npm run typecheck`    | Run the TypeScript project check                       |
-| `npm run lint`         | Run ESLint                                             |
-| `npm run format:check` | Check formatting with Prettier                         |
-| `npm run build`        | Type-check and create the production bundle in `dist/` |
-| `npm run preview`      | Serve the built bundle locally for preview             |
+| Command                | Purpose                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| `npm run dev`          | Start the Vite dev server                               |
+| `npm run build`        | Type-check, then build the production bundle in `dist/` |
+| `npm run preview`      | Serve the built bundle locally                          |
+| `npm run typecheck`    | TypeScript check only                                   |
+| `npm run lint`         | ESLint                                                  |
+| `npm run format:check` | Prettier check (`npm run format` fixes)                 |
 
-There is no frontend test script defined in `package.json`.
+This repository has no test suite. The business rules (sales, stock, voids, by-piece selling) are tested in the API repository.
 
 ## Project structure
 
 ```text
 src/
-├── components/   Shared UI, cashier, admin, and landing-page components
-├── constants/   Application and navigation constants
-├── data/        Browser stores, account state, and server synchronization
-├── layouts/     Public and cashier/admin workspace layouts
-├── pages/       Landing, sign-in, cashier, and admin pages
-├── routes/      Session and role route guards
-├── services/    REST API clients
-└── types/       Shared TypeScript types
-docs/            Local development, implementation, and deployment notes
+├── components/   Shared UI, plus cashier, admin and landing-page parts
+├── constants/    Navigation and app constants
+├── data/         Browser copies, search ranking, batch pricing, server sync
+├── layouts/      Public and workspace layouts
+├── lib/          Excel, CSV, PDF and sound helpers
+├── pages/        Landing, login, cashier and admin pages
+├── routes/       Session and role guards
+├── services/     REST API client
+└── types/        Shared types
+docs/             Running locally, deployment, plans and the development playbook
 ```
 
-## Data and integration status
+## Deployment
 
-The frontend is configured to communicate with a separate API for authentication, products, sales, stock, shifts, suppliers, staff, settings, expenses, and related operations. The API/database are not part of this repository. Workspace routes check the server session, and the API client sends the session cookie with requests.
+The web app runs on Hostinger as a static Vite build, next to the API (a Node.js app) and a managed MariaDB database, all over HTTPS. The steps that worked, including the build settings to check on every upload, are in [Deployment](docs/DEPLOYMENT.md).
 
-Selected API responses are copied into browser `localStorage` because some pages currently read from local stores. That cache is not the authoritative pharmacy record. Some dashboard content and fallback data remain illustrative; printed receipts are not a substitute for any legally required tax document. Do not assume a sample figure or a cached value has been verified against the live API.
+## Documentation
 
-## Further documentation
+- [Running locally](docs/RUNNING_LOCALLY.md): start the API, database and web on the maintainer's computer; backups.
+- [Deployment](docs/DEPLOYMENT.md): Hostinger deployment as done on 2026-11-13, and how to update.
+- [Deploy checklist](docs/DEPLOY_CHECKLIST.md): the earlier draft for a staging site.
+- [Implementation plan](docs/IMPLEMENTATION_PLAN.md): the phases that moved the app from browser storage to the API.
+- [Development playbook](docs/DEVELOPMENT_PLAYBOOK.md): how this system was built, reused for other clients.
 
-- [Running locally](docs/RUNNING_LOCALLY.md) — maintainer's companion API and database workflow.
-- [Development playbook](docs/DEVELOPMENT_PLAYBOOK.md) — project development notes.
-- [Implementation plan](docs/IMPLEMENTATION_PLAN.md) — documented implementation work.
-- [Deployment checklist](docs/DEPLOY_CHECKLIST.md) — draft checklist; Hostinger deployment steps have not yet been verified.
+## License
+
+Copyright © 2026 Niel Adrian. All rights reserved. The source is visible here for reference only; copying, reuse or resale needs written permission. See [LICENSE](LICENSE).

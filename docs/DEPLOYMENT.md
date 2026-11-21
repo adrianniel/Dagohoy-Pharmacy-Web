@@ -4,11 +4,11 @@ The live Dagohoy Pharmacy system was deployed this way on the first try that wor
 the recipe for the next deploy and for future clients. `docs/DEPLOY_CHECKLIST.md` is the older
 plan; where the two differ, this file is right.
 
-| Part | Address | Hostinger type |
-|---|---|---|
-| Web (owner and cashier) | https://dagohoypharmacy.boncales.com | Node.js web app, Vite preset |
-| API | https://api-dagohoypharmacy.boncales.com (`/api/health`) | Node.js web app, NestJS preset |
-| Database | `u885578654_dagohoy` (MariaDB **12.3.3**) | Hostinger MySQL, assigned to the API site |
+| Part                    | Address                                                  | Hostinger type                            |
+| ----------------------- | -------------------------------------------------------- | ----------------------------------------- |
+| Web (owner and cashier) | https://dagohoypharmacy.boncales.com                     | Node.js web app, Vite preset              |
+| API                     | https://api-dagohoypharmacy.boncales.com (`/api/health`) | Node.js web app, NestJS preset            |
+| Database                | `u885578654_dagohoy` (MariaDB **12.3.3**)                | Hostinger MySQL, assigned to the API site |
 
 Plan: **Unlimited Web Hosting** (PH name of the tier with Node.js web apps; Single and Premium
 have none). Node **22.x**. No staging for now: deployed straight to live with an empty database.
@@ -122,6 +122,14 @@ imported in step 3, change `DB_PASSWORD` under Environment variables and **Redep
 
 ## Updating later
 
-Make new zips (step 1) and use **Redeploy / upload** on the same site. Schema changes: back up
+Make new zips (step 1) and use **Redeploy / upload** on the same site. Upload the API first, then
+the web.
+
+**Check the build settings on every web upload.** On 2026-11-17 the web site's saved settings had
+turned into the API's (preset NestJS, entry `main.js`): Vite built fine, then the deploy failed
+with "Entry file not found" (the old version stayed live). The web must be preset **Vite** with
+the entry file **blank**, not `index.html` as Hostinger's failure analysis suggests.
+
+Schema changes: back up
 first (hPanel backup or phpMyAdmin export), then step 5 with External connections opened for the
 time it takes, then `/api/health` and `verify-schema`.
